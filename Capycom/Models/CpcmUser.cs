@@ -52,7 +52,6 @@ public partial class CpcmUser
 
     public virtual CpcmCity? CpcmUserCityNavigation { get; set; }
 
-    [ValidateNever]
     public virtual CpcmRole CpcmUserRoleNavigation { get; set; } = null!;
 
     public virtual CpcmSchool? CpcmUserSchoolNavigation { get; set; }
