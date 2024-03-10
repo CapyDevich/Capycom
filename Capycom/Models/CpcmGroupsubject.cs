@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Capycom.Models;
+namespace Capycom;
 
 public partial class CpcmGroupsubject
 {
