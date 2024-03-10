@@ -17,7 +17,7 @@ namespace Capycom.Controllers
 
         public IActionResult Index()
         {
-            Console.WriteLine( db.Database.CanConnect());
+            Debug.WriteLine(db.Database.CanConnect());
             return View();
         }
 
