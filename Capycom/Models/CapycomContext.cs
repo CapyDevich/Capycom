@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using Capycom.Models;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 
 namespace Capycom;
 
@@ -70,6 +68,9 @@ public partial class CapycomContext : DbContext
             entity.Property(e => e.CpcmCommentId)
                 .ValueGeneratedNever()
                 .HasColumnName("CPCM_CommentID");
+            entity.Property(e => e.CpcmCommentCreationDate)
+                .HasColumnType("datetime")
+                .HasColumnName("CPCM_CommentCreationDate");
             entity.Property(e => e.CpcmCommentFather).HasColumnName("CPCM_CommentFather");
             entity.Property(e => e.CpcmCommentText).HasColumnName("CPCM_CommentText");
             entity.Property(e => e.CpcmPostId).HasColumnName("CPCM_PostID");
