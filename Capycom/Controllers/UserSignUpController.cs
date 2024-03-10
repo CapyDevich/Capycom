@@ -124,8 +124,8 @@ namespace Capycom.Controllers
             {
                 return NotFound();
             }
-            var cpcmUser = await _context.CpcmUsers.Include(c => c.CpcmUserRoleNavigation).FirstOrDefaultAsync(s => s.CpcmUserId == id);
-
+            //var cpcmUser = await _context.CpcmUsers.Include(c => c.CpcmUserRoleNavigation).FirstOrDefaultAsync(s => s.CpcmUserId == id);
+            var cpcmUser = await _context.CpcmUsers.FirstOrDefaultAsync(s => s.CpcmUserId == id);
 
             if (await TryUpdateModelAsync<CpcmUser>(
                 cpcmUser,
