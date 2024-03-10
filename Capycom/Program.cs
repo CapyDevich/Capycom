@@ -1,3 +1,6 @@
+using Microsoft.EntityFrameworkCore;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
+
 namespace Capycom
 {
     public class Program
@@ -5,6 +8,12 @@ namespace Capycom
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
+
+            string connection = builder.Configuration.GetConnectionString("OurDB");
+
+            //Добавляем DBC
+            builder.Services.AddDbContext<CapycomContext>(options => options.UseSqlServer(connection));
+
 
             // Add services to the container.
             builder.Services.AddControllersWithViews();
