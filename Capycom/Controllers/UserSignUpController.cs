@@ -73,7 +73,7 @@ namespace Capycom.Controllers
 
             ModelState.Clear();
             TryValidateModel(cpcmUser, nameof(CpcmUser));
-            ModelState.Remove("CpcmUserRoleNavigation"); // До того, как всё сохранено в бд мы не может обратиться к этому полю т.е. не задаётся экземпляр этого объекта за ненадобностью в этом месте.. Потом сможем, т.к. Включена Lazy Loading.
+            ModelState.Remove("CpcmUser.CpcmUserRoleNavigation"); // До того, как всё сохранено в бд мы не может обратиться к этому полю т.е. не задаётся экземпляр этого объекта за ненадобностью в этом месте.. Потом сможем, т.к. Включена Lazy Loading.
 
 
             if (ModelState.IsValid)
@@ -97,8 +97,9 @@ namespace Capycom.Controllers
                 return NotFound();
             }
 
+            //var cpcmUser = (await _context.CpcmUsers.Include("CpcmUserRoleNavigation").ToListAsync()).FirstOrDefault();
+            //var a = cpcmUser.CpcmUserRoleNavigation.CpcmRoleName;
             var cpcmUser = await _context.CpcmUsers.FindAsync(id);
-            var a = cpcmUser.CpcmUserRoleNavigation.CpcmRoleName;
             if (cpcmUser == null)
             {
                 return NotFound();
@@ -122,8 +123,13 @@ namespace Capycom.Controllers
                 return NotFound();
             }
 
+            ModelState.Clear();
+            TryValidateModel(cpcmUser, nameof(CpcmUser));
+            ModelState.Remove("CpcmUser.CpcmUserRoleNavigation");
+            //ModelState.Remove("CpcmUser.CpcmUserPwdHash");
             if (ModelState.IsValid)
             {
+
                 try
                 {
                     _context.Update(cpcmUser);
