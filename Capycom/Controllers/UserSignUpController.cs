@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Capycom;
+using System.Security.Cryptography;
 
 namespace Capycom.Controllers
 {
@@ -67,6 +68,7 @@ namespace Capycom.Controllers
             if (ModelState.IsValid)
             {
                 cpcmUser.CpcmUserId = Guid.NewGuid();
+                cpcmUser.CpcmUserPwdHash = SHA256.HashData(cpcmUser.CpcmUserPwdHash);
                 _context.Add(cpcmUser);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
