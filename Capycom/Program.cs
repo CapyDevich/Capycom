@@ -10,8 +10,14 @@ namespace Capycom
             var builder = WebApplication.CreateBuilder(args);
 
             string connection = builder.Configuration.GetConnectionString("OurDB");
+            builder.Configuration.AddJsonFile("privateData.json");
+            if (connection==String.Empty)
+            {
+                connection = builder.Configuration.GetSection("Test1")["OurDB"]; 
+            }
 
-            //Добавляем DBC
+
+            //Добавляем DB как встривание зависимости. 
             builder.Services.AddDbContext<CapycomContext>(options => options.UseSqlServer(connection));
 
 
