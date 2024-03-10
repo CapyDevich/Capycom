@@ -15,6 +15,8 @@ public partial class CpcmComment
 
     public Guid? CpcmCommentFather { get; set; }
 
+    public DateTime CpcmCommentCreationDate { get; set; }
+
     public virtual CpcmComment? CpcmCommentFatherNavigation { get; set; }
 
     public virtual ICollection<CpcmImage> CpcmImages { get; set; } = new List<CpcmImage>();
