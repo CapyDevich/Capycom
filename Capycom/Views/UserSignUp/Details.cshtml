@@ -1,0 +1,132 @@
+﻿@model Capycom.CpcmUser
+
+@{
+    ViewData["Title"] = "Details";
+}
+
+<h1>Details</h1>
+
+<div>
+    <h4>CpcmUser</h4>
+    <hr />
+    <dl class="row">
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.CpcmUserEmail)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.CpcmUserEmail)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.CpcmUserTelNum)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.CpcmUserTelNum)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.CpcmUserPwdHash)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.CpcmUserPwdHash)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.CpcmUserSalt)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.CpcmUserSalt)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.CpcmUserAbout)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.CpcmUserAbout)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.CpcmUserSite)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.CpcmUserSite)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.CpcmUserBooks)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.CpcmUserBooks)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.CpcmUserFilms)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.CpcmUserFilms)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.CpcmUserMusics)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.CpcmUserMusics)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.CpcmUserImagePath)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.CpcmUserImagePath)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.CpcmUserCoverPath)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.CpcmUserCoverPath)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.CpcmUserNickName)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.CpcmUserNickName)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.CpcmUserFirstName)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.CpcmUserFirstName)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.CpcmUserSecondName)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.CpcmUserSecondName)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.CpcmUserAdditionalName)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.CpcmUserAdditionalName)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.CpcmUserCityNavigation)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.CpcmUserCityNavigation.CpcmCityId)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.CpcmUserRoleNavigation)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.CpcmUserRoleNavigation.CpcmRoleId)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.CpcmUserSchoolNavigation)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.CpcmUserSchoolNavigation.CpcmSchooldId)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.CpcmUserUniversityNavigation)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.CpcmUserUniversityNavigation.CpcmUniversityId)
+        </dd>
+    </dl>
+</div>
+<div>
+    <a asp-action="Edit" asp-route-id="@Model?.CpcmUserId">Edit</a> |
+    <a asp-action="Index">Back to List</a>
+</div>

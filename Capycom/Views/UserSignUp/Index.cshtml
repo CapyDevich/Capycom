@@ -1,0 +1,143 @@
+﻿@model IEnumerable<Capycom.CpcmUser>
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<h1>Index</h1>
+
+<p>
+    <a asp-action="Create">Create New</a>
+</p>
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.CpcmUserEmail)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.CpcmUserTelNum)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.CpcmUserPwdHash)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.CpcmUserSalt)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.CpcmUserAbout)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.CpcmUserSite)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.CpcmUserBooks)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.CpcmUserFilms)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.CpcmUserMusics)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.CpcmUserImagePath)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.CpcmUserCoverPath)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.CpcmUserNickName)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.CpcmUserFirstName)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.CpcmUserSecondName)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.CpcmUserAdditionalName)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.CpcmUserCityNavigation)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.CpcmUserRoleNavigation)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.CpcmUserSchoolNavigation)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.CpcmUserUniversityNavigation)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model) {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.CpcmUserEmail)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.CpcmUserTelNum)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.CpcmUserPwdHash)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.CpcmUserSalt)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.CpcmUserAbout)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.CpcmUserSite)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.CpcmUserBooks)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.CpcmUserFilms)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.CpcmUserMusics)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.CpcmUserImagePath)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.CpcmUserCoverPath)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.CpcmUserNickName)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.CpcmUserFirstName)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.CpcmUserSecondName)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.CpcmUserAdditionalName)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.CpcmUserCityNavigation.CpcmCityId)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.CpcmUserRoleNavigation.CpcmRoleId)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.CpcmUserSchoolNavigation.CpcmSchooldId)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.CpcmUserUniversityNavigation.CpcmUniversityId)
+            </td>
+            <td>
+                <a asp-action="Edit" asp-route-id="@item.CpcmUserId">Edit</a> |
+                <a asp-action="Details" asp-route-id="@item.CpcmUserId">Details</a> |
+                <a asp-action="Delete" asp-route-id="@item.CpcmUserId">Delete</a>
+            </td>
+        </tr>
+}
+    </tbody>
+</table>
