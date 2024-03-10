@@ -1,0 +1,106 @@
+﻿@{
+    ViewData["Title"] = "Регистрация";
+}
+<div class="container">
+  <h1 class="text-center mt-5">@ViewData["Title"]</h1>  
+  <form class="col-md-6 mx-auto">
+    <div class="row mb-3">
+      <div class="col">
+        <label for="firstName" class="form-label">Имя</label>
+        <input type="text" class="form-control" id="firstName" required>
+      </div>
+      <div class="col">
+        <label for="lastName" class="form-label">Фамилия</label>
+        <input type="text" class="form-control" id="lastName" required>
+      </div>
+      <div class="col">
+        <label for="middleName" class="form-label">Отчество</label>
+        <input type="text" class="form-control" id="middleName">
+      </div>
+    </div>
+        <label for="validationCustomUsername" class="form-label">Псевдоним</label>
+    <div class="input-group">
+      <span class="input-group-text" id="inputGroupPrepend">@@</span>
+      <input type="text" class="form-control" id="validationCustomUsername" aria-describedby="inputGroupPrepend" required>
+      <div class="invalid-feedback">
+        Выберите другой псевдоним.
+      </div>
+    </div>
+    <div class="mb-3">
+        <label for="email" class="form-label">Электронная почта</label>
+        <input type="email" class="form-control" id="email" required>
+    </div>
+    <div class="mb-3">
+        <label for="phone" class="form-label">Номер телефона</label>
+        <input type="tel" class="form-control" id="phone" pattern="\d" title="Номер телефона должен содержать только цифры и специальные символы" required>
+    </div>
+    <div class="mb-3">
+      <label for="dob" class="form-label">Дата рождения</label>
+      <input type="date" class="form-control" id="dob" required>
+    </div>
+    <div class="mb-3">
+        <label for="password" class="form-label">Пароль</label>
+        <input type="password" class="form-control" id="password" required>
+    </div>
+    <div class="mb-3">
+        <label for="confirmPassword" class="form-label">Подтвердите пароль</label>
+        <input type="password" class="form-control" id="confirmPassword" required>
+    </div>
+    <h4 class="mb-2">Дополнительные сведения</h4>
+    <div class="mb-3">
+        <label for="formFile" class="form-label">Иконка профиля</label>
+        <input class="form-control" type="file" id="formFile">
+    </div>
+    <div class="col mb-3">
+        <label for="userAbout" class="form-label">О себе</label>
+        <textarea type="text" class="form-control" id="userAbout" rows="3"></textarea>
+    </div>
+    <div class="mb-3">
+      <label for="country" class="form-label">Страна</label>
+      <select class="form-select" id="country">
+        <option value="" selected disabled>Выберите страну...</option>
+        <option>Российская Федерация</option>
+      </select>
+    </div>
+    <div class="mb-3">
+      <label for="city" class="form-label">Город</label>
+      <select class="form-select" id="city">
+        <option value="" selected disabled>Выберите город...</option>
+        <option>Хабаровск</option>
+        <option>Москва</option>
+      </select>
+    </div>
+    <div class="mb-3">
+      <label for="university" class="form-label">Университет</label>
+      <select class="form-select" id="university">
+        <option value="" selected disabled>Выберите университет...</option>
+        <option>ДВГУПС</option>
+        <option>ТОГУ</option>
+      </select>
+    </div>
+    <div class="mb-3">
+      <label for="school" class="form-label">Школа</label>
+      <select class="form-select" id="school">
+        <option value="" selected disabled>Выберите школу...</option>
+        <option>Школа №12</option>
+      </select>
+    </div>
+    <div class="col mb-3">
+        <label for="site" class="form-label">Сайт</label>
+        <input type="text" class="form-control" id="site">
+    </div>
+    <div class="col mb-3">
+        <label for="books" class="form-label">Книги</label>
+        <input type="text" class="form-control" id="books">
+    </div>
+    <div class="col mb-3">
+        <label for="films" class="form-label">Фильмы</label>
+        <input type="text" class="form-control" id="films">
+    </div>
+    <div class="col mb-3">
+        <label for="music" class="form-label">Музыка</label>
+        <input type="text" class="form-control" id="music">
+    </div>
+    <button type="submit" class="btn btn-primary">Зарегистрироваться</button>
+  </form>
+</div>
