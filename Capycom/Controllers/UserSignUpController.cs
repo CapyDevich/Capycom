@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Capycom;
 using System.Security.Cryptography;
+using System.Text;
 
 namespace Capycom.Controllers
 {
@@ -65,10 +66,20 @@ namespace Capycom.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("CpcmUserId,CpcmUserEmail,CpcmUserTelNum,CpcmUserPwdHash,CpcmUserSalt,CpcmUserAbout,CpcmUserCity,CpcmUserSite,CpcmUserBooks,CpcmUserFilms,CpcmUserMusics,CpcmUserSchool,CpcmUserUniversity,CpcmUserImagePath,CpcmUserCoverPath,CpcmUserNickName,CpcmUserFirstName,CpcmUserSecondName,CpcmUserAdditionalName,CpcmUserRole")] CpcmUser cpcmUser)
         {
+            cpcmUser.CpcmUserPwdHash = SHA256.HashData(GetSha256Hash(Request.Form["CpcmUserPwdHash"]));
+            cpcmUser.CpcmUserId = Guid.NewGuid();
+            cpcmUser.CpcmUserSalt = RandomString(10);
+            cpcmUser.CpcmUserRole = 0;
+
+            ModelState.Clear();
+            TryValidateModel(cpcmUser, nameof(CpcmUser));
+
+
             if (ModelState.IsValid)
             {
-                cpcmUser.CpcmUserId = Guid.NewGuid();
-                cpcmUser.CpcmUserPwdHash = SHA256.HashData(cpcmUser.CpcmUserPwdHash);
+               
+
+
                 _context.Add(cpcmUser);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
@@ -89,6 +100,7 @@ namespace Capycom.Controllers
             }
 
             var cpcmUser = await _context.CpcmUsers.FindAsync(id);
+            //var cpcmUser = await _context.CpcmUsers.Include("CpcmRole")
             if (cpcmUser == null)
             {
                 return NotFound();
@@ -179,6 +191,27 @@ namespace Capycom.Controllers
         private bool CpcmUserExists(Guid id)
         {
             return _context.CpcmUsers.Any(e => e.CpcmUserId == id);
+        }
+        private static byte[] GetSha256Hash(string stringToSHA)
+        {
+            if(stringToSHA == null || stringToSHA == String.Empty)
+            {
+                throw new ArgumentException("Строка была пустой или null");
+            }
+
+            byte[] returnValue;
+            using (var shaGenerator = SHA256.Create()) 
+            {
+                returnValue =  shaGenerator.ComputeHash(Encoding.Unicode.GetBytes(stringToSHA));
+            }
+            return returnValue;
+        }
+        private static string RandomString(int length)
+        {
+            Random rnd = new Random();
+            const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+            return new string(Enumerable.Repeat(chars, length)
+                .Select(s => s[rnd.Next(s.Length)]).ToArray());
         }
     }
 }
