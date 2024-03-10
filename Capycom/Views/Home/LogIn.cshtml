@@ -1,0 +1,20 @@
+﻿@{
+    ViewData["Title"] = "Вход";
+}
+<div class="container">
+  <h1 class="text-center mt-5">@ViewData["Title"]</h1>  
+  <form class="col-md-6 mx-auto">
+    <label for="login" class="form-label">Логин (почта или телефон)</label>
+    <div class="input-group">
+      <input type="text" class="form-control" id="login" required>
+      <div class="invalid-feedback">
+        Неверный логин (почта или телефон)
+      </div>
+    </div>
+    <div class="mb-3">
+        <label for="password" class="form-label">Пароль</label>
+        <input type="password" class="form-control" id="password" required>
+    </div>
+    <button type="submit" class="btn btn-primary">Войти</button>
+  </form>
+</div>
