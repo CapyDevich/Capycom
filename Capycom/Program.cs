@@ -20,7 +20,7 @@ namespace Capycom
             //ƒобавл€ем DB как встривание зависимости. 
             builder.Services.AddDbContext<CapycomContext>(options => options.UseSqlServer(connection));
 
-
+            
             // Add services to the container.
             builder.Services.AddControllersWithViews();
 
