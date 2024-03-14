@@ -8,16 +8,20 @@ using Microsoft.EntityFrameworkCore;
 using Capycom;
 using System.Security.Cryptography;
 using System.Text;
+using Microsoft.Extensions.Options;
+
 
 namespace Capycom.Controllers
 {
     public class UserSignUpController : Controller
     {
         private readonly CapycomContext _context;
+        private readonly MyConfig _config;
 
-        public UserSignUpController(CapycomContext context)
+        public UserSignUpController(CapycomContext context, IOptions<MyConfig> config)
         {
             _context = context;
+            _config = config.Value;
         }
 
         // GET: UserSignUp
@@ -27,27 +31,27 @@ namespace Capycom.Controllers
             return View(await capycomContext.ToListAsync());
         }
 
-        // GET: UserSignUp/Details/5
-        public async Task<IActionResult> Details(Guid? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
+        //// GET: UserSignUp/Details/5
+        //public async Task<IActionResult> Details(Guid? id)
+        //{
+        //    if (id == null)
+        //    {
+        //        return NotFound();
+        //    }
 
-            var cpcmUser = await _context.CpcmUsers
-                .Include(c => c.CpcmUserCityNavigation)
-                .Include(c => c.CpcmUserRoleNavigation)
-                .Include(c => c.CpcmUserSchoolNavigation)
-                .Include(c => c.CpcmUserUniversityNavigation)
-                .FirstOrDefaultAsync(m => m.CpcmUserId == id);
-            if (cpcmUser == null)
-            {
-                return NotFound();
-            }
+        //    var cpcmUser = await _context.CpcmUsers
+        //        .Include(c => c.CpcmUserCityNavigation)
+        //        .Include(c => c.CpcmUserRoleNavigation)
+        //        .Include(c => c.CpcmUserSchoolNavigation)
+        //        .Include(c => c.CpcmUserUniversityNavigation)
+        //        .FirstOrDefaultAsync(m => m.CpcmUserId == id);
+        //    if (cpcmUser == null)
+        //    {
+        //        return NotFound();
+        //    }
 
-            return View(cpcmUser);
-        }
+        //    return View(cpcmUser);
+        //}
 
         // GET: UserSignUp/Create
         public IActionResult Create()
@@ -64,11 +68,12 @@ namespace Capycom.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("CpcmUserId,CpcmUserEmail,CpcmUserTelNum,CpcmUserPwdHash,CpcmUserSalt,CpcmUserAbout,CpcmUserCity,CpcmUserSite,CpcmUserBooks,CpcmUserFilms,CpcmUserMusics,CpcmUserSchool,CpcmUserUniversity,CpcmUserImagePath,CpcmUserCoverPath,CpcmUserNickName,CpcmUserFirstName,CpcmUserSecondName,CpcmUserAdditionalName,CpcmUserRole")] CpcmUser cpcmUser)
+        public async Task<IActionResult> Create(CpcmUser cpcmUser)
         {
-            cpcmUser.CpcmUserPwdHash = SHA256.HashData(GetSha256Hash(Request.Form["CpcmUserPwdHash"]));
+            string sol = RandomString(10);
+            cpcmUser.CpcmUserPwdHash = GetSha256Hash(Request.Form["CpcmUserPwdHash"],sol,_config.ServerSol);
             cpcmUser.CpcmUserId = Guid.NewGuid();
-            cpcmUser.CpcmUserSalt = RandomString(10);
+            cpcmUser.CpcmUserSalt = sol;
             cpcmUser.CpcmUserRole = 0;
 
             ModelState.Clear();
@@ -91,170 +96,167 @@ namespace Capycom.Controllers
 
         // GET: UserSignUp/Edit/5
 
-        public async Task<IActionResult> Edit(Guid? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
+        //public async Task<IActionResult> Edit(Guid? id)
+        //{
+        //    if (id == null)
+        //    {
+        //        return NotFound();
+        //    }
 
-            //var cpcmUser = (await _context.CpcmUsers.Include("CpcmUserRoleNavigation").ToListAsync()).FirstOrDefault();
-            //var a = cpcmUser.CpcmUserRoleNavigation.CpcmRoleName;
-            var cpcmUser = await _context.CpcmUsers.FindAsync(id);
-            if (cpcmUser == null)
-            {
-                return NotFound();
-            }
-            ViewData["CpcmUserCity"] = new SelectList(_context.CpcmCities, "CpcmCityId", "CpcmCityId", cpcmUser.CpcmUserCity);
-            ViewData["CpcmUserRole"] = new SelectList(_context.CpcmRoles, "CpcmRoleId", "CpcmRoleId", cpcmUser.CpcmUserRole);
-            ViewData["CpcmUserSchool"] = new SelectList(_context.CpcmSchools, "CpcmSchooldId", "CpcmSchooldId", cpcmUser.CpcmUserSchool);
-            ViewData["CpcmUserUniversity"] = new SelectList(_context.CpcmUniversities, "CpcmUniversityId", "CpcmUniversityId", cpcmUser.CpcmUserUniversity);
-            return View(cpcmUser);
-        }
+        //    //var cpcmUser = (await _context.CpcmUsers.Include("CpcmUserRoleNavigation").ToListAsync()).FirstOrDefault();
+        //    //var a = cpcmUser.CpcmUserRoleNavigation.CpcmRoleName;
+        //    var cpcmUser = await _context.CpcmUsers.FindAsync(id);
+        //    if (cpcmUser == null)
+        //    {
+        //        return NotFound();
+        //    }
+        //    ViewData["CpcmUserCity"] = new SelectList(_context.CpcmCities, "CpcmCityId", "CpcmCityId", cpcmUser.CpcmUserCity);
+        //    ViewData["CpcmUserRole"] = new SelectList(_context.CpcmRoles, "CpcmRoleId", "CpcmRoleId", cpcmUser.CpcmUserRole);
+        //    ViewData["CpcmUserSchool"] = new SelectList(_context.CpcmSchools, "CpcmSchooldId", "CpcmSchooldId", cpcmUser.CpcmUserSchool);
+        //    ViewData["CpcmUserUniversity"] = new SelectList(_context.CpcmUniversities, "CpcmUniversityId", "CpcmUniversityId", cpcmUser.CpcmUserUniversity);
+        //    return View(cpcmUser);
+        //}
 
         // POST: UserSignUp/Edit/5
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-        [HttpPost]
-        [ValidateAntiForgeryToken]
+        //[HttpPost]
+        //[ValidateAntiForgeryToken]
 
-        public async Task<IActionResult> Edit(Guid id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-            //var cpcmUser = await _context.CpcmUsers.Include(c => c.CpcmUserRoleNavigation).FirstOrDefaultAsync(s => s.CpcmUserId == id);
-            var cpcmUser = await _context.CpcmUsers.FirstOrDefaultAsync(s => s.CpcmUserId == id);
+        //public async Task<IActionResult> Edit(Guid id)
+        //{
+        //    if (id == null)
+        //    {
+        //        return NotFound();
+        //    }
+        //    //var cpcmUser = await _context.CpcmUsers.Include(c => c.CpcmUserRoleNavigation).FirstOrDefaultAsync(s => s.CpcmUserId == id);
+        //    var cpcmUser = await _context.CpcmUsers.FirstOrDefaultAsync(s => s.CpcmUserId == id);
 
-            if (await TryUpdateModelAsync<CpcmUser>(
-                cpcmUser,
-                "",
-                s => s.CpcmUserEmail,
-                s => s.CpcmUserTelNum,
-                s => s.CpcmUserAbout,
-                s => s.CpcmUserCity,
-                s => s.CpcmUserSite,
-                s => s.CpcmUserBooks,
-                s => s.CpcmUserFilms,
-                s => s.CpcmUserMusics,
-                s => s.CpcmUserSchool,
-                s => s.CpcmUserUniversity,
-                s => s.CpcmUserNickName,
-                s => s.CpcmUserFirstName,
-                s => s.CpcmUserSecondName,
-                s => s.CpcmUserAdditionalName))//Нет роли хэша пароля соли и id.
-            {
-                try
-                {
-                    await _context.SaveChangesAsync();
-                    return RedirectToAction(nameof(Index));
-                }
-                catch (DbUpdateException /* ex */)
-                {
-                    //Log the error (uncomment ex variable name and write a log.)
-                    ModelState.AddModelError("", "Unable to save changes. " +
-                        "Try again, and if the problem persists, " +
-                        "see your system administrator.");
-                }
+        //    if (await TryUpdateModelAsync<CpcmUser>(
+        //        cpcmUser,
+        //        "",
+        //        s => s.CpcmUserEmail,
+        //        s => s.CpcmUserTelNum,
+        //        s => s.CpcmUserAbout,
+        //        s => s.CpcmUserCity,
+        //        s => s.CpcmUserSite,
+        //        s => s.CpcmUserBooks,
+        //        s => s.CpcmUserFilms,
+        //        s => s.CpcmUserMusics,
+        //        s => s.CpcmUserSchool,
+        //        s => s.CpcmUserUniversity,
+        //        s => s.CpcmUserNickName,
+        //        s => s.CpcmUserFirstName,
+        //        s => s.CpcmUserSecondName,
+        //        s => s.CpcmUserAdditionalName))//Нет роли хэша пароля соли и id.
+        //    {
+        //        try
+        //        {
+        //            await _context.SaveChangesAsync();
+        //            return RedirectToAction(nameof(Index));
+        //        }
+        //        catch (DbUpdateException /* ex */)
+        //        {
+        //            //Log the error (uncomment ex variable name and write a log.)
+        //            ModelState.AddModelError("", "Unable to save changes. " +
+        //                "Try again, and if the problem persists, " +
+        //                "see your system administrator.");
+        //        }
 
 
-            }
-            foreach (var entry in ModelState)
-            {
-                if (entry.Value.Errors.Count > 0)
-                {
+        //    }
+        //    foreach (var entry in ModelState)
+        //    {
+        //        if (entry.Value.Errors.Count > 0)
+        //        {
                     
-                }
-            }
+        //        }
+        //    }
 
 
-            //    ModelState.Clear();
-            //TryValidateModel(cpcmUser, nameof(CpcmUser));
-            //ModelState.Remove("CpcmUser.CpcmUserRoleNavigation");
-            //ModelState.Remove("CpcmUser.CpcmUserPwdHash");
+        //    //    ModelState.Clear();
+        //    //TryValidateModel(cpcmUser, nameof(CpcmUser));
+        //    //ModelState.Remove("CpcmUser.CpcmUserRoleNavigation");
+        //    //ModelState.Remove("CpcmUser.CpcmUserPwdHash");
 
-            //if (ModelState.IsValid)
-            //{
+        //    //if (ModelState.IsValid)
+        //    //{
 
-            //    try
-            //    {
-            //        _context.Update(cpcmUser);
-            //        await _context.SaveChangesAsync();
-            //    }
-            //    catch (DbUpdateConcurrencyException)
-            //    {
-            //        if (!CpcmUserExists(cpcmUser.CpcmUserId))
-            //        {
-            //            return NotFound();
-            //        }
-            //        else
-            //        {
-            //            throw;
-            //        }
-            //    }
-            //    return RedirectToAction(nameof(Index));
-            //}
-            ViewData["CpcmUserCity"] = new SelectList(_context.CpcmCities, "CpcmCityId", "CpcmCityId", cpcmUser.CpcmUserCity);
-            ViewData["CpcmUserRole"] = new SelectList(_context.CpcmRoles, "CpcmRoleId", "CpcmRoleId", cpcmUser.CpcmUserRole);
-            ViewData["CpcmUserSchool"] = new SelectList(_context.CpcmSchools, "CpcmSchooldId", "CpcmSchooldId", cpcmUser.CpcmUserSchool);
-            ViewData["CpcmUserUniversity"] = new SelectList(_context.CpcmUniversities, "CpcmUniversityId", "CpcmUniversityId", cpcmUser.CpcmUserUniversity);
-            return View(cpcmUser);
-        }
+        //    //    try
+        //    //    {
+        //    //        _context.Update(cpcmUser);
+        //    //        await _context.SaveChangesAsync();
+        //    //    }
+        //    //    catch (DbUpdateConcurrencyException)
+        //    //    {
+        //    //        if (!CpcmUserExists(cpcmUser.CpcmUserId))
+        //    //        {
+        //    //            return NotFound();
+        //    //        }
+        //    //        else
+        //    //        {
+        //    //            throw;
+        //    //        }
+        //    //    }
+        //    //    return RedirectToAction(nameof(Index));
+        //    //}
+        //    ViewData["CpcmUserCity"] = new SelectList(_context.CpcmCities, "CpcmCityId", "CpcmCityId", cpcmUser.CpcmUserCity);
+        //    ViewData["CpcmUserRole"] = new SelectList(_context.CpcmRoles, "CpcmRoleId", "CpcmRoleId", cpcmUser.CpcmUserRole);
+        //    ViewData["CpcmUserSchool"] = new SelectList(_context.CpcmSchools, "CpcmSchooldId", "CpcmSchooldId", cpcmUser.CpcmUserSchool);
+        //    ViewData["CpcmUserUniversity"] = new SelectList(_context.CpcmUniversities, "CpcmUniversityId", "CpcmUniversityId", cpcmUser.CpcmUserUniversity);
+        //    return View(cpcmUser);
+        //}
 
-        // GET: UserSignUp/Delete/5
-        public async Task<IActionResult> Delete(Guid? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
+        //// GET: UserSignUp/Delete/5
+        //public async Task<IActionResult> Delete(Guid? id)
+        //{
+        //    if (id == null)
+        //    {
+        //        return NotFound();
+        //    }
 
-            var cpcmUser = await _context.CpcmUsers
-                .Include(c => c.CpcmUserCityNavigation)
-                .Include(c => c.CpcmUserRoleNavigation)
-                .Include(c => c.CpcmUserSchoolNavigation)
-                .Include(c => c.CpcmUserUniversityNavigation)
-                .FirstOrDefaultAsync(m => m.CpcmUserId == id);
-            if (cpcmUser == null)
-            {
-                return NotFound();
-            }
+        //    var cpcmUser = await _context.CpcmUsers
+        //        .Include(c => c.CpcmUserCityNavigation)
+        //        .Include(c => c.CpcmUserRoleNavigation)
+        //        .Include(c => c.CpcmUserSchoolNavigation)
+        //        .Include(c => c.CpcmUserUniversityNavigation)
+        //        .FirstOrDefaultAsync(m => m.CpcmUserId == id);
+        //    if (cpcmUser == null)
+        //    {
+        //        return NotFound();
+        //    }
 
-            return View(cpcmUser);
-        }
+        //    return View(cpcmUser);
+        //}
 
-        // POST: UserSignUp/Delete/5
-        [HttpPost, ActionName("Delete")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(Guid id)
-        {
-            var cpcmUser = await _context.CpcmUsers.FindAsync(id);
-            if (cpcmUser != null)
-            {
-                _context.CpcmUsers.Remove(cpcmUser);
-            }
+        //// POST: UserSignUp/Delete/5
+        //[HttpPost, ActionName("Delete")]
+        //[ValidateAntiForgeryToken]
+        //public async Task<IActionResult> DeleteConfirmed(Guid id)
+        //{
+        //    var cpcmUser = await _context.CpcmUsers.FindAsync(id);
+        //    if (cpcmUser != null)
+        //    {
+        //        _context.CpcmUsers.Remove(cpcmUser);
+        //    }
 
-            await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
-        }
+        //    await _context.SaveChangesAsync();
+        //    return RedirectToAction(nameof(Index));
+        //}
 
         private bool CpcmUserExists(Guid id)
         {
             return _context.CpcmUsers.Any(e => e.CpcmUserId == id);
         }
-        private static byte[] GetSha256Hash(string stringToSHA)
+        private static byte[] GetSha256Hash(string stringToSHA, string sol, string serversol)
         {
-            if(stringToSHA == null || stringToSHA == String.Empty)
+            if (stringToSHA == null || stringToSHA == String.Empty)
             {
                 throw new ArgumentException("Строка была пустой или null");
             }
 
             byte[] returnValue;
-            using (var shaGenerator = SHA256.Create()) 
-            {
-                returnValue =  shaGenerator.ComputeHash(Encoding.Unicode.GetBytes(stringToSHA));
-            }
+            returnValue = SHA256.HashData(Encoding.Unicode.GetBytes(stringToSHA+sol+serversol));
             return returnValue;
         }
         private static string RandomString(int length)
