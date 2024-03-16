@@ -9,6 +9,7 @@ using Capycom;
 using System.Security.Cryptography;
 using System.Text;
 using Microsoft.Extensions.Options;
+using Capycom.Models;
 
 
 namespace Capycom.Controllers
@@ -31,29 +32,6 @@ namespace Capycom.Controllers
             return View(await capycomContext.ToListAsync());
         }
 
-        //// GET: UserSignUp/Details/5
-        //public async Task<IActionResult> Details(Guid? id)
-        //{
-        //    if (id == null)
-        //    {
-        //        return NotFound();
-        //    }
-
-        //    var cpcmUser = await _context.CpcmUsers
-        //        .Include(c => c.CpcmUserCityNavigation)
-        //        .Include(c => c.CpcmUserRoleNavigation)
-        //        .Include(c => c.CpcmUserSchoolNavigation)
-        //        .Include(c => c.CpcmUserUniversityNavigation)
-        //        .FirstOrDefaultAsync(m => m.CpcmUserId == id);
-        //    if (cpcmUser == null)
-        //    {
-        //        return NotFound();
-        //    }
-
-        //    return View(cpcmUser);
-        //}
-
-        // GET: UserSignUp/Create
         public IActionResult Create()
         {
             ViewData["CpcmUserCity"] = new SelectList(_context.CpcmCities, "CpcmCityId", "CpcmCityId");
@@ -68,181 +46,69 @@ namespace Capycom.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(CpcmUser cpcmUser)
-        {
-            string sol = RandomString(10);
-            cpcmUser.CpcmUserPwdHash = GetSha256Hash(Request.Form["CpcmUserPwdHash"],sol,_config.ServerSol);
-            cpcmUser.CpcmUserId = Guid.NewGuid();
-            cpcmUser.CpcmUserSalt = sol;
-            cpcmUser.CpcmUserRole = 0;
-
-            ModelState.Clear();
-            TryValidateModel(cpcmUser, nameof(CpcmUser));
-            ModelState.Remove("CpcmUser.CpcmUserRoleNavigation"); // До того, как всё сохранено в бд мы не может обратиться к этому полю т.е. не задаётся экземпляр этого объекта за ненадобностью в этом месте.. Потом сможем, т.к. Включена Lazy Loading.
-
+        public async Task<IActionResult> Create(UserSignUpModel cpcmSignUser)
+        {            
 
             if (ModelState.IsValid)
             {
+                CpcmUser cpcmUser = new();
+                cpcmUser.CpcmUserId = Guid.NewGuid();
+                cpcmUser.CpcmUserEmail = cpcmSignUser.CpcmUserEmail;
+                cpcmUser.CpcmUserTelNum = cpcmSignUser.CpcmUserTelNum;
+                cpcmUser.CpcmUserSalt = GetRandomString(10);
+                cpcmUser.CpcmUserPwdHash = GetSha256Hash(cpcmSignUser.CpcmUserPwd,cpcmUser.CpcmUserSalt,_config.ServerSol);
+                cpcmUser.CpcmUserAbout = cpcmSignUser.CpcmUserAbout;
+                cpcmUser.CpcmUserCity = cpcmSignUser.CpcmUserCity;
+                cpcmUser.CpcmUserSite = cpcmSignUser.CpcmUserSite;
+                cpcmUser.CpcmUserBooks = cpcmSignUser.CpcmUserBooks;
+                cpcmUser.CpcmUserFilms = cpcmSignUser.CpcmUserFilms;
+                cpcmUser.CpcmUserMusics = cpcmSignUser.CpcmUserMusics;
+                cpcmUser.CpcmUserSchool = cpcmSignUser.CpcmUserSchool;
+                cpcmUser.CpcmUserUniversity = cpcmSignUser.CpcmUserUniversity;
+                cpcmUser.CpcmUserImagePath = cpcmSignUser.CpcmUserImagePath;
+                cpcmUser.CpcmUserCoverPath = cpcmSignUser.CpcmUserCoverPath;
+                cpcmUser.CpcmUserNickName = cpcmSignUser.CpcmUserNickName;
+                cpcmUser.CpcmUserFirstName = cpcmSignUser.CpcmUserFirstName;
+                cpcmUser.CpcmUserSecondName = cpcmSignUser.CpcmUserSecondName;
+                cpcmUser.CpcmUserAdditionalName = cpcmSignUser.CpcmUserAdditionalName;
+                cpcmUser.CpcmUserRole = UserSignUpModel.BaseUserRole; 
+
                 _context.Add(cpcmUser);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["CpcmUserCity"] = new SelectList(_context.CpcmCities, "CpcmCityId", "CpcmCityId", cpcmUser.CpcmUserCity);
-            ViewData["CpcmUserRole"] = new SelectList(_context.CpcmRoles, "CpcmRoleId", "CpcmRoleId", cpcmUser.CpcmUserRole);
-            ViewData["CpcmUserSchool"] = new SelectList(_context.CpcmSchools, "CpcmSchooldId", "CpcmSchooldId", cpcmUser.CpcmUserSchool);
-            ViewData["CpcmUserUniversity"] = new SelectList(_context.CpcmUniversities, "CpcmUniversityId", "CpcmUniversityId", cpcmUser.CpcmUserUniversity);
-            return View(cpcmUser);
+            ViewData["CpcmUserCity"] = new SelectList(_context.CpcmCities, "CpcmCityId", "CpcmCityName", cpcmSignUser.CpcmUserCity);
+            ViewData["CpcmUserSchool"] = new SelectList(_context.CpcmSchools, "CpcmSchooldId", "CpcmSchoolName", cpcmSignUser.CpcmUserSchool);
+            ViewData["CpcmUserUniversity"] = new SelectList(_context.CpcmUniversities, "CpcmUniversityId", "CpcmUniversityName", cpcmSignUser.CpcmUserUniversity);
+            return View(cpcmSignUser);
+            //return RedirectToAction("Index");
         }
 
-        // GET: UserSignUp/Edit/5
+        [HttpPost]
+        public async Task<IActionResult> CheckEmail(string CpcmUserEmail)
+        {
+            if (CpcmUserEmail.Contains("admin") || CpcmUserEmail.Contains("webmaster") || CpcmUserEmail.Contains("abuse"))
+            {
+                return Json(false);
+            }
+            return Json(!_context.CpcmUsers.Any(e => e.CpcmUserEmail == CpcmUserEmail));
+        }
 
-        //public async Task<IActionResult> Edit(Guid? id)
-        //{
-        //    if (id == null)
-        //    {
-        //        return NotFound();
-        //    }
+        [HttpPost]
+        public async Task<IActionResult> CheckNickName(string CpcmUserNickName)
+        {
+            if (CpcmUserNickName.Contains("admin") || CpcmUserNickName.Contains("webmaster") || CpcmUserNickName.Contains("abuse"))
+            {
+                return Json(false);
+            }
+            return Json(!_context.CpcmUsers.Any(e => e.CpcmUserNickName == CpcmUserNickName));
+        }
 
-        //    //var cpcmUser = (await _context.CpcmUsers.Include("CpcmUserRoleNavigation").ToListAsync()).FirstOrDefault();
-        //    //var a = cpcmUser.CpcmUserRoleNavigation.CpcmRoleName;
-        //    var cpcmUser = await _context.CpcmUsers.FindAsync(id);
-        //    if (cpcmUser == null)
-        //    {
-        //        return NotFound();
-        //    }
-        //    ViewData["CpcmUserCity"] = new SelectList(_context.CpcmCities, "CpcmCityId", "CpcmCityId", cpcmUser.CpcmUserCity);
-        //    ViewData["CpcmUserRole"] = new SelectList(_context.CpcmRoles, "CpcmRoleId", "CpcmRoleId", cpcmUser.CpcmUserRole);
-        //    ViewData["CpcmUserSchool"] = new SelectList(_context.CpcmSchools, "CpcmSchooldId", "CpcmSchooldId", cpcmUser.CpcmUserSchool);
-        //    ViewData["CpcmUserUniversity"] = new SelectList(_context.CpcmUniversities, "CpcmUniversityId", "CpcmUniversityId", cpcmUser.CpcmUserUniversity);
-        //    return View(cpcmUser);
-        //}
-
-        // POST: UserSignUp/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-        //[HttpPost]
-        //[ValidateAntiForgeryToken]
-
-        //public async Task<IActionResult> Edit(Guid id)
-        //{
-        //    if (id == null)
-        //    {
-        //        return NotFound();
-        //    }
-        //    //var cpcmUser = await _context.CpcmUsers.Include(c => c.CpcmUserRoleNavigation).FirstOrDefaultAsync(s => s.CpcmUserId == id);
-        //    var cpcmUser = await _context.CpcmUsers.FirstOrDefaultAsync(s => s.CpcmUserId == id);
-
-        //    if (await TryUpdateModelAsync<CpcmUser>(
-        //        cpcmUser,
-        //        "",
-        //        s => s.CpcmUserEmail,
-        //        s => s.CpcmUserTelNum,
-        //        s => s.CpcmUserAbout,
-        //        s => s.CpcmUserCity,
-        //        s => s.CpcmUserSite,
-        //        s => s.CpcmUserBooks,
-        //        s => s.CpcmUserFilms,
-        //        s => s.CpcmUserMusics,
-        //        s => s.CpcmUserSchool,
-        //        s => s.CpcmUserUniversity,
-        //        s => s.CpcmUserNickName,
-        //        s => s.CpcmUserFirstName,
-        //        s => s.CpcmUserSecondName,
-        //        s => s.CpcmUserAdditionalName))//Нет роли хэша пароля соли и id.
-        //    {
-        //        try
-        //        {
-        //            await _context.SaveChangesAsync();
-        //            return RedirectToAction(nameof(Index));
-        //        }
-        //        catch (DbUpdateException /* ex */)
-        //        {
-        //            //Log the error (uncomment ex variable name and write a log.)
-        //            ModelState.AddModelError("", "Unable to save changes. " +
-        //                "Try again, and if the problem persists, " +
-        //                "see your system administrator.");
-        //        }
-
-
-        //    }
-        //    foreach (var entry in ModelState)
-        //    {
-        //        if (entry.Value.Errors.Count > 0)
-        //        {
-                    
-        //        }
-        //    }
-
-
-        //    //    ModelState.Clear();
-        //    //TryValidateModel(cpcmUser, nameof(CpcmUser));
-        //    //ModelState.Remove("CpcmUser.CpcmUserRoleNavigation");
-        //    //ModelState.Remove("CpcmUser.CpcmUserPwdHash");
-
-        //    //if (ModelState.IsValid)
-        //    //{
-
-        //    //    try
-        //    //    {
-        //    //        _context.Update(cpcmUser);
-        //    //        await _context.SaveChangesAsync();
-        //    //    }
-        //    //    catch (DbUpdateConcurrencyException)
-        //    //    {
-        //    //        if (!CpcmUserExists(cpcmUser.CpcmUserId))
-        //    //        {
-        //    //            return NotFound();
-        //    //        }
-        //    //        else
-        //    //        {
-        //    //            throw;
-        //    //        }
-        //    //    }
-        //    //    return RedirectToAction(nameof(Index));
-        //    //}
-        //    ViewData["CpcmUserCity"] = new SelectList(_context.CpcmCities, "CpcmCityId", "CpcmCityId", cpcmUser.CpcmUserCity);
-        //    ViewData["CpcmUserRole"] = new SelectList(_context.CpcmRoles, "CpcmRoleId", "CpcmRoleId", cpcmUser.CpcmUserRole);
-        //    ViewData["CpcmUserSchool"] = new SelectList(_context.CpcmSchools, "CpcmSchooldId", "CpcmSchooldId", cpcmUser.CpcmUserSchool);
-        //    ViewData["CpcmUserUniversity"] = new SelectList(_context.CpcmUniversities, "CpcmUniversityId", "CpcmUniversityId", cpcmUser.CpcmUserUniversity);
-        //    return View(cpcmUser);
-        //}
-
-        //// GET: UserSignUp/Delete/5
-        //public async Task<IActionResult> Delete(Guid? id)
-        //{
-        //    if (id == null)
-        //    {
-        //        return NotFound();
-        //    }
-
-        //    var cpcmUser = await _context.CpcmUsers
-        //        .Include(c => c.CpcmUserCityNavigation)
-        //        .Include(c => c.CpcmUserRoleNavigation)
-        //        .Include(c => c.CpcmUserSchoolNavigation)
-        //        .Include(c => c.CpcmUserUniversityNavigation)
-        //        .FirstOrDefaultAsync(m => m.CpcmUserId == id);
-        //    if (cpcmUser == null)
-        //    {
-        //        return NotFound();
-        //    }
-
-        //    return View(cpcmUser);
-        //}
-
-        //// POST: UserSignUp/Delete/5
-        //[HttpPost, ActionName("Delete")]
-        //[ValidateAntiForgeryToken]
-        //public async Task<IActionResult> DeleteConfirmed(Guid id)
-        //{
-        //    var cpcmUser = await _context.CpcmUsers.FindAsync(id);
-        //    if (cpcmUser != null)
-        //    {
-        //        _context.CpcmUsers.Remove(cpcmUser);
-        //    }
-
-        //    await _context.SaveChangesAsync();
-        //    return RedirectToAction(nameof(Index));
-        //}
+        [HttpPost]
+        public async Task<IActionResult> CheckPhone(string CpcmUserTelNum)
+        {
+            return Json(!_context.CpcmUsers.Any(e => e.CpcmUserTelNum == CpcmUserTelNum));
+        }
 
         private bool CpcmUserExists(Guid id)
         {
@@ -259,7 +125,7 @@ namespace Capycom.Controllers
             returnValue = SHA256.HashData(Encoding.Unicode.GetBytes(stringToSHA+sol+serversol));
             return returnValue;
         }
-        private static string RandomString(int length)
+        private static string GetRandomString(int length)
         {
             Random rnd = new Random();
             const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
