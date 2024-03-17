@@ -1,16 +1,19 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
+using System;
 using System.Collections.Generic;
 
 namespace Capycom;
 
 public partial class CpcmUser
 {
+    
     public Guid CpcmUserId { get; set; }
 
     public string CpcmUserEmail { get; set; } = null!;
 
     public string CpcmUserTelNum { get; set; } = null!;
 
+    
     public byte[] CpcmUserPwdHash { get; set; } = null!;
 
     public string CpcmUserSalt { get; set; } = null!;
@@ -48,7 +51,7 @@ public partial class CpcmUser
     public virtual ICollection<CpcmGroupfollower> CpcmGroupfollowers { get; set; } = new List<CpcmGroupfollower>();
 
     public virtual CpcmCity? CpcmUserCityNavigation { get; set; }
-
+    [ValidateNever]
     public virtual CpcmRole CpcmUserRoleNavigation { get; set; } = null!;
 
     public virtual CpcmSchool? CpcmUserSchoolNavigation { get; set; }
