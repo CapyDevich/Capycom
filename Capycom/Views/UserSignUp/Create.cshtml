@@ -105,3 +105,18 @@
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
 }
+
+@* <script>
+    $("#addCityForm").submit(function (e) { // только лучше не на форму его весить а на клик по кнопку. Форму в форму нельзя пихать 
+        e.preventDefault();
+
+        var newCity = $("#newCity").val();
+
+        $.post('@Url.Action("AddCity", "Home")', { newCity: newCity }, function (data) {
+            if (data.success) {
+                $("#cities").append('<option>' + newCity + '</option>');
+                $("#newCity").val('');
+            }
+        });
+    });
+</script> *@
