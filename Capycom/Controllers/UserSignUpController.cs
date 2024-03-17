@@ -10,6 +10,7 @@ using System.Security.Cryptography;
 using System.Text;
 using Microsoft.Extensions.Options;
 using Capycom.Models;
+using Microsoft.AspNetCore.Authorization;
 
 
 namespace Capycom.Controllers
