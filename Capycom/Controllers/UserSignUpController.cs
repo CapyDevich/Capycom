@@ -28,6 +28,7 @@ namespace Capycom.Controllers
         // GET: UserSignUp
         public async Task<IActionResult> Index()
         {
+
             var capycomContext = _context.CpcmUsers.Include(c => c.CpcmUserCityNavigation).Include(c => c.CpcmUserRoleNavigation).Include(c => c.CpcmUserSchoolNavigation).Include(c => c.CpcmUserUniversityNavigation);
             return View(await capycomContext.ToListAsync());
         }
@@ -74,7 +75,16 @@ namespace Capycom.Controllers
                 cpcmUser.CpcmUserRole = UserSignUpModel.BaseUserRole; 
 
                 _context.Add(cpcmUser);
-                await _context.SaveChangesAsync();
+                try
+                {
+                    await _context.SaveChangesAsync();
+                }
+                catch (Exception ex)
+                {
+                    Response.StatusCode = 418;
+                    ViewData["Message"] = "Не удалось сохранить вас как нового пользователя. Возможно вы указали данные, которые не поддерживаются нами. Обратитесь в техническую поддержку";
+                    return View("Error418");
+                }
                 return RedirectToAction(nameof(Index));
             }
             ViewData["CpcmUserCity"] = new SelectList(_context.CpcmCities, "CpcmCityId", "CpcmCityName", cpcmSignUser.CpcmUserCity);
@@ -108,6 +118,55 @@ namespace Capycom.Controllers
         public async Task<IActionResult> CheckPhone(string CpcmUserTelNum)
         {
             return Json(!_context.CpcmUsers.Any(e => e.CpcmUserTelNum == CpcmUserTelNum));
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> AddCity(string newCity)
+        {
+            if (!string.IsNullOrEmpty(newCity) && !_context.CpcmCities.Any(e => e.CpcmCityName == newCity))
+            {
+                CpcmCity city = new();
+                city.CpcmCityId = Guid.NewGuid();
+                city.CpcmCityName = newCity;
+
+                _context.CpcmCities.Add(city);
+                await _context.SaveChangesAsync();
+                return Json(new { success = true });
+            }
+
+            return Json(new { success = false });
+        }
+        [HttpPost]
+        public async Task<IActionResult> AddSchool(string newSchool)
+        {
+            if (!string.IsNullOrEmpty(newSchool) && !_context.CpcmSchools.Any(e => e.CpcmSchoolName == newSchool))
+            {
+                CpcmSchool school= new();
+                school.CpcmSchooldId = Guid.NewGuid();
+                school.CpcmSchoolName = newSchool;
+
+                _context.CpcmSchools.Add(school);
+                await _context.SaveChangesAsync();
+                return Json(new { success = true });
+            }
+
+            return Json(new { success = false });
+        }
+        [HttpPost]
+        public async Task<IActionResult> AddUniversities(string newUni)
+        {
+            if (!string.IsNullOrEmpty(newUni) && !_context.CpcmUniversities.Any(e => e.CpcmUniversityName == newUni))
+            {
+                CpcmUniversity university= new();
+                university.CpcmUniversityId = Guid.NewGuid();
+                university.CpcmUniversityName = newUni;
+
+                _context.CpcmUniversities.Add(university);
+                await _context.SaveChangesAsync();
+                return Json(new { success = true });
+            }
+
+            return Json(new { success = false });
         }
 
         private bool CpcmUserExists(Guid id)
