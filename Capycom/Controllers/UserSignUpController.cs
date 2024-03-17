@@ -17,12 +17,14 @@ namespace Capycom.Controllers
     public class UserSignUpController : Controller
     {
         private readonly CapycomContext _context;
+        private readonly ILogger<HomeController> _logger;
         private readonly MyConfig _config;
 
-        public UserSignUpController(CapycomContext context, IOptions<MyConfig> config)
+        public UserSignUpController(ILogger<HomeController> logger, CapycomContext context, IOptions<MyConfig> config)
         {
             _context = context;
             _config = config.Value;
+            _logger = logger;
         }
 
         // GET: UserSignUp
@@ -56,8 +58,8 @@ namespace Capycom.Controllers
                 cpcmUser.CpcmUserId = Guid.NewGuid();
                 cpcmUser.CpcmUserEmail = cpcmSignUser.CpcmUserEmail;
                 cpcmUser.CpcmUserTelNum = cpcmSignUser.CpcmUserTelNum;
-                cpcmUser.CpcmUserSalt = GetRandomString(10);
-                cpcmUser.CpcmUserPwdHash = GetSha256Hash(cpcmSignUser.CpcmUserPwd,cpcmUser.CpcmUserSalt,_config.ServerSol);
+                cpcmUser.CpcmUserSalt = MyConfig.GetRandomString(10);
+                cpcmUser.CpcmUserPwdHash = MyConfig.GetSha256Hash(cpcmSignUser.CpcmUserPwd,cpcmUser.CpcmUserSalt,_config.ServerSol);
                 cpcmUser.CpcmUserAbout = cpcmSignUser.CpcmUserAbout;
                 cpcmUser.CpcmUserCity = cpcmSignUser.CpcmUserCity;
                 cpcmUser.CpcmUserSite = cpcmSignUser.CpcmUserSite;
