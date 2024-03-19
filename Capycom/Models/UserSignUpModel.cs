@@ -56,9 +56,9 @@ namespace Capycom.Models
         [Display(Name = "Университет")]
         public Guid? CpcmUserUniversity { get; set; }
 
-        public string? CpcmUserImagePath { get; set; }
+        //public string? CpcmUserImagePath { get; set; }
 
-        public string? CpcmUserCoverPath { get; set; }
+        //public string? CpcmUserCoverPath { get; set; }
 
         [Display(Name = "Мой Nickname")]
         [Required(ErrorMessage = "Не указан Nickname")]
@@ -75,6 +75,10 @@ namespace Capycom.Models
 
         [Display(Name = "Моё отчество")]
         public string? CpcmUserAdditionalName { get; set; }
+
+        public IFormFile? CpcmUserImage { get; set; }
+
+        public IFormFile? CpcmUserCoverImage { get; set; }
 
     }
 }
