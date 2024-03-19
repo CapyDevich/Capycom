@@ -86,7 +86,20 @@ namespace Capycom.Controllers
                     if (ModelState.IsValid)
                     {
                         var uniqueFileName = Guid.NewGuid().ToString() + Path.GetExtension(cpcmSignUser.CpcmUserImage.FileName);
-                        filePathUserImage = Path.Combine("wwwroot", "uploads", uniqueFileName);  
+                        filePathUserImage = Path.Combine("wwwroot", "uploads", uniqueFileName);
+
+                        try
+                        {
+                            using (var fileStream = new FileStream(filePathUserImage, FileMode.Create))
+                            {
+                                await cpcmSignUser.CpcmUserImage.CopyToAsync(fileStream);
+                            }
+                            cpcmUser.CpcmUserImagePath = filePathUserImage;
+                        }
+                        catch (Exception ex)
+                        {
+                            cpcmUser.CpcmUserImagePath = null;
+                        }
                     }
 
                 }
@@ -100,6 +113,19 @@ namespace Capycom.Controllers
                     {
                         var uniqueFileName = Guid.NewGuid().ToString() + Path.GetExtension(cpcmSignUser.CpcmUserCoverImage.FileName); //System.IO.Path.GetRandomFileName()
                         filePathUserCoverImage = Path.Combine("wwwroot", "uploads", uniqueFileName);
+
+                        try
+                        {
+                            using (var fileStream = new FileStream(filePathUserCoverImage, FileMode.Create))
+                            {
+                                await cpcmSignUser.CpcmUserCoverImage.CopyToAsync(fileStream);
+                            }
+                            cpcmUser.CpcmUserCoverPath = filePathUserCoverImage;
+                        }
+                        catch (Exception ex)
+                        {
+                            cpcmUser.CpcmUserCoverPath = null;
+                        }
                     }
                 }
 
@@ -111,27 +137,6 @@ namespace Capycom.Controllers
                     return View(cpcmSignUser);
                 }
 
-                try
-                {
-                    using (var fileStream = new FileStream(filePathUserImage, FileMode.Create))
-                    {
-                        await cpcmSignUser.CpcmUserImage.CopyToAsync(fileStream);
-                    }
-                    cpcmUser.CpcmUserImagePath = filePathUserImage;
-
-                    using (var fileStream = new FileStream(filePathUserCoverImage, FileMode.Create))
-                    {
-                        await cpcmSignUser.CpcmUserCoverImage.CopyToAsync(fileStream);
-                    }
-                    cpcmUser.CpcmUserCoverPath = filePathUserCoverImage;
-
-                }
-                catch (Exception ex)
-                {
-                    cpcmUser.CpcmUserImagePath = null;
-                    cpcmUser.CpcmUserCoverPath = null;
-
-                }
 
                 _context.Add(cpcmUser);
 
