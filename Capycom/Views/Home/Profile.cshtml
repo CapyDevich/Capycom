@@ -1,31 +1,34 @@
 ﻿@{
-    ViewData["Title"] = "Профиль";
+	ViewData["Title"] = "Профиль";
 }
 <style>
-.profile-block {
-background-color: #f7f7f7;
-}
+	.profile-block {
+		background-color: #f7f7f7;
+	}
 </style>
 <div class="container">
-    <div class="container mt-5">
-        <div class="row">
-            <div class="col-md-3 pt-3 pb-3 profile-block card" width=256>
-                <div class="text-center">
-                <img width=256 height=256 src="https://upload.wikimedia.org/wikipedia/commons/thumb/d/d9/Чёрный_супрематический_квадрат._1915._ГТГ.png/350px-Чёрный_супрематический_квадрат._1915._ГТГ.png" class="figure-img img-fluid rounded" alt="Иконка пользователя">
-                    <h4>Nickname</h4>
-                </div>
-                <div class="mt-1">
-                    <ul class="list-group list-group-flush">
-                        <li class="list-group-item profile-block">Lorem ipsum dolor sit amet consectetur adipisicing elit. Illum quos quibusdam fugit harum repellendus ducimus vero quidem soluta aut optio?</li>
-                        <li class="list-group-item profile-block">Lorem ipsum dolor sit amet consectetur adipisicing elit. Quaerat, debitis!</li>
-                        <li class="list-group-item profile-block">Lorem ipsum dolor sit, amet consectetur adipisicing elit. Incidunt blanditiis recusandae explicabo ipsam temporibus aliquid.</li>
-                        <li class="list-group-item profile-block">Сайт: <a href="#">www.siteeeeeeeeeeeeeeeeeeeee.com</a></li>
-                    </ul>
-                    <hr>
-                    <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Velit et, consequuntur possimus maxime atque expedita laborum quibusdam magnam nostrum est, voluptas officia temporibus quidem quae.</p>
-                </div>
-            </div>
-            <div class="col-md-8">Posts</div>
-        </div>
-    </div>
+	<div class="container mt-5">
+		<div class="row">
+			<div class="col-md-3 pt-3 pb-3 profile-block card" width=256>
+				<div class="text-center">
+					<img width=256 height=256 src="https://upload.wikimedia.org/wikipedia/commons/thumb/d/d9/Чёрный_супрематический_квадрат._1915._ГТГ.png/350px-Чёрный_супрематический_квадрат._1915._ГТГ.png" class="figure-img img-fluid rounded" alt="Иконка пользователя">
+					<h4>Nickname</h4>
+				</div>
+				<div class="mt-1">
+					<ul class="list-group list-group-flush">
+						<li class="list-group-item profile-block">Lorem ipsum dolor sit amet consectetur adipisicing elit. Illum quos quibusdam fugit harum repellendus ducimus vero quidem soluta aut optio?</li>
+						<li class="list-group-item profile-block">Lorem ipsum dolor sit amet consectetur adipisicing elit. Quaerat, debitis!</li>
+						<li class="list-group-item profile-block">Lorem ipsum dolor sit, amet consectetur adipisicing elit. Incidunt blanditiis recusandae explicabo ipsam temporibus aliquid.</li>
+						<li class="list-group-item profile-block">Сайт: <a href="#">www.siteeeeeeeeeeeeeeeeeeeee.com</a></li>
+					</ul>
+					<hr>
+					<p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Velit et, consequuntur possimus maxime atque expedita laborum quibusdam magnam nostrum est, voluptas officia temporibus quidem quae.</p>
+				</div>
+			</div>
+			<div class="col-md-8">
+				@await Html.PartialAsync("Post")
+				@await Html.PartialAsync("Post")
+			</div>
+		</div>
+	</div>
 </div>
