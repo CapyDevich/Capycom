@@ -10,6 +10,8 @@ using System.Security.Cryptography;
 using System.Text;
 using Microsoft.Extensions.Options;
 using Capycom.Models;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
+using System.Drawing;
 
 namespace Capycom.Controllers
 {
@@ -78,14 +80,8 @@ namespace Capycom.Controllers
 
                 if(cpcmSignUser.CpcmUserImage != null && cpcmSignUser.CpcmUserImage.Length != 0)// Почему тут а не в [Remote] - чтобы клиент не посылал запросы дважды. Т.е. чтобы клиент не посылал запрос на валидацию, а потом всю форму. 
                 {
-                    if (!CheckIFileContent(cpcmSignUser.CpcmUserImage))
-                    {
-                        ModelState.AddModelError("CpcmUserImage", "Допустимые типы файлов: png, jpeg, gif");
-                    }
-                    if (!CheckIFileSize(cpcmSignUser.CpcmUserImage))
-                    {
-                        ModelState.AddModelError("CpcmUserImage", "Размер файла превышает 8Мбайт");
-                    }
+                    CheckIFormFile("CpcmUserImage", cpcmSignUser.CpcmUserImage, 8388608, new[] { "image/jpeg", "image/png", "image/gif" });
+
                     if (ModelState.IsValid)
                     {
                         var uniqueFileName = Guid.NewGuid().ToString() + Path.GetExtension(cpcmSignUser.CpcmUserImage.FileName);
@@ -103,15 +99,8 @@ namespace Capycom.Controllers
                 
                 if (cpcmSignUser.CpcmUserCoverImage != null && cpcmSignUser.CpcmUserCoverImage.Length != 0)
                 {
+                    CheckIFormFile("CpcmUserCoverImage", cpcmSignUser.CpcmUserCoverImage, 8388608, new[] { "image/jpeg", "image/png", "image/gif" });
 
-                    if (!CheckIFileContent(cpcmSignUser.CpcmUserCoverImage))
-                    {
-                        ModelState.AddModelError("CpcmUserCoverImage", "Допустимые типы файлов: png, jpeg, gif");                       
-                    }
-                    if (!CheckIFileSize(cpcmSignUser.CpcmUserCoverImage))
-                    {
-                        ModelState.AddModelError("CpcmUserCoverImage", "Размер файла превышает 8Мбайт");
-                    }
                     if (ModelState.IsValid)
                     {
                         var uniqueFileName = Guid.NewGuid().ToString() + Path.GetExtension(cpcmSignUser.CpcmUserCoverImage.FileName);
@@ -252,9 +241,8 @@ namespace Capycom.Controllers
             return new string(Enumerable.Repeat(chars, length)
                 .Select(s => s[rnd.Next(s.Length)]).ToArray());
         }
-        private bool CheckIFileContent(IFormFile cpcmUserImage)
+        private bool CheckIFormFileContent(IFormFile cpcmUserImage, string[] permittedTypes)
         {
-            var permittedTypes = new[] { "image/jpeg", "image/png", "image/gif" };
             if (cpcmUserImage != null && permittedTypes.Contains(cpcmUserImage.ContentType))
             {
                 return true;
@@ -264,11 +252,10 @@ namespace Capycom.Controllers
                 return false;
             }
         }
-
-        private bool CheckIFileSize(IFormFile cpcmUserImage)
+        private bool CheckIFormFileSize(IFormFile cpcmUserImage, int size)
         {
 
-            if (cpcmUserImage.Length > 0 && cpcmUserImage.Length < 8192)
+            if (cpcmUserImage.Length > 0 && cpcmUserImage.Length < size)
             {
                 return true;
             }
@@ -277,5 +264,21 @@ namespace Capycom.Controllers
                 return false;
             }
         }
+        private bool CheckIFormFile(string FormFieldName, IFormFile file, int size, string[] permittedTypes)
+        {
+            bool status = true;
+            if (!CheckIFormFileContent(file,permittedTypes))
+            {
+                ModelState.AddModelError(FormFieldName, "Допустимые типы файлов: png, jpeg, jpg, gif");
+                status = false;
+            }
+            if (!CheckIFormFileSize(file, size))
+            {
+                ModelState.AddModelError(FormFieldName, $"Максимальный размер файла: {size/1024} Кбайт");
+                status = false;
+            }
+            return status;
+        }
+
     }
 }
