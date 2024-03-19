@@ -76,8 +76,9 @@ namespace Capycom.Controllers
                 cpcmUser.CpcmUserFirstName = cpcmSignUser.CpcmUserFirstName;
                 cpcmUser.CpcmUserSecondName = cpcmSignUser.CpcmUserSecondName;
                 cpcmUser.CpcmUserAdditionalName = cpcmSignUser.CpcmUserAdditionalName;
-                cpcmUser.CpcmUserRole = UserSignUpModel.BaseUserRole; 
+                cpcmUser.CpcmUserRole = UserSignUpModel.BaseUserRole;
 
+                string filePathUserImage = "";
                 if(cpcmSignUser.CpcmUserImage != null && cpcmSignUser.CpcmUserImage.Length != 0)// Почему тут а не в [Remote] - чтобы клиент не посылал запросы дважды. Т.е. чтобы клиент не посылал запрос на валидацию, а потом всю форму. 
                 {
                     CheckIFormFile("CpcmUserImage", cpcmSignUser.CpcmUserImage, 8388608, new[] { "image/jpeg", "image/png", "image/gif" });
@@ -85,33 +86,20 @@ namespace Capycom.Controllers
                     if (ModelState.IsValid)
                     {
                         var uniqueFileName = Guid.NewGuid().ToString() + Path.GetExtension(cpcmSignUser.CpcmUserImage.FileName);
-
-                        var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", uniqueFileName);
-
-                        using (var fileStream = new FileStream(filePath, FileMode.Create))
-                        {
-                            await cpcmSignUser.CpcmUserImage.CopyToAsync(fileStream);
-                        }
-                        cpcmUser.CpcmUserImagePath = filePath; 
+                        filePathUserImage = Path.Combine("wwwroot", "uploads", uniqueFileName);  
                     }
 
                 }
-                
+
+                string filePathUserCoverImage = "";
                 if (cpcmSignUser.CpcmUserCoverImage != null && cpcmSignUser.CpcmUserCoverImage.Length != 0)
                 {
                     CheckIFormFile("CpcmUserCoverImage", cpcmSignUser.CpcmUserCoverImage, 8388608, new[] { "image/jpeg", "image/png", "image/gif" });
 
                     if (ModelState.IsValid)
                     {
-                        var uniqueFileName = Guid.NewGuid().ToString() + Path.GetExtension(cpcmSignUser.CpcmUserCoverImage.FileName);
-
-                        var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", uniqueFileName);
-
-                        using (var fileStream = new FileStream(filePath, FileMode.Create))
-                        {
-                            await cpcmSignUser.CpcmUserCoverImage.CopyToAsync(fileStream);
-                        }
-                        cpcmUser.CpcmUserCoverPath = filePath; 
+                        var uniqueFileName = Guid.NewGuid().ToString() + Path.GetExtension(cpcmSignUser.CpcmUserCoverImage.FileName); //System.IO.Path.GetRandomFileName()
+                        filePathUserCoverImage = Path.Combine("wwwroot", "uploads", uniqueFileName);
                     }
                 }
 
@@ -123,14 +111,44 @@ namespace Capycom.Controllers
                     return View(cpcmSignUser);
                 }
 
+                try
+                {
+                    using (var fileStream = new FileStream(filePathUserImage, FileMode.Create))
+                    {
+                        await cpcmSignUser.CpcmUserImage.CopyToAsync(fileStream);
+                    }
+                    cpcmUser.CpcmUserImagePath = filePathUserImage;
+
+                    using (var fileStream = new FileStream(filePathUserCoverImage, FileMode.Create))
+                    {
+                        await cpcmSignUser.CpcmUserCoverImage.CopyToAsync(fileStream);
+                    }
+                    cpcmUser.CpcmUserCoverPath = filePathUserCoverImage;
+
+                }
+                catch (Exception ex)
+                {
+                    cpcmUser.CpcmUserImagePath = null;
+                    cpcmUser.CpcmUserCoverPath = null;
+
+                }
 
                 _context.Add(cpcmUser);
+
                 try
                 {
                     await _context.SaveChangesAsync();
                 }
                 catch (Exception ex)
                 {
+                    if (System.IO.File.Exists(filePathUserImage))
+                    {
+                        System.IO.File.Delete(filePathUserImage);
+                    }
+                    if (System.IO.File.Exists(filePathUserCoverImage))
+                    {
+                        System.IO.File.Delete(filePathUserCoverImage);
+                    }
                     Response.StatusCode = 418;
                     ViewData["Message"] = "Не удалось сохранить вас как нового пользователя. Возможно вы указали данные, которые не поддерживаются нами. Обратитесь в техническую поддержку";
                     return View("Error418");
