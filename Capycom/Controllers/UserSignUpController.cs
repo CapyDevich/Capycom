@@ -81,28 +81,23 @@ namespace Capycom.Controllers
                     if (!CheckIFileContent(cpcmSignUser.CpcmUserImage))
                     {
                         ModelState.AddModelError("CpcmUserImage", "Допустимые типы файлов: png, jpeg, gif");
-                        ViewData["CpcmUserCity"] = new SelectList(_context.CpcmCities, "CpcmCityId", "CpcmCityName", cpcmSignUser.CpcmUserCity);
-                        ViewData["CpcmUserSchool"] = new SelectList(_context.CpcmSchools, "CpcmSchooldId", "CpcmSchoolName", cpcmSignUser.CpcmUserSchool);
-                        ViewData["CpcmUserUniversity"] = new SelectList(_context.CpcmUniversities, "CpcmUniversityId", "CpcmUniversityName", cpcmSignUser.CpcmUserUniversity);
-                        return View(cpcmSignUser);
                     }
                     if (!CheckIFileSize(cpcmSignUser.CpcmUserImage))
                     {
                         ModelState.AddModelError("CpcmUserImage", "Размер файла превышает 8Мбайт");
-                        ViewData["CpcmUserCity"] = new SelectList(_context.CpcmCities, "CpcmCityId", "CpcmCityName", cpcmSignUser.CpcmUserCity);
-                        ViewData["CpcmUserSchool"] = new SelectList(_context.CpcmSchools, "CpcmSchooldId", "CpcmSchoolName", cpcmSignUser.CpcmUserSchool);
-                        ViewData["CpcmUserUniversity"] = new SelectList(_context.CpcmUniversities, "CpcmUniversityId", "CpcmUniversityName", cpcmSignUser.CpcmUserUniversity);
-                        return View(cpcmSignUser);
                     }
-                    var uniqueFileName = Guid.NewGuid().ToString() + Path.GetExtension(cpcmSignUser.CpcmUserImage.FileName);
-
-                    var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", uniqueFileName);
-
-                    using (var fileStream = new FileStream(filePath, FileMode.Create))
+                    if (ModelState.IsValid)
                     {
-                        await cpcmSignUser.CpcmUserImage.CopyToAsync(fileStream);
+                        var uniqueFileName = Guid.NewGuid().ToString() + Path.GetExtension(cpcmSignUser.CpcmUserImage.FileName);
+
+                        var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", uniqueFileName);
+
+                        using (var fileStream = new FileStream(filePath, FileMode.Create))
+                        {
+                            await cpcmSignUser.CpcmUserImage.CopyToAsync(fileStream);
+                        }
+                        cpcmUser.CpcmUserImagePath = filePath; 
                     }
-                    cpcmUser.CpcmUserImagePath = filePath;
 
                 }
                 
@@ -111,33 +106,33 @@ namespace Capycom.Controllers
 
                     if (!CheckIFileContent(cpcmSignUser.CpcmUserCoverImage))
                     {
-                        ModelState.AddModelError("CpcmUserCoverImage", "Допустимые типы файлов: png, jpeg, gif");
-                        ViewData["CpcmUserCity"] = new SelectList(_context.CpcmCities, "CpcmCityId", "CpcmCityName", cpcmSignUser.CpcmUserCity);
-                        ViewData["CpcmUserSchool"] = new SelectList(_context.CpcmSchools, "CpcmSchooldId", "CpcmSchoolName", cpcmSignUser.CpcmUserSchool);
-                        ViewData["CpcmUserUniversity"] = new SelectList(_context.CpcmUniversities, "CpcmUniversityId", "CpcmUniversityName", cpcmSignUser.CpcmUserUniversity);
-                        return View(cpcmSignUser);
+                        ModelState.AddModelError("CpcmUserCoverImage", "Допустимые типы файлов: png, jpeg, gif");                       
                     }
                     if (!CheckIFileSize(cpcmSignUser.CpcmUserCoverImage))
                     {
                         ModelState.AddModelError("CpcmUserCoverImage", "Размер файла превышает 8Мбайт");
-                        ViewData["CpcmUserCity"] = new SelectList(_context.CpcmCities, "CpcmCityId", "CpcmCityName", cpcmSignUser.CpcmUserCity);
-                        ViewData["CpcmUserSchool"] = new SelectList(_context.CpcmSchools, "CpcmSchooldId", "CpcmSchoolName", cpcmSignUser.CpcmUserSchool);
-                        ViewData["CpcmUserUniversity"] = new SelectList(_context.CpcmUniversities, "CpcmUniversityId", "CpcmUniversityName", cpcmSignUser.CpcmUserUniversity);
-                        return View(cpcmSignUser);
                     }
-
-                    var uniqueFileName = Guid.NewGuid().ToString() + Path.GetExtension(cpcmSignUser.CpcmUserCoverImage.FileName);
-
-                    var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", uniqueFileName);
-
-                    using (var fileStream = new FileStream(filePath, FileMode.Create))
+                    if (ModelState.IsValid)
                     {
-                        await cpcmSignUser.CpcmUserCoverImage.CopyToAsync(fileStream);
-                    }
-                    cpcmUser.CpcmUserCoverPath = filePath;
+                        var uniqueFileName = Guid.NewGuid().ToString() + Path.GetExtension(cpcmSignUser.CpcmUserCoverImage.FileName);
 
+                        var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", uniqueFileName);
+
+                        using (var fileStream = new FileStream(filePath, FileMode.Create))
+                        {
+                            await cpcmSignUser.CpcmUserCoverImage.CopyToAsync(fileStream);
+                        }
+                        cpcmUser.CpcmUserCoverPath = filePath; 
+                    }
                 }
 
+                if (!ModelState.IsValid)
+                {
+                    ViewData["CpcmUserCity"] = new SelectList(_context.CpcmCities, "CpcmCityId", "CpcmCityName", cpcmSignUser.CpcmUserCity);
+                    ViewData["CpcmUserSchool"] = new SelectList(_context.CpcmSchools, "CpcmSchooldId", "CpcmSchoolName", cpcmSignUser.CpcmUserSchool);
+                    ViewData["CpcmUserUniversity"] = new SelectList(_context.CpcmUniversities, "CpcmUniversityId", "CpcmUniversityName", cpcmSignUser.CpcmUserUniversity);
+                    return View(cpcmSignUser);
+                }
 
 
                 _context.Add(cpcmUser);
