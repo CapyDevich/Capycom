@@ -94,7 +94,10 @@ if (ModelState.IsValid)
            
             foreach (PropertyInfo property in properties)
             {
-                returnClaims.Add(new Claim(property.Name, property.GetValue(userRole).ToString()));                
+                if (property.PropertyType == typeof(bool) || property.PropertyType == typeof(string))
+                {
+                    returnClaims.Add(new Claim(property.Name, property.GetValue(userRole).ToString()));          
+                }       
             }
             return returnClaims;
         }
