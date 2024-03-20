@@ -53,13 +53,13 @@ if (ModelState.IsValid)
 #endif
 
                 {
-                    List<Claim> claims = new List<Claim>
-                    {
-                        new Claim("CpcmUserId", potentialUser.CpcmUserId.ToString()),
-                    };
+                    List<Claim> claims = GetUserClaims(potentialUser); 
                     var claimsIdentity = new ClaimsIdentity(claims, "Cookies");
                     var claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
+
                     await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(claimsIdentity));
+                    //var kek = HttpContext.User.FindFirst(c => c.Type == "CpcmUserId" && c.Value == "1");
+                    //kek.Value;
                     return RedirectToAction("Test");
                 }
                 else
@@ -84,13 +84,14 @@ if (ModelState.IsValid)
             return RedirectToAction("Index");
         }
 
-        private List<Claim> GetRoleData(CpcmRole userRole)
+        private List<Claim> GetUserClaims(CpcmUser user)
         {
+            List<Claim> returnClaims = new List<Claim> { new Claim("CpcmUserId", user.CpcmUserId.ToString()) };
+
+            CpcmRole userRole = user.CpcmUserRoleNavigation;
             Type type = userRole.GetType();
-
             PropertyInfo[] properties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
-            List<Claim> returnClaims = new List<Claim>();
-
+           
             foreach (PropertyInfo property in properties)
             {
                 returnClaims.Add(new Claim(property.Name, property.GetValue(userRole).ToString()));                
