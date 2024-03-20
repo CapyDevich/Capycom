@@ -7,6 +7,8 @@ using System.Security.Claims;
 using System;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication;
+using System.Reflection;
+using Microsoft.EntityFrameworkCore;
 namespace Capycom.Controllers
 {
     public class UserLogInController : Controller
@@ -39,7 +41,7 @@ if (ModelState.IsValid)
 
             {
 #if AdminAutoAuth
-                CpcmUser potentialUser = _context.CpcmUsers.Where(e => e.CpcmUserEmail == "asdas@asd.ru").First();               
+                CpcmUser potentialUser = _context.CpcmUsers.Include(c => c.CpcmUserRoleNavigation).Where(e => e.CpcmUserEmail == "asdas@asd.ru").First();               
 #else
                 CpcmUser potentialUser = _context.CpcmUsers.Where(e => e.CpcmUserEmail == user.CpcmUserEmail).First();
 #endif
@@ -80,6 +82,20 @@ if (ModelState.IsValid)
         {
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
             return RedirectToAction("Index");
+        }
+
+        private List<Claim> GetRoleData(CpcmRole userRole)
+        {
+            Type type = userRole.GetType();
+
+            PropertyInfo[] properties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
+            List<Claim> returnClaims = new List<Claim>();
+
+            foreach (PropertyInfo property in properties)
+            {
+                returnClaims.Add(new Claim(property.Name, property.GetValue(userRole).ToString()));                
+            }
+            return returnClaims;
         }
     }
 }
