@@ -24,10 +24,8 @@ namespace Capycom.Controllers
         }
 
 
-        // GET: UserController
+
         [Authorize]
-        //[HttpGet("User/id")]
-        [HttpGet]
         public async Task<ActionResult> Index()
         {
             string userId = HttpContext.User.FindFirst(c => c.Type == "CpcmUserId").Value;
@@ -53,7 +51,6 @@ namespace Capycom.Controllers
 
         }
 
-        //[HttpGet("User/id")]
         public async Task<ActionResult> Index(Guid id)
         {
             CpcmUser user = _context.CpcmUsers
@@ -231,13 +228,11 @@ namespace Capycom.Controllers
 
 
         [Authorize]
-        // GET: UserController/Delete/5
         public async Task<ActionResult> Delete(int id)
         {
             return View();
         }
 
-        // POST: UserController/Delete/5
         [Authorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
