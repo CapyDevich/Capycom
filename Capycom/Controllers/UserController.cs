@@ -26,22 +26,34 @@ namespace Capycom.Controllers
 
         // GET: UserController
         [Authorize]
+        //[HttpGet("User/id")]
+        [HttpGet]
         public async Task<ActionResult> Index()
         {
             string userId = HttpContext.User.FindFirst(c => c.Type == "CpcmUserId").Value;
 
-            CpcmUser user = _context.CpcmUsers
-                .Include(c => c.CpcmUserCityNavigation)
-                .Include(c => c.CpcmUserRoleNavigation)
-                .Include(c => c.CpcmUserSchoolNavigation)
-                .Include(c => c.CpcmUserUniversityNavigation)
-                .Where(c => c.CpcmUserId == Guid.Parse(userId)).First();
+            //CpcmUser user = _context.CpcmUsers
+            //    .Include(c => c.CpcmUserCityNavigation)
+            //    .Include(c => c.CpcmUserRoleNavigation)
+            //    .Include(c => c.CpcmUserSchoolNavigation)
+            //    .Include(c => c.CpcmUserUniversityNavigation)
+            //    .Where(c => c.CpcmUserId == Guid.Parse(userId)).First();
 
-            return View(user);
+            //return View(user);
+
+            CpcmUser user = _context.CpcmUsers.Where(c => c.CpcmUserId == Guid.Parse(userId)).First();
+            if (user.CpcmUserNickName != null)
+            {
+                return RedirectToActionPermanent("Index", new { nickName = user.CpcmUserNickName });
+            }
+            else
+            {
+                return RedirectToActionPermanent("Index", new { id = user.CpcmUserId });
+            }
 
         }
 
-        [HttpGet]
+        //[HttpGet("User/id")]
         public async Task<ActionResult> Index(Guid id)
         {
             CpcmUser user = _context.CpcmUsers
@@ -54,7 +66,7 @@ namespace Capycom.Controllers
             return View(user);
         }
 
-        [HttpGet]
+        [Route("User/{nickName}")]
         public async Task<ActionResult> Index(string nickName)
         {
             CpcmUser user = _context.CpcmUsers
