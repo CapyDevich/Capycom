@@ -80,7 +80,10 @@ namespace Capycom.Controllers
                 ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
                 return View("Error418");
             }
-
+            if(user.CpcmUserNickName != null)
+            {
+                return RedirectToActionPermanent("Index", new { nickName = user.CpcmUserNickName });
+            }
             return View(user);
         }
 
@@ -105,8 +108,12 @@ namespace Capycom.Controllers
             }
             return View(user);
         }
+
+
+
         
         [Authorize]
+        [HttpPost]
         public async Task<ActionResult> Edit(string id)
         {
             if (!CheckUserPrivilege("CpcmCanEditUsers", "True", id))
@@ -117,7 +124,7 @@ namespace Capycom.Controllers
             CpcmUser user;
             try
             {
-                user = _context.CpcmUsers.Where(c => c.CpcmUserId == Guid.Parse(id)).First();
+                user = await _context.CpcmUsers.Where(c => c.CpcmUserId == Guid.Parse(id)).FirstAsync();
             }
             catch (Exception)
             {
@@ -260,6 +267,7 @@ namespace Capycom.Controllers
         }
 
         [Authorize]
+        [HttpPost]
         public async Task<ActionResult> EditIdentity(string id)
         {
             if (!CheckUserPrivilege("CpcmCanEditUsers", "True", id))
@@ -319,6 +327,155 @@ namespace Capycom.Controllers
 
 
 
+        public async Task<ActionResult> Friends(Guid id)
+        {
+            CpcmUser user;
+            try
+            {
+                user = _context.CpcmUsers.Where(c => c.CpcmUserId == id).First();
+            }
+            catch (Exception)
+            {
+                Response.StatusCode = 418;
+                ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
+                return View("Error418");
+            }
+
+
+            if (user.CpcmUserNickName != null)
+            {
+                return RedirectToActionPermanent("Friends", new { nickName = user.CpcmUserNickName });
+            }
+
+            //_context.CpcmUserfriends.Select(c => c.CmcpFriend).Where(c => c.CmcpUserId == id).Include(c => c.CmcpFriend).ToList();
+            List<CpcmUser> friendList1;
+            List<CpcmUser> friendList2;
+            try
+            {
+                friendList1 = _context.CpcmUserfriends.Where(c => c.CmcpUserId == user.CpcmUserId && c.CpcmFriendRequestStatus==true).Select(c => c.CmcpFriend).ToList();
+                friendList2 = _context.CpcmUserfriends.Where(c => c.CmcpFriendId == user.CpcmUserId && c.CpcmFriendRequestStatus == true).Select(c => c.CmcpUser).ToList();
+            }
+            catch (Exception)
+            {
+                Response.StatusCode = 418;
+                ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
+                return View("Error418");
+            }
+
+            friendList1.AddRange(friendList2);
+
+            return View(friendList1);
+        }
+
+        [Route("User/Friends/{nickName}")]
+        public async Task<ActionResult> Friends(string nickName)
+        {
+            CpcmUser user;
+            try
+            {
+                user = _context.CpcmUsers.Where(c => c.CpcmUserNickName == nickName).First();
+            }
+            catch (Exception)
+            {
+                Response.StatusCode = 418;
+                ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
+                return View("Error418");
+            }
+
+            //_context.CpcmUserfriends.Select(c => c.CmcpFriend).Where(c => c.CmcpUserId == id).Include(c => c.CmcpFriend).ToList();
+            List<CpcmUser> friendList1;
+            List<CpcmUser> friendList2;
+            try
+            {
+                friendList1 = _context.CpcmUserfriends.Where(c => c.CmcpUserId == user.CpcmUserId && c.CpcmFriendRequestStatus == true).Select(c => c.CmcpFriend).ToList();
+                friendList2 = _context.CpcmUserfriends.Where(c => c.CmcpFriendId == user.CpcmUserId && c.CpcmFriendRequestStatus == true).Select(c => c.CmcpUser).ToList();
+            }
+            catch (Exception)
+            {
+                Response.StatusCode = 418;
+                ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
+                return View("Error418");
+            }
+
+            friendList1.AddRange(friendList2);
+
+            return View(friendList1);
+        }
+
+        public async Task<ActionResult> Followers(Guid id)
+        {
+            CpcmUser user;
+            try
+            {
+                user = _context.CpcmUsers.Where(c => c.CpcmUserId == id).First();
+            }
+            catch (Exception)
+            {
+                Response.StatusCode = 418;
+                ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
+                return View("Error418");
+            }
+
+
+            if (user.CpcmUserNickName != null)
+            {
+                return RedirectToActionPermanent("Followers", new { nickName = user.CpcmUserNickName });
+            }
+
+            //_context.CpcmUserfriends.Select(c => c.CmcpFriend).Where(c => c.CmcpUserId == id).Include(c => c.CmcpFriend).ToList();
+            List<CpcmUser> followerList1;
+            List<CpcmUser> followerList2;
+            try
+            {
+                followerList1 = _context.CpcmUserfollowers.Where(c => c.CpcmUserId == user.CpcmUserId).Select(c => c.CpcmFollower).ToList();
+                followerList2 = _context.CpcmUserfollowers.Where(c => c.CpcmFollowerId == user.CpcmUserId).Select(c => c.CpcmUser).ToList();
+            }
+            catch (Exception)
+            {
+                Response.StatusCode = 418;
+                ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
+                return View("Error418");
+            }
+
+            followerList1.AddRange(followerList2);
+
+            return View(followerList1);
+        }
+
+        [Route("User/Followers/{nickName}")]
+        public async Task<ActionResult> Followers(string nickName)
+        {
+            CpcmUser user;
+            try
+            {
+                user = _context.CpcmUsers.Where(c => c.CpcmUserNickName == nickName).First();
+            }
+            catch (Exception)
+            {
+                Response.StatusCode = 418;
+                ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
+                return View("Error418");
+            }
+
+            //_context.CpcmUserfriends.Select(c => c.CmcpFriend).Where(c => c.CmcpUserId == id).Include(c => c.CmcpFriend).ToList();
+            List<CpcmUser> followerList1;
+            List<CpcmUser> followerList2;
+            try
+            {
+                followerList1 = _context.CpcmUserfollowers.Where(c => c.CpcmUserId == user.CpcmUserId).Select(c => c.CpcmFollower).ToList();
+                followerList2 = _context.CpcmUserfollowers.Where(c => c.CpcmFollowerId == user.CpcmUserId).Select(c => c.CpcmUser).ToList();
+            }
+            catch (Exception)
+            {
+                Response.StatusCode = 418;
+                ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
+                return View("Error418");
+            }
+
+            followerList1.AddRange(followerList2);
+
+            return View(followerList1);
+        }
 
 
 
@@ -342,6 +499,11 @@ namespace Capycom.Controllers
                 return View();
             }
         }
+
+
+
+
+
 
 
         private bool CheckUserPrivilege(string claimType, string claimValue, string id)
