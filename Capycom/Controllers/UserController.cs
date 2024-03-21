@@ -39,7 +39,18 @@ namespace Capycom.Controllers
 
             //return View(user);
 
-            CpcmUser user = _context.CpcmUsers.Where(c => c.CpcmUserId == Guid.Parse(userId)).First();
+            CpcmUser user;
+            try
+            {
+                user = _context.CpcmUsers.Where(c => c.CpcmUserId == Guid.Parse(userId)).First();
+            }
+            catch (Exception)
+            {
+                Response.StatusCode = 418;
+                ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
+                return View("Error418");
+            }
+
             if (user.CpcmUserNickName != null)
             {
                 return RedirectToActionPermanent("Index", new { nickName = user.CpcmUserNickName });
@@ -53,12 +64,22 @@ namespace Capycom.Controllers
 
         public async Task<ActionResult> Index(Guid id)
         {
-            CpcmUser user = _context.CpcmUsers
+            CpcmUser user;
+            try
+            {
+                user = _context.CpcmUsers
                 .Include(c => c.CpcmUserCityNavigation)
                 .Include(c => c.CpcmUserRoleNavigation)
                 .Include(c => c.CpcmUserSchoolNavigation)
                 .Include(c => c.CpcmUserUniversityNavigation)
                 .Where(c => c.CpcmUserId == id).First();
+            }
+            catch (Exception)
+            {
+                Response.StatusCode = 418;
+                ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
+                return View("Error418");
+            }
 
             return View(user);
         }
@@ -66,12 +87,22 @@ namespace Capycom.Controllers
         [Route("User/{nickName}")]
         public async Task<ActionResult> Index(string nickName)
         {
-            CpcmUser user = _context.CpcmUsers
+            CpcmUser user;
+            try
+            {
+                user = _context.CpcmUsers
                 .Include(c => c.CpcmUserCityNavigation)
                 .Include(c => c.CpcmUserRoleNavigation)
                 .Include(c => c.CpcmUserSchoolNavigation)
                 .Include(c => c.CpcmUserUniversityNavigation)
                 .Where(c => c.CpcmUserNickName == nickName).First();
+            }
+            catch (Exception)
+            {
+                Response.StatusCode = 418;
+                ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
+                return View("Error418");
+            }
             return View(user);
         }
         
@@ -83,12 +114,18 @@ namespace Capycom.Controllers
                 return View("Error418");
             }
 
-            CpcmUser user = _context.CpcmUsers
-                .Include(c => c.CpcmUserCityNavigation)
-                .Include(c => c.CpcmUserRoleNavigation)
-                .Include(c => c.CpcmUserSchoolNavigation)
-                .Include(c => c.CpcmUserUniversityNavigation)
-                .Where(c => c.CpcmUserId == Guid.Parse(id)).First();
+            CpcmUser user;
+            try
+            {
+                user = _context.CpcmUsers.Where(c => c.CpcmUserId == Guid.Parse(id)).First();
+            }
+            catch (Exception)
+            {
+                Response.StatusCode = 418;
+                ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
+                return View("Error418");
+            }
+
 
             ViewData["CpcmUserCity"] = new SelectList(_context.CpcmCities, "CpcmCityId", "CpcmCityName", user.CpcmUserCity);
             ViewData["CpcmUserSchool"] = new SelectList(_context.CpcmSchools, "CpcmSchooldId", "CpcmSchoolName", user.CpcmUserSchool);
@@ -109,7 +146,17 @@ namespace Capycom.Controllers
 
             if (ModelState.IsValid)
             {
-                CpcmUser cpcmUser = _context.CpcmUsers.Where(c => c.CpcmUserId == Guid.Parse(user.CpcmUserId.ToString())).First();
+                CpcmUser cpcmUser;
+                try
+                {
+                    cpcmUser = _context.CpcmUsers.Where(c => c.CpcmUserId == Guid.Parse(user.CpcmUserId.ToString())).First();
+                }
+                catch (Exception)
+                {
+                    Response.StatusCode = 418;
+                    ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
+                    return View("Error418");
+                }
 
                 cpcmUser.CpcmUserAbout = user.CpcmUserAbout;
                 cpcmUser.CpcmUserCity = user.CpcmUserCity;
@@ -176,7 +223,34 @@ namespace Capycom.Controllers
                         }
                     }
                 }
-                return RedirectToActionPermanent($"Index\\{user.CpcmUserId}");
+
+                try
+                {
+                    await _context.SaveChangesAsync();
+                }
+                catch (Exception)
+                {
+                    if (System.IO.File.Exists(filePathUserImage))
+                    {
+                        System.IO.File.Delete(filePathUserImage);
+                    }
+                    if (System.IO.File.Exists(filePathUserCoverImage))
+                    {
+                        System.IO.File.Delete(filePathUserCoverImage);
+                    }
+                    Response.StatusCode = 418;
+                    ViewData["Message"] = "Не удалось сохранить вас как нового пользователя. Возможно вы указали данные, которые не поддерживаются нами. Обратитесь в техническую поддержку";
+                    return View("Error418");
+                }
+
+                if (cpcmUser.CpcmUserNickName != null)
+                {
+                    return RedirectToActionPermanent("Index", new { nickName = cpcmUser.CpcmUserNickName });
+                }
+                else
+                {
+                    return RedirectToActionPermanent("Index", new { id = cpcmUser.CpcmUserId });
+                }
             }
 
             ViewData["CpcmUserCity"] = new SelectList(_context.CpcmCities, "CpcmCityId", "CpcmCityName", user.CpcmUserCity);
@@ -192,7 +266,17 @@ namespace Capycom.Controllers
             {
                 return View("Error418");
             }
-            CpcmUser user = _context.CpcmUsers.Where(c => c.CpcmUserId == Guid.Parse(id)).First();
+            CpcmUser user;
+            try
+            {
+                user = _context.CpcmUsers.Where(c => c.CpcmUserId == Guid.Parse(id)).First();
+            }
+            catch (Exception)
+            {
+                Response.StatusCode = 418;
+                ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
+                return View("Error418");
+            }
             return View(user);
 
         }
@@ -209,7 +293,18 @@ namespace Capycom.Controllers
                     return StatusCode(403);
                 }
 
-                CpcmUser cpcmUser = _context.CpcmUsers.Where(c => c.CpcmUserId == Guid.Parse(user.CpcmUserId.ToString())).First();
+
+                CpcmUser cpcmUser;
+                try
+                {
+                    cpcmUser = _context.CpcmUsers.Where(c => c.CpcmUserId == Guid.Parse(user.CpcmUserId.ToString())).First();
+                }
+                catch (Exception)
+                {
+                    Response.StatusCode = 418;
+                    ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
+                    return View("Error418");
+                }
 
                 cpcmUser.CpcmUserEmail = user.CpcmUserEmail;
                 cpcmUser.CpcmUserTelNum = user.CpcmUserTelNum;
@@ -267,6 +362,7 @@ namespace Capycom.Controllers
             }
             return true;
         }
+
         private bool CheckIFormFileContent(IFormFile cpcmUserImage, string[] permittedTypes)//TODO: Объединить с методами при регистрации
         {
             if (cpcmUserImage != null && permittedTypes.Contains(cpcmUserImage.ContentType))
@@ -315,7 +411,6 @@ namespace Capycom.Controllers
             }
             return Json(!_context.CpcmUsers.Any(e => e.CpcmUserEmail == CpcmUserEmail && e.CpcmUserId.ToString()!=HttpContext.User.FindFirst(c => c.Type == "CpcmUserId").Value));
         }
-
         [HttpPost]//TODO: Объединить с методами при регистрации
         public async Task<IActionResult> CheckNickName(string CpcmUserNickName)
         {
@@ -325,7 +420,6 @@ namespace Capycom.Controllers
             }
             return Json(!_context.CpcmUsers.Any(e => e.CpcmUserNickName == CpcmUserNickName && e.CpcmUserId.ToString() != HttpContext.User.FindFirst(c => c.Type == "CpcmUserId").Value));
         }
-
         [HttpPost]//TODO: Объединить с методами при регистрации
         public async Task<IActionResult> CheckPhone(string CpcmUserTelNum)
         {
