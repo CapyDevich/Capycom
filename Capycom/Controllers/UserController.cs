@@ -514,11 +514,11 @@ namespace Capycom.Controllers
 
             //_context.CpcmUserfriends.Select(c => c.CmcpFriend).Where(c => c.CmcpUserId == id).Include(c => c.CmcpFriend).ToList();
             List<CpcmUser> followerList1;
-            List<CpcmUser> followerList2;
+            //List<CpcmUser> followerList2;
             try
             {
                 followerList1 = await _context.CpcmUserfollowers.Where(c => c.CpcmUserId == user.CpcmUserId).Select(c => c.CpcmFollower).ToListAsync();
-                followerList2 = await _context.CpcmUserfollowers.Where(c => c.CpcmFollowerId == user.CpcmUserId).Select(c => c.CpcmUser).ToListAsync();
+                //followerList2 = await _context.CpcmUserfollowers.Where(c => c.CpcmFollowerId == user.CpcmUserId).Select(c => c.CpcmUser).ToListAsync();
             }
             catch (Exception)
             {
@@ -527,7 +527,7 @@ namespace Capycom.Controllers
                 return View("Error418");
             }
 
-            followerList1.AddRange(followerList2);
+            //followerList1.AddRange(followerList2);
 
             return View(followerList1);
         }
@@ -556,11 +556,11 @@ namespace Capycom.Controllers
 
             //_context.CpcmUserfriends.Select(c => c.CmcpFriend).Where(c => c.CmcpUserId == id).Include(c => c.CmcpFriend).ToList();
             List<CpcmUser> followerList1;
-            List<CpcmUser> followerList2;
+            //List<CpcmUser> followerList2;
             try
             {
                 followerList1 = await _context.CpcmUserfollowers.Where(c => c.CpcmUserId == user.CpcmUserId).Select(c => c.CpcmFollower).ToListAsync();
-                followerList2 = await _context.CpcmUserfollowers.Where(c => c.CpcmFollowerId == user.CpcmUserId).Select(c => c.CpcmUser).ToListAsync();
+                //followerList2 = await _context.CpcmUserfollowers.Where(c => c.CpcmFollowerId == user.CpcmUserId).Select(c => c.CpcmUser).ToListAsync();
             }
             catch (DbException)
             {
@@ -569,7 +569,7 @@ namespace Capycom.Controllers
                 return View("Error418");
             }
 
-            followerList1.AddRange(followerList2);
+            //followerList1.AddRange(followerList2);
 
             return View(followerList1);
         }
@@ -752,34 +752,131 @@ namespace Capycom.Controllers
             return Json(!await _context.CpcmUsers.AnyAsync(e => e.CpcmUserTelNum == CpcmUserTelNum && e.CpcmUserId != CpcmUserId));
         }
 
-        //public async Task<IActionResult> Follow(Guid CpcmUserId)
-        //{
+        [Authorize]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Follow(Guid CpcmUserId)
+        {
 
-        //}
+            CpcmUserfollower follower = new();
+            follower.CpcmFollowerId = CpcmUserId;
+            follower.CpcmUserId = Guid.Parse(HttpContext.User.FindFirst(c => c.Type == "CpcmUserId").Value);
+            _context.CpcmUserfollowers.Add(follower);
 
-        //public async Task<IActionResult> Unfollow(Guid CpcmUserId)
-        //{
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbException)
+            {
+                return StatusCode(400);
+            }
 
-        //}
+            return StatusCode(200);
+        }
 
-        //public async Task<IActionResult> CreateFriendRequest(Guid CpcmUserId)
-        //{
+        [Authorize]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Unfollow(Guid CpcmUserId)
+        {
+            CpcmUserfollower? follow;
+            try
+            {
+                follow = await _context.CpcmUserfollowers.Where(e => e.CpcmUserId == CpcmUserId).FirstOrDefaultAsync();
+            }
+            catch (DbException)
+            {
+                return StatusCode(400);
+            }
 
-        //}
 
-        //public async Task<IActionResult> FriendRequests(Guid CpcmUserId)
-        //{
+            if(follow == null)
+            {
+                return StatusCode(400);
+            }
 
-        //}
+            _context.Remove(follow);
 
-        //public async Task<IActionResult> AnswerToFriendRequests(Guid CpcmUserId)
-        //{
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbException)
+            {
+                return StatusCode(400);
+            }
 
-        //}
-        //public async Task<IActionResult> DeleteToFriendRequests(Guid CpcmUserId)
-        //{
+            return StatusCode(200);
 
-        //}
+        }
+
+        [Authorize]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CreateFriendRequest(Guid CpcmUserId)
+        {
+            CpcmUserfriend friendRequest = new();
+            friendRequest.CmcpUserId = Guid.Parse(HttpContext.User.FindFirst(c => c.Type == "CpcmUserId").Value);
+            friendRequest.CmcpFriendId = CpcmUserId;
+
+            _context.CpcmUserfriends.Add(friendRequest);
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbException)
+            {
+                return StatusCode(400);
+            }
+
+            return StatusCode(200);
+        }
+
+        [Authorize]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AnswerToFriendRequests(Guid CpcmUserId, bool status)
+        {
+            var friendRequest = await _context.CpcmUserfriends.Where(c => c.CmcpUserId.ToString() == HttpContext.User.FindFirst(c => c.Type == "CpcmUserId").Value
+            && c.CmcpFriendId == CpcmUserId).FirstOrDefaultAsync();
+
+            friendRequest.CpcmFriendRequestStatus  = status;
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbException)
+            {
+                return StatusCode(400);
+            }
+
+            return StatusCode(200);
+        }
+
+        [Authorize]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteToFriendRequests(Guid CpcmUserId)
+        {
+            var friendRequest = await _context.CpcmUserfriends.Where(c => c.CmcpUserId.ToString() == HttpContext.User.FindFirst(c => c.Type == "CpcmUserId").Value
+            && c.CmcpFriendId == CpcmUserId).FirstOrDefaultAsync();
+
+            _context.CpcmUserfriends.Remove(friendRequest);
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbException)
+            {
+                return StatusCode(400);
+            }
+
+            return StatusCode(200);
+        }
 
 
 
