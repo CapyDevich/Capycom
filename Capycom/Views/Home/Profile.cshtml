@@ -1,19 +1,13 @@
 ﻿@{
 	ViewData["Title"] = "Профиль";
 }
-<style>
-	.profile-block {
-		background-color: #f7f7f7;
-	}
-</style>
-<div class="container">
-	<div class="container mt-5">
-		<div class="row">
-			@await Html.PartialAsync("UserCard")
-			<div class="col-md-8">
-				@await Html.PartialAsync("Post")
-				@await Html.PartialAsync("Post")
-			</div>
+
+<div class="container mt-5">
+	<div class="row">
+		@await Html.PartialAsync("UserCard")
+		<div class="col-md-8">
+			@await Html.PartialAsync("Post")
+			@await Html.PartialAsync("Post")
 		</div>
 	</div>
 </div>
