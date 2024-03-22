@@ -577,24 +577,73 @@ namespace Capycom.Controllers
 
 
         [Authorize]
-        public async Task<ActionResult> Delete(int id)
+        public async Task<ActionResult> Delete(Guid id)
         {
-            return View();
+            CpcmUser user;
+            try
+            {
+                user = await _context.CpcmUsers.Where(c => c.CpcmUserId == id).FirstOrDefaultAsync();
+            }
+            catch (DbException)
+            {
+                Response.StatusCode = 418;
+                ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
+                return View("Error418");
+            }
+
+            if (user == null)
+            {
+                Response.StatusCode = 418;
+                ViewData["Message"] = "Пользователь не найден";
+                return View("Error418");
+            }
+            return View(user);
         }
 
         [Authorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<ActionResult> Delete(int id, IFormCollection collection)
+        public async Task<ActionResult> Delete(UserDeleteModel userdel)
         {
+            if (!CheckUserPrivilege("CpcmCanEditUsers", "True", userdel.CpcmUserId))
+            {
+                return StatusCode(403);
+            }
+
+            CpcmUser user;
             try
             {
-                return RedirectToAction(nameof(Index));
+                user = await _context.CpcmUsers.Where(c => c.CpcmUserId == userdel.CpcmUserId).FirstOrDefaultAsync();
             }
-            catch
+            catch (DbException)
             {
-                return View();
+                Response.StatusCode = 418;
+                ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
+                return View("Error418");
             }
+
+            if (user == null)
+            {
+                Response.StatusCode = 418;
+                ViewData["Message"] = "Пользователь не найден";
+                return View("Error418");
+            }
+
+            _context.CpcmUsers.Remove(user);
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbException)
+            {
+                Response.StatusCode = 418;
+                ViewData["Message"] = "Не удалось сохранить вас как нового пользователя. Возможно вы указали данные, которые не поддерживаются нами. Обратитесь в техническую поддержку";
+                return View("Error418");
+            }
+
+            return RedirectToAction("UserLogIn", "Index");
+
         }
 
 
