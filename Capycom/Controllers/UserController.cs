@@ -579,6 +579,11 @@ namespace Capycom.Controllers
         [Authorize]
         public async Task<ActionResult> Delete(Guid id)
         {
+            if (!CheckUserPrivilege("CpcmCanEditUsers", "True", id))
+            {
+                return StatusCode(403);
+            }
+
             CpcmUser user;
             try
             {
