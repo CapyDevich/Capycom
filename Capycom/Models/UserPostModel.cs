@@ -8,6 +8,7 @@
 
         public Guid? PostFatherId { get; set; }
 
+        [FutureDate]
         public DateTime? Published { get; set; }
     }
 
