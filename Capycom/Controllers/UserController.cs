@@ -890,9 +890,9 @@ namespace Capycom.Controllers
         }
 
         [Authorize]
-        public async Task<IActionResult> CreatePost(Guid author)
+        public async Task<IActionResult> CreatePost()
         {
-            return View(author);
+            return View();
         }
 
         [Authorize]
@@ -914,6 +914,7 @@ namespace Capycom.Controllers
                 post.CpcmPostFather = userPost.PostFatherId;
                 post.CpcmPostCreationDate = DateTime.Now;
                 post.CpcmPostPublishedDate = userPost.Published;
+                post.CpcmUserId = Guid.Parse(User.FindFirst(c => c.Type == "CpcmUserId").Value);
 
                 List<string>filePaths = new List<string>(); 
                 List<CpcmImage> images = new List<CpcmImage>();
@@ -981,6 +982,8 @@ namespace Capycom.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeletePost(Guid postGuid)
         {
+
+
             CpcmPost? post = null;
             try
             {
@@ -990,10 +993,15 @@ namespace Capycom.Controllers
             {
                 return StatusCode(StatusCodes.Status503ServiceUnavailable);
             }
-
             if(post == null)
             {
                 return StatusCode(StatusCodes.Status404NotFound);
+            }
+
+
+            if (!CheckUserPrivilege("CpcmCanDelUsersPosts", "True", post.CpcmUserId.ToString()))
+            {
+                return StatusCode(403);
             }
 
             _context.CpcmPosts.Remove(post);
@@ -1024,6 +1032,12 @@ namespace Capycom.Controllers
             if (post == null)
             {
                 return StatusCode(StatusCodes.Status404NotFound);
+            }
+
+
+            if (!CheckUserPrivilege("CpcmCanEditUsers", "True", post.CpcmUserId.ToString()))
+            {
+                return View("Index");
             }
 
             UserPostEditModel model = new UserPostEditModel();
@@ -1061,7 +1075,11 @@ namespace Capycom.Controllers
                 {
                     return StatusCode(StatusCodes.Status404NotFound);
                 }
-                
+                if (!CheckUserPrivilege("CpcmCanEditUsers", "True", post.CpcmUserId.ToString()))
+                {
+                    return StatusCode(403);
+                }
+
 
                 post.CpcmPostText = editPost.Text;
                 post.CpcmPostPublishedDate = DateTime.Now;
