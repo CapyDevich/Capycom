@@ -6,14 +6,12 @@ namespace Capycom;
 
 public partial class CpcmUser
 {
-    
     public Guid CpcmUserId { get; set; }
 
     public string CpcmUserEmail { get; set; } = null!;
 
     public string CpcmUserTelNum { get; set; } = null!;
 
-    
     public byte[] CpcmUserPwdHash { get; set; } = null!;
 
     public string CpcmUserSalt { get; set; } = null!;
