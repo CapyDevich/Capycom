@@ -12,13 +12,13 @@ namespace Capycom.Models
         [Display(Name = "Адрес электронной почты")]
         
         [EmailAddress(ErrorMessage = "Некорректный адрес")]
-        [Remote(action: "CheckEmail", controller: "User", ErrorMessage = "Email уже занят", HttpMethod = "Post")]
+        [Remote(action: "CheckEmail", controller: "User", ErrorMessage = "Email уже занят", HttpMethod = "Post", AdditionalFields = nameof(CpcmUserId))]
         public string CpcmUserEmail { get; set; } = null!;
 
         [Display(Name = "Номер телефона")]
         
         [Phone(ErrorMessage = "Некорректный номер телефона")]
-        [Remote(action: "CheckPhone", controller: "User", ErrorMessage = "Телефон уже занят", HttpMethod = "Post")]
+        [Remote(action: "CheckPhone", controller: "User", ErrorMessage = "Телефон уже занят", HttpMethod = "Post", AdditionalFields = nameof(CpcmUserId))]
         public string CpcmUserTelNum { get; set; } = null!;
 
         [Display(Name = "Пароль")]
@@ -34,7 +34,7 @@ namespace Capycom.Models
 
         [Display(Name = "Мой Nickname")]
         [Required(ErrorMessage = "Не указан Nickname")]
-        [Remote(action: "CheckNickName", controller: "User", ErrorMessage = "Nickname уже занят", HttpMethod = "Post")]
+        [Remote(action: "CheckNickName", controller: "User", ErrorMessage = "Nickname уже занят", HttpMethod = "Post", AdditionalFields = nameof(CpcmUserId))]
         public string? CpcmUserNickName { get; set; }
     }
 }
