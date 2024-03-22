@@ -711,27 +711,40 @@ namespace Capycom.Controllers
         }
 
         [HttpPost] //TODO: Объединить с методами при регистрации
-        public async Task<IActionResult> CheckEmail(string CpcmUserEmail)
+        public async Task<IActionResult> CheckEmail(string CpcmUserEmail, Guid CpcmUserId)
         {
-            if (CpcmUserEmail.Contains("admin") || CpcmUserEmail.Contains("webmaster") || CpcmUserEmail.Contains("abuse")&& !HttpContext.User.Identity.IsAuthenticated)
+            var authFactor = HttpContext.User.FindFirst(c => c.Type == "CpcmCanEditUsers" && c.Value == "True");
+            if(authFactor != null)
+            {
+                return Json(!await _context.CpcmUsers.AnyAsync(e => e.CpcmUserEmail == CpcmUserEmail && e.CpcmUserId!=CpcmUserId));
+            }
+
+
+            if (CpcmUserEmail.Contains("admin") || CpcmUserEmail.Contains("webmaster") || CpcmUserEmail.Contains("abuse"))
             {
                 return Json(false);
             }
-            return Json(!await _context.CpcmUsers.AnyAsync(e => e.CpcmUserEmail == CpcmUserEmail && e.CpcmUserId.ToString()!=HttpContext.User.FindFirst(c => c.Type == "CpcmUserId").Value));
+            return Json(!await _context.CpcmUsers.AnyAsync(e => e.CpcmUserEmail == CpcmUserEmail && e.CpcmUserId != CpcmUserId));
         }
         [HttpPost]//TODO: Объединить с методами при регистрации
-        public async Task<IActionResult> CheckNickName(string CpcmUserNickName)
+        public async Task<IActionResult> CheckNickName(string CpcmUserNickName, Guid CpcmUserId)
         {
-            if (CpcmUserNickName.Contains("admin") || CpcmUserNickName.Contains("webmaster") || CpcmUserNickName.Contains("abuse") && !HttpContext.User.Identity.IsAuthenticated)
+            var authFactor = HttpContext.User.FindFirst(c => c.Type == "CpcmCanEditUsers" && c.Value == "True");
+            if (authFactor != null)
+            {
+                return Json(!await _context.CpcmUsers.AnyAsync(e => e.CpcmUserNickName == CpcmUserNickName && e.CpcmUserId != CpcmUserId));
+            }
+
+            if (CpcmUserNickName.Contains("admin") || CpcmUserNickName.Contains("webmaster") || CpcmUserNickName.Contains("abuse"))
             {
                 return Json(false);
             }
-            return Json(!await _context.CpcmUsers.AnyAsync(e => e.CpcmUserNickName == CpcmUserNickName && e.CpcmUserId.ToString() != HttpContext.User.FindFirst(c => c.Type == "CpcmUserId").Value));
+            return Json(!await _context.CpcmUsers.AnyAsync(e => e.CpcmUserNickName == CpcmUserNickName && e.CpcmUserId != CpcmUserId));
         }
         [HttpPost]//TODO: Объединить с методами при регистрации
-        public async Task<IActionResult> CheckPhone(string CpcmUserTelNum)
+        public async Task<IActionResult> CheckPhone(string CpcmUserTelNum, Guid CpcmUserId)
         {
-            return Json(!await _context.CpcmUsers.AnyAsync(e => e.CpcmUserTelNum == CpcmUserTelNum && e.CpcmUserId.ToString() != HttpContext.User.FindFirst(c => c.Type == "CpcmUserId").Value));
+            return Json(!await _context.CpcmUsers.AnyAsync(e => e.CpcmUserTelNum == CpcmUserTelNum && e.CpcmUserId != CpcmUserId));
         }
 
 
