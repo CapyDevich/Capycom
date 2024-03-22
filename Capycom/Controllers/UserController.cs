@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using NuGet.Protocol.Plugins;
+using System.Data.Common;
 
 namespace Capycom.Controllers
 {
@@ -42,12 +43,19 @@ namespace Capycom.Controllers
             CpcmUser user;
             try
             {
-                user = await _context.CpcmUsers.Where(c => c.CpcmUserId == Guid.Parse(userId)).FirstAsync();
+                user = await _context.CpcmUsers.Where(c => c.CpcmUserId == Guid.Parse(userId)).FirstOrDefaultAsync();
             }
-            catch (Exception)
+            catch (DbException)
             {
                 Response.StatusCode = 418;
                 ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
+                return View("Error418");
+            }
+
+            if (user == null)
+            {
+                Response.StatusCode = 418;
+                ViewData["Message"] = "Пользователь не найден";
                 return View("Error418");
             }
 
@@ -72,15 +80,23 @@ namespace Capycom.Controllers
                 .Include(c => c.CpcmUserRoleNavigation)
                 .Include(c => c.CpcmUserSchoolNavigation)
                 .Include(c => c.CpcmUserUniversityNavigation)
-                .Where(c => c.CpcmUserId == id).FirstAsync();
+                .Where(c => c.CpcmUserId == id).FirstOrDefaultAsync();
             }
-            catch (Exception)
+            catch (DbException)
             {
                 Response.StatusCode = 418;
                 ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
                 return View("Error418");
             }
-            if(user.CpcmUserNickName != null)
+
+            if (user == null)
+            {
+                Response.StatusCode = 418;
+                ViewData["Message"] = "Пользователь не найден";
+                return View("Error418");
+            }
+
+            if (user.CpcmUserNickName != null)
             {
                 return RedirectToAction("Index", new { nickName = user.CpcmUserNickName });
             }
@@ -98,14 +114,29 @@ namespace Capycom.Controllers
                 .Include(c => c.CpcmUserRoleNavigation)
                 .Include(c => c.CpcmUserSchoolNavigation)
                 .Include(c => c.CpcmUserUniversityNavigation)
-                .Where(c => c.CpcmUserNickName == nickName).FirstAsync();
+                .Where(c => c.CpcmUserNickName == nickName).FirstOrDefaultAsync();
             }
-            catch (Exception)
+            catch (DbException)
             {
                 Response.StatusCode = 418;
                 ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
                 return View("Error418");
             }
+
+            if (user == null)
+            {
+                Response.StatusCode = 418;
+                ViewData["Message"] = "Пользователь не найден";
+                return View("Error418");
+            }
+
+            if (user == null)
+            {
+                Response.StatusCode = 418;
+                ViewData["Message"] = "Пользователь не найден";
+                return View("Error418");
+            }
+
             return View(user);
         }
 
@@ -124,15 +155,21 @@ namespace Capycom.Controllers
             CpcmUser user;
             try
             {
-                user = await _context.CpcmUsers.Where(c => c.CpcmUserId == Guid.Parse(id)).FirstAsync();
+                user = await _context.CpcmUsers.Where(c => c.CpcmUserId == Guid.Parse(id)).FirstOrDefaultAsync();
             }
-            catch (Exception)
+            catch (DbException)
             {
                 Response.StatusCode = 418;
                 ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
                 return View("Error418");
             }
 
+            if (user == null)
+            {
+                Response.StatusCode = 418;
+                ViewData["Message"] = "Пользователь не найден";
+                return View("Error418");
+            }
 
             ViewData["CpcmUserCity"] = new SelectList(_context.CpcmCities, "CpcmCityId", "CpcmCityName", user.CpcmUserCity);
             ViewData["CpcmUserSchool"] = new SelectList(_context.CpcmSchools, "CpcmSchooldId", "CpcmSchoolName", user.CpcmUserSchool);
@@ -156,12 +193,19 @@ namespace Capycom.Controllers
                 CpcmUser cpcmUser;
                 try
                 {
-                    cpcmUser = await _context.CpcmUsers.Where(c => c.CpcmUserId == Guid.Parse(user.CpcmUserId.ToString())).FirstAsync();
+                    cpcmUser = await _context.CpcmUsers.Where(c => c.CpcmUserId == Guid.Parse(user.CpcmUserId.ToString())).FirstOrDefaultAsync();
                 }
-                catch (Exception)
+                catch (DbException)
                 {
                     Response.StatusCode = 418;
                     ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
+                    return View("Error418");
+                }
+
+                if (user == null)
+                {
+                    Response.StatusCode = 418;
+                    ViewData["Message"] = "Пользователь не найден";
                     return View("Error418");
                 }
 
@@ -235,7 +279,7 @@ namespace Capycom.Controllers
                 {
                     await _context.SaveChangesAsync();
                 }
-                catch (Exception)
+                catch (DbException)
                 {
                     if (System.IO.File.Exists(filePathUserImage))
                     {
@@ -277,14 +321,21 @@ namespace Capycom.Controllers
             CpcmUser user;
             try
             {
-                user = await _context.CpcmUsers.Where(c => c.CpcmUserId == Guid.Parse(id)).FirstAsync();
+                user = await _context.CpcmUsers.Where(c => c.CpcmUserId == Guid.Parse(id)).FirstOrDefaultAsync();
             }
-            catch (Exception)
+            catch (DbException)
             {
                 Response.StatusCode = 418;
                 ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
                 return View("Error418");
             }
+            if (user == null)
+            {
+                Response.StatusCode = 418;
+                ViewData["Message"] = "Пользователь не найден";
+                return View("Error418");
+            }
+
             return View(user);
 
         }
@@ -305,12 +356,19 @@ namespace Capycom.Controllers
                 CpcmUser cpcmUser;
                 try
                 {
-                    cpcmUser = await _context.CpcmUsers.Where(c => c.CpcmUserId == Guid.Parse(user.CpcmUserId.ToString())).FirstAsync();
+                    cpcmUser = await _context.CpcmUsers.Where(c => c.CpcmUserId == Guid.Parse(user.CpcmUserId.ToString())).FirstOrDefaultAsync();
                 }
-                catch (Exception)
+                catch (DbException)
                 {
                     Response.StatusCode = 418;
                     ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
+                    return View("Error418");
+                }
+
+                if (user == null)
+                {
+                    Response.StatusCode = 418;
+                    ViewData["Message"] = "Пользователь не найден";
                     return View("Error418");
                 }
 
@@ -323,7 +381,7 @@ namespace Capycom.Controllers
                 {
                     await _context.SaveChangesAsync();
                 }
-                catch (Exception)
+                catch (DbException)
                 {
                     Response.StatusCode = 418;
                     ViewData["Message"] = "Не удалось сохранить вас как нового пользователя. Возможно вы указали данные, которые не поддерживаются нами. Обратитесь в техническую поддержку";
@@ -344,12 +402,19 @@ namespace Capycom.Controllers
             CpcmUser user;
             try
             {
-                user = await _context.CpcmUsers.Where(c => c.CpcmUserId == id).FirstAsync();
+                user = await _context.CpcmUsers.Where(c => c.CpcmUserId == id).FirstOrDefaultAsync();
             }
-            catch (Exception)
+            catch (DbException)
             {
                 Response.StatusCode = 418;
                 ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
+                return View("Error418");
+            }
+
+            if (user == null)
+            {
+                Response.StatusCode = 418;
+                ViewData["Message"] = "Пользователь не найден";
                 return View("Error418");
             }
 
@@ -367,7 +432,7 @@ namespace Capycom.Controllers
                 friendList1 = await _context.CpcmUserfriends.Where(c => c.CmcpUserId == user.CpcmUserId && c.CpcmFriendRequestStatus==true).Select(c => c.CmcpFriend).ToListAsync();
                 friendList2 = await _context.CpcmUserfriends.Where(c => c.CmcpFriendId == user.CpcmUserId && c.CpcmFriendRequestStatus == true).Select(c => c.CmcpUser).ToListAsync();
             }
-            catch (Exception)
+            catch (DbException)
             {
                 Response.StatusCode = 418;
                 ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
@@ -385,12 +450,19 @@ namespace Capycom.Controllers
             CpcmUser user;
             try
             {
-                user = await _context.CpcmUsers.Where(c => c.CpcmUserNickName == nickName).FirstAsync();
+                user = await _context.CpcmUsers.Where(c => c.CpcmUserNickName == nickName).FirstOrDefaultAsync();
             }
-            catch (Exception)
+            catch (DbException)
             {
                 Response.StatusCode = 418;
                 ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
+                return View("Error418");
+            }
+
+            if (user == null)
+            {
+                Response.StatusCode = 418;
+                ViewData["Message"] = "Пользователь не найден";
                 return View("Error418");
             }
 
@@ -402,7 +474,7 @@ namespace Capycom.Controllers
                 friendList1 = await _context.CpcmUserfriends.Where(c => c.CmcpUserId == user.CpcmUserId && c.CpcmFriendRequestStatus == true).Select(c => c.CmcpFriend).ToListAsync();
                 friendList2 = await _context.CpcmUserfriends.Where(c => c.CmcpFriendId == user.CpcmUserId && c.CpcmFriendRequestStatus == true).Select(c => c.CmcpUser).ToListAsync();
             }
-            catch (Exception)
+            catch (DbException)
             {
                 Response.StatusCode = 418;
                 ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
@@ -419,7 +491,7 @@ namespace Capycom.Controllers
             CpcmUser user;
             try
             {
-                user = await _context.CpcmUsers.Where(c => c.CpcmUserId == id).FirstAsync();
+                user = await _context.CpcmUsers.Where(c => c.CpcmUserId == id).FirstOrDefaultAsync();
             }
             catch (Exception)
             {
@@ -428,6 +500,12 @@ namespace Capycom.Controllers
                 return View("Error418");
             }
 
+            if (user == null)
+            {
+                Response.StatusCode = 418;
+                ViewData["Message"] = "Пользователь не найден";
+                return View("Error418");
+            }
 
             if (user.CpcmUserNickName != null)
             {
@@ -460,12 +538,19 @@ namespace Capycom.Controllers
             CpcmUser user;
             try
             {
-                user = await _context.CpcmUsers.Where(c => c.CpcmUserNickName == nickName).FirstAsync();
+                user = await _context.CpcmUsers.Where(c => c.CpcmUserNickName == nickName).FirstOrDefaultAsync();
             }
-            catch (Exception)
+            catch (DbException)
             {
                 Response.StatusCode = 418;
                 ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
+                return View("Error418");
+            }
+
+            if (user == null)
+            {
+                Response.StatusCode = 418;
+                ViewData["Message"] = "Пользователь не найден";
                 return View("Error418");
             }
 
@@ -477,7 +562,7 @@ namespace Capycom.Controllers
                 followerList1 = await _context.CpcmUserfollowers.Where(c => c.CpcmUserId == user.CpcmUserId).Select(c => c.CpcmFollower).ToListAsync();
                 followerList2 = await _context.CpcmUserfollowers.Where(c => c.CpcmFollowerId == user.CpcmUserId).Select(c => c.CpcmUser).ToListAsync();
             }
-            catch (Exception)
+            catch (DbException)
             {
                 Response.StatusCode = 418;
                 ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
