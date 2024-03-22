@@ -1034,11 +1034,11 @@ namespace Capycom.Controllers
             if(ModelState.IsValid)
             {
                 CpcmPost? post = null;
-                int i = 0;
+                
                 try
                 {
-                    post = await _context.CpcmPosts.Where(c => c.CpcmPostId == editPost.Id).FirstOrDefaultAsync();
-                    i = (await _context.CpcmImages.Where(c => c.CpcmPostId == editPost.Id).OrderBy(k => k.CpcmImageOrder).LastAsync()).CpcmImageOrder;
+                    post = await _context.CpcmPosts.Include(c => c.CpcmImages).Where(c => c.CpcmPostId == editPost.Id).FirstOrDefaultAsync();
+                    
                 }
                 catch (DbException)
                 {
@@ -1048,6 +1048,7 @@ namespace Capycom.Controllers
                 {
                     return StatusCode(StatusCodes.Status404NotFound);
                 }
+                int i = post.CpcmImages.Where(c => c.CpcmPostId == editPost.Id).OrderBy(k => k.CpcmImageOrder).Last().CpcmImageOrder;
 
                 post.CpcmPostText = editPost.Text;
                 post.CpcmPostPublishedDate = DateTime.Now;
@@ -1055,7 +1056,7 @@ namespace Capycom.Controllers
                 List<CpcmImage>? images = null;
                 try
                 {
-                    images = await _context.CpcmImages.Where(c => !editPost.FilesToDelete.Contains(c.CpcmImageId)).ToListAsync();
+                    images = post.CpcmImages.Where(c => !editPost.FilesToDelete.Contains(c.CpcmImageId)).ToList();
                 }
                 catch(DbException)
                 {
@@ -1066,11 +1067,16 @@ namespace Capycom.Controllers
                 if (images != null)
                 {
                     _context.CpcmImages.RemoveRange(images);
+                    foreach(var item in  images) 
+                    {
+                        post.CpcmImages.Remove(item);
+                    }
+
                     try
                     {
                         await _context.SaveChangesAsync();
 
-                        var imagesAfterDeletion = await _context.CpcmImages.Where(c => c.CpcmPostId == post.CpcmPostId).OrderBy(i => i.CpcmImageOrder).ToListAsync();
+                        var imagesAfterDeletion = post.CpcmImages.Where(c => c.CpcmPostId == post.CpcmPostId).OrderBy(i => i.CpcmImageOrder).ToList();
                         
                         for (int j = 0; j < imagesAfterDeletion.Count; j++)
                         {
@@ -1085,9 +1091,7 @@ namespace Capycom.Controllers
                             {
                                 System.IO.File.Delete(image.CpcmImagePath);
                             }
-                        }
-
-                        
+                        }       
 
                     }
                     catch (DbException)
