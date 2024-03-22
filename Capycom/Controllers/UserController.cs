@@ -900,6 +900,10 @@ namespace Capycom.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> CreatePost(UserPostModel userPost)
         {
+            if(userPost.Text==null && userPost.Files.Count>0)
+            {
+                return View(userPost);
+            }
 
             if(ModelState.IsValid)
             {
@@ -973,6 +977,8 @@ namespace Capycom.Controllers
         }
 
         [Authorize]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeletePost(Guid postGuid)
         {
             CpcmPost? post = null;
@@ -1025,13 +1031,20 @@ namespace Capycom.Controllers
             model.UserId = post.CpcmUserId;
             model.Text = post.CpcmPostText;
             model.CpcmImages = post.CpcmImages;
-
             return View(model);
         }
 
         [Authorize]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> EditPost(UserPostEditModel editPost)
         {
+            if(editPost.Text==null && editPost.FilesToDelete.Count==0 && editPost.NewFiles.Count==0)
+            {
+                return View(editPost);
+            }
+
+
             if(ModelState.IsValid)
             {
                 CpcmPost? post = null; 
