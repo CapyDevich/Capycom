@@ -174,7 +174,7 @@ namespace Capycom.Controllers
             {
                 return Json(false);
             }
-            return Json(!_context.CpcmUsers.Any(e => e.CpcmUserEmail == CpcmUserEmail));
+            return Json(!await _context.CpcmUsers.AnyAsync(e => e.CpcmUserEmail == CpcmUserEmail));
         }
 
         [HttpPost]
@@ -184,13 +184,13 @@ namespace Capycom.Controllers
             {
                 return Json(false);
             }
-            return Json(!_context.CpcmUsers.Any(e => e.CpcmUserNickName == CpcmUserNickName));
+            return Json(!await _context.CpcmUsers.AnyAsync(e => e.CpcmUserNickName == CpcmUserNickName));
         }
 
         [HttpPost]
         public async Task<IActionResult> CheckPhone(string CpcmUserTelNum)
         {
-            return Json(!_context.CpcmUsers.Any(e => e.CpcmUserTelNum == CpcmUserTelNum));
+            return Json(!await _context.CpcmUsers.AnyAsync(e => e.CpcmUserTelNum == CpcmUserTelNum));
         }
 
         [HttpPost]

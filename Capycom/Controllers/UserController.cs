@@ -42,7 +42,7 @@ namespace Capycom.Controllers
             CpcmUser user;
             try
             {
-                user = _context.CpcmUsers.Where(c => c.CpcmUserId == Guid.Parse(userId)).First();
+                user = await _context.CpcmUsers.Where(c => c.CpcmUserId == Guid.Parse(userId)).FirstAsync();
             }
             catch (Exception)
             {
@@ -53,11 +53,11 @@ namespace Capycom.Controllers
 
             if (user.CpcmUserNickName != null)
             {
-                return RedirectToActionPermanent("Index", new { nickName = user.CpcmUserNickName });
+                return RedirectToAction("Index", new { nickName = user.CpcmUserNickName });
             }
             else
             {
-                return RedirectToActionPermanent("Index", new { id = user.CpcmUserId });
+                return RedirectToAction("Index", new { id = user.CpcmUserId });
             }
 
         }
@@ -67,12 +67,12 @@ namespace Capycom.Controllers
             CpcmUser user;
             try
             {
-                user = _context.CpcmUsers
+                user = await _context.CpcmUsers
                 .Include(c => c.CpcmUserCityNavigation)
                 .Include(c => c.CpcmUserRoleNavigation)
                 .Include(c => c.CpcmUserSchoolNavigation)
                 .Include(c => c.CpcmUserUniversityNavigation)
-                .Where(c => c.CpcmUserId == id).First();
+                .Where(c => c.CpcmUserId == id).FirstAsync();
             }
             catch (Exception)
             {
@@ -82,7 +82,7 @@ namespace Capycom.Controllers
             }
             if(user.CpcmUserNickName != null)
             {
-                return RedirectToActionPermanent("Index", new { nickName = user.CpcmUserNickName });
+                return RedirectToAction("Index", new { nickName = user.CpcmUserNickName });
             }
             return View(user);
         }
@@ -93,12 +93,12 @@ namespace Capycom.Controllers
             CpcmUser user;
             try
             {
-                user = _context.CpcmUsers
+                user = await _context.CpcmUsers
                 .Include(c => c.CpcmUserCityNavigation)
                 .Include(c => c.CpcmUserRoleNavigation)
                 .Include(c => c.CpcmUserSchoolNavigation)
                 .Include(c => c.CpcmUserUniversityNavigation)
-                .Where(c => c.CpcmUserNickName == nickName).First();
+                .Where(c => c.CpcmUserNickName == nickName).FirstAsync();
             }
             catch (Exception)
             {
@@ -156,7 +156,7 @@ namespace Capycom.Controllers
                 CpcmUser cpcmUser;
                 try
                 {
-                    cpcmUser = _context.CpcmUsers.Where(c => c.CpcmUserId == Guid.Parse(user.CpcmUserId.ToString())).First();
+                    cpcmUser = await _context.CpcmUsers.Where(c => c.CpcmUserId == Guid.Parse(user.CpcmUserId.ToString())).FirstAsync();
                 }
                 catch (Exception)
                 {
@@ -252,11 +252,11 @@ namespace Capycom.Controllers
 
                 if (cpcmUser.CpcmUserNickName != null)
                 {
-                    return RedirectToActionPermanent("Index", new { nickName = cpcmUser.CpcmUserNickName });
+                    return RedirectToAction("Index", new { nickName = cpcmUser.CpcmUserNickName });
                 }
                 else
                 {
-                    return RedirectToActionPermanent("Index", new { id = cpcmUser.CpcmUserId });
+                    return RedirectToAction("Index", new { id = cpcmUser.CpcmUserId });
                 }
             }
 
@@ -277,7 +277,7 @@ namespace Capycom.Controllers
             CpcmUser user;
             try
             {
-                user = _context.CpcmUsers.Where(c => c.CpcmUserId == Guid.Parse(id)).First();
+                user = await _context.CpcmUsers.Where(c => c.CpcmUserId == Guid.Parse(id)).FirstAsync();
             }
             catch (Exception)
             {
@@ -305,7 +305,7 @@ namespace Capycom.Controllers
                 CpcmUser cpcmUser;
                 try
                 {
-                    cpcmUser = _context.CpcmUsers.Where(c => c.CpcmUserId == Guid.Parse(user.CpcmUserId.ToString())).First();
+                    cpcmUser = await _context.CpcmUsers.Where(c => c.CpcmUserId == Guid.Parse(user.CpcmUserId.ToString())).FirstAsync();
                 }
                 catch (Exception)
                 {
@@ -319,7 +319,19 @@ namespace Capycom.Controllers
                 cpcmUser.CpcmUserNickName = user.CpcmUserNickName;
                 cpcmUser.CpcmUserPwdHash = MyConfig.GetSha256Hash(user.CpcmUserPwd, cpcmUser.CpcmUserSalt, _config.ServerSol);
 
-                return RedirectToActionPermanent($"Index\\{user.CpcmUserId}");
+                try
+                {
+                    await _context.SaveChangesAsync();
+                }
+                catch (Exception)
+                {
+                    Response.StatusCode = 418;
+                    ViewData["Message"] = "Не удалось сохранить вас как нового пользователя. Возможно вы указали данные, которые не поддерживаются нами. Обратитесь в техническую поддержку";
+                    return View("Error418");
+                }
+
+
+                return RedirectToAction($"Index\\{user.CpcmUserId}");
             }
 
             return View(user);
@@ -332,7 +344,7 @@ namespace Capycom.Controllers
             CpcmUser user;
             try
             {
-                user = _context.CpcmUsers.Where(c => c.CpcmUserId == id).First();
+                user = await _context.CpcmUsers.Where(c => c.CpcmUserId == id).FirstAsync();
             }
             catch (Exception)
             {
@@ -344,7 +356,7 @@ namespace Capycom.Controllers
 
             if (user.CpcmUserNickName != null)
             {
-                return RedirectToActionPermanent("Friends", new { nickName = user.CpcmUserNickName });
+                return RedirectToAction("Friends", new { nickName = user.CpcmUserNickName });
             }
 
             //_context.CpcmUserfriends.Select(c => c.CmcpFriend).Where(c => c.CmcpUserId == id).Include(c => c.CmcpFriend).ToList();
@@ -352,8 +364,8 @@ namespace Capycom.Controllers
             List<CpcmUser> friendList2;
             try
             {
-                friendList1 = _context.CpcmUserfriends.Where(c => c.CmcpUserId == user.CpcmUserId && c.CpcmFriendRequestStatus==true).Select(c => c.CmcpFriend).ToList();
-                friendList2 = _context.CpcmUserfriends.Where(c => c.CmcpFriendId == user.CpcmUserId && c.CpcmFriendRequestStatus == true).Select(c => c.CmcpUser).ToList();
+                friendList1 = await _context.CpcmUserfriends.Where(c => c.CmcpUserId == user.CpcmUserId && c.CpcmFriendRequestStatus==true).Select(c => c.CmcpFriend).ToListAsync();
+                friendList2 = await _context.CpcmUserfriends.Where(c => c.CmcpFriendId == user.CpcmUserId && c.CpcmFriendRequestStatus == true).Select(c => c.CmcpUser).ToListAsync();
             }
             catch (Exception)
             {
@@ -373,7 +385,7 @@ namespace Capycom.Controllers
             CpcmUser user;
             try
             {
-                user = _context.CpcmUsers.Where(c => c.CpcmUserNickName == nickName).First();
+                user = await _context.CpcmUsers.Where(c => c.CpcmUserNickName == nickName).FirstAsync();
             }
             catch (Exception)
             {
@@ -387,8 +399,8 @@ namespace Capycom.Controllers
             List<CpcmUser> friendList2;
             try
             {
-                friendList1 = _context.CpcmUserfriends.Where(c => c.CmcpUserId == user.CpcmUserId && c.CpcmFriendRequestStatus == true).Select(c => c.CmcpFriend).ToList();
-                friendList2 = _context.CpcmUserfriends.Where(c => c.CmcpFriendId == user.CpcmUserId && c.CpcmFriendRequestStatus == true).Select(c => c.CmcpUser).ToList();
+                friendList1 = await _context.CpcmUserfriends.Where(c => c.CmcpUserId == user.CpcmUserId && c.CpcmFriendRequestStatus == true).Select(c => c.CmcpFriend).ToListAsync();
+                friendList2 = await _context.CpcmUserfriends.Where(c => c.CmcpFriendId == user.CpcmUserId && c.CpcmFriendRequestStatus == true).Select(c => c.CmcpUser).ToListAsync();
             }
             catch (Exception)
             {
@@ -407,7 +419,7 @@ namespace Capycom.Controllers
             CpcmUser user;
             try
             {
-                user = _context.CpcmUsers.Where(c => c.CpcmUserId == id).First();
+                user = await _context.CpcmUsers.Where(c => c.CpcmUserId == id).FirstAsync();
             }
             catch (Exception)
             {
@@ -419,7 +431,7 @@ namespace Capycom.Controllers
 
             if (user.CpcmUserNickName != null)
             {
-                return RedirectToActionPermanent("Followers", new { nickName = user.CpcmUserNickName });
+                return RedirectToAction("Followers", new { nickName = user.CpcmUserNickName });
             }
 
             //_context.CpcmUserfriends.Select(c => c.CmcpFriend).Where(c => c.CmcpUserId == id).Include(c => c.CmcpFriend).ToList();
@@ -427,8 +439,8 @@ namespace Capycom.Controllers
             List<CpcmUser> followerList2;
             try
             {
-                followerList1 = _context.CpcmUserfollowers.Where(c => c.CpcmUserId == user.CpcmUserId).Select(c => c.CpcmFollower).ToList();
-                followerList2 = _context.CpcmUserfollowers.Where(c => c.CpcmFollowerId == user.CpcmUserId).Select(c => c.CpcmUser).ToList();
+                followerList1 = await _context.CpcmUserfollowers.Where(c => c.CpcmUserId == user.CpcmUserId).Select(c => c.CpcmFollower).ToListAsync();
+                followerList2 = await _context.CpcmUserfollowers.Where(c => c.CpcmFollowerId == user.CpcmUserId).Select(c => c.CpcmUser).ToListAsync();
             }
             catch (Exception)
             {
@@ -448,7 +460,7 @@ namespace Capycom.Controllers
             CpcmUser user;
             try
             {
-                user = _context.CpcmUsers.Where(c => c.CpcmUserNickName == nickName).First();
+                user = await _context.CpcmUsers.Where(c => c.CpcmUserNickName == nickName).FirstAsync();
             }
             catch (Exception)
             {
@@ -462,8 +474,8 @@ namespace Capycom.Controllers
             List<CpcmUser> followerList2;
             try
             {
-                followerList1 = _context.CpcmUserfollowers.Where(c => c.CpcmUserId == user.CpcmUserId).Select(c => c.CpcmFollower).ToList();
-                followerList2 = _context.CpcmUserfollowers.Where(c => c.CpcmFollowerId == user.CpcmUserId).Select(c => c.CpcmUser).ToList();
+                followerList1 = await _context.CpcmUserfollowers.Where(c => c.CpcmUserId == user.CpcmUserId).Select(c => c.CpcmFollower).ToListAsync();
+                followerList2 = await _context.CpcmUserfollowers.Where(c => c.CpcmFollowerId == user.CpcmUserId).Select(c => c.CpcmUser).ToListAsync();
             }
             catch (Exception)
             {
@@ -571,7 +583,7 @@ namespace Capycom.Controllers
             {
                 return Json(false);
             }
-            return Json(!_context.CpcmUsers.Any(e => e.CpcmUserEmail == CpcmUserEmail && e.CpcmUserId.ToString()!=HttpContext.User.FindFirst(c => c.Type == "CpcmUserId").Value));
+            return Json(!await _context.CpcmUsers.AnyAsync(e => e.CpcmUserEmail == CpcmUserEmail && e.CpcmUserId.ToString()!=HttpContext.User.FindFirst(c => c.Type == "CpcmUserId").Value));
         }
         [HttpPost]//TODO: Объединить с методами при регистрации
         public async Task<IActionResult> CheckNickName(string CpcmUserNickName)
@@ -580,12 +592,12 @@ namespace Capycom.Controllers
             {
                 return Json(false);
             }
-            return Json(!_context.CpcmUsers.Any(e => e.CpcmUserNickName == CpcmUserNickName && e.CpcmUserId.ToString() != HttpContext.User.FindFirst(c => c.Type == "CpcmUserId").Value));
+            return Json(!await _context.CpcmUsers.AnyAsync(e => e.CpcmUserNickName == CpcmUserNickName && e.CpcmUserId.ToString() != HttpContext.User.FindFirst(c => c.Type == "CpcmUserId").Value));
         }
         [HttpPost]//TODO: Объединить с методами при регистрации
         public async Task<IActionResult> CheckPhone(string CpcmUserTelNum)
         {
-            return Json(!_context.CpcmUsers.Any(e => e.CpcmUserTelNum == CpcmUserTelNum && e.CpcmUserId.ToString() != HttpContext.User.FindFirst(c => c.Type == "CpcmUserId").Value));
+            return Json(!await _context.CpcmUsers.AnyAsync(e => e.CpcmUserTelNum == CpcmUserTelNum && e.CpcmUserId.ToString() != HttpContext.User.FindFirst(c => c.Type == "CpcmUserId").Value));
         }
 
 
