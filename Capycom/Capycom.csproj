@@ -18,7 +18,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Models\BDModels1\" />
+    <Folder Include="Models\BDModels\" />
   </ItemGroup>
 
 </Project>
