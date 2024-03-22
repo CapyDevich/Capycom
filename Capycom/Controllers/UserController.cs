@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using NuGet.Protocol.Plugins;
@@ -274,6 +275,15 @@ namespace Capycom.Controllers
                         }
                     }
                 }
+
+                if (!ModelState.IsValid)
+                {
+                    ViewData["CpcmUserCity"] = new SelectList(_context.CpcmCities, "CpcmCityId", "CpcmCityName", user.CpcmUserCity);
+                    ViewData["CpcmUserSchool"] = new SelectList(_context.CpcmSchools, "CpcmSchooldId", "CpcmSchoolName", user.CpcmUserSchool);
+                    ViewData["CpcmUserUniversity"] = new SelectList(_context.CpcmUniversities, "CpcmUniversityId", "CpcmUniversityName", user.CpcmUserUniversity);
+                    return View(user);
+                }
+
 
                 try
                 {
@@ -878,7 +888,271 @@ namespace Capycom.Controllers
             return StatusCode(200);
         }
 
+        [Authorize]
+        public async Task<IActionResult> CreatePost(Guid author)
+        {
+            return View(author);
+        }
+
+        [Authorize]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CreatePost(UserPostModel userPost)
+        {
+
+            if(ModelState.IsValid)
+            {
+                CpcmPost post = new CpcmPost();
+
+                post.CpcmPostText = userPost.Text;
+                post.CpcmPostId = Guid.NewGuid();
+                post.CpcmPostFather = userPost.PostFatherId;
+                post.CpcmPostCreationDate = DateTime.Now;
+                post.CpcmPostPublishedDate = userPost.Published;
+
+                List<string>filePaths = new List<string>(); 
+                List<CpcmImage> images = new List<CpcmImage>();
+
+                int i = 0;
+                foreach(IFormFile file in userPost.Files)
+                {
+                    CheckIFormFile("Files", file, 8388608, new[] { "image/jpeg", "image/png", "image/gif" });
+
+                    if (!ModelState.IsValid)
+                    {
+                       return View(userPost);
+
+                    }
+
+                    string uniqueFileName = Guid.NewGuid().ToString() + Path.GetExtension(file.FileName);
+                    filePaths.Add(Path.Combine("wwwroot", "uploads", uniqueFileName));
+
+                    try
+                    {
+                        using (var fileStream = new FileStream(filePaths.Last(), FileMode.Create))
+                        {
+                            await file.CopyToAsync(fileStream);
+                        }
+                        CpcmImage image = new CpcmImage();
+                        image.CpcmImageId = Guid.NewGuid();
+                        image.CpcmPostId = post.CpcmPostId;
+                        image.CpcmImagePath = filePaths.Last();
+                        image.CpcmImageOrder = 0;
+                        i++;
+
+                        images.Add(image);
+                    }
+                    catch (Exception ex)
+                    {
+                        Response.StatusCode = 418;
+                        ViewData["Message"] = "Не удалось сохранить фотографию на сервере. Пожалуйста, повторите запрос позднее или обратитесь к Администратору.";
+                        return View(userPost);
+                    }
+
+                }
+                post.CpcmImages = images;
+
+                _context.CpcmPosts.Add(post);
+                _context.CpcmImages.AddRange(images);
+                try
+                {
+                    await _context.SaveChangesAsync();
+                }
+                catch (DbException)
+                {
+                    Response.StatusCode = 418;
+                    ViewData["Message"] = "Не удалось сохранить пост. Пожалуйста, повторите запрос позднее или обратитесь к Администратору.";
+                    return View(userPost); // TODO Продумать место для сохранения еррора
+                }
+
+                return View("Index");
+
+            }
+            return View(userPost);
+        }
+
+        [Authorize]
+        public async Task<IActionResult> DeletePost(Guid postGuid)
+        {
+            CpcmPost? post = null;
+            try
+            {
+                post = await _context.CpcmPosts.Where(c => c.CpcmPostId == postGuid).FirstOrDefaultAsync();
+            }
+            catch (DbException)
+            {
+                return StatusCode(StatusCodes.Status503ServiceUnavailable);
+            }
+
+            if(post == null)
+            {
+                return StatusCode(StatusCodes.Status404NotFound);
+            }
+
+            _context.CpcmPosts.Remove(post);
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbException)
+            {
+                return StatusCode(StatusCodes.Status503ServiceUnavailable);
+            }
+            return StatusCode(200);
+        }
+
+        [Authorize]
+        public async Task<IActionResult> EditPost(Guid postGuid)
+        {
+            CpcmPost? post = null;
+            try
+            {
+                post = await _context.CpcmPosts.Where(c => c.CpcmPostId == postGuid).FirstOrDefaultAsync();
+            }
+            catch (DbException)
+            {
+                return StatusCode(StatusCodes.Status503ServiceUnavailable);
+            }
+
+            if (post == null)
+            {
+                return StatusCode(StatusCodes.Status404NotFound);
+            }
+
+            UserPostEditModel model = new UserPostEditModel();
+            model.Id = post.CpcmPostId;
+            model.UserId = post.CpcmUserId;
+            model.Text = post.CpcmPostText;
+            model.CpcmImages = post.CpcmImages;
+
+            return View(model);
+        }
+
+        [Authorize]
+        public async Task<IActionResult> EditPost(UserPostEditModel editPost)
+        {
+            if(ModelState.IsValid)
+            {
+                CpcmPost? post = null;
+                int i = 0;
+                try
+                {
+                    post = await _context.CpcmPosts.Where(c => c.CpcmPostId == editPost.Id).FirstOrDefaultAsync();
+                    i = (await _context.CpcmImages.Where(c => c.CpcmPostId == editPost.Id).OrderBy(k => k.CpcmImageOrder).LastAsync()).CpcmImageOrder;
+                }
+                catch (DbException)
+                {
+                    return StatusCode(StatusCodes.Status503ServiceUnavailable);
+                }
+                if(post == null)
+                {
+                    return StatusCode(StatusCodes.Status404NotFound);
+                }
+
+                post.CpcmPostText = editPost.Text;
+                post.CpcmPostPublishedDate = DateTime.Now;
+
+                List<CpcmImage>? images = null;
+                try
+                {
+                    images = await _context.CpcmImages.Where(c => !editPost.FilesToDelete.Contains(c.CpcmImageId)).ToListAsync();
+                }
+                catch(DbException)
+                {
+                    return StatusCode(StatusCodes.Status503ServiceUnavailable);
+                }
+
+                
+                if (images != null)
+                {
+                    _context.CpcmImages.RemoveRange(images);
+                    try
+                    {
+                        await _context.SaveChangesAsync();
+
+                        var imagesAfterDeletion = await _context.CpcmImages.Where(c => c.CpcmPostId == post.CpcmPostId).OrderBy(i => i.CpcmImageOrder).ToListAsync();
+                        
+                        for (int j = 0; j < imagesAfterDeletion.Count; j++)
+                        {
+                            imagesAfterDeletion[j].CpcmImageOrder = j;
+                        }
+                        i = imagesAfterDeletion.Last().CpcmImageOrder;
 
 
+                        foreach (var image in images)
+                        {
+                            if (System.IO.File.Exists(image.CpcmImagePath))
+                            {
+                                System.IO.File.Delete(image.CpcmImagePath);
+                            }
+                        }
+
+                        
+
+                    }
+                    catch (DbException)
+                    {
+                        return StatusCode(StatusCodes.Status503ServiceUnavailable);
+                    }
+                }
+
+
+
+                List<string> filePaths = new List<string>();
+                List<CpcmImage> newImages = new List<CpcmImage>();
+
+                
+                foreach (var file in editPost.NewFiles)
+                {
+                    CheckIFormFile("NewFiles", file, 8388608, new[] { "image/jpeg", "image/png", "image/gif" });
+
+                    if (!ModelState.IsValid)
+                    {
+                        return View(editPost);
+
+                    }
+
+                    string uniqueFileName = Guid.NewGuid().ToString() + Path.GetExtension(file.FileName);
+                    filePaths.Add(Path.Combine("wwwroot", "uploads", uniqueFileName));
+
+                    try
+                    {
+                        using (var fileStream = new FileStream(filePaths.Last(), FileMode.Create))
+                        {
+                            await file.CopyToAsync(fileStream);
+                        }
+                        CpcmImage image = new CpcmImage();
+                        image.CpcmImageId = Guid.NewGuid();
+                        image.CpcmPostId = post.CpcmPostId;
+                        image.CpcmImagePath = filePaths.Last();
+                        image.CpcmImageOrder = 0;
+                        i++;
+
+                        newImages.Add(image);
+                    }
+                    catch (Exception ex)
+                    {
+                        Response.StatusCode = 418;
+                        ViewData["Message"] = "Не удалось сохранить фотографию на сервере. Пожалуйста, повторите запрос позднее или обратитесь к Администратору.";
+                        return View(editPost);
+                    }
+
+                }
+
+                _context.CpcmImages.AddRange(newImages);
+                try
+                {
+                    await _context.SaveChangesAsync();
+                }
+                catch (DbException)
+                {
+                    Response.StatusCode = 418;
+                    ViewData["Message"] = "Не удалось сохранить пост. Пожалуйста, повторите запрос позднее или обратитесь к Администратору.";
+                    return View(editPost); // TODO Продумать место для сохранения еррора
+                }
+
+            }
+            return View(editPost);
+        }
     }
 }
