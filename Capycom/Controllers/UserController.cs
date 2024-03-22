@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using NuGet.Packaging;
 using NuGet.Protocol.Plugins;
 using System.Data.Common;
 
@@ -1033,8 +1034,7 @@ namespace Capycom.Controllers
         {
             if(ModelState.IsValid)
             {
-                CpcmPost? post = null;
-                
+                CpcmPost? post = null; 
                 try
                 {
                     post = await _context.CpcmPosts.Include(c => c.CpcmImages).Where(c => c.CpcmPostId == editPost.Id).FirstOrDefaultAsync();
@@ -1048,25 +1048,58 @@ namespace Capycom.Controllers
                 {
                     return StatusCode(StatusCodes.Status404NotFound);
                 }
-                int i = post.CpcmImages.Where(c => c.CpcmPostId == editPost.Id).OrderBy(k => k.CpcmImageOrder).Last().CpcmImageOrder;
+                
 
                 post.CpcmPostText = editPost.Text;
                 post.CpcmPostPublishedDate = DateTime.Now;
 
-                List<CpcmImage>? images = null;
-                try
-                {
-                    images = post.CpcmImages.Where(c => !editPost.FilesToDelete.Contains(c.CpcmImageId)).ToList();
-                }
-                catch(DbException)
-                {
-                    return StatusCode(StatusCodes.Status503ServiceUnavailable);
-                }
+                int i = post.CpcmImages.Where(c => c.CpcmPostId == editPost.Id).OrderBy(k => k.CpcmImageOrder).Last().CpcmImageOrder;
 
-                
-                if (images != null)
+                List<string> filePaths = new List<string>();
+
+                foreach (var file in editPost.NewFiles)
                 {
-                    _context.CpcmImages.RemoveRange(images);
+                    CheckIFormFile("NewFiles", file, 8388608, new[] { "image/jpeg", "image/png", "image/gif" });
+
+                    if (!ModelState.IsValid)
+                    {
+                        return View(editPost);
+
+                    }
+
+                    string uniqueFileName = Guid.NewGuid().ToString() + Path.GetExtension(file.FileName);
+                    filePaths.Add(Path.Combine("wwwroot", "uploads", uniqueFileName));
+
+                    try
+                    {
+                        using (var fileStream = new FileStream(filePaths.Last(), FileMode.Create))
+                        {
+                            await file.CopyToAsync(fileStream);
+                        }
+                        CpcmImage image = new CpcmImage();
+                        image.CpcmImageId = Guid.NewGuid();
+                        image.CpcmPostId = post.CpcmPostId;
+                        image.CpcmImagePath = filePaths.Last();
+                        image.CpcmImageOrder = 0;
+                        i++;
+
+                        post.CpcmImages.Add(image);
+                    }
+                    catch (Exception ex)
+                    {
+                        Response.StatusCode = 418;
+                        ViewData["Message"] = "Не удалось сохранить фотографию на сервере. Пожалуйста, повторите запрос позднее или обратитесь к Администратору.";
+                        return View(editPost);
+                    }
+
+                }
+                
+
+
+                List<CpcmImage>? images = post.CpcmImages.Where(c => !editPost.FilesToDelete.Contains(c.CpcmImageId)).ToList();
+                if (images.Count!=0)
+                {
+                    //_context.CpcmImages.RemoveRange(images);
                     foreach(var item in  images) 
                     {
                         post.CpcmImages.Remove(item);
@@ -1096,54 +1129,20 @@ namespace Capycom.Controllers
                     }
                     catch (DbException)
                     {
+
+                        foreach (var path in filePaths)
+                        {
+                            if (System.IO.File.Exists(path))
+                            {
+                                System.IO.File.Delete(path);
+                            }
+                        }
+
                         return StatusCode(StatusCodes.Status503ServiceUnavailable);
                     }
                 }
 
 
-
-                List<string> filePaths = new List<string>();
-                List<CpcmImage> newImages = new List<CpcmImage>();
-
-                
-                foreach (var file in editPost.NewFiles)
-                {
-                    CheckIFormFile("NewFiles", file, 8388608, new[] { "image/jpeg", "image/png", "image/gif" });
-
-                    if (!ModelState.IsValid)
-                    {
-                        return View(editPost);
-
-                    }
-
-                    string uniqueFileName = Guid.NewGuid().ToString() + Path.GetExtension(file.FileName);
-                    filePaths.Add(Path.Combine("wwwroot", "uploads", uniqueFileName));
-
-                    try
-                    {
-                        using (var fileStream = new FileStream(filePaths.Last(), FileMode.Create))
-                        {
-                            await file.CopyToAsync(fileStream);
-                        }
-                        CpcmImage image = new CpcmImage();
-                        image.CpcmImageId = Guid.NewGuid();
-                        image.CpcmPostId = post.CpcmPostId;
-                        image.CpcmImagePath = filePaths.Last();
-                        image.CpcmImageOrder = 0;
-                        i++;
-
-                        newImages.Add(image);
-                    }
-                    catch (Exception ex)
-                    {
-                        Response.StatusCode = 418;
-                        ViewData["Message"] = "Не удалось сохранить фотографию на сервере. Пожалуйста, повторите запрос позднее или обратитесь к Администратору.";
-                        return View(editPost);
-                    }
-
-                }
-
-                _context.CpcmImages.AddRange(newImages);
                 try
                 {
                     await _context.SaveChangesAsync();
