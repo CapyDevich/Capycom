@@ -6,9 +6,9 @@ namespace Capycom;
 
 public partial class CapycomContext : DbContext
 {
-    //public CapycomContext()
-    //{
-    //}
+    public CapycomContext()
+    {
+    }
 
     public CapycomContext(DbContextOptions<CapycomContext> options)
         : base(options)
@@ -64,7 +64,7 @@ public partial class CapycomContext : DbContext
 
         modelBuilder.Entity<CpcmComment>(entity =>
         {
-            entity.ToTable("CPCM_COMMENTS");
+            entity.ToTable("CPCM_COMMENTS", tb => tb.HasTrigger("DeleteCommentImageTirgger"));
 
             entity.Property(e => e.CpcmCommentId)
                 .ValueGeneratedNever()
@@ -189,7 +189,7 @@ public partial class CapycomContext : DbContext
 
         modelBuilder.Entity<CpcmPost>(entity =>
         {
-            entity.ToTable("CPCM_POSTS");
+            entity.ToTable("CPCM_POSTS", tb => tb.HasTrigger("DeletePostImageTirgger"));
 
             entity.Property(e => e.CpcmPostId)
                 .ValueGeneratedNever()
@@ -293,7 +293,7 @@ public partial class CapycomContext : DbContext
 
         modelBuilder.Entity<CpcmUser>(entity =>
         {
-            entity.ToTable("CPCM_USERS");
+            entity.ToTable("CPCM_USERS", tb => tb.HasTrigger("DeleteUserTirgger"));
 
             entity.HasIndex(e => e.CpcmUserEmail, "IX_CPCM_USERS").IsUnique();
 

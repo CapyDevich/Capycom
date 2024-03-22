@@ -752,34 +752,34 @@ namespace Capycom.Controllers
             return Json(!await _context.CpcmUsers.AnyAsync(e => e.CpcmUserTelNum == CpcmUserTelNum && e.CpcmUserId != CpcmUserId));
         }
 
-        public async Task<IActionResult> Follow(Guid CpcmUserId)
-        {
+        //public async Task<IActionResult> Follow(Guid CpcmUserId)
+        //{
 
-        }
+        //}
 
-        public async Task<IActionResult> Unfollow(Guid CpcmUserId)
-        {
+        //public async Task<IActionResult> Unfollow(Guid CpcmUserId)
+        //{
 
-        }
+        //}
 
-        public async Task<IActionResult> CreateFriendRequest(Guid CpcmUserId)
-        {
+        //public async Task<IActionResult> CreateFriendRequest(Guid CpcmUserId)
+        //{
 
-        }
+        //}
 
-        public async Task<IActionResult> FriendRequests(Guid CpcmUserId)
-        {
+        //public async Task<IActionResult> FriendRequests(Guid CpcmUserId)
+        //{
 
-        }
+        //}
 
-        public async Task<IActionResult> AnswerToFriendRequests(Guid CpcmUserId)
-        {
+        //public async Task<IActionResult> AnswerToFriendRequests(Guid CpcmUserId)
+        //{
 
-        }
-        public async Task<IActionResult> DeleteToFriendRequests(Guid CpcmUserId)
-        {
+        //}
+        //public async Task<IActionResult> DeleteToFriendRequests(Guid CpcmUserId)
+        //{
 
-        }
+        //}
 
 
 
