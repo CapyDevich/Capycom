@@ -9,8 +9,6 @@
 
         public Guid? PostFatherId { get; set; }
 
-        public DateTime? Published { get; set; }
-
         public List<Guid>? FilesToDelete { get; set; }
 
         public List<IFormFile>? NewFiles { get; set; }
