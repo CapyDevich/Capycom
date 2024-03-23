@@ -342,6 +342,9 @@ namespace Capycom.Controllers
             return View(user);
         }
 
+
+
+
         [Authorize]
         [HttpPost]
         public async Task<ActionResult> EditIdentity(string id)
@@ -442,6 +445,7 @@ namespace Capycom.Controllers
 
 
 
+
         public async Task<ActionResult> Friends(Guid id)
         {
             CpcmUser user;
@@ -530,6 +534,9 @@ namespace Capycom.Controllers
 
             return View(friendList1);
         }
+
+
+
 
         public async Task<ActionResult> Followers(Guid id)
         {
@@ -621,6 +628,7 @@ namespace Capycom.Controllers
 
 
 
+
         [Authorize]
         public async Task<ActionResult> Delete(Guid id)
         {
@@ -699,7 +707,441 @@ namespace Capycom.Controllers
 
 
 
+        [Authorize]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Follow(Guid CpcmUserId)
+        {
 
+            CpcmUserfollower follower = new();
+            follower.CpcmFollowerId = CpcmUserId;
+            follower.CpcmUserId = Guid.Parse(HttpContext.User.FindFirst(c => c.Type == "CpcmUserId").Value);
+            _context.CpcmUserfollowers.Add(follower);
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbException)
+            {
+                return StatusCode(400);
+            }
+
+            return StatusCode(200);
+        }
+
+        [Authorize]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Unfollow(Guid CpcmUserId)
+        {
+            CpcmUserfollower? follow;
+            try
+            {
+                follow = await _context.CpcmUserfollowers.Where(e => e.CpcmUserId == CpcmUserId).FirstOrDefaultAsync();
+            }
+            catch (DbException)
+            {
+                return StatusCode(400);
+            }
+
+
+            if (follow == null)
+            {
+                return StatusCode(400);
+            }
+
+            _context.Remove(follow);
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbException)
+            {
+                return StatusCode(400);
+            }
+
+            return StatusCode(200);
+
+        }
+
+
+
+
+        [Authorize]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CreateFriendRequest(Guid CpcmUserId)
+        {
+            CpcmUserfriend friendRequest = new();
+            friendRequest.CmcpUserId = Guid.Parse(HttpContext.User.FindFirst(c => c.Type == "CpcmUserId").Value);
+            friendRequest.CmcpFriendId = CpcmUserId;
+
+            _context.CpcmUserfriends.Add(friendRequest);
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbException)
+            {
+                return StatusCode(400);
+            }
+
+            return StatusCode(200);
+        }
+
+        [Authorize]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AnswerToFriendRequests(Guid CpcmUserId, bool status)
+        {
+            var friendRequest = await _context.CpcmUserfriends.Where(c => c.CmcpUserId.ToString() == HttpContext.User.FindFirst(c => c.Type == "CpcmUserId").Value
+            && c.CmcpFriendId == CpcmUserId).FirstOrDefaultAsync();
+
+            friendRequest.CpcmFriendRequestStatus = status;
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbException)
+            {
+                return StatusCode(400);
+            }
+
+            return StatusCode(200);
+        }
+
+        [Authorize]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteToFriendRequests(Guid CpcmUserId)
+        {
+            var friendRequest = await _context.CpcmUserfriends.Where(c => c.CmcpUserId.ToString() == HttpContext.User.FindFirst(c => c.Type == "CpcmUserId").Value
+            && c.CmcpFriendId == CpcmUserId).FirstOrDefaultAsync();
+
+            _context.CpcmUserfriends.Remove(friendRequest);
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbException)
+            {
+                return StatusCode(400);
+            }
+
+            return StatusCode(200);
+        }
+
+
+
+
+        [Authorize]
+        public async Task<IActionResult> CreatePost()
+        {
+            return View();
+        }
+
+        [Authorize]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CreatePost(UserPostModel userPost)
+        {
+            if (userPost.Text == null && userPost.Files.Count > 0)
+            {
+                return View(userPost);
+            }
+
+            if (ModelState.IsValid)
+            {
+                CpcmPost post = new CpcmPost();
+
+                post.CpcmPostText = userPost.Text.Trim();
+                post.CpcmPostId = Guid.NewGuid();
+                post.CpcmPostFather = userPost.PostFatherId;
+                post.CpcmPostCreationDate = DateTime.Now;
+                post.CpcmPostPublishedDate = userPost.Published;
+                post.CpcmUserId = Guid.Parse(User.FindFirst(c => c.Type == "CpcmUserId").Value);
+
+                List<string> filePaths = new List<string>();
+                List<CpcmImage> images = new List<CpcmImage>();
+
+                int i = 0;
+                foreach (IFormFile file in userPost.Files)
+                {
+                    CheckIFormFile("Files", file, 8388608, new[] { "image/jpeg", "image/png", "image/gif" });
+
+                    if (!ModelState.IsValid)
+                    {
+                        return View(userPost);
+
+                    }
+
+                    string uniqueFileName = Guid.NewGuid().ToString() + Path.GetExtension(file.FileName);
+                    filePaths.Add(Path.Combine("wwwroot", "uploads", uniqueFileName));
+
+                    try
+                    {
+                        using (var fileStream = new FileStream(filePaths.Last(), FileMode.Create))
+                        {
+                            await file.CopyToAsync(fileStream);
+                        }
+                        CpcmImage image = new CpcmImage();
+                        image.CpcmImageId = Guid.NewGuid();
+                        image.CpcmPostId = post.CpcmPostId;
+                        image.CpcmImagePath = filePaths.Last();
+                        image.CpcmImageOrder = 0;
+                        i++;
+
+                        images.Add(image);
+                    }
+                    catch (Exception ex)
+                    {
+                        Response.StatusCode = 418;
+                        ViewData["Message"] = "Не удалось сохранить фотографию на сервере. Пожалуйста, повторите запрос позднее или обратитесь к Администратору.";
+                        return View(userPost);
+                    }
+
+                }
+                post.CpcmImages = images;
+
+                _context.CpcmPosts.Add(post);
+                _context.CpcmImages.AddRange(images);
+                try
+                {
+                    await _context.SaveChangesAsync();
+                }
+                catch (DbException)
+                {
+                    Response.StatusCode = 418;
+                    ViewData["Message"] = "Не удалось сохранить пост. Пожалуйста, повторите запрос позднее или обратитесь к Администратору.";
+                    return View(userPost); // TODO Продумать место для сохранения еррора
+                }
+
+                return View("Index");
+
+            }
+            return View(userPost);
+        }
+
+        [Authorize]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeletePost(Guid postGuid)
+        {
+
+
+            CpcmPost? post = null;
+            try
+            {
+                post = await _context.CpcmPosts.Where(c => c.CpcmPostId == postGuid).FirstOrDefaultAsync();
+            }
+            catch (DbException)
+            {
+                return StatusCode(StatusCodes.Status503ServiceUnavailable);
+            }
+            if (post == null)
+            {
+                return StatusCode(StatusCodes.Status404NotFound);
+            }
+
+
+            if (!CheckUserPrivilege("CpcmCanDelUsersPosts", "True", post.CpcmUserId.ToString()))
+            {
+                return StatusCode(403);
+            }
+
+            _context.CpcmPosts.Remove(post);
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbException)
+            {
+                return StatusCode(StatusCodes.Status503ServiceUnavailable);
+            }
+            return StatusCode(200);
+        }
+
+        [Authorize]
+        public async Task<IActionResult> EditPost(Guid postGuid)
+        {
+            CpcmPost? post = null;
+            try
+            {
+                post = await _context.CpcmPosts.Where(c => c.CpcmPostId == postGuid).FirstOrDefaultAsync();
+            }
+            catch (DbException)
+            {
+                return StatusCode(StatusCodes.Status503ServiceUnavailable);
+            }
+
+            if (post == null)
+            {
+                return StatusCode(StatusCodes.Status404NotFound);
+            }
+
+
+            if (!CheckUserPrivilege("CpcmCanEditUsers", "True", post.CpcmUserId.ToString()))
+            {
+                return View("Index");
+            }
+
+            UserPostEditModel model = new UserPostEditModel();
+            model.Id = post.CpcmPostId;
+            model.UserId = post.CpcmUserId;
+            model.Text = post.CpcmPostText;
+            model.CpcmImages = post.CpcmImages;
+            return View(model);
+        }
+
+        [Authorize]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EditPost(UserPostEditModel editPost)
+        {
+            if (editPost.Text == null && editPost.FilesToDelete.Count == 0 && editPost.NewFiles.Count == 0)
+            {
+                return View(editPost);
+            }
+
+
+            if (ModelState.IsValid)
+            {
+                CpcmPost? post = null;
+                try
+                {
+                    post = await _context.CpcmPosts.Include(c => c.CpcmImages).Where(c => c.CpcmPostId == editPost.Id).FirstOrDefaultAsync();
+
+                }
+                catch (DbException)
+                {
+                    return StatusCode(StatusCodes.Status503ServiceUnavailable);
+                }
+                if (post == null)
+                {
+                    return StatusCode(StatusCodes.Status404NotFound);
+                }
+                if (!CheckUserPrivilege("CpcmCanEditUsers", "True", post.CpcmUserId.ToString()))
+                {
+                    return StatusCode(403);
+                }
+                if (post.CpcmImages.Count - editPost.FilesToDelete.Count + editPost.NewFiles.Count > 4)
+                {
+                    ModelState.AddModelError("NewFiles", "В посте не может быть больше 4 фотографий");
+                    return View(editPost);
+                }
+
+                post.CpcmPostText = editPost.Text.Trim();
+                post.CpcmPostPublishedDate = DateTime.Now;
+
+                int i = post.CpcmImages.Where(c => c.CpcmPostId == editPost.Id).OrderBy(k => k.CpcmImageOrder).Last().CpcmImageOrder;
+
+                List<string> filePaths = new List<string>();
+
+                foreach (var file in editPost.NewFiles)
+                {
+                    CheckIFormFile("NewFiles", file, 8388608, new[] { "image/jpeg", "image/png", "image/gif" });
+
+                    if (!ModelState.IsValid)
+                    {
+                        return View(editPost);
+
+                    }
+
+                    string uniqueFileName = Guid.NewGuid().ToString() + Path.GetExtension(file.FileName);
+                    filePaths.Add(Path.Combine("wwwroot", "uploads", uniqueFileName));
+
+                    try
+                    {
+                        using (var fileStream = new FileStream(filePaths.Last(), FileMode.Create))
+                        {
+                            await file.CopyToAsync(fileStream);
+                        }
+                        CpcmImage image = new CpcmImage();
+                        image.CpcmImageId = Guid.NewGuid();
+                        image.CpcmPostId = post.CpcmPostId;
+                        image.CpcmImagePath = filePaths.Last();
+                        image.CpcmImageOrder = 0;
+                        i++;
+
+                        post.CpcmImages.Add(image);
+                    }
+                    catch (Exception ex)
+                    {
+                        Response.StatusCode = 418;
+                        ViewData["Message"] = "Не удалось сохранить фотографию на сервере. Пожалуйста, повторите запрос позднее или обратитесь к Администратору.";
+                        return View(editPost);
+                    }
+
+                }
+
+
+
+                List<CpcmImage>? images = post.CpcmImages.Where(c => !editPost.FilesToDelete.Contains(c.CpcmImageId)).ToList();
+                if (images.Count != 0)
+                {
+                    //_context.CpcmImages.RemoveRange(images);
+                    foreach (var item in images)
+                    {
+                        post.CpcmImages.Remove(item);
+                    }
+
+                    try
+                    {
+                        await _context.SaveChangesAsync();
+
+                        var imagesAfterDeletion = post.CpcmImages.Where(c => c.CpcmPostId == post.CpcmPostId).OrderBy(i => i.CpcmImageOrder).ToList();
+
+                        for (int j = 0; j < imagesAfterDeletion.Count; j++)
+                        {
+                            imagesAfterDeletion[j].CpcmImageOrder = j;
+                        }
+                        i = imagesAfterDeletion.Last().CpcmImageOrder;
+
+
+                        foreach (var image in images)
+                        {
+                            if (System.IO.File.Exists(image.CpcmImagePath))
+                            {
+                                System.IO.File.Delete(image.CpcmImagePath);
+                            }
+                        }
+
+                    }
+                    catch (DbException)
+                    {
+
+                        foreach (var path in filePaths)
+                        {
+                            if (System.IO.File.Exists(path))
+                            {
+                                System.IO.File.Delete(path);
+                            }
+                        }
+
+                        return StatusCode(StatusCodes.Status503ServiceUnavailable);
+                    }
+                }
+
+
+                try
+                {
+                    await _context.SaveChangesAsync();
+                }
+                catch (DbException)
+                {
+                    Response.StatusCode = 418;
+                    ViewData["Message"] = "Не удалось сохранить пост. Пожалуйста, повторите запрос позднее или обратитесь к Администратору.";
+                    return View(editPost); // TODO Продумать место для сохранения еррора
+                }
+
+            }
+            return View(editPost);
+        }
 
 
         private bool CheckUserPrivilege(string claimType, string claimValue, string id)
@@ -814,7 +1256,7 @@ namespace Capycom.Controllers
             CpcmUserTelNum = CpcmUserTelNum.Trim();
             return Json(!await _context.CpcmUsers.AnyAsync(e => e.CpcmUserTelNum == CpcmUserTelNum && e.CpcmUserId != CpcmUserId));
         }
-        [HttpPost]
+        [HttpPost]//TODO: Объединить с методами при регистрации
         public async Task<IActionResult> CheckPwd(string pwd)
         {
             if(pwd == null || pwd == "")
@@ -827,434 +1269,6 @@ namespace Capycom.Controllers
             }
         }
 
-        [Authorize]
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Follow(Guid CpcmUserId)
-        {
 
-            CpcmUserfollower follower = new();
-            follower.CpcmFollowerId = CpcmUserId;
-            follower.CpcmUserId = Guid.Parse(HttpContext.User.FindFirst(c => c.Type == "CpcmUserId").Value);
-            _context.CpcmUserfollowers.Add(follower);
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbException)
-            {
-                return StatusCode(400);
-            }
-
-            return StatusCode(200);
-        }
-
-        [Authorize]
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Unfollow(Guid CpcmUserId)
-        {
-            CpcmUserfollower? follow;
-            try
-            {
-                follow = await _context.CpcmUserfollowers.Where(e => e.CpcmUserId == CpcmUserId).FirstOrDefaultAsync();
-            }
-            catch (DbException)
-            {
-                return StatusCode(400);
-            }
-
-
-            if(follow == null)
-            {
-                return StatusCode(400);
-            }
-
-            _context.Remove(follow);
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbException)
-            {
-                return StatusCode(400);
-            }
-
-            return StatusCode(200);
-
-        }
-
-        [Authorize]
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> CreateFriendRequest(Guid CpcmUserId)
-        {
-            CpcmUserfriend friendRequest = new();
-            friendRequest.CmcpUserId = Guid.Parse(HttpContext.User.FindFirst(c => c.Type == "CpcmUserId").Value);
-            friendRequest.CmcpFriendId = CpcmUserId;
-
-            _context.CpcmUserfriends.Add(friendRequest);
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbException)
-            {
-                return StatusCode(400);
-            }
-
-            return StatusCode(200);
-        }
-
-        [Authorize]
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> AnswerToFriendRequests(Guid CpcmUserId, bool status)
-        {
-            var friendRequest = await _context.CpcmUserfriends.Where(c => c.CmcpUserId.ToString() == HttpContext.User.FindFirst(c => c.Type == "CpcmUserId").Value
-            && c.CmcpFriendId == CpcmUserId).FirstOrDefaultAsync();
-
-            friendRequest.CpcmFriendRequestStatus  = status;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbException)
-            {
-                return StatusCode(400);
-            }
-
-            return StatusCode(200);
-        }
-
-        [Authorize]
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteToFriendRequests(Guid CpcmUserId)
-        {
-            var friendRequest = await _context.CpcmUserfriends.Where(c => c.CmcpUserId.ToString() == HttpContext.User.FindFirst(c => c.Type == "CpcmUserId").Value
-            && c.CmcpFriendId == CpcmUserId).FirstOrDefaultAsync();
-
-            _context.CpcmUserfriends.Remove(friendRequest);
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbException)
-            {
-                return StatusCode(400);
-            }
-
-            return StatusCode(200);
-        }
-
-        [Authorize]
-        public async Task<IActionResult> CreatePost()
-        {
-            return View();
-        }
-
-        [Authorize]
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> CreatePost(UserPostModel userPost)
-        {
-            if(userPost.Text==null && userPost.Files.Count>0)
-            {
-                return View(userPost);
-            }
-
-            if(ModelState.IsValid)
-            {
-                CpcmPost post = new CpcmPost();
-
-                post.CpcmPostText = userPost.Text.Trim();
-                post.CpcmPostId = Guid.NewGuid();
-                post.CpcmPostFather = userPost.PostFatherId;
-                post.CpcmPostCreationDate = DateTime.Now;
-                post.CpcmPostPublishedDate = userPost.Published;
-                post.CpcmUserId = Guid.Parse(User.FindFirst(c => c.Type == "CpcmUserId").Value);
-
-                List<string>filePaths = new List<string>(); 
-                List<CpcmImage> images = new List<CpcmImage>();
-
-                int i = 0;
-                foreach(IFormFile file in userPost.Files)
-                {
-                    CheckIFormFile("Files", file, 8388608, new[] { "image/jpeg", "image/png", "image/gif" });
-
-                    if (!ModelState.IsValid)
-                    {
-                       return View(userPost);
-
-                    }
-
-                    string uniqueFileName = Guid.NewGuid().ToString() + Path.GetExtension(file.FileName);
-                    filePaths.Add(Path.Combine("wwwroot", "uploads", uniqueFileName));
-
-                    try
-                    {
-                        using (var fileStream = new FileStream(filePaths.Last(), FileMode.Create))
-                        {
-                            await file.CopyToAsync(fileStream);
-                        }
-                        CpcmImage image = new CpcmImage();
-                        image.CpcmImageId = Guid.NewGuid();
-                        image.CpcmPostId = post.CpcmPostId;
-                        image.CpcmImagePath = filePaths.Last();
-                        image.CpcmImageOrder = 0;
-                        i++;
-
-                        images.Add(image);
-                    }
-                    catch (Exception ex)
-                    {
-                        Response.StatusCode = 418;
-                        ViewData["Message"] = "Не удалось сохранить фотографию на сервере. Пожалуйста, повторите запрос позднее или обратитесь к Администратору.";
-                        return View(userPost);
-                    }
-
-                }
-                post.CpcmImages = images;
-
-                _context.CpcmPosts.Add(post);
-                _context.CpcmImages.AddRange(images);
-                try
-                {
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbException)
-                {
-                    Response.StatusCode = 418;
-                    ViewData["Message"] = "Не удалось сохранить пост. Пожалуйста, повторите запрос позднее или обратитесь к Администратору.";
-                    return View(userPost); // TODO Продумать место для сохранения еррора
-                }
-
-                return View("Index");
-
-            }
-            return View(userPost);
-        }
-
-        [Authorize]
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeletePost(Guid postGuid)
-        {
-
-
-            CpcmPost? post = null;
-            try
-            {
-                post = await _context.CpcmPosts.Where(c => c.CpcmPostId == postGuid).FirstOrDefaultAsync();
-            }
-            catch (DbException)
-            {
-                return StatusCode(StatusCodes.Status503ServiceUnavailable);
-            }
-            if(post == null)
-            {
-                return StatusCode(StatusCodes.Status404NotFound);
-            }
-
-
-            if (!CheckUserPrivilege("CpcmCanDelUsersPosts", "True", post.CpcmUserId.ToString()))
-            {
-                return StatusCode(403);
-            }
-
-            _context.CpcmPosts.Remove(post);
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbException)
-            {
-                return StatusCode(StatusCodes.Status503ServiceUnavailable);
-            }
-            return StatusCode(200);
-        }
-
-        [Authorize]
-        public async Task<IActionResult> EditPost(Guid postGuid)
-        {
-            CpcmPost? post = null;
-            try
-            {
-                post = await _context.CpcmPosts.Where(c => c.CpcmPostId == postGuid).FirstOrDefaultAsync();
-            }
-            catch (DbException)
-            {
-                return StatusCode(StatusCodes.Status503ServiceUnavailable);
-            }
-
-            if (post == null)
-            {
-                return StatusCode(StatusCodes.Status404NotFound);
-            }
-
-
-            if (!CheckUserPrivilege("CpcmCanEditUsers", "True", post.CpcmUserId.ToString()))
-            {
-                return View("Index");
-            }
-
-            UserPostEditModel model = new UserPostEditModel();
-            model.Id = post.CpcmPostId;
-            model.UserId = post.CpcmUserId;
-            model.Text = post.CpcmPostText;
-            model.CpcmImages = post.CpcmImages;
-            return View(model);
-        }
-
-        [Authorize]
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> EditPost(UserPostEditModel editPost)
-        {
-            if(editPost.Text==null && editPost.FilesToDelete.Count==0 && editPost.NewFiles.Count==0)
-            {
-                return View(editPost);
-            }
-
-
-            if(ModelState.IsValid)
-            {
-                CpcmPost? post = null; 
-                try
-                {
-                    post = await _context.CpcmPosts.Include(c => c.CpcmImages).Where(c => c.CpcmPostId == editPost.Id).FirstOrDefaultAsync();
-                    
-                }
-                catch (DbException)
-                {
-                    return StatusCode(StatusCodes.Status503ServiceUnavailable);
-                }
-                if(post == null)
-                {
-                    return StatusCode(StatusCodes.Status404NotFound);
-                }
-                if (!CheckUserPrivilege("CpcmCanEditUsers", "True", post.CpcmUserId.ToString()))
-                {
-                    return StatusCode(403);
-                }
-                if (post.CpcmImages.Count - editPost.FilesToDelete.Count + editPost.NewFiles.Count > 4)
-                {
-                    ModelState.AddModelError("NewFiles", "В посте не может быть больше 4 фотографий");
-                    return View(editPost);
-                }
-
-                post.CpcmPostText = editPost.Text.Trim();
-                post.CpcmPostPublishedDate = DateTime.Now;
-
-                int i = post.CpcmImages.Where(c => c.CpcmPostId == editPost.Id).OrderBy(k => k.CpcmImageOrder).Last().CpcmImageOrder;
-
-                List<string> filePaths = new List<string>();
-
-                foreach (var file in editPost.NewFiles)
-                {
-                    CheckIFormFile("NewFiles", file, 8388608, new[] { "image/jpeg", "image/png", "image/gif" });
-
-                    if (!ModelState.IsValid)
-                    {
-                        return View(editPost);
-
-                    }
-
-                    string uniqueFileName = Guid.NewGuid().ToString() + Path.GetExtension(file.FileName);
-                    filePaths.Add(Path.Combine("wwwroot", "uploads", uniqueFileName));
-
-                    try
-                    {
-                        using (var fileStream = new FileStream(filePaths.Last(), FileMode.Create))
-                        {
-                            await file.CopyToAsync(fileStream);
-                        }
-                        CpcmImage image = new CpcmImage();
-                        image.CpcmImageId = Guid.NewGuid();
-                        image.CpcmPostId = post.CpcmPostId;
-                        image.CpcmImagePath = filePaths.Last();
-                        image.CpcmImageOrder = 0;
-                        i++;
-
-                        post.CpcmImages.Add(image);
-                    }
-                    catch (Exception ex)
-                    {
-                        Response.StatusCode = 418;
-                        ViewData["Message"] = "Не удалось сохранить фотографию на сервере. Пожалуйста, повторите запрос позднее или обратитесь к Администратору.";
-                        return View(editPost);
-                    }
-
-                }
-                
-
-
-                List<CpcmImage>? images = post.CpcmImages.Where(c => !editPost.FilesToDelete.Contains(c.CpcmImageId)).ToList();
-                if (images.Count!=0)
-                {
-                    //_context.CpcmImages.RemoveRange(images);
-                    foreach(var item in  images) 
-                    {
-                        post.CpcmImages.Remove(item);
-                    }
-
-                    try
-                    {
-                        await _context.SaveChangesAsync();
-
-                        var imagesAfterDeletion = post.CpcmImages.Where(c => c.CpcmPostId == post.CpcmPostId).OrderBy(i => i.CpcmImageOrder).ToList();
-                        
-                        for (int j = 0; j < imagesAfterDeletion.Count; j++)
-                        {
-                            imagesAfterDeletion[j].CpcmImageOrder = j;
-                        }
-                        i = imagesAfterDeletion.Last().CpcmImageOrder;
-
-
-                        foreach (var image in images)
-                        {
-                            if (System.IO.File.Exists(image.CpcmImagePath))
-                            {
-                                System.IO.File.Delete(image.CpcmImagePath);
-                            }
-                        }       
-
-                    }
-                    catch (DbException)
-                    {
-
-                        foreach (var path in filePaths)
-                        {
-                            if (System.IO.File.Exists(path))
-                            {
-                                System.IO.File.Delete(path);
-                            }
-                        }
-
-                        return StatusCode(StatusCodes.Status503ServiceUnavailable);
-                    }
-                }
-
-
-                try
-                {
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbException)
-                {
-                    Response.StatusCode = 418;
-                    ViewData["Message"] = "Не удалось сохранить пост. Пожалуйста, повторите запрос позднее или обратитесь к Администратору.";
-                    return View(editPost); // TODO Продумать место для сохранения еррора
-                }
-
-            }
-            return View(editPost);
-        }
     }
 }
