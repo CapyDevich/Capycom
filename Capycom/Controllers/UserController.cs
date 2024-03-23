@@ -973,7 +973,7 @@ namespace Capycom.Controllers
             {
                 CpcmPost post = new CpcmPost();
 
-                post.CpcmPostText = userPost.Text;
+                post.CpcmPostText = userPost.Text.Trim();
                 post.CpcmPostId = Guid.NewGuid();
                 post.CpcmPostFather = userPost.PostFatherId;
                 post.CpcmPostCreationDate = DateTime.Now;
@@ -1149,7 +1149,7 @@ namespace Capycom.Controllers
                     return View(editPost);
                 }
 
-                post.CpcmPostText = editPost.Text;
+                post.CpcmPostText = editPost.Text.Trim();
                 post.CpcmPostPublishedDate = DateTime.Now;
 
                 int i = post.CpcmImages.Where(c => c.CpcmPostId == editPost.Id).OrderBy(k => k.CpcmImageOrder).Last().CpcmImageOrder;
