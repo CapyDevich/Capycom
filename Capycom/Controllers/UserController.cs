@@ -107,8 +107,7 @@ namespace Capycom.Controllers
 
             try
             {
-                user.CpcmPosts = await _context.CpcmPosts.Where(c => c.CpcmUserId == user.CpcmUserId).Include(c => c.CpcmImages).OrderByDescending(c => c.CpcmPostPublishedDate).Take(10).ToListAsync();
-
+                user.CpcmPosts = await _context.CpcmPosts.Where(c => c.CpcmUserId == user.CpcmUserId && c.CpcmPostPublishedDate < DateTime.Now).Include(c => c.CpcmImages).OrderByDescending(c => c.CpcmPostPublishedDate).Take(10).ToListAsync();
             }
             catch (DbException)
             {
@@ -1141,6 +1140,73 @@ namespace Capycom.Controllers
 
             }
             return View(editPost);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> GetNextPosts(Guid userId,Guid lastPostId)
+        {
+            List<CpcmPost> posts;
+            try
+            {
+                var date = await _context.CpcmPosts.Where(c => c.CpcmPostId == lastPostId).FirstOrDefaultAsync();
+                if (date == null)
+                {
+                    return StatusCode(404);
+                }
+
+                posts= await _context.CpcmPosts.Where(c => c.CpcmUserId == userId && c.CpcmPostId == lastPostId).Where(c => c.CpcmPostPublishedDate < date.CpcmPostPublishedDate && c.CpcmPostPublishedDate < DateTime.Now).Take(10).ToListAsync();
+            }
+            catch (DbException)
+            {
+                return StatusCode(StatusCodes.Status503ServiceUnavailable);
+            }
+            return Json(posts);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> GetNextNotPublishedPosts(Guid userId, Guid lastPostId)
+        {
+            List<CpcmPost> posts;
+            try
+            {
+                var date = await _context.CpcmPosts.Where(c => c.CpcmPostId == lastPostId).FirstOrDefaultAsync();
+                if (date == null)
+                {
+                    return StatusCode(404);
+                }
+
+                posts = await _context.CpcmPosts.Where(c => c.CpcmUserId == userId && c.CpcmPostId == lastPostId).Where(c => c.CpcmPostPublishedDate < date.CpcmPostPublishedDate && c.CpcmPostPublishedDate > DateTime.Now).Take(10).ToListAsync();
+            }
+            catch (DbException)
+            {
+                return StatusCode(StatusCodes.Status503ServiceUnavailable);
+            }
+            return Json(posts);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> NotPublishedPosts(Guid id)
+        {
+            if (!CheckUserPrivilege("CpcmCanEditUsers", "True", id))
+            {
+                ViewData["ErrorCode"] = 403;
+                ViewData["Message"] = "Доступ запрещён";
+                return View("UserError");
+            }
+
+            List<CpcmPost> posts;
+            try
+            {
+                posts = await _context.CpcmPosts.Where(c => c.CpcmUserId == id && c.CpcmPostPublishedDate > DateTime.Now).Include(c => c.CpcmImages).OrderByDescending(c => c.CpcmPostPublishedDate).Take(10).ToListAsync();
+            }
+            catch (DbException)
+            {
+                Response.StatusCode = 418;
+                ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
+                return View("Error418");
+            }
+
+            return View();
         }
 
 
