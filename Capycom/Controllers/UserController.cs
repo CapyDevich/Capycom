@@ -9,6 +9,7 @@ using Microsoft.Extensions.Options;
 using NuGet.Packaging;
 using NuGet.Protocol.Plugins;
 using System.Data.Common;
+using System.Text.RegularExpressions;
 
 namespace Capycom.Controllers
 {
@@ -405,7 +406,17 @@ namespace Capycom.Controllers
 
                 cpcmUser.CpcmUserEmail = user.CpcmUserEmail.Trim();
                 cpcmUser.CpcmUserTelNum = user.CpcmUserTelNum.Trim();
-                cpcmUser.CpcmUserNickName = user.CpcmUserNickName?.Trim();
+
+                if(user.CpcmUserNickName==null || user.CpcmUserNickName == "")
+                {
+                    cpcmUser.CpcmUserNickName = null;
+                }
+                else
+                {
+                    cpcmUser.CpcmUserNickName = user.CpcmUserNickName?.Trim();
+                }
+
+                
                 if (!string.IsNullOrEmpty(user.CpcmUserPwd))
                 {
                     cpcmUser.CpcmUserPwdHash = MyConfig.GetSha256Hash(user.CpcmUserPwd, cpcmUser.CpcmUserSalt, _config.ServerSol); 
@@ -802,6 +813,18 @@ namespace Capycom.Controllers
             }
             CpcmUserTelNum = CpcmUserTelNum.Trim();
             return Json(!await _context.CpcmUsers.AnyAsync(e => e.CpcmUserTelNum == CpcmUserTelNum && e.CpcmUserId != CpcmUserId));
+        }
+        [HttpPost]
+        public async Task<IActionResult> CheckPwd(string pwd)
+        {
+            if(pwd == null || pwd == "")
+            {
+                return Json(true);
+            }
+            else
+            {
+               return Json(Regex.Match(pwd, @"(^$)|^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$").Success);
+            }
         }
 
         [Authorize]
