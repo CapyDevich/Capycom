@@ -1,4 +1,4 @@
-﻿#define AdminAutoAuth
+﻿//#define AdminAutoAuth
 using Microsoft.AspNetCore.Mvc;
 using Capycom.Models;
 using Microsoft.Extensions.Options;
@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication;
 using System.Reflection;
 using Microsoft.EntityFrameworkCore;
+using System.Data.Common;
 namespace Capycom.Controllers
 {
     public class UserLogInController : Controller
@@ -43,8 +44,24 @@ if (ModelState.IsValid)
 #if AdminAutoAuth
                 CpcmUser potentialUser = _context.CpcmUsers.Include(c => c.CpcmUserRoleNavigation).Where(e => e.CpcmUserEmail == "asdas@asd.ru").First();               
 #else
-                CpcmUser potentialUser = _context.CpcmUsers.Where(e => e.CpcmUserEmail == user.CpcmUserEmail).First();
+                CpcmUser potentialUser;
+                try
+                {
+                    potentialUser = await _context.CpcmUsers.Where(e => e.CpcmUserEmail == user.CpcmUserEmail).FirstOrDefaultAsync();
+                }
+                catch (DbException)
+                {
+                    ViewData["Error"] = "Не удалось установить соединение с сервером";
+                    StatusCode(StatusCodes.Status503ServiceUnavailable);
+                    return View("Error418");
+                }
 #endif
+                if(potentialUser == null)
+                {
+                    ViewData["Error"] = "Не найден пользователь с данным именем и//или паролем";
+                    StatusCode(StatusCodes.Status400BadRequest);
+                    return View("Index");
+                }
                 string potentialUserSalt = potentialUser.CpcmUserSalt;
 #if AdminAutoAuth
                 if (true)
@@ -64,11 +81,11 @@ if (ModelState.IsValid)
                 }
                 else
                 {
-					ViewBag["Error"] = "Не найден пользователь с данным именем и//или паролем";
+                    ViewData["Error"] = "Не найден пользователь с данным именем и//или паролем";
 					return View();
 				}
             }
-            return View("Index",user);
+            return View("Index");
         }
 
         [Authorize]
