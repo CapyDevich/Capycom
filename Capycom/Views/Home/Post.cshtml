@@ -63,11 +63,9 @@
 <script>
 	function likePost(element) {
 		let icon = element.querySelectorAll('img')[0];
-		if (icon.src.match('tangerine_black')) {
+		if (icon.src.match('tangerine_black'))
 			icon.src = icon.src.replace('black', 'colored');
-		}
-		else if (icon.src.match('tangerine_colored') {
+		else if (icon.src.match('tangerine_colored'))
 			icon.src = icon.src.replace('colored', 'black');
-		}
 	}
 </script>

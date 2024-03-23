@@ -8,7 +8,7 @@ function shortenNumber(number) {
 		return number + "K";
 	}
 	else if (number < 1_000_000_000) {
-		number = Math.floor(number / 1000000);
+		number = Math.floor(number / 1_000_000);
 		return number + "M";
 	}
 	else
