@@ -164,7 +164,7 @@ namespace Capycom.Controllers
 
 
 
-        
+
         [Authorize]
         [HttpPost]
         public async Task<ActionResult> Edit(string id)
@@ -378,7 +378,7 @@ namespace Capycom.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> EditIdentity(UserEditIdentityModel user)
-        {           
+        {
             if (ModelState.IsValid)
             {
                 if (!CheckUserPrivilege("CpcmCanEditUsers", "True", user.CpcmUserId))
@@ -409,7 +409,7 @@ namespace Capycom.Controllers
                 cpcmUser.CpcmUserEmail = user.CpcmUserEmail.Trim();
                 cpcmUser.CpcmUserTelNum = user.CpcmUserTelNum.Trim();
 
-                if(user.CpcmUserNickName==null || user.CpcmUserNickName == "")
+                if (user.CpcmUserNickName == null || user.CpcmUserNickName == "")
                 {
                     cpcmUser.CpcmUserNickName = null;
                 }
@@ -418,10 +418,10 @@ namespace Capycom.Controllers
                     cpcmUser.CpcmUserNickName = user.CpcmUserNickName?.Trim();
                 }
 
-                
+
                 if (!string.IsNullOrEmpty(user.CpcmUserPwd))
                 {
-                    cpcmUser.CpcmUserPwdHash = MyConfig.GetSha256Hash(user.CpcmUserPwd, cpcmUser.CpcmUserSalt, _config.ServerSol); 
+                    cpcmUser.CpcmUserPwdHash = MyConfig.GetSha256Hash(user.CpcmUserPwd, cpcmUser.CpcmUserSalt, _config.ServerSol);
                 }
 
                 try
@@ -477,8 +477,8 @@ namespace Capycom.Controllers
             List<CpcmUser> friendList2;
             try
             {
-                friendList1 = await _context.CpcmUserfriends.Where(c => c.CmcpUserId == user.CpcmUserId && c.CpcmFriendRequestStatus==true).Select(c => c.CmcpFriend).ToListAsync();
-                friendList2 = await _context.CpcmUserfriends.Where(c => c.CmcpFriendId == user.CpcmUserId && c.CpcmFriendRequestStatus == true).Select(c => c.CmcpUser).ToListAsync();
+                friendList1 = await _context.CpcmUserfriends.Where(c => c.CmcpUserId == user.CpcmUserId && c.CpcmFriendRequestStatus == true).Select(c => c.CmcpFriend).OrderBy(u => u.CpcmUserId).Take(5).ToListAsync();
+                friendList2 = await _context.CpcmUserfriends.Where(c => c.CmcpFriendId == user.CpcmUserId && c.CpcmFriendRequestStatus == true).Select(c => c.CmcpUser).OrderBy(u => u.CpcmUserId).Take(10 - friendList1.Count).ToListAsync();
             }
             catch (DbException)
             {
@@ -490,6 +490,53 @@ namespace Capycom.Controllers
             friendList1.AddRange(friendList2);
 
             return View(friendList1);
+        }
+        [HttpPost]
+        public async Task<ActionResult> GetNextFriends(Guid id, Guid latsId)
+        {
+            CpcmUser user;
+            try
+            {
+                user = await _context.CpcmUsers.Where(c => c.CpcmUserId == id).FirstOrDefaultAsync();
+            }
+            catch (DbException)
+            {
+                Response.StatusCode = 418;
+                ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
+                return View("Error418");
+            }
+
+            if (user == null)
+            {
+                Response.StatusCode = 418;
+                ViewData["Message"] = "Пользователь не найден";
+                return View("Error418");
+            }
+
+
+            if (user.CpcmUserNickName != null)
+            {
+                return RedirectToAction("GetNextFriends", new { nickName = user.CpcmUserNickName });
+            }
+
+            //_context.CpcmUserfriends.Select(c => c.CmcpFriend).Where(c => c.CmcpUserId == id).Include(c => c.CmcpFriend).ToList();
+            List<CpcmUser> friendList1;
+            List<CpcmUser> friendList2;
+            try
+            {
+                friendList1 = await _context.CpcmUserfriends.Where(c => c.CmcpUserId == user.CpcmUserId && c.CpcmFriendRequestStatus == true && c.CmcpFriendId.CompareTo(latsId)>0).Select(c => c.CmcpFriend).OrderBy(u => u.CpcmUserId).Take(5).ToListAsync();
+                friendList2 = await _context.CpcmUserfriends.Where(c => c.CmcpFriendId == user.CpcmUserId && c.CpcmFriendRequestStatus == true && c.CmcpUserId.CompareTo(latsId) > 0).Select(c => c.CmcpUser).OrderBy(u => u.CpcmUserId).Take(10 - friendList1.Count).ToListAsync();
+            }
+            catch (DbException)
+            {
+                Response.StatusCode = 418;
+                ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
+                return View("Error418");
+            }
+
+            friendList1.AddRange(friendList2);
+
+            return Json(friendList1);
         }
 
         [Route("User/Friends/{nickName}")]
@@ -519,8 +566,50 @@ namespace Capycom.Controllers
             List<CpcmUser> friendList2;
             try
             {
-                friendList1 = await _context.CpcmUserfriends.Where(c => c.CmcpUserId == user.CpcmUserId && c.CpcmFriendRequestStatus == true).Select(c => c.CmcpFriend).ToListAsync();
-                friendList2 = await _context.CpcmUserfriends.Where(c => c.CmcpFriendId == user.CpcmUserId && c.CpcmFriendRequestStatus == true).Select(c => c.CmcpUser).ToListAsync();
+                friendList1 = await _context.CpcmUserfriends.Where(c => c.CmcpUserId == user.CpcmUserId && c.CpcmFriendRequestStatus == true).Select(c => c.CmcpFriend).OrderBy(u => u.CpcmUserId).Take(5).ToListAsync();
+                friendList2 = await _context.CpcmUserfriends.Where(c => c.CmcpFriendId == user.CpcmUserId && c.CpcmFriendRequestStatus == true).Select(c => c.CmcpUser).OrderBy(u => u.CpcmUserId).Take(10-friendList1.Count).ToListAsync();
+            }
+            catch (DbException)
+            {
+                Response.StatusCode = 418;
+                ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
+                return View("Error418");
+            }
+
+            friendList1.AddRange(friendList2);
+
+            return View(friendList1);
+        }
+        [HttpPost]
+        [Route("User/GetNextFriends/{nickName}")]
+        public async Task<ActionResult> GetNextFriends(string nickName, Guid latsId)
+        {
+            CpcmUser user;
+            try
+            {
+                user = await _context.CpcmUsers.Where(c => c.CpcmUserNickName == nickName).FirstOrDefaultAsync();
+            }
+            catch (DbException)
+            {
+                Response.StatusCode = 418;
+                ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
+                return View("Error418");
+            }
+
+            if (user == null)
+            {
+                Response.StatusCode = 418;
+                ViewData["Message"] = "Пользователь не найден";
+                return View("Error418");
+            }
+
+            //_context.CpcmUserfriends.Select(c => c.CmcpFriend).Where(c => c.CmcpUserId == id).Include(c => c.CmcpFriend).ToList();
+            List<CpcmUser> friendList1;
+            List<CpcmUser> friendList2;
+            try
+            {
+                friendList1 = await _context.CpcmUserfriends.Where(c => c.CmcpUserId == user.CpcmUserId && c.CpcmFriendRequestStatus == true && c.CmcpFriendId.CompareTo(latsId) > 0).Select(c => c.CmcpFriend).OrderBy(u => u.CpcmUserId).Take(5).ToListAsync();
+                friendList2 = await _context.CpcmUserfriends.Where(c => c.CmcpFriendId == user.CpcmUserId && c.CpcmFriendRequestStatus == true && c.CmcpUserId.CompareTo(latsId) > 0).Select(c => c.CmcpUser).OrderBy(u => u.CpcmUserId).Take(10 - friendList1.Count).ToListAsync();
             }
             catch (DbException)
             {
