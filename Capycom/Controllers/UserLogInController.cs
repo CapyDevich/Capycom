@@ -64,8 +64,9 @@ if (ModelState.IsValid)
                 }
                 else
                 {
-
-                }
+					ViewBag["Error"] = "Не найден пользователь с данным именем и//или паролем";
+					return View();
+				}
             }
             return View("Index",user);
         }
