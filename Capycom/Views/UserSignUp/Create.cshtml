@@ -1,0 +1,135 @@
+﻿@model Capycom.Models.UserSignUpModel
+
+@{
+    ViewData["Title"] = "Create";
+}
+
+<h1>Create</h1>
+
+<h4>CpcmUser</h4>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="Create" enctype="multipart/form-data">
+            @Html.AntiForgeryToken()
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="form-group">               
+                <label asp-for="CpcmUserEmail" class="control-label"></label>
+                <input asp-for="CpcmUserEmail" class="form-control" />
+                <span asp-validation-for="CpcmUserEmail" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="CpcmUserTelNum" class="control-label"></label>
+                <input asp-for="CpcmUserTelNum" class="form-control" />
+                <span asp-validation-for="CpcmUserTelNum" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="CpcmUserPwd" class="control-label"></label>
+                <input asp-for="CpcmUserPwd" class="form-control" />
+                <span asp-validation-for="CpcmUserPwd" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="CpcmUserPwdConfirm" class="control-label"></label>
+                <input asp-for="CpcmUserPwdConfirm" class="form-control" />
+                <span asp-validation-for="CpcmUserPwdConfirm" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="CpcmUserAbout" class="control-label"></label>
+                <input asp-for="CpcmUserAbout" class="form-control" />
+                <span asp-validation-for="CpcmUserAbout" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="CpcmUserCity" class="control-label"></label>
+                <select asp-for="CpcmUserCity" class ="form-control" asp-items="ViewBag.CpcmUserCity"></select>
+            </div>
+            <div class="form-group">
+                <label asp-for="CpcmUserSite" class="control-label"></label>
+                <input asp-for="CpcmUserSite" class="form-control" />
+                <span asp-validation-for="CpcmUserSite" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="CpcmUserBooks" class="control-label"></label>
+                <input asp-for="CpcmUserBooks" class="form-control" />
+                <span asp-validation-for="CpcmUserBooks" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="CpcmUserFilms" class="control-label"></label>
+                <input asp-for="CpcmUserFilms" class="form-control" />
+                <span asp-validation-for="CpcmUserFilms" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="CpcmUserMusics" class="control-label"></label>
+                <input asp-for="CpcmUserMusics" class="form-control" />
+                <span asp-validation-for="CpcmUserMusics" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="CpcmUserSchool" class="control-label"></label>
+                <select asp-for="CpcmUserSchool" class ="form-control" asp-items="ViewBag.CpcmUserSchool"></select>
+            </div>
+            <div class="form-group">
+                <label asp-for="CpcmUserUniversity" class="control-label"></label>
+                <select asp-for="CpcmUserUniversity" class ="form-control" asp-items="ViewBag.CpcmUserUniversity"></select>
+            </div>
+            <div class="form-group">
+                <label asp-for="CpcmUserNickName" class="control-label"></label>
+                <input asp-for="CpcmUserNickName" class="form-control" />
+                <span asp-validation-for="CpcmUserNickName" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="CpcmUserFirstName" class="control-label"></label>
+                <input asp-for="CpcmUserFirstName" class="form-control" />
+                <span asp-validation-for="CpcmUserFirstName" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="CpcmUserSecondName" class="control-label"></label>
+                <input asp-for="CpcmUserSecondName" class="form-control" />
+                <span asp-validation-for="CpcmUserSecondName" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="CpcmUserAdditionalName" class="control-label"></label>
+                <input asp-for="CpcmUserAdditionalName" class="form-control" />
+                <span asp-validation-for="CpcmUserAdditionalName" class="text-danger"></span>
+            </div>
+
+
+            <div class="form-group">
+                <label asp-for="CpcmUserImage" class="control-label"></label>
+                <input asp-for="CpcmUserImage" class="form-control" type="file" />
+                <span asp-validation-for="CpcmUserImage" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="CpcmUserCoverImage" class="control-label"></label>
+                <input asp-for="CpcmUserCoverImage" class="form-control" type="file" />
+                <span asp-validation-for="CpcmUserCoverImage" class="text-danger"></span>
+            </div>
+
+
+            <div class="form-group">
+                <input type="submit" value="Create" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+
+<div>
+    <a asp-action="Index">Back to List</a>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
+
+@* <script>
+    $("#addCityForm").submit(function (e) { // только лучше не на форму его весить а на клик по кнопку. Форму в форму нельзя пихать 
+        e.preventDefault();
+
+        var newCity = $("#newCity").val();
+
+        $.post('@Url.Action("AddCity", "Home")', { newCity: newCity }, function (data) {
+            if (data.success) {
+                $("#cities").append('<option>' + newCity + '</option>');
+                $("#newCity").val('');
+            }
+        });
+    });
+</script> *@
