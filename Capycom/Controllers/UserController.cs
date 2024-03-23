@@ -43,23 +43,25 @@ namespace Capycom.Controllers
 
             //return View(user);
 
-            CpcmUser user;
+            CpcmUser? user;
             try
             {
                 user = await _context.CpcmUsers.Where(c => c.CpcmUserId == Guid.Parse(userId)).FirstOrDefaultAsync();
             }
             catch (DbException)
             {
-                Response.StatusCode = 418;
+                Response.StatusCode = 500;
+                ViewData["ErrorCode"] = 500;
                 ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
-                return View("Error418");
+                return View("UserError");
             }
 
             if (user == null)
             {
-                Response.StatusCode = 418;
+                Response.StatusCode = 404;
+                ViewData["ErrorCode"] = 404;
                 ViewData["Message"] = "Пользователь не найден";
-                return View("Error418");
+                return View("UserError");
             }
 
             if (user.CpcmUserNickName != null)
@@ -76,7 +78,7 @@ namespace Capycom.Controllers
         [HttpGet]
         public async Task<ActionResult> Index(Guid id)
         {
-            CpcmUser user;
+            CpcmUser? user;
             try
             {
                 user = await _context.CpcmUsers
@@ -88,16 +90,18 @@ namespace Capycom.Controllers
             }
             catch (DbException)
             {
-                Response.StatusCode = 418;
+                Response.StatusCode = 500;
+                ViewData["ErrorCode"] = 500;
                 ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
-                return View("Error418");
+                return View("UserError");
             }
 
             if (user == null)
             {
-                Response.StatusCode = 418;
+                Response.StatusCode = 404;
+                ViewData["ErrorCode"] = 404;
                 ViewData["Message"] = "Пользователь не найден";
-                return View("Error418");
+                return View("UserError");
             }
 
             if (user.CpcmUserNickName != null)
@@ -111,9 +115,10 @@ namespace Capycom.Controllers
             }
             catch (DbException)
             {
-                Response.StatusCode = 418;
+                Response.StatusCode = 500;
+                ViewData["ErrorCode"] = 500;
                 ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
-                return View("Error418");
+                return View("UserError");
             }
 
             return View(user);
@@ -123,7 +128,7 @@ namespace Capycom.Controllers
         [Route("User/{nickName}")]
         public async Task<ActionResult> Index(string nickName)
         {
-            CpcmUser user;
+            CpcmUser? user;
             try
             {
                 user = await _context.CpcmUsers
@@ -135,16 +140,18 @@ namespace Capycom.Controllers
             }
             catch (DbException)
             {
-                Response.StatusCode = 418;
+                Response.StatusCode = 500;
+                ViewData["ErrorCode"] = 500;
                 ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
-                return View("Error418");
+                return View("UserError");
             }
 
             if (user == null)
             {
-                Response.StatusCode = 418;
+                Response.StatusCode = 404;
+                ViewData["ErrorCode"] = 404;
                 ViewData["Message"] = "Пользователь не найден";
-                return View("Error418");
+                return View("UserError");
             }
 
             try
@@ -154,9 +161,10 @@ namespace Capycom.Controllers
             }
             catch (DbException)
             {
-                Response.StatusCode = 418;
+                Response.StatusCode = 500;
+                ViewData["ErrorCode"] = 500;
                 ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
-                return View("Error418");
+                return View("UserError");
             }
 
             return View(user);
