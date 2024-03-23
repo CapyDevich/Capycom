@@ -132,11 +132,11 @@ namespace Capycom.Controllers
             try
             {
                 user = await _context.CpcmUsers
-                .Include(c => c.CpcmUserCityNavigation)
+                .Include(c => c.CpcmUserCityNavigation) 
                 .Include(c => c.CpcmUserRoleNavigation)
                 .Include(c => c.CpcmUserSchoolNavigation)
                 .Include(c => c.CpcmUserUniversityNavigation)
-                .Where(c => c.CpcmUserNickName == nickName).FirstOrDefaultAsync();
+                .Where(c => c.CpcmUserNickName == nickName).FirstOrDefaultAsync(); //_context.Entry(user).Reference(u => u.CpcmUserCityNavigation).Load();
             }
             catch (DbException)
             {
