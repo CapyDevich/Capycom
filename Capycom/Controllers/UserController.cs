@@ -1205,45 +1205,35 @@ namespace Capycom.Controllers
         [HttpPost] //TODO: Объединить с методами при регистрации
         public async Task<IActionResult> CheckEmail(string CpcmUserEmail, Guid CpcmUserId)
         {
-            var authFactor = HttpContext.User.FindFirst(c => c.Type == "CpcmCanEditUsers" && c.Value == "True");
             if (string.IsNullOrWhiteSpace(CpcmUserEmail))
             {
                 return Json("Email не может быть пустым или состоять из одних пробелов");
             }
+
+            var authFactor = HttpContext.User.FindFirst(c => c.Type == "CpcmCanEditUsers" && c.Value == "True");
             CpcmUserEmail = CpcmUserEmail.Trim();
-
-            if (authFactor != null)
-            {
-                return Json(!await _context.CpcmUsers.AnyAsync(e => e.CpcmUserEmail == CpcmUserEmail && e.CpcmUserId!=CpcmUserId));
-            }
-
-
-            if (CpcmUserEmail.Contains("admin") || CpcmUserEmail.Contains("webmaster") || CpcmUserEmail.Contains("abuse"))
+            if (CpcmUserEmail.Contains("admin") || CpcmUserEmail.Contains("webmaster") || CpcmUserEmail.Contains("abuse") && authFactor == null)
             {
                 return Json(false);
             }
+
             return Json(!await _context.CpcmUsers.AnyAsync(e => e.CpcmUserEmail == CpcmUserEmail && e.CpcmUserId != CpcmUserId));
         }
         [HttpPost]//TODO: Объединить с методами при регистрации
         public async Task<IActionResult> CheckNickName(string CpcmUserNickName, Guid CpcmUserId)
         {
-            var authFactor = HttpContext.User.FindFirst(c => c.Type == "CpcmCanEditUsers" && c.Value == "True");
-
             if (CpcmUserNickName == null || CpcmUserNickName.All(char.IsWhiteSpace) || CpcmUserNickName == string.Empty)
             {
                 return Json(true);
             }
             CpcmUserNickName = CpcmUserNickName.Trim();
 
-            if (authFactor != null)
-            {
-                return Json(!await _context.CpcmUsers.AnyAsync(e => e.CpcmUserNickName == CpcmUserNickName && e.CpcmUserId != CpcmUserId));
-            }
-
-            if (CpcmUserNickName.Contains("admin") || CpcmUserNickName.Contains("webmaster") || CpcmUserNickName.Contains("abuse"))
+            var authFactor = HttpContext.User.FindFirst(c => c.Type == "CpcmCanEditUsers" && c.Value == "True");
+            if (CpcmUserNickName.Contains("admin") || CpcmUserNickName.Contains("webmaster") || CpcmUserNickName.Contains("abuse") && authFactor==null)
             {
                 return Json(false);
             }
+
             return Json(!await _context.CpcmUsers.AnyAsync(e => e.CpcmUserNickName == CpcmUserNickName && e.CpcmUserId != CpcmUserId));
         }
         [HttpPost]//TODO: Объединить с методами при регистрации
