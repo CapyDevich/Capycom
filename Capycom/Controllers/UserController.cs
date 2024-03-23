@@ -1217,7 +1217,17 @@ namespace Capycom.Controllers
                 return Json(false);
             }
 
-            return Json(!await _context.CpcmUsers.AnyAsync(e => e.CpcmUserEmail == CpcmUserEmail && e.CpcmUserId != CpcmUserId));
+            bool rez = false;
+            try
+            {
+                rez = !await _context.CpcmUsers.AnyAsync(e => e.CpcmUserEmail == CpcmUserEmail && e.CpcmUserId != CpcmUserId);
+            }
+            catch (DbException)
+            {
+                StatusCode(StatusCodes.Status503ServiceUnavailable);
+                return Json(false);
+            }
+            return Json(rez);
         }
         [HttpPost]//TODO: Объединить с методами при регистрации
         public async Task<IActionResult> CheckNickName(string CpcmUserNickName, Guid CpcmUserId)
@@ -1233,8 +1243,17 @@ namespace Capycom.Controllers
             {
                 return Json(false);
             }
-
-            return Json(!await _context.CpcmUsers.AnyAsync(e => e.CpcmUserNickName == CpcmUserNickName && e.CpcmUserId != CpcmUserId));
+            bool rez = false;
+            try
+            {
+                rez = !await _context.CpcmUsers.AnyAsync(e => e.CpcmUserNickName == CpcmUserNickName && e.CpcmUserId != CpcmUserId);
+            }
+            catch (DbException)
+            {
+                StatusCode(StatusCodes.Status503ServiceUnavailable);
+                return Json(false);
+            }
+            return Json(rez);
         }
         [HttpPost]//TODO: Объединить с методами при регистрации
         public async Task<IActionResult> CheckPhone(string CpcmUserTelNum, Guid CpcmUserId)
@@ -1244,7 +1263,17 @@ namespace Capycom.Controllers
                 return Json("Телефон не может быть пустым или состоять из одних пробелов");
             }
             CpcmUserTelNum = CpcmUserTelNum.Trim();
-            return Json(!await _context.CpcmUsers.AnyAsync(e => e.CpcmUserTelNum == CpcmUserTelNum && e.CpcmUserId != CpcmUserId));
+            bool rez = false;
+            try
+            {
+                rez = !await _context.CpcmUsers.AnyAsync(e => e.CpcmUserTelNum == CpcmUserTelNum && e.CpcmUserId != CpcmUserId);
+            }
+            catch (DbException)
+            {
+                StatusCode(StatusCodes.Status503ServiceUnavailable);
+                return Json(false);
+            }
+            return Json(rez);
         }
         [HttpPost]//TODO: Объединить с методами при регистрации
         public async Task<IActionResult> CheckPwd(string pwd)
@@ -1255,7 +1284,17 @@ namespace Capycom.Controllers
             }
             else
             {
-               return Json(Regex.Match(pwd, @"(^$)|^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$").Success);
+                bool rez = false;
+                try
+                {
+                    rez = Regex.Match(pwd, @"(^$)|^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$").Success;
+                }
+                catch (DbException)
+                {
+                    StatusCode(StatusCodes.Status503ServiceUnavailable);
+                    return Json(false);
+                }
+               return Json(rez);
             }
         }
 
