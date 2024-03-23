@@ -22,8 +22,9 @@ namespace Capycom.Models
         public string CpcmUserTelNum { get; set; } = null!;
 
         [Display(Name = "Пароль")]
-        [RegularExpression(@"^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$", ErrorMessage = "Ваш пароль должен быть минимум из 8 символов, " +
+        [RegularExpression(@"(^$)|^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$", ErrorMessage = "Ваш пароль должен быть минимум из 8 символов, " +
             "содержать хотя бы 1 символ в нижнем регистре, 1 символ в верхнем регистре, 1 цифру, 1 специальный символ (#?!@$%^&*-) ")]
+        [Remote(action:"CheckPwd",controller:"User",ErrorMessage = "Ваш пароль должен быть минимум из 8 символов, содержать хотя бы 1 символ в нижнем регистре, 1 символ в верхнем регистре, 1 цифру, 1 специальный символ (#?!@$%^&*-)", HttpMethod = "Post")]
         public string CpcmUserPwd { get; set; } = null!;
 
         [Display(Name = "Подтвердите пароль")] 
