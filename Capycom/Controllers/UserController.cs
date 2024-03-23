@@ -72,6 +72,7 @@ namespace Capycom.Controllers
 
         }
 
+        [HttpGet]
         public async Task<ActionResult> Index(Guid id)
         {
             CpcmUser user;
@@ -102,9 +103,23 @@ namespace Capycom.Controllers
             {
                 return RedirectToAction("Index", new { nickName = user.CpcmUserNickName });
             }
+
+            try
+            {
+                user.CpcmPosts = await _context.CpcmPosts.Where(c => c.CpcmUserId == user.CpcmUserId).Include(c => c.CpcmImages).OrderByDescending(c => c.CpcmPostPublishedDate).Take(10).ToListAsync();
+
+            }
+            catch (DbException)
+            {
+                Response.StatusCode = 418;
+                ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
+                return View("Error418");
+            }
+
             return View(user);
         }
 
+        [HttpGet]
         [Route("User/{nickName}")]
         public async Task<ActionResult> Index(string nickName)
         {
@@ -132,10 +147,15 @@ namespace Capycom.Controllers
                 return View("Error418");
             }
 
-            if (user == null)
+            try
+            {
+                user.CpcmPosts = await _context.CpcmPosts.Where(c => c.CpcmUserId == user.CpcmUserId).Include(c => c.CpcmImages).OrderByDescending(c => c.CpcmPostPublishedDate).Take(10).ToListAsync();
+
+            }
+            catch (DbException)
             {
                 Response.StatusCode = 418;
-                ViewData["Message"] = "Пользователь не найден";
+                ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
                 return View("Error418");
             }
 
@@ -1079,7 +1099,11 @@ namespace Capycom.Controllers
                 {
                     return StatusCode(403);
                 }
-
+                if (post.CpcmImages.Count - editPost.FilesToDelete.Count + editPost.NewFiles.Count > 4)
+                {
+                    ModelState.AddModelError("NewFiles", "В посте не может быть больше 4 фотографий");
+                    return View(editPost);
+                }
 
                 post.CpcmPostText = editPost.Text;
                 post.CpcmPostPublishedDate = DateTime.Now;
