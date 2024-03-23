@@ -1,4 +1,4 @@
-﻿#define AdminAutoAuth
+﻿//#define AdminAutoAuth
 using Microsoft.AspNetCore.Mvc;
 using Capycom.Models;
 using Microsoft.Extensions.Options;
@@ -43,13 +43,13 @@ if (ModelState.IsValid)
 #if AdminAutoAuth
                 CpcmUser potentialUser = _context.CpcmUsers.Include(c => c.CpcmUserRoleNavigation).Where(e => e.CpcmUserEmail == "asdas@asd.ru").First();               
 #else
-                CpcmUser potentialUser = _context.CpcmUsers.Where(e => e.CpcmUserEmail == user.CpcmUserEmail).First();
+                CpcmUser potentialUser = _context.CpcmUsers.Where(e => e.CpcmUserEmail == user.CpcmUserEmail.Trim()).First();
 #endif
                 string potentialUserSalt = potentialUser.CpcmUserSalt;
 #if AdminAutoAuth
                 if (true)
 #else
-                if (potentialUser.CpcmUserPwdHash == MyConfig.GetSha256Hash(user.CpcmUserPwd, potentialUserSalt, _config.ServerSol))
+                if (potentialUser.CpcmUserPwdHash == MyConfig.GetSha256Hash(user.CpcmUserPwd.Trim(), potentialUserSalt, _config.ServerSol))
 #endif
 
                 {

@@ -231,19 +231,19 @@ namespace Capycom.Controllers
                     return View("Error418");
                 }
 
-                cpcmUser.CpcmUserAbout = user.CpcmUserAbout;
+                cpcmUser.CpcmUserAbout = user.CpcmUserAbout?.Trim();
                 cpcmUser.CpcmUserCity = user.CpcmUserCity;
-                cpcmUser.CpcmUserSite = user.CpcmUserSite;
-                cpcmUser.CpcmUserBooks = user.CpcmUserBooks;
-                cpcmUser.CpcmUserFilms = user.CpcmUserFilms;
-                cpcmUser.CpcmUserMusics = user.CpcmUserMusics;
+                cpcmUser.CpcmUserSite = user.CpcmUserSite?.Trim();
+                cpcmUser.CpcmUserBooks = user.CpcmUserBooks?.Trim();
+                cpcmUser.CpcmUserFilms = user.CpcmUserFilms?.Trim();
+                cpcmUser.CpcmUserMusics = user.CpcmUserMusics?.Trim();
                 cpcmUser.CpcmUserSchool = user.CpcmUserSchool;
                 cpcmUser.CpcmUserUniversity = user.CpcmUserUniversity;
 
 
-                cpcmUser.CpcmUserFirstName = user.CpcmUserFirstName;
-                cpcmUser.CpcmUserSecondName = user.CpcmUserSecondName;
-                cpcmUser.CpcmUserAdditionalName = user.CpcmUserAdditionalName;
+                cpcmUser.CpcmUserFirstName = user.CpcmUserFirstName.Trim();
+                cpcmUser.CpcmUserSecondName = user.CpcmUserSecondName.Trim();
+                cpcmUser.CpcmUserAdditionalName = user.CpcmUserAdditionalName?.Trim();
 
 
                 string filePathUserImage = "";
@@ -403,10 +403,13 @@ namespace Capycom.Controllers
                     return View("Error418");
                 }
 
-                cpcmUser.CpcmUserEmail = user.CpcmUserEmail;
-                cpcmUser.CpcmUserTelNum = user.CpcmUserTelNum;
-                cpcmUser.CpcmUserNickName = user.CpcmUserNickName;
-                cpcmUser.CpcmUserPwdHash = MyConfig.GetSha256Hash(user.CpcmUserPwd, cpcmUser.CpcmUserSalt, _config.ServerSol);
+                cpcmUser.CpcmUserEmail = user.CpcmUserEmail.Trim();
+                cpcmUser.CpcmUserTelNum = user.CpcmUserTelNum.Trim();
+                cpcmUser.CpcmUserNickName = user.CpcmUserNickName?.Trim();
+                if (!string.IsNullOrEmpty(user.CpcmUserPwd))
+                {
+                    cpcmUser.CpcmUserPwdHash = MyConfig.GetSha256Hash(user.CpcmUserPwd, cpcmUser.CpcmUserSalt, _config.ServerSol); 
+                }
 
                 try
                 {
@@ -750,7 +753,13 @@ namespace Capycom.Controllers
         public async Task<IActionResult> CheckEmail(string CpcmUserEmail, Guid CpcmUserId)
         {
             var authFactor = HttpContext.User.FindFirst(c => c.Type == "CpcmCanEditUsers" && c.Value == "True");
-            if(authFactor != null)
+            if (string.IsNullOrWhiteSpace(CpcmUserEmail))
+            {
+                return Json("Email не может быть пустым или состоять из одних пробелов");
+            }
+            CpcmUserEmail = CpcmUserEmail.Trim();
+
+            if (authFactor != null)
             {
                 return Json(!await _context.CpcmUsers.AnyAsync(e => e.CpcmUserEmail == CpcmUserEmail && e.CpcmUserId!=CpcmUserId));
             }
@@ -766,6 +775,13 @@ namespace Capycom.Controllers
         public async Task<IActionResult> CheckNickName(string CpcmUserNickName, Guid CpcmUserId)
         {
             var authFactor = HttpContext.User.FindFirst(c => c.Type == "CpcmCanEditUsers" && c.Value == "True");
+
+            if (CpcmUserNickName == null || CpcmUserNickName.All(char.IsWhiteSpace) || CpcmUserNickName == string.Empty)
+            {
+                return Json(true);
+            }
+            CpcmUserNickName = CpcmUserNickName.Trim();
+
             if (authFactor != null)
             {
                 return Json(!await _context.CpcmUsers.AnyAsync(e => e.CpcmUserNickName == CpcmUserNickName && e.CpcmUserId != CpcmUserId));
@@ -780,6 +796,11 @@ namespace Capycom.Controllers
         [HttpPost]//TODO: Объединить с методами при регистрации
         public async Task<IActionResult> CheckPhone(string CpcmUserTelNum, Guid CpcmUserId)
         {
+            if (string.IsNullOrWhiteSpace(CpcmUserTelNum))
+            {
+                return Json("Телефон не может быть пустым или состоять из одних пробелов");
+            }
+            CpcmUserTelNum = CpcmUserTelNum.Trim();
             return Json(!await _context.CpcmUsers.AnyAsync(e => e.CpcmUserTelNum == CpcmUserTelNum && e.CpcmUserId != CpcmUserId));
         }
 

@@ -35,13 +35,16 @@ namespace Capycom.Models
 
         [Display(Name = "Моё имя")]
         [Required(ErrorMessage = "Укажите ваше имя")]
+        [WordCount(1, ErrorMessage = "Имя не может состоять из более чем 1 слова")]
         public string CpcmUserFirstName { get; set; } = null!;
 
         [Display(Name = "Моя фамилия")]
         [Required(ErrorMessage = "Укажите вашу фамилию")]
+        [WordCount(1, ErrorMessage = "Фамилия не может состоять из более чем 1 слова")]
         public string CpcmUserSecondName { get; set; } = null!;
 
         [Display(Name = "Моё отчество")]
+        [WordCount(1, ErrorMessage = "Отчество не может состоять из более чем 1 слова")]
         public string? CpcmUserAdditionalName { get; set; }
 
         public IFormFile? CpcmUserImage { get; set; }

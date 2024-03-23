@@ -11,6 +11,7 @@
 
         public List<Guid>? FilesToDelete { get; set; }
 
+        [MaxFileCount(4)]
         public List<IFormFile>? NewFiles { get; set; }
 
         public ICollection<CpcmImage>? CpcmImages { get; set; }

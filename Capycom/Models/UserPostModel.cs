@@ -2,6 +2,7 @@
 {
     public class UserPostModel
     {
+        [MaxFileCount(4)]
         public IFormFileCollection? Files { get; set; }
 
         public string? Text { get; set; }
