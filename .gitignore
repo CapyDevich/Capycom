@@ -460,3 +460,5 @@ $RECYCLE.BIN/
 *.lnk
 
 privateData.json
+
+*/wwwroot/uploads/

@@ -1,0 +1,32 @@
+﻿@model Capycom.Models.UserLogInModel
+@{
+    ViewData["Title"] = "Вход в аккаунт";
+}
+
+<h1>Войти в аккаунт</h1>
+
+<h4>CpcmUser</h4>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="LogIn">
+            @Html.AntiForgeryToken()
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="form-group">
+
+                <label asp-for="CpcmUserEmail" class="control-label"></label>
+                <input asp-for="CpcmUserEmail" class="form-control" />
+                <span asp-validation-for="CpcmUserEmail" class="text-danger"></span>
+            </div>          
+            <div class="form-group">
+                <label asp-for="CpcmUserPwd" class="control-label"></label>
+                <input asp-for="CpcmUserPwd" class="form-control" />
+                <span asp-validation-for="CpcmUserPwd" class="text-danger"></span>
+            </div>     
+            <div class="form-group">
+                <input type="submit" value="Create" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+
