@@ -45,11 +45,7 @@ namespace Capycom.Controllers
             return View();
         }
 
-        // POST: UserSignUp/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
-        //[RequestSizeLimit(10240)]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(UserSignUpModel cpcmSignUser)
         {            
@@ -273,24 +269,6 @@ namespace Capycom.Controllers
         private bool CpcmUserExists(Guid id)
         {
             return _context.CpcmUsers.Any(e => e.CpcmUserId == id);
-        }
-        private static byte[] GetSha256Hash(string stringToSHA, string sol, string serversol)
-        {
-            if (stringToSHA == null || stringToSHA == String.Empty)
-            {
-                throw new ArgumentException("Строка была пустой или null");
-            }
-
-            byte[] returnValue;
-            returnValue = SHA256.HashData(Encoding.Unicode.GetBytes(stringToSHA+sol+serversol));
-            return returnValue;
-        }
-        private static string GetRandomString(int length)
-        {
-            Random rnd = new Random();
-            const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-            return new string(Enumerable.Repeat(chars, length)
-                .Select(s => s[rnd.Next(s.Length)]).ToArray());
         }
         private bool CheckIFormFileContent(IFormFile cpcmUserImage, string[] permittedTypes)
         {
