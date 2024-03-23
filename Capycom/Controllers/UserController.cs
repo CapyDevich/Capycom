@@ -1210,6 +1210,129 @@ namespace Capycom.Controllers
         }
 
 
+
+
+        public async Task<IActionResult> FindUser()
+        {
+            return View();
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> FindUser(Guid? id, string? nick, Guid? cityId, Guid? schoolId, Guid? universityId, string? firstName, string? secondName, string? additionalName)
+        {
+            var query = _context.CpcmUsers.AsQueryable();
+            if (id.HasValue)
+            {
+                //ViewData["id"] = id;
+                query = query.Where(u => u.CpcmUserId == id);
+            }
+            if (!string.IsNullOrEmpty(nick))
+            {
+                //ViewData["nick"]=nick;
+                query = query.Where( u => u.CpcmUserNickName== nick);
+            }
+            if (cityId.HasValue)
+            {
+                //ViewData["cityId"]=cityId;
+                query = query.Where(u => u.CpcmUserCity == cityId);
+            }
+            if (schoolId.HasValue)
+            {
+                //ViewData["scgoolId"]=schoolId;
+                query = query.Where(u => u.CpcmUserSchool ==  schoolId);
+            }
+            if (universityId.HasValue)
+            {
+                //ViewData["universityId"] = universityId;
+                query = query.Where(u => u.CpcmUserUniversity == universityId);
+            }
+            if (!string.IsNullOrEmpty(firstName))
+            {
+                //ViewData["firstName"] = firstName;
+                query = query.Where(u => u.CpcmUserFirstName == firstName);
+            }
+            if (!string.IsNullOrEmpty(secondName))
+            {
+                //ViewData["secondName"] = secondName;
+                query = query.Where(u => u.CpcmUserSecondName == secondName);
+            }
+            if (!string.IsNullOrEmpty(additionalName))
+            {
+                //ViewData["additionalName"] = additionalName;
+                query = query.Where(u => u.CpcmUserAdditionalName == additionalName);
+            }
+
+            try
+            {
+                var rez = await query.OrderBy(u => u.CpcmUserId).Take(10).ToListAsync();
+                return Json(rez);
+            }
+            catch (DbException)
+            {
+                ViewData["Message"] = "Ошибка при обращении к серверу";
+                ViewData["ErrorCode"] = 504;
+                return View("UserError");
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> FindNextUser(Guid? id, string? nick, Guid? cityId, Guid? schoolId, Guid? universityId, string? firstName, string? secondName, string? additionalName, Guid lastId)
+        {
+            var query = _context.CpcmUsers.AsQueryable();
+            if (id.HasValue)
+            {
+                ViewData["id"] = id;
+                query = query.Where(u => u.CpcmUserId == id);
+            }
+            if (!string.IsNullOrEmpty(nick))
+            {
+                ViewData["nick"] = nick;
+                query = query.Where(u => u.CpcmUserNickName == nick);
+            }
+            if (cityId.HasValue)
+            {
+                ViewData["cityId"] = cityId;
+                query = query.Where(u => u.CpcmUserCity == cityId);
+            }
+            if (schoolId.HasValue)
+            {
+                ViewData["scgoolId"] = schoolId;
+                query = query.Where(u => u.CpcmUserSchool == schoolId);
+            }
+            if (universityId.HasValue)
+            {
+                ViewData["universityId"] = universityId;
+                query = query.Where(u => u.CpcmUserUniversity == universityId);
+            }
+            if (!string.IsNullOrEmpty(firstName))
+            {
+                ViewData["firstName"] = firstName;
+                query = query.Where(u => u.CpcmUserFirstName == firstName);
+            }
+            if (!string.IsNullOrEmpty(secondName))
+            {
+                ViewData["secondName"] = secondName;
+                query = query.Where(u => u.CpcmUserSecondName == secondName);
+            }
+            if (!string.IsNullOrEmpty(additionalName))
+            {
+                ViewData["additionalName"] = additionalName;
+                query = query.Where(u => u.CpcmUserAdditionalName == additionalName);
+            }
+
+            try
+            {
+                var rez = await query.Where(u => u.CpcmUserId.CompareTo(lastId) > 0).OrderBy(u => u.CpcmUserId).Take(10).ToListAsync();
+                return Json(rez);
+            }
+            catch (DbException)
+            {
+                ViewData["Message"] = "Ошибка при обращении к серверу";
+                ViewData["ErrorCode"] = 504;
+                return View("UserError");
+            }
+        }
+
         private bool CheckUserPrivilege(string claimType, string claimValue, string id)
         {
             var authFactor = HttpContext.User.FindFirst(c => c.Type == "CpcmUserId" && c.Value == id || c.Type == "claimType" && c.Value == "claimValue");
