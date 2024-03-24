@@ -53,6 +53,13 @@ if (ModelState.IsValid)
 #endif
 
                 {
+                    if(potentialUser.CpcmUserBanned == true)
+                    {
+                        Response.StatusCode = 403;
+                        ViewData["ErrorCode"] = 403;
+                        ViewData["Message"] = "Вы забанены за нарушение условия пользования Capycom. Если вы считаете, что банхаммер прилетел неправомерно - обратитесь в администрацию";
+                        return View("UserError");
+                    }
                     List<Claim> claims = GetUserClaims(potentialUser); 
                     var claimsIdentity = new ClaimsIdentity(claims, "Cookies");
                     var claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
