@@ -1,4 +1,6 @@
 ﻿using Capycom.Models;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -185,7 +187,7 @@ namespace Capycom.Controllers
                 return View("UserError");
             }
 
-            CpcmUser user;
+            CpcmUser? user;
             try
             {
                 user = await _context.CpcmUsers.Where(c => c.CpcmUserId == Guid.Parse(id)).FirstOrDefaultAsync();
@@ -209,7 +211,21 @@ namespace Capycom.Controllers
             ViewData["CpcmUserCity"] = new SelectList(_context.CpcmCities, "CpcmCityId", "CpcmCityName", user.CpcmUserCity);
             ViewData["CpcmUserSchool"] = new SelectList(_context.CpcmSchools, "CpcmSchooldId", "CpcmSchoolName", user.CpcmUserSchool);
             ViewData["CpcmUserUniversity"] = new SelectList(_context.CpcmUniversities, "CpcmUniversityId", "CpcmUniversityName", user.CpcmUserUniversity);
-            return View(user);
+            UserEditAboutDataModel userModel = new();
+            userModel.CpcmUserId = user.CpcmUserId;
+            userModel.CpcmUserAbout = user.CpcmUserAbout;
+            userModel.CpcmUserCity = user.CpcmUserCity;
+            userModel.CpcmUserSite = user.CpcmUserSite;
+            userModel.CpcmUserBooks = user.CpcmUserBooks;
+            userModel.CpcmUserFilms = user.CpcmUserFilms;
+            userModel.CpcmUserMusics = user.CpcmUserMusics;
+            userModel.CpcmUserSchool = user.CpcmUserSchool;
+            userModel.CpcmUserUniversity = user.CpcmUserUniversity;
+            userModel.CpcmUserFirstName = user.CpcmUserFirstName;
+            userModel.CpcmUserSecondName = user.CpcmUserSecondName;
+            userModel.CpcmUserAdditionalName = user.CpcmUserAdditionalName;
+
+            return View(userModel);
 
         }
 
@@ -391,8 +407,12 @@ namespace Capycom.Controllers
                 ViewData["Message"] = "Пользователь не найден";
                 return View("UserError");
             }
-
-            return View(user);
+            UserEditIdentityModel userModel = new();
+            userModel.CpcmUserEmail = user.CpcmUserEmail;
+            userModel.CpcmUserNickName = user.CpcmUserNickName;
+            userModel.CpcmUserTelNum = user.CpcmUserTelNum;
+            userModel.CpcmUserId = user.CpcmUserId;
+            return View(userModel);
 
         }
 
@@ -555,17 +575,13 @@ namespace Capycom.Controllers
             catch (DbException)
             {
                 Response.StatusCode = 500;
-                ViewData["ErrorCode"] = 500;
-                ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
-                return View("UserError");
+                return StatusCode(500);
             }
 
             if (user == null)
             {
                 Response.StatusCode = 404;
-                ViewData["ErrorCode"] = 404;
-                ViewData["Message"] = "Пользователь не найден";
-                return View("UserError");
+                return StatusCode(404);
             }
 
 
@@ -585,9 +601,7 @@ namespace Capycom.Controllers
             catch (DbException)
             {
                 Response.StatusCode = 500;
-                ViewData["ErrorCode"] = 500;
-                ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
-                return View("UserError");
+                return StatusCode(500);
             }
 
             friendList1.AddRange(friendList2);
@@ -651,17 +665,13 @@ namespace Capycom.Controllers
             catch (DbException)
             {
                 Response.StatusCode = 500;
-                ViewData["ErrorCode"] = 500;
-                ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
-                return View("UserError");
+                return StatusCode(500);
             }
 
             if (user == null)
             {
                 Response.StatusCode = 404;
-                ViewData["ErrorCode"] = 404;
-                ViewData["Message"] = "Пользователь не найден";
-                return View("UserError");
+                return StatusCode(404);
             }
 
             //_context.CpcmUserfriends.Select(c => c.CmcpFriend).Where(c => c.CmcpUserId == id).Include(c => c.CmcpFriend).ToList();
@@ -675,9 +685,7 @@ namespace Capycom.Controllers
             catch (DbException)
             {
                 Response.StatusCode = 500;
-                ViewData["ErrorCode"] = 500;
-                ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
-                return View("UserError");
+                return StatusCode(500);
             }
 
             friendList1.AddRange(friendList2);
@@ -939,6 +947,7 @@ namespace Capycom.Controllers
             try
             {
                 await _context.SaveChangesAsync();
+                await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
             }
             catch (DbException)
             {
@@ -947,7 +956,7 @@ namespace Capycom.Controllers
                 ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
                 return View("UserError");
             }
-
+            
             return RedirectToAction("UserLogIn", "Index");
 
         }
