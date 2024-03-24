@@ -32,12 +32,11 @@ namespace Capycom.Controllers
         // GET: UserSignUp
         public async Task<IActionResult> Index()
         {
-
             var capycomContext = _context.CpcmUsers.Include(c => c.CpcmUserCityNavigation).Include(c => c.CpcmUserRoleNavigation).Include(c => c.CpcmUserSchoolNavigation).Include(c => c.CpcmUserUniversityNavigation);
             return View(await capycomContext.ToListAsync());
         }
 
-        public IActionResult Create()
+        public IActionResult SignUp()
         {
             ViewData["CpcmUserCity"] = new SelectList(_context.CpcmCities, "CpcmCityId", "CpcmCityId");
             ViewData["CpcmUserRole"] = new SelectList(_context.CpcmRoles, "CpcmRoleId", "CpcmRoleId");
