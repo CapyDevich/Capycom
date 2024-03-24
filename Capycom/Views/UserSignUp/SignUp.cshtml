@@ -1,110 +1,116 @@
-﻿@{
-    ViewData["Title"] = "Регистрация";
+﻿@model Capycom.Models.UserSignUpModel
+@{
+	ViewData["Title"] = "Регистрация";
 }
 <div class="container">
-  <h1 class="text-center mt-5">@ViewData["Title"]</h1>  
-  <form class="col-md-6 mx-auto">
-    <div class="row mb-3">
-      <div class="col">
-        <label for="firstName" class="form-label">Имя</label>
-        <input type="text" class="form-control" id="firstName" required>
-      </div>
-      <div class="col">
-        <label for="lastName" class="form-label">Фамилия</label>
-        <input type="text" class="form-control" id="lastName" required>
-      </div>
-      <div class="col">
-        <label for="middleName" class="form-label">Отчество</label>
-        <input type="text" class="form-control" id="middleName">
-      </div>
-    </div>
-        <label for="validationCustomUsername" class="form-label">Псевдоним</label>
-    <div class="input-group">
-      <span class="input-group-text" id="inputGroupPrepend">@@</span>
-      <input type="text" class="form-control" id="validationCustomUsername" aria-describedby="inputGroupPrepend" required>
-      <div class="invalid-feedback">
-        Выберите другой псевдоним.
-      </div>
-    </div>
-    <div class="mb-3">
-        <label for="email" class="form-label">Электронная почта</label>
-        <input type="email" class="form-control" id="email" required>
-    </div>
-    <div class="mb-3">
-        <label for="phone" class="form-label">Номер телефона</label>
-        <input type="tel" class="form-control" id="phone" pattern="\d" title="Номер телефона должен содержать только цифры и специальные символы" required>
-    </div>
-@*     <div class="mb-3">
-      <label for="dob" class="form-label">Дата рождения</label>
-      <input type="date" class="form-control" id="dob" required>
-    </div> *@
-    <div class="mb-3">
-        <label for="password" class="form-label">Пароль</label>
-        <input type="password" class="form-control" id="password" required>
-    </div>
-    <div class="mb-3">
-        <label for="confirmPassword" class="form-label">Подтвердите пароль</label>
-        <input type="password" class="form-control" id="confirmPassword" required>
-    </div>
-    <h4 class="mb-2">Дополнительные сведения</h4>
-    <div class="mb-3">
-        <label for="formFile" class="form-label">Иконка профиля</label>
-        <input class="form-control" type="file" id="formFile">
-    </div>
-    <div class="col mb-3">
-        <label for="userAbout" class="form-label">О себе</label>
-        <textarea type="text" class="form-control" id="userAbout" rows="3"></textarea>
-    </div>
-    <div class="mb-3">
-      <label for="country" class="form-label">Страна</label>
-      <select class="form-select" id="country">
-        <option value="" selected disabled>Выберите страну...</option>
-        <option>Российская Федерация</option>
-        <option>Казахстан</option>
-        <option>Республика Белоруссия</option>
-      </select>
-    </div>
-    <div class="mb-3">
-      <label for="city" class="form-label">Город</label>
-      <select class="form-select" id="city">
-        <option value="" selected disabled>Выберите город...</option>
-        <option>Хабаровск</option>
-        <option>Москва</option>
-        <option>Владивосток</option>
-      </select>
-    </div>
-    <div class="mb-3">
-      <label for="university" class="form-label">Университет</label>
-      <select class="form-select" id="university">
-        <option value="" selected disabled>Выберите университет...</option>
-        <option>ДВГУПС</option>
-        <option>ТОГУ</option>
-      </select>
-    </div>
-    <div class="mb-3">
-      <label for="school" class="form-label">Школа</label>
-      <select class="form-select" id="school">
-        <option value="" selected disabled>Выберите школу...</option>
-        <option>Школа №12</option>
-        <option>Школа №54</option>
-      </select>
-    </div>
-    <div class="col mb-3">
-        <label for="site" class="form-label">Сайт</label>
-        <input type="text" class="form-control" id="site">
-    </div>
-    <div class="col mb-3">
-        <label for="books" class="form-label">Книги</label>
-        <input type="text" class="form-control" id="books">
-    </div>
-    <div class="col mb-3">
-        <label for="films" class="form-label">Фильмы</label>
-        <input type="text" class="form-control" id="films">
-    </div>
-    <div class="col mb-3">
-        <label for="music" class="form-label">Музыка</label>
-        <input type="text" class="form-control" id="music">
-    </div>
-    <button type="submit" class="btn btn-primary">Зарегистрироваться</button>
-  </form>
+	<h1 class="text-center mt-5">@ViewData["Title"]</h1>
+	<form class="col-md-6 mx-auto" asp-action="Create" enctype="multipart/form-data">
+		@Html.AntiForgeryToken()
+		<div asp-validation-summary="ModelOnly" class="text-danger"></div>
+		<div class="row mb-3">
+			<div class="col">
+				<label asp-for="CpcmUserFirstName" class="form-label">Имя</label>
+				<input type="text" class="form-control" id="firstName" required asp-for="CpcmUserFirstName">
+			</div>
+			<div class="col">
+				<label asp-for="CpcmUserSecondName" class="form-label">Фамилия</label>
+				<input type="text" class="form-control" id="lastName" required asp-for="CpcmUserSecondName">
+			</div>
+			<div class="col">
+				<label asp-for="CpcmUserAdditionalName" class="form-label">Отчество</label>
+				<input type="text" class="form-control" id="middleName" asp-for="CpcmUserAdditionalName">
+			</div>
+			<span asp-validation-for="CpcmUserFirstName" class="text-danger"></span>
+			<span asp-validation-for="CpcmUserSecondName" class="text-danger"></span>
+			<span asp-validation-for="CpcmUserAdditionalName" class="text-danger"></span>
+		</div>
+		<label asp-for="CpcmUserNickName" class="form-label">Псевдоним</label>
+		<div class="input-group">
+			<span class="input-group-text" id="inputGroupPrepend">@@</span>
+			<input asp-for="CpcmUserNickName" type="text" class="form-control" id="validationCustomUsername" aria-describedby="inputGroupPrepend" required>
+		</div>
+		<span asp-validation-for="CpcmUserNickName" class="text-danger"></span>
+		<div class="mb-3">
+			<label asp-for="CpcmUserEmail" class="form-label">Электронная почта</label>
+			<input asp-for="CpcmUserEmail" type="email" class="form-control" id="email" required>
+		</div>
+		<span asp-validation-for="CpcmUserEmail" class="text-danger"></span>
+		<div class="mb-3">
+			<label asp-for="CpcmUserTelNum" class="form-label">Номер телефона</label>
+			<input asp-for="CpcmUserTelNum" type="tel" class="form-control" id="phone" title="Номер телефона должен содержать только цифры и специальные символы" required>
+		</div>
+		<span asp-validation-for="CpcmUserTelNum" class="text-danger"></span>
+		@*     <div class="mb-3">
+		<label for="dob" class="form-label">Дата рождения</label>
+		<input type="date" class="form-control" id="dob" required>
+		</div> *@
+		<div class="mb-3">
+			<label asp-for="CpcmUserPwd" class="form-label">Пароль</label>
+			<input asp-for="CpcmUserPwd" type="password" class="form-control" id="password" required>
+		</div>
+		<span asp-validation-for="CpcmUserPwd" class="text-danger"></span>
+		<div class="mb-3">
+			<label asp-for="CpcmUserPwdConfirm" class="form-label">Подтвердите пароль</label>
+			<input asp-for="CpcmUserPwdConfirm" type="password" class="form-control" id="confirmPassword" required>
+		</div>
+		<span asp-validation-for="CpcmUserPwdConfirm" class="text-danger"></span>
+		<h4 class="mb-2">Дополнительные сведения</h4>
+		<div class="mb-3">
+			<label asp-for="CpcmUserImage" class="form-label">Иконка профиля</label>
+			<input asp-for="CpcmUserImage" class="form-control" type="file" id="formFile">
+		</div>
+		<span asp-validation-for="CpcmUserImage" class="text-danger"></span>
+		<div class="col mb-3">
+			<label for="userAbout" class="form-label">О себе</label>
+			<textarea type="text" class="form-control" id="userAbout" rows="3"></textarea>
+		</div>
+		<div class="mb-3">
+			<label asp-for="CpcmUserCity" class="form-label">Город</label>
+			<select asp-for="CpcmUserCity" asp-items="ViewBag.CpcmUserCity" class="form-select" id="city">
+				<option value="" selected disabled>Выберите город...</option>
+			</select>
+		</div>
+		<div class="mb-3">
+			<label asp-for="CpcmUserUniversity" class="form-label">Университет</label>
+			<select asp-for="CpcmUserUniversity" asp-items="ViewBag.CpcmUserUniversity" class="form-select" id="university">
+				<option value="" selected disabled>Выберите университет...</option>
+			</select>
+		</div>
+		<div class="mb-3">
+			<label label asp-for="CpcmUserSchool" class="form-label">Школа</label>
+			<select label asp-for="CpcmUserSchool" asp-items="ViewBag.CpcmUserSchool" class="form-select" id="school">
+				<option value="" selected disabled>Выберите школу...</option>
+			</select>
+		</div>
+		<div class="col mb-3">
+			<label asp-for="CpcmUserSite" class="form-label">Сайт</label>
+			<input asp-for="CpcmUserSite" type="text" class="form-control" id="site">
+		</div>
+		<span asp-validation-for="CpcmUserSite" class="text-danger"></span>
+		<div class="col mb-3">
+			<label asp-for="CpcmUserBooks" class="form-label">Книги</label>
+			<input asp-for="CpcmUserBooks" type="text" class="form-control" id="books">
+		</div>
+		<span asp-validation-for="CpcmUserBooks" class="text-danger"></span>
+		<div class="col mb-3">
+			<label asp-for="CpcmUserFilms" class="form-label">Фильмы</label>
+			<input asp-for="CpcmUserFilms" type="text" class="form-control" id="films">
+		</div>
+		<span asp-validation-for="CpcmUserFilms" class="text-danger"></span>
+		<div class="col mb-3">
+			<label asp-for="CpcmUserMusics" class="form-label">Музыка</label>
+			<input asp-for="CpcmUserMusics" type="text" class="form-control" id="music">
+		</div>
+		<span asp-validation-for="CpcmUserMusics" class="text-danger"></span>
+		<button type="submit" class="btn btn-primary" value="Create">Зарегистрироваться</button>
+	</form>
 </div>
+
+<div>
+	<a asp-action="Index" class="btn btn-light">Back to List</a>
+</div>
+@section Scripts {
+	@{
+		await Html.RenderPartialAsync("_ValidationScriptsPartial");
+	}
+}
