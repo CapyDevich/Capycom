@@ -20,9 +20,9 @@ namespace Capycom.Controllers
 
         private readonly CapycomContext _context;
         private readonly MyConfig _config;
-        private readonly ILogger<HomeController> _logger;
+        private readonly ILogger<UserController> _logger;
 
-        public UserController(ILogger<HomeController> logger, CapycomContext context, IOptions<MyConfig> config)
+        public UserController(ILogger<UserController> logger, CapycomContext context, IOptions<MyConfig> config)
         {
             _context = context;
             _config = config.Value;
