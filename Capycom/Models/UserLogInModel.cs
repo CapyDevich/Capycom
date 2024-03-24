@@ -12,6 +12,7 @@ namespace Capycom.Models
 
         [Display(Name = "Пароль")]
         [Required(ErrorMessage = "Не указан пароль")]
+        [RequiredNonEmptyString(ErrorMessage = "Поле не может быть пустым или состоять только из пробелов")]
         public string CpcmUserPwd { get; set; } = null!;
     }
 }

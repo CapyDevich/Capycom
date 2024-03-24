@@ -44,17 +44,7 @@ if (ModelState.IsValid)
 #if AdminAutoAuth
                 CpcmUser potentialUser = _context.CpcmUsers.Include(c => c.CpcmUserRoleNavigation).Where(e => e.CpcmUserEmail == "asdas@asd.ru").First();               
 #else
-                CpcmUser potentialUser;
-                try
-                {
-                    potentialUser = await _context.CpcmUsers.Where(e => e.CpcmUserEmail == user.CpcmUserEmail).FirstOrDefaultAsync();
-                }
-                catch (DbException)
-                {
-                    ViewData["Error"] = "Не удалось установить соединение с сервером";
-                    StatusCode(StatusCodes.Status503ServiceUnavailable);
-                    return View("Error418");
-                }
+                CpcmUser potentialUser = _context.CpcmUsers.Where(e => e.CpcmUserEmail == user.CpcmUserEmail.Trim()).First();
 #endif
                 if(potentialUser == null)
                 {
@@ -66,10 +56,17 @@ if (ModelState.IsValid)
 #if AdminAutoAuth
                 if (true)
 #else
-                if (potentialUser.CpcmUserPwdHash == MyConfig.GetSha256Hash(user.CpcmUserPwd, potentialUserSalt, _config.ServerSol))
+                if (potentialUser.CpcmUserPwdHash == MyConfig.GetSha256Hash(user.CpcmUserPwd.Trim(), potentialUserSalt, _config.ServerSol))
 #endif
 
                 {
+                    if(potentialUser.CpcmUserBanned == true)
+                    {
+                        Response.StatusCode = 403;
+                        ViewData["ErrorCode"] = 403;
+                        ViewData["Message"] = "Вы забанены за нарушение условия пользования Capycom. Если вы считаете, что банхаммер прилетел неправомерно - обратитесь в администрацию";
+                        return View("UserError");
+                    }
                     List<Claim> claims = GetUserClaims(potentialUser); 
                     var claimsIdentity = new ClaimsIdentity(claims, "Cookies");
                     var claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
