@@ -1730,7 +1730,7 @@ namespace Capycom.Controllers
             }
             catch (DbException)
             {
-                StatusCode(500);
+                //StatusCode(500);
                 return Json(false);
             }
             return Json(rez);
@@ -1756,7 +1756,7 @@ namespace Capycom.Controllers
             }
             catch (DbException)
             {
-                StatusCode(500);
+                //StatusCode(500);
                 return Json(false);
             }
             return Json(rez);
@@ -1776,7 +1776,7 @@ namespace Capycom.Controllers
             }
             catch (DbException)
             {
-                StatusCode(500);
+                //StatusCode(500);
                 return Json(false);
             }
             return Json(rez);
@@ -1797,7 +1797,7 @@ namespace Capycom.Controllers
                 }
                 catch (DbException)
                 {
-                    StatusCode(500);
+                    //StatusCode(500);
                     return Json(false);
                 }
                return Json(rez);
