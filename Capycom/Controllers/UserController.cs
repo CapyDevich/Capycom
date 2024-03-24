@@ -170,7 +170,7 @@ namespace Capycom.Controllers
             return View(user);
         }
 
-
+        
 
 
         [Authorize]
@@ -179,7 +179,10 @@ namespace Capycom.Controllers
         {
             if (!CheckUserPrivilege("CpcmCanEditUsers", "True", id))
             {
-                return View("Error418");
+                Response.StatusCode = 403;
+                ViewData["ErrorCode"] = 403;
+                ViewData["Message"] = "Доступ запрещён";
+                return View("UserError");
             }
 
             CpcmUser user;
@@ -217,6 +220,7 @@ namespace Capycom.Controllers
         {
             if (!CheckUserPrivilege("CpcmCanEditUsers", "True", user.CpcmUserId))
             {
+                Response.StatusCode = 403;
                 return StatusCode(403);
             }
 
@@ -363,7 +367,10 @@ namespace Capycom.Controllers
         {
             if (!CheckUserPrivilege("CpcmCanEditUsers", "True", id))
             {
-                return View("Error418");
+                Response.StatusCode = 403;
+                ViewData["ErrorCode"] = 403;
+                ViewData["Message"] = "Доступ запрещён";
+                return View("UserError");
             }
             CpcmUser user;
             try
