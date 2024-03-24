@@ -6,14 +6,12 @@ namespace Capycom;
 
 public partial class CpcmUser
 {
-    
     public Guid CpcmUserId { get; set; }
 
     public string CpcmUserEmail { get; set; } = null!;
 
     public string CpcmUserTelNum { get; set; } = null!;
 
-    
     public byte[] CpcmUserPwdHash { get; set; } = null!;
 
     public string CpcmUserSalt { get; set; } = null!;
@@ -48,8 +46,9 @@ public partial class CpcmUser
 
     public int CpcmUserRole { get; set; }
 
-    public virtual ICollection<CpcmGroupfollower> CpcmGroupfollowers { get; set; } = new List<CpcmGroupfollower>();
+    public bool CpcmUserBanned { get; set; }
 
+    public virtual ICollection<CpcmGroupfollower> CpcmGroupfollowers { get; set; } = new List<CpcmGroupfollower>();
     public virtual CpcmCity? CpcmUserCityNavigation { get; set; }
     [ValidateNever]
     public virtual CpcmRole CpcmUserRoleNavigation { get; set; } = null!;
