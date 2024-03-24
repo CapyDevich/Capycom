@@ -1,4 +1,4 @@
-﻿#define AdminAutoAuth
+﻿//#define AdminAutoAuth
 using Microsoft.AspNetCore.Mvc;
 using Capycom.Models;
 using Microsoft.Extensions.Options;
@@ -43,16 +43,23 @@ if (ModelState.IsValid)
 #if AdminAutoAuth
                 CpcmUser potentialUser = _context.CpcmUsers.Include(c => c.CpcmUserRoleNavigation).Where(e => e.CpcmUserEmail == "asdas@asd.ru").First();               
 #else
-                CpcmUser potentialUser = _context.CpcmUsers.Where(e => e.CpcmUserEmail == user.CpcmUserEmail).First();
+                CpcmUser potentialUser = _context.CpcmUsers.Where(e => e.CpcmUserEmail == user.CpcmUserEmail.Trim()).First();
 #endif
                 string potentialUserSalt = potentialUser.CpcmUserSalt;
 #if AdminAutoAuth
                 if (true)
 #else
-                if (potentialUser.CpcmUserPwdHash == MyConfig.GetSha256Hash(user.CpcmUserPwd, potentialUserSalt, _config.ServerSol))
+                if (potentialUser.CpcmUserPwdHash == MyConfig.GetSha256Hash(user.CpcmUserPwd.Trim(), potentialUserSalt, _config.ServerSol))
 #endif
 
                 {
+                    if(potentialUser.CpcmUserBanned == true)
+                    {
+                        Response.StatusCode = 403;
+                        ViewData["ErrorCode"] = 403;
+                        ViewData["Message"] = "Вы забанены за нарушение условия пользования Capycom. Если вы считаете, что банхаммер прилетел неправомерно - обратитесь в администрацию";
+                        return View("UserError");
+                    }
                     List<Claim> claims = GetUserClaims(potentialUser); 
                     var claimsIdentity = new ClaimsIdentity(claims, "Cookies");
                     var claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
