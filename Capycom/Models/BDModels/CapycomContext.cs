@@ -47,7 +47,6 @@ public partial class CapycomContext : DbContext
     {
         //optionsBuilder.UseLazyLoadingProxies();
     }
-
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<CpcmCity>(entity =>
@@ -69,6 +68,7 @@ public partial class CapycomContext : DbContext
             entity.Property(e => e.CpcmCommentId)
                 .ValueGeneratedNever()
                 .HasColumnName("CPCM_CommentID");
+            entity.Property(e => e.CpcmCommentBanned).HasColumnName("CPCM_CommentBanned");
             entity.Property(e => e.CpcmCommentCreationDate)
                 .HasColumnType("datetime")
                 .HasColumnName("CPCM_CommentCreationDate");
@@ -96,6 +96,7 @@ public partial class CapycomContext : DbContext
                 .ValueGeneratedNever()
                 .HasColumnName("CPCM_GroupID");
             entity.Property(e => e.CpcmGroupAbout).HasColumnName("CPCM_GroupAbout");
+            entity.Property(e => e.CpcmGroupBanned).HasColumnName("CPCM_GroupBanned");
             entity.Property(e => e.CpcmGroupCity).HasColumnName("CPCM_GroupCity");
             entity.Property(e => e.CpcmGroupCovet).HasColumnName("CPCM_GroupCovet");
             entity.Property(e => e.CpcmGroupImage).HasColumnName("CPCM_GroupImage");
@@ -195,6 +196,7 @@ public partial class CapycomContext : DbContext
                 .ValueGeneratedNever()
                 .HasColumnName("CPCM_PostID");
             entity.Property(e => e.CpcmGroupId).HasColumnName("CPCM_GroupID");
+            entity.Property(e => e.CpcmPostBanned).HasColumnName("CPCM_PostBanned");
             entity.Property(e => e.CpcmPostCreationDate)
                 .HasColumnType("datetime")
                 .HasColumnName("CPCM_PostCreationDate");
@@ -308,6 +310,7 @@ public partial class CapycomContext : DbContext
                 .HasColumnName("CPCM_UserId");
             entity.Property(e => e.CpcmUserAbout).HasColumnName("CPCM_UserAbout");
             entity.Property(e => e.CpcmUserAdditionalName).HasColumnName("CPCM_UserAdditionalName");
+            entity.Property(e => e.CpcmUserBanned).HasColumnName("CPCM_UserBanned");
             entity.Property(e => e.CpcmUserBooks).HasColumnName("CPCM_UserBooks");
             entity.Property(e => e.CpcmUserCity).HasColumnName("CPCM_UserCity");
             entity.Property(e => e.CpcmUserCoverPath).HasColumnName("CPCM_UserCoverPath");
