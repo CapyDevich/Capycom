@@ -189,16 +189,18 @@ namespace Capycom.Controllers
             }
             catch (DbException)
             {
-                Response.StatusCode = 418;
+                Response.StatusCode = 500;
+                ViewData["ErrorCode"] = 500;
                 ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
-                return View("Error418");
+                return View("UserError");
             }
 
             if (user == null)
             {
-                Response.StatusCode = 418;
+                Response.StatusCode = 404;
+                ViewData["ErrorCode"] = 404;
                 ViewData["Message"] = "Пользователь не найден";
-                return View("Error418");
+                return View("UserError");
             }
 
             ViewData["CpcmUserCity"] = new SelectList(_context.CpcmCities, "CpcmCityId", "CpcmCityName", user.CpcmUserCity);
@@ -227,16 +229,18 @@ namespace Capycom.Controllers
                 }
                 catch (DbException)
                 {
-                    Response.StatusCode = 418;
+                    Response.StatusCode = 500;
+                    ViewData["ErrorCode"] = 500;
                     ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
-                    return View("Error418");
+                    return View("UserError");
                 }
 
                 if (user == null)
                 {
-                    Response.StatusCode = 418;
+                    Response.StatusCode = 404;
+                    ViewData["ErrorCode"] = 404;
                     ViewData["Message"] = "Пользователь не найден";
-                    return View("Error418");
+                    return View("UserError");
                 }
 
                 cpcmUser.CpcmUserAbout = user.CpcmUserAbout?.Trim();
@@ -328,9 +332,10 @@ namespace Capycom.Controllers
                     {
                         System.IO.File.Delete(filePathUserCoverImage);
                     }
-                    Response.StatusCode = 418;
-                    ViewData["Message"] = "Не удалось сохранить вас как нового пользователя. Возможно вы указали данные, которые не поддерживаются нами. Обратитесь в техническую поддержку";
-                    return View("Error418");
+                    Response.StatusCode = 500;
+                    ViewData["ErrorCode"] = 500;
+                    ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
+                    return View("UserError");
                 }
 
                 if (cpcmUser.CpcmUserNickName != null)
@@ -367,15 +372,17 @@ namespace Capycom.Controllers
             }
             catch (DbException)
             {
-                Response.StatusCode = 418;
+                Response.StatusCode = 500;
+                ViewData["ErrorCode"] = 500;
                 ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
-                return View("Error418");
+                return View("UserError");
             }
             if (user == null)
             {
-                Response.StatusCode = 418;
+                Response.StatusCode = 404;
+                ViewData["ErrorCode"] = 404;
                 ViewData["Message"] = "Пользователь не найден";
-                return View("Error418");
+                return View("UserError");
             }
 
             return View(user);
@@ -402,16 +409,18 @@ namespace Capycom.Controllers
                 }
                 catch (DbException)
                 {
-                    Response.StatusCode = 418;
+                    Response.StatusCode = 500;
+                    ViewData["ErrorCode"] = 500;
                     ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
-                    return View("Error418");
+                    return View("UserError");
                 }
 
                 if (user == null)
                 {
-                    Response.StatusCode = 418;
+                    Response.StatusCode = 404;
+                    ViewData["ErrorCode"] = 404;
                     ViewData["Message"] = "Пользователь не найден";
-                    return View("Error418");
+                    return View("UserError");
                 }
 
                 cpcmUser.CpcmUserEmail = user.CpcmUserEmail.Trim();
@@ -438,9 +447,10 @@ namespace Capycom.Controllers
                 }
                 catch (DbException)
                 {
-                    Response.StatusCode = 418;
-                    ViewData["Message"] = "Не удалось сохранить вас как нового пользователя. Возможно вы указали данные, которые не поддерживаются нами. Обратитесь в техническую поддержку";
-                    return View("Error418");
+                    Response.StatusCode = 500;
+                    ViewData["ErrorCode"] = 500;
+                    ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
+                    return View("UserError");
                 }
 
 
@@ -462,16 +472,18 @@ namespace Capycom.Controllers
             }
             catch (DbException)
             {
-                Response.StatusCode = 418;
+                Response.StatusCode = 500;
+                ViewData["ErrorCode"] = 500;
                 ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
-                return View("Error418");
+                return View("UserError");
             }
 
             if (user == null)
             {
-                Response.StatusCode = 418;
+                Response.StatusCode = 404;
+                ViewData["ErrorCode"] = 404;
                 ViewData["Message"] = "Пользователь не найден";
-                return View("Error418");
+                return View("UserError");
             }
 
 
@@ -490,9 +502,10 @@ namespace Capycom.Controllers
             }
             catch (DbException)
             {
-                Response.StatusCode = 418;
+                Response.StatusCode = 500;
+                ViewData["ErrorCode"] = 500;
                 ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
-                return View("Error418");
+                return View("UserError");
             }
 
             friendList1.AddRange(friendList2);
@@ -509,16 +522,18 @@ namespace Capycom.Controllers
             }
             catch (DbException)
             {
-                Response.StatusCode = 418;
+                Response.StatusCode = 500;
+                ViewData["ErrorCode"] = 500;
                 ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
-                return View("Error418");
+                return View("UserError");
             }
 
             if (user == null)
             {
-                Response.StatusCode = 418;
+                Response.StatusCode = 404;
+                ViewData["ErrorCode"] = 404;
                 ViewData["Message"] = "Пользователь не найден";
-                return View("Error418");
+                return View("UserError");
             }
 
 
@@ -537,9 +552,10 @@ namespace Capycom.Controllers
             }
             catch (DbException)
             {
-                Response.StatusCode = 418;
+                Response.StatusCode = 500;
+                ViewData["ErrorCode"] = 500;
                 ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
-                return View("Error418");
+                return View("UserError");
             }
 
             friendList1.AddRange(friendList2);
@@ -557,16 +573,18 @@ namespace Capycom.Controllers
             }
             catch (DbException)
             {
-                Response.StatusCode = 418;
+                Response.StatusCode = 500;
+                ViewData["ErrorCode"] = 500;
                 ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
-                return View("Error418");
+                return View("UserError");
             }
 
             if (user == null)
             {
-                Response.StatusCode = 418;
+                Response.StatusCode = 404;
+                ViewData["ErrorCode"] = 404;
                 ViewData["Message"] = "Пользователь не найден";
-                return View("Error418");
+                return View("UserError");
             }
 
             //_context.CpcmUserfriends.Select(c => c.CmcpFriend).Where(c => c.CmcpUserId == id).Include(c => c.CmcpFriend).ToList();
@@ -579,9 +597,10 @@ namespace Capycom.Controllers
             }
             catch (DbException)
             {
-                Response.StatusCode = 418;
+                Response.StatusCode = 500;
+                ViewData["ErrorCode"] = 500;
                 ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
-                return View("Error418");
+                return View("UserError");
             }
 
             friendList1.AddRange(friendList2);
@@ -599,16 +618,18 @@ namespace Capycom.Controllers
             }
             catch (DbException)
             {
-                Response.StatusCode = 418;
+                Response.StatusCode = 500;
+                ViewData["ErrorCode"] = 500;
                 ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
-                return View("Error418");
+                return View("UserError");
             }
 
             if (user == null)
             {
-                Response.StatusCode = 418;
+                Response.StatusCode = 404;
+                ViewData["ErrorCode"] = 404;
                 ViewData["Message"] = "Пользователь не найден";
-                return View("Error418");
+                return View("UserError");
             }
 
             //_context.CpcmUserfriends.Select(c => c.CmcpFriend).Where(c => c.CmcpUserId == id).Include(c => c.CmcpFriend).ToList();
@@ -621,9 +642,10 @@ namespace Capycom.Controllers
             }
             catch (DbException)
             {
-                Response.StatusCode = 418;
+                Response.StatusCode = 500;
+                ViewData["ErrorCode"] = 500;
                 ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
-                return View("Error418");
+                return View("UserError");
             }
 
             friendList1.AddRange(friendList2);
@@ -643,16 +665,18 @@ namespace Capycom.Controllers
             }
             catch (Exception)
             {
-                Response.StatusCode = 418;
+                Response.StatusCode = 500;
+                ViewData["ErrorCode"] = 500;
                 ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
-                return View("Error418");
+                return View("UserError");
             }
 
             if (user == null)
             {
-                Response.StatusCode = 418;
+                Response.StatusCode = 404;
+                ViewData["ErrorCode"] = 404;
                 ViewData["Message"] = "Пользователь не найден";
-                return View("Error418");
+                return View("UserError");
             }
 
             if (user.CpcmUserNickName != null)
@@ -670,9 +694,10 @@ namespace Capycom.Controllers
             }
             catch (Exception)
             {
-                Response.StatusCode = 418;
+                Response.StatusCode = 500;
+                ViewData["ErrorCode"] = 500;
                 ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
-                return View("Error418");
+                return View("UserError");
             }
 
             //followerList1.AddRange(followerList2);
@@ -690,16 +715,18 @@ namespace Capycom.Controllers
             }
             catch (DbException)
             {
-                Response.StatusCode = 418;
+                Response.StatusCode = 500;
+                ViewData["ErrorCode"] = 500;
                 ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
-                return View("Error418");
+                return View("UserError");
             }
 
             if (user == null)
             {
-                Response.StatusCode = 418;
+                Response.StatusCode = 404;
+                ViewData["ErrorCode"] = 404;
                 ViewData["Message"] = "Пользователь не найден";
-                return View("Error418");
+                return View("UserError");
             }
 
             //_context.CpcmUserfriends.Select(c => c.CmcpFriend).Where(c => c.CmcpUserId == id).Include(c => c.CmcpFriend).ToList();
@@ -712,9 +739,10 @@ namespace Capycom.Controllers
             }
             catch (DbException)
             {
-                Response.StatusCode = 418;
+                Response.StatusCode = 500;
+                ViewData["ErrorCode"] = 500;
                 ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
-                return View("Error418");
+                return View("UserError");
             }
 
             //followerList1.AddRange(followerList2);
@@ -740,16 +768,18 @@ namespace Capycom.Controllers
             }
             catch (DbException)
             {
-                Response.StatusCode = 418;
+                Response.StatusCode = 500;
+                ViewData["ErrorCode"] = 500;
                 ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
-                return View("Error418");
+                return View("UserError");
             }
 
             if (user == null)
             {
-                Response.StatusCode = 418;
+                Response.StatusCode = 404;
+                ViewData["ErrorCode"] = 404;
                 ViewData["Message"] = "Пользователь не найден";
-                return View("Error418");
+                return View("UserError");
             }
             return View(user);
         }
@@ -771,16 +801,18 @@ namespace Capycom.Controllers
             }
             catch (DbException)
             {
-                Response.StatusCode = 418;
+                Response.StatusCode = 500;
+                ViewData["ErrorCode"] = 500;
                 ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
-                return View("Error418");
+                return View("UserError");
             }
 
             if (user == null)
             {
-                Response.StatusCode = 418;
+                Response.StatusCode = 404;
+                ViewData["ErrorCode"] = 404;
                 ViewData["Message"] = "Пользователь не найден";
-                return View("Error418");
+                return View("UserError");
             }
 
             _context.CpcmUsers.Remove(user);
@@ -791,9 +823,10 @@ namespace Capycom.Controllers
             }
             catch (DbException)
             {
-                Response.StatusCode = 418;
-                ViewData["Message"] = "Не удалось сохранить вас как нового пользователя. Возможно вы указали данные, которые не поддерживаются нами. Обратитесь в техническую поддержку";
-                return View("Error418");
+                Response.StatusCode = 500;
+                ViewData["ErrorCode"] = 500;
+                ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
+                return View("UserError");
             }
 
             return RedirectToAction("UserLogIn", "Index");
@@ -820,7 +853,7 @@ namespace Capycom.Controllers
             }
             catch (DbException)
             {
-                return StatusCode(400);
+                return StatusCode(500);
             }
 
             return StatusCode(200);
@@ -838,13 +871,13 @@ namespace Capycom.Controllers
             }
             catch (DbException)
             {
-                return StatusCode(400);
+                return StatusCode(500);
             }
 
 
             if (follow == null)
             {
-                return StatusCode(400);
+                return StatusCode(404);
             }
 
             _context.Remove(follow);
@@ -855,7 +888,7 @@ namespace Capycom.Controllers
             }
             catch (DbException)
             {
-                return StatusCode(400);
+                return StatusCode(500);
             }
 
             return StatusCode(200);
@@ -882,7 +915,7 @@ namespace Capycom.Controllers
             }
             catch (DbException)
             {
-                return StatusCode(400);
+                return StatusCode(500);
             }
 
             return StatusCode(200);
@@ -893,8 +926,20 @@ namespace Capycom.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> AnswerToFriendRequests(Guid CpcmUserId, bool status)
         {
-            var friendRequest = await _context.CpcmUserfriends.Where(c => c.CmcpUserId.ToString() == HttpContext.User.FindFirst(c => c.Type == "CpcmUserId").Value
-            && c.CmcpFriendId == CpcmUserId).FirstOrDefaultAsync();
+            CpcmUserfriend? friendRequest;
+            try
+            {
+                friendRequest = await _context.CpcmUserfriends.Where(c => c.CmcpUserId.ToString() == HttpContext.User.FindFirst(c => c.Type == "CpcmUserId").Value
+                    && c.CmcpFriendId == CpcmUserId).FirstOrDefaultAsync();
+            }
+            catch (DbException)
+            {
+                return StatusCode(500);
+            }
+            if(friendRequest == null)
+            {
+                return StatusCode(404);
+            }
 
             friendRequest.CpcmFriendRequestStatus = status;
 
@@ -904,7 +949,7 @@ namespace Capycom.Controllers
             }
             catch (DbException)
             {
-                return StatusCode(400);
+                return StatusCode(500);
             }
 
             return StatusCode(200);
@@ -913,11 +958,22 @@ namespace Capycom.Controllers
         [Authorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteToFriendRequests(Guid CpcmUserId)
+        public async Task<IActionResult> DeleteFriendRequests(Guid CpcmUserId)
         {
-            var friendRequest = await _context.CpcmUserfriends.Where(c => c.CmcpUserId.ToString() == HttpContext.User.FindFirst(c => c.Type == "CpcmUserId").Value
-            && c.CmcpFriendId == CpcmUserId).FirstOrDefaultAsync();
-
+            CpcmUserfriend? friendRequest;
+            try
+            {
+                friendRequest = await _context.CpcmUserfriends.Where(c => c.CmcpUserId.ToString() == HttpContext.User.FindFirst(c => c.Type == "CpcmUserId").Value
+                   && c.CmcpFriendId == CpcmUserId).FirstOrDefaultAsync();
+            }
+            catch (DbException)
+            {
+                return StatusCode(500);
+            }
+            if( friendRequest == null)
+            {
+                return StatusCode(404);
+            }
             _context.CpcmUserfriends.Remove(friendRequest);
 
             try
@@ -926,7 +982,7 @@ namespace Capycom.Controllers
             }
             catch (DbException)
             {
-                return StatusCode(400);
+                return StatusCode(500);
             }
 
             return StatusCode(200);
@@ -996,8 +1052,9 @@ namespace Capycom.Controllers
                     }
                     catch (Exception ex)
                     {
-                        Response.StatusCode = 418;
-                        ViewData["Message"] = "Не удалось сохранить фотографию на сервере. Пожалуйста, повторите запрос позднее или обратитесь к Администратору.";
+                        Response.StatusCode = 500;
+                        ViewData["ErrorCode"] = 500;
+                        ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
                         return View(userPost);
                     }
 
@@ -1012,8 +1069,9 @@ namespace Capycom.Controllers
                 }
                 catch (DbException)
                 {
-                    Response.StatusCode = 418;
-                    ViewData["Message"] = "Не удалось сохранить пост. Пожалуйста, повторите запрос позднее или обратитесь к Администратору.";
+                    Response.StatusCode = 500;
+                    ViewData["ErrorCode"] = 500;
+                    ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
                     return View(userPost); // TODO Продумать место для сохранения еррора
                 }
 
@@ -1037,11 +1095,11 @@ namespace Capycom.Controllers
             }
             catch (DbException)
             {
-                return StatusCode(StatusCodes.Status503ServiceUnavailable);
+                return StatusCode(500);
             }
             if (post == null)
             {
-                return StatusCode(StatusCodes.Status404NotFound);
+                return StatusCode(404);
             }
 
 
@@ -1057,7 +1115,7 @@ namespace Capycom.Controllers
             }
             catch (DbException)
             {
-                return StatusCode(StatusCodes.Status503ServiceUnavailable);
+                return StatusCode(500);
             }
             return StatusCode(200);
         }
@@ -1072,12 +1130,12 @@ namespace Capycom.Controllers
             }
             catch (DbException)
             {
-                return StatusCode(StatusCodes.Status503ServiceUnavailable);
+                return StatusCode(500);
             }
 
             if (post == null)
             {
-                return StatusCode(StatusCodes.Status404NotFound);
+                return StatusCode(404);
             }
 
 
@@ -1115,11 +1173,11 @@ namespace Capycom.Controllers
                 }
                 catch (DbException)
                 {
-                    return StatusCode(StatusCodes.Status503ServiceUnavailable);
+                    return StatusCode(500);
                 }
                 if (post == null)
                 {
-                    return StatusCode(StatusCodes.Status404NotFound);
+                    return StatusCode(404);
                 }
                 if (!CheckUserPrivilege("CpcmCanEditUsers", "True", post.CpcmUserId.ToString()))
                 {
@@ -1168,8 +1226,9 @@ namespace Capycom.Controllers
                     }
                     catch (Exception ex)
                     {
-                        Response.StatusCode = 418;
-                        ViewData["Message"] = "Не удалось сохранить фотографию на сервере. Пожалуйста, повторите запрос позднее или обратитесь к Администратору.";
+                        Response.StatusCode = 500;
+                        ViewData["ErrorCode"] = 500;
+                        ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
                         return View(editPost);
                     }
 
@@ -1219,7 +1278,7 @@ namespace Capycom.Controllers
                             }
                         }
 
-                        return StatusCode(StatusCodes.Status503ServiceUnavailable);
+                        return StatusCode(500);
                     }
                 }
 
@@ -1255,7 +1314,7 @@ namespace Capycom.Controllers
             }
             catch (DbException)
             {
-                return StatusCode(StatusCodes.Status503ServiceUnavailable);
+                return StatusCode( 500 );
             }
             return Json(posts);
         }
@@ -1276,7 +1335,7 @@ namespace Capycom.Controllers
             }
             catch (DbException)
             {
-                return StatusCode(StatusCodes.Status503ServiceUnavailable);
+                return StatusCode(500);
             }
             return Json(posts);
         }
@@ -1298,9 +1357,10 @@ namespace Capycom.Controllers
             }
             catch (DbException)
             {
-                Response.StatusCode = 418;
+                Response.StatusCode = 500;
+                ViewData["ErrorCode"] = 500;
                 ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
-                return View("Error418");
+                return View("UserError");
             }
 
             return View();
@@ -1366,8 +1426,9 @@ namespace Capycom.Controllers
             }
             catch (DbException)
             {
-                ViewData["Message"] = "Ошибка при обращении к серверу";
-                ViewData["ErrorCode"] = 504;
+                Response.StatusCode = 500;
+                ViewData["ErrorCode"] = 500;
+                ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
                 return View("UserError");
             }
         }
@@ -1424,9 +1485,7 @@ namespace Capycom.Controllers
             }
             catch (DbException)
             {
-                ViewData["Message"] = "Ошибка при обращении к серверу";
-                ViewData["ErrorCode"] = 504;
-                return View("UserError");
+                return StatusCode(500);
             }
         }
 
@@ -1510,7 +1569,7 @@ namespace Capycom.Controllers
             }
             catch (DbException)
             {
-                StatusCode(StatusCodes.Status503ServiceUnavailable);
+                StatusCode(500);
                 return Json(false);
             }
             return Json(rez);
@@ -1536,7 +1595,7 @@ namespace Capycom.Controllers
             }
             catch (DbException)
             {
-                StatusCode(StatusCodes.Status503ServiceUnavailable);
+                StatusCode(500);
                 return Json(false);
             }
             return Json(rez);
@@ -1556,7 +1615,7 @@ namespace Capycom.Controllers
             }
             catch (DbException)
             {
-                StatusCode(StatusCodes.Status503ServiceUnavailable);
+                StatusCode(500);
                 return Json(false);
             }
             return Json(rez);
@@ -1577,7 +1636,7 @@ namespace Capycom.Controllers
                 }
                 catch (DbException)
                 {
-                    StatusCode(StatusCodes.Status503ServiceUnavailable);
+                    StatusCode(500);
                     return Json(false);
                 }
                return Json(rez);
