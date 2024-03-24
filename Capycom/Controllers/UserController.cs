@@ -132,7 +132,7 @@ namespace Capycom.Controllers
             try
             {
                 user = await _context.CpcmUsers
-                .Include(c => c.CpcmUserCityNavigation) 
+                .Include(c => c.CpcmUserCityNavigation)
                 .Include(c => c.CpcmUserRoleNavigation)
                 .Include(c => c.CpcmUserSchoolNavigation)
                 .Include(c => c.CpcmUserUniversityNavigation)
@@ -170,7 +170,7 @@ namespace Capycom.Controllers
             return View(user);
         }
 
-        
+
 
 
         [Authorize]
@@ -467,6 +467,31 @@ namespace Capycom.Controllers
             return View(user);
         }
 
+        [Authorize]
+        [HttpPost]
+        public async Task<IActionResult> BanUnbanUser(Guid id)
+        {
+            if (!CheckUserPrivilege("CpcmCanEditUsers", "True"))
+            {
+                return StatusCode(403);
+            }
+            try
+            {
+                var user = await _context.CpcmUsers.Where(c => c.CpcmUserId == id).FirstOrDefaultAsync();
+                if (user == null)
+                {
+                    return StatusCode(404);
+                }
+                user.CpcmUserBanned = !user.CpcmUserBanned;
+                await _context.SaveChangesAsync();
+                return StatusCode(200);
+            }
+            catch (DbException)
+            {
+                return StatusCode(500);
+            }
+        }
+
 
 
 
@@ -554,7 +579,7 @@ namespace Capycom.Controllers
             List<CpcmUser> friendList2;
             try
             {
-                friendList1 = await _context.CpcmUserfriends.Where(c => c.CmcpUserId == user.CpcmUserId && c.CpcmFriendRequestStatus == true && c.CmcpFriendId.CompareTo(lastId)>0).Select(c => c.CmcpFriend).OrderBy(u => u.CpcmUserId).Take(5).ToListAsync();
+                friendList1 = await _context.CpcmUserfriends.Where(c => c.CmcpUserId == user.CpcmUserId && c.CpcmFriendRequestStatus == true && c.CmcpFriendId.CompareTo(lastId) > 0).Select(c => c.CmcpFriend).OrderBy(u => u.CpcmUserId).Take(5).ToListAsync();
                 friendList2 = await _context.CpcmUserfriends.Where(c => c.CmcpFriendId == user.CpcmUserId && c.CpcmFriendRequestStatus == true && c.CmcpUserId.CompareTo(lastId) > 0).Select(c => c.CmcpUser).OrderBy(u => u.CpcmUserId).Take(10 - friendList1.Count).ToListAsync();
             }
             catch (DbException)
@@ -600,7 +625,7 @@ namespace Capycom.Controllers
             try
             {
                 friendList1 = await _context.CpcmUserfriends.Where(c => c.CmcpUserId == user.CpcmUserId && c.CpcmFriendRequestStatus == true).Select(c => c.CmcpFriend).OrderBy(u => u.CpcmUserId).Take(5).ToListAsync();
-                friendList2 = await _context.CpcmUserfriends.Where(c => c.CmcpFriendId == user.CpcmUserId && c.CpcmFriendRequestStatus == true).Select(c => c.CmcpUser).OrderBy(u => u.CpcmUserId).Take(10-friendList1.Count).ToListAsync();
+                friendList2 = await _context.CpcmUserfriends.Where(c => c.CmcpFriendId == user.CpcmUserId && c.CpcmFriendRequestStatus == true).Select(c => c.CmcpUser).OrderBy(u => u.CpcmUserId).Take(10 - friendList1.Count).ToListAsync();
             }
             catch (DbException)
             {
@@ -722,17 +747,13 @@ namespace Capycom.Controllers
             catch (Exception)
             {
                 Response.StatusCode = 500;
-                ViewData["ErrorCode"] = 500;
-                ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
-                return View("UserError");
+                return StatusCode(500);
             }
 
             if (user == null)
             {
                 Response.StatusCode = 404;
-                ViewData["ErrorCode"] = 404;
-                ViewData["Message"] = "Пользователь не найден";
-                return View("UserError");
+                return StatusCode(404);
             }
 
             if (user.CpcmUserNickName != null)
@@ -751,14 +772,12 @@ namespace Capycom.Controllers
             catch (Exception)
             {
                 Response.StatusCode = 500;
-                ViewData["ErrorCode"] = 500;
-                ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
-                return View("UserError");
+                return StatusCode(500);
             }
 
             //followerList1.AddRange(followerList2);
 
-            return View(followerList1);
+            return Json(followerList1);
         }
 
         [Route("User/Followers/{nickName}")]
@@ -817,17 +836,13 @@ namespace Capycom.Controllers
             catch (Exception)
             {
                 Response.StatusCode = 500;
-                ViewData["ErrorCode"] = 500;
-                ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
-                return View("UserError");
+                return StatusCode(500);
             }
 
             if (user == null)
             {
                 Response.StatusCode = 404;
-                ViewData["ErrorCode"] = 404;
-                ViewData["Message"] = "Пользователь не найден";
-                return View("UserError");
+                return StatusCode(404);
             }
 
             if (user.CpcmUserNickName != null)
@@ -1040,7 +1055,7 @@ namespace Capycom.Controllers
             {
                 return StatusCode(500);
             }
-            if(friendRequest == null)
+            if (friendRequest == null)
             {
                 return StatusCode(404);
             }
@@ -1074,7 +1089,7 @@ namespace Capycom.Controllers
             {
                 return StatusCode(500);
             }
-            if( friendRequest == null)
+            if (friendRequest == null)
             {
                 return StatusCode(404);
             }
@@ -1207,10 +1222,11 @@ namespace Capycom.Controllers
             }
 
 
-            if (!CheckUserPrivilege("CpcmCanDelUsersPosts", "True", post.CpcmUserId.ToString()))
+            if (!CheckUserPrivilege("CpcmCanDelUsersPosts", "True", post.CpcmUserId.ToString()) || post.CpcmPostBanned == true)
             {
                 return StatusCode(403);
             }
+
 
             _context.CpcmPosts.Remove(post);
             try
@@ -1243,7 +1259,7 @@ namespace Capycom.Controllers
             }
 
 
-            if (!CheckUserPrivilege("CpcmCanEditUsers", "True", post.CpcmUserId.ToString()))
+            if (!CheckUserPrivilege("CpcmCanEditUsers", "True", post.CpcmUserId.ToString()) || post.CpcmPostBanned == true)
             {
                 return View("Index");
             }
@@ -1283,7 +1299,7 @@ namespace Capycom.Controllers
                 {
                     return StatusCode(404);
                 }
-                if (!CheckUserPrivilege("CpcmCanEditUsers", "True", post.CpcmUserId.ToString()))
+                if (!CheckUserPrivilege("CpcmCanEditUsers", "True", post.CpcmUserId.ToString()) || post.CpcmPostBanned == true)
                 {
                     return StatusCode(403);
                 }
@@ -1403,7 +1419,7 @@ namespace Capycom.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> GetNextPosts(Guid userId,Guid lastPostId)
+        public async Task<IActionResult> GetNextPosts(Guid userId, Guid lastPostId)
         {
             List<CpcmPost> posts;
             try
@@ -1414,11 +1430,11 @@ namespace Capycom.Controllers
                     return StatusCode(404);
                 }
 
-                posts= await _context.CpcmPosts.Where(c => c.CpcmUserId == userId && c.CpcmPostId == lastPostId).Where(c => c.CpcmPostPublishedDate < date.CpcmPostPublishedDate && c.CpcmPostPublishedDate < DateTime.Now).Take(10).ToListAsync();
+                posts = await _context.CpcmPosts.Where(c => c.CpcmUserId == userId && c.CpcmPostId == lastPostId).Where(c => c.CpcmPostPublishedDate < date.CpcmPostPublishedDate && c.CpcmPostPublishedDate < DateTime.Now).Take(10).ToListAsync();
             }
             catch (DbException)
             {
-                return StatusCode( 500 );
+                return StatusCode(500);
             }
             return Json(posts);
         }
@@ -1470,7 +1486,30 @@ namespace Capycom.Controllers
             return View();
         }
 
-
+        [Authorize]
+        [HttpPost]
+        public async Task<IActionResult> BanUnbanPost(Guid id)
+        {
+            if (!CheckUserPrivilege("CpcmCanEditUsers", "True"))
+            {
+                return StatusCode(403);
+            }
+            try
+            {
+                var post = await _context.CpcmPosts.Where(c => c.CpcmPostId == id).FirstOrDefaultAsync();
+                if(post == null)
+                {
+                    return StatusCode(404);
+                }
+                post.CpcmPostBanned = !post.CpcmPostBanned;
+                await _context.SaveChangesAsync();
+                return StatusCode(200);
+            }
+            catch (DbException)
+            {
+                return StatusCode(500);
+            }
+        }
 
 
         public async Task<IActionResult> FindUser()
@@ -1605,6 +1644,15 @@ namespace Capycom.Controllers
         private bool CheckUserPrivilege(string claimType, string claimValue, Guid id)
         {
             var authFactor = HttpContext.User.FindFirst(c => c.Type == "CpcmUserId" && c.Value == id.ToString() || c.Type == "claimType" && c.Value == "claimValue");
+            if (authFactor == null)
+            {
+                return false;
+            }
+            return true;
+        }
+        private bool CheckUserPrivilege(string claimType, string claimValue)
+        {
+            var authFactor = HttpContext.User.FindFirst(c => c.Type == "claimType" && c.Value == "claimValue");
             if (authFactor == null)
             {
                 return false;
