@@ -66,8 +66,9 @@
 		</div>
 		<div class="mb-3">
 			<label asp-for="CpcmUserCity" class="form-label">Город</label>
-			<select asp-for="CpcmUserCity" asp-items="ViewBag.CpcmUserCity" class="form-select" id="city">
+			<select asp-for="CpcmUserCity" asp-items="ViewBag.CpcmUserCity" class="form-select" id="city" data-live-search="true">
 				<option value="" selected disabled>Выберите город...</option>
+				<option value="">Вfdsfdsfds.</option>
 			</select>
 		</div>
 		<div class="mb-3">
@@ -77,9 +78,11 @@
 			</select>
 		</div>
 		<div class="mb-3">
-			<label label asp-for="CpcmUserSchool" class="form-label">Школа</label>
-			<select label asp-for="CpcmUserSchool" asp-items="ViewBag.CpcmUserSchool" class="form-select" id="school">
+			<label asp-for="CpcmUserSchool" class="form-label">Школа</label>
+			<select data-live-search="true" asp-for="CpcmUserSchool" asp-items="ViewBag.CpcmUserSchool" class="selectpicker" id="school">
 				<option value="" selected disabled>Выберите школу...</option>
+				<option value="">test1...</option>
+				<option value="">test2...</option>
 			</select>
 		</div>
 		<div class="col mb-3">
@@ -109,6 +112,37 @@
 <div>
 	<a asp-action="Index" class="btn btn-light">Back to List</a>
 </div>
+<script>
+	$(document).ready(function () {
+		$('#addButton').click(function () {
+			// Открываем модальное окно
+			$('#addCityModal').show();
+		});
+
+		$('#submitCity').click(function () {
+			var newCity = $('#newCity').val();
+
+			$.ajax({
+				url: '/User/AddCity',
+				type: 'POST',
+				data: { city: newCity },
+				success: function (response) {
+					if (response.statusCode == 200) {
+						// Добавляем новый город в выпадающий список
+						$('#mySelect').append(new Option(newCity, newCity));
+						$('#mySelect').selectpicker('refresh');
+
+						// Закрываем модальное окно
+						$('#addCityModal').hide();
+					} else {
+						// Обрабатываем ошибку
+						alert('Не удалось добавить город');
+					}
+				}
+			});
+		});
+	});
+</script>
 @section Scripts {
 	@{
 		await Html.RenderPartialAsync("_ValidationScriptsPartial");
