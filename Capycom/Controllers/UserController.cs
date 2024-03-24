@@ -1259,7 +1259,7 @@ namespace Capycom.Controllers
             }
 
 
-            if (!CheckUserPrivilege("CpcmCanEditUsers", "True", post.CpcmUserId.ToString()) || post.CpcmPostBanned == true)
+            if (!CheckUserPrivilege("CpcmCanDelUsersPosts", "True", post.CpcmUserId.ToString()) || post.CpcmPostBanned == true)
             {
                 return View("Index");
             }
@@ -1299,7 +1299,7 @@ namespace Capycom.Controllers
                 {
                     return StatusCode(404);
                 }
-                if (!CheckUserPrivilege("CpcmCanEditUsers", "True", post.CpcmUserId.ToString()) || post.CpcmPostBanned == true)
+                if (!CheckUserPrivilege("CpcmCanDelUsersPosts", "True", post.CpcmUserId.ToString()) || post.CpcmPostBanned == true)
                 {
                     return StatusCode(403);
                 }
@@ -1490,7 +1490,7 @@ namespace Capycom.Controllers
         [HttpPost]
         public async Task<IActionResult> BanUnbanPost(Guid id)
         {
-            if (!CheckUserPrivilege("CpcmCanEditUsers", "True"))
+            if (!CheckUserPrivilege("CpcmCanDelUsersPosts", "True"))
             {
                 return StatusCode(403);
             }
