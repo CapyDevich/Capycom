@@ -17,6 +17,8 @@ public partial class CpcmComment
 
     public DateTime CpcmCommentCreationDate { get; set; }
 
+    public bool CpcmCommentBanned { get; set; }
+
     public virtual CpcmComment? CpcmCommentFatherNavigation { get; set; }
 
     public virtual ICollection<CpcmImage> CpcmImages { get; set; } = new List<CpcmImage>();

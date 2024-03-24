@@ -9,7 +9,7 @@ public partial class CpcmUserfriend
 
     public Guid CmcpFriendId { get; set; }
 
-    public bool CpcmFriendRequestStatus { get; set; }
+    public bool? CpcmFriendRequestStatus { get; set; }
 
     public virtual CpcmUser CmcpFriend { get; set; } = null!;
 

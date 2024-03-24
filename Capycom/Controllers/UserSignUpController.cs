@@ -1,28 +1,20 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using Capycom;
-using System.Security.Cryptography;
-using System.Text;
+
 using Microsoft.Extensions.Options;
 using Capycom.Models;
-using Microsoft.AspNetCore.Mvc.ModelBinding;
-using System.Drawing;
-using Microsoft.AspNetCore.Authorization;
+using System.Data.Common;
 
 namespace Capycom.Controllers
 {
     public class UserSignUpController : Controller
     {
         private readonly CapycomContext _context;
-        private readonly ILogger<HomeController> _logger;
+        private readonly ILogger<UserSignUpController> _logger;
         private readonly MyConfig _config;
 
-        public UserSignUpController(ILogger<HomeController> logger, CapycomContext context, IOptions<MyConfig> config)
+        public UserSignUpController(ILogger<UserSignUpController> logger, CapycomContext context, IOptions<MyConfig> config)
         {
             _context = context;
             _config = config.Value;
@@ -32,24 +24,50 @@ namespace Capycom.Controllers
         // GET: UserSignUp
         public async Task<IActionResult> Index()
         {
-            var capycomContext = _context.CpcmUsers.Include(c => c.CpcmUserCityNavigation).Include(c => c.CpcmUserRoleNavigation).Include(c => c.CpcmUserSchoolNavigation).Include(c => c.CpcmUserUniversityNavigation);
-            return View(await capycomContext.ToListAsync());
+            List<CpcmUser> capycomContext;
+            try
+            {
+                capycomContext = await _context.CpcmUsers.Include(c => c.CpcmUserCityNavigation).Include(c => c.CpcmUserRoleNavigation).Include(c => c.CpcmUserSchoolNavigation).Include(c => c.CpcmUserUniversityNavigation).ToListAsync();
+
+            }
+            catch (DbException)
+            {
+                Response.StatusCode = 500;
+                ViewData["ErrorCode"] = 500;
+                ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
+                return View("UserError");
+            }
+            if(capycomContext == null)
+            {
+                Response.StatusCode = 404;
+                ViewData["ErrorCode"] = 404;
+                ViewData["Message"] = "Пользователи не найдены";
+                return View("UserError");
+            }
+            return View(capycomContext);
         }
 
         public IActionResult SignUp()
         {
-            ViewData["CpcmUserCity"] = new SelectList(_context.CpcmCities, "CpcmCityId", "CpcmCityId");
-            ViewData["CpcmUserRole"] = new SelectList(_context.CpcmRoles, "CpcmRoleId", "CpcmRoleId");
-            ViewData["CpcmUserSchool"] = new SelectList(_context.CpcmSchools, "CpcmSchooldId", "CpcmSchooldId");
-            ViewData["CpcmUserUniversity"] = new SelectList(_context.CpcmUniversities, "CpcmUniversityId", "CpcmUniversityId");
-            return View();
+            try
+            {
+                ViewData["CpcmUserCity"] = new SelectList(_context.CpcmCities, "CpcmCityId", "CpcmCityId");
+                ViewData["CpcmUserRole"] = new SelectList(_context.CpcmRoles, "CpcmRoleId", "CpcmRoleId");
+                ViewData["CpcmUserSchool"] = new SelectList(_context.CpcmSchools, "CpcmSchooldId", "CpcmSchooldId");
+                ViewData["CpcmUserUniversity"] = new SelectList(_context.CpcmUniversities, "CpcmUniversityId", "CpcmUniversityId");
+                return View();
+            }
+            catch (DbException)
+            {
+                Response.StatusCode = 500;
+                ViewData["ErrorCode"] = 500;
+                ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
+                return View("UserError");
+            }
+            
         }
 
-        // POST: UserSignUp/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
-        //[RequestSizeLimit(10240)]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(UserSignUpModel cpcmSignUser)
         {            
@@ -58,24 +76,34 @@ namespace Capycom.Controllers
             {
                 CpcmUser cpcmUser = new();
                 cpcmUser.CpcmUserId = Guid.NewGuid();
-                cpcmUser.CpcmUserEmail = cpcmSignUser.CpcmUserEmail;
-                cpcmUser.CpcmUserTelNum = cpcmSignUser.CpcmUserTelNum;
+                cpcmUser.CpcmUserEmail = cpcmSignUser.CpcmUserEmail.Trim();
+                cpcmUser.CpcmUserTelNum = cpcmSignUser.CpcmUserTelNum.Trim();
                 cpcmUser.CpcmUserSalt = MyConfig.GetRandomString(10);
-                cpcmUser.CpcmUserPwdHash = MyConfig.GetSha256Hash(cpcmSignUser.CpcmUserPwd,cpcmUser.CpcmUserSalt,_config.ServerSol);
-                cpcmUser.CpcmUserAbout = cpcmSignUser.CpcmUserAbout;
+                cpcmUser.CpcmUserPwdHash = MyConfig.GetSha256Hash(cpcmSignUser.CpcmUserPwd.Trim(),cpcmUser.CpcmUserSalt,_config.ServerSol);
+                cpcmUser.CpcmUserAbout = cpcmSignUser.CpcmUserAbout?.Trim();
                 cpcmUser.CpcmUserCity = cpcmSignUser.CpcmUserCity;
-                cpcmUser.CpcmUserSite = cpcmSignUser.CpcmUserSite;
-                cpcmUser.CpcmUserBooks = cpcmSignUser.CpcmUserBooks;
-                cpcmUser.CpcmUserFilms = cpcmSignUser.CpcmUserFilms;
-                cpcmUser.CpcmUserMusics = cpcmSignUser.CpcmUserMusics;
+                cpcmUser.CpcmUserSite = cpcmSignUser.CpcmUserSite?.Trim();
+                cpcmUser.CpcmUserBooks = cpcmSignUser.CpcmUserBooks?.Trim();
+                cpcmUser.CpcmUserFilms = cpcmSignUser.CpcmUserFilms?.Trim();
+                cpcmUser.CpcmUserMusics = cpcmSignUser.CpcmUserMusics?.Trim();
                 cpcmUser.CpcmUserSchool = cpcmSignUser.CpcmUserSchool;
                 cpcmUser.CpcmUserUniversity = cpcmSignUser.CpcmUserUniversity;
                 //cpcmUser.CpcmUserImagePath = cpcmSignUser.CpcmUserImagePath;
                 //cpcmUser.CpcmUserCoverPath = cpcmSignUser.CpcmUserCoverPath;
-                cpcmUser.CpcmUserNickName = cpcmSignUser.CpcmUserNickName;
-                cpcmUser.CpcmUserFirstName = cpcmSignUser.CpcmUserFirstName;
-                cpcmUser.CpcmUserSecondName = cpcmSignUser.CpcmUserSecondName;
-                cpcmUser.CpcmUserAdditionalName = cpcmSignUser.CpcmUserAdditionalName;
+
+                cpcmSignUser.CpcmUserNickName = cpcmSignUser.CpcmUserNickName?.Trim();
+                if (cpcmSignUser.CpcmUserNickName == "" || cpcmSignUser.CpcmUserNickName == null)
+                {
+                    cpcmUser.CpcmUserNickName = null;
+                }
+                else
+                {
+                    cpcmUser.CpcmUserNickName = cpcmSignUser.CpcmUserNickName;
+                }
+
+                cpcmUser.CpcmUserFirstName = cpcmSignUser.CpcmUserFirstName.Trim();
+                cpcmUser.CpcmUserSecondName = cpcmSignUser.CpcmUserSecondName.Trim();
+                cpcmUser.CpcmUserAdditionalName = cpcmSignUser.CpcmUserAdditionalName?.Trim();
                 cpcmUser.CpcmUserRole = UserSignUpModel.BaseUserRole;
 
                 string filePathUserImage = "";
@@ -96,7 +124,7 @@ namespace Capycom.Controllers
                             }
                             cpcmUser.CpcmUserImagePath = filePathUserImage;
                         }
-                        catch (Exception ex)
+                        catch (Exception)
                         {
                             cpcmUser.CpcmUserImagePath = null;
                         }
@@ -122,7 +150,7 @@ namespace Capycom.Controllers
                             }
                             cpcmUser.CpcmUserCoverPath = filePathUserCoverImage;
                         }
-                        catch (Exception ex)
+                        catch (Exception)
                         {
                             cpcmUser.CpcmUserCoverPath = null;
                         }
@@ -131,10 +159,20 @@ namespace Capycom.Controllers
 
                 if (!ModelState.IsValid)
                 {
-                    ViewData["CpcmUserCity"] = new SelectList(_context.CpcmCities, "CpcmCityId", "CpcmCityName", cpcmSignUser.CpcmUserCity);
-                    ViewData["CpcmUserSchool"] = new SelectList(_context.CpcmSchools, "CpcmSchooldId", "CpcmSchoolName", cpcmSignUser.CpcmUserSchool);
-                    ViewData["CpcmUserUniversity"] = new SelectList(_context.CpcmUniversities, "CpcmUniversityId", "CpcmUniversityName", cpcmSignUser.CpcmUserUniversity);
-                    return View(cpcmSignUser);
+                    try
+                    {
+                        ViewData["CpcmUserCity"] = new SelectList(_context.CpcmCities, "CpcmCityId", "CpcmCityName", cpcmSignUser.CpcmUserCity);
+                        ViewData["CpcmUserSchool"] = new SelectList(_context.CpcmSchools, "CpcmSchooldId", "CpcmSchoolName", cpcmSignUser.CpcmUserSchool);
+                        ViewData["CpcmUserUniversity"] = new SelectList(_context.CpcmUniversities, "CpcmUniversityId", "CpcmUniversityName", cpcmSignUser.CpcmUserUniversity);
+                        return View(cpcmSignUser);
+                    }
+                    catch (DbException)
+                    {
+                        Response.StatusCode = 500;
+                        ViewData["ErrorCode"] = 500;
+                        ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
+                        return View("UserError");
+                    }
                 }
 
 
@@ -144,9 +182,9 @@ namespace Capycom.Controllers
                 {
                     await _context.SaveChangesAsync();
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
-                    if (System.IO.File.Exists(filePathUserImage))
+                    if (System.IO.File.Exists(filePathUserImage)) // TODO Возможно это стоит обернуть в try catch
                     {
                         System.IO.File.Delete(filePathUserImage);
                     }
@@ -154,115 +192,190 @@ namespace Capycom.Controllers
                     {
                         System.IO.File.Delete(filePathUserCoverImage);
                     }
-                    Response.StatusCode = 418;
-                    ViewData["Message"] = "Не удалось сохранить вас как нового пользователя. Возможно вы указали данные, которые не поддерживаются нами. Обратитесь в техническую поддержку";
-                    return View("Error418");
+                    Response.StatusCode = 500;
+                    ViewData["ErrorCode"] = 500;
+                    ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
+                    return View("UserError");
                 }
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["CpcmUserCity"] = new SelectList(_context.CpcmCities, "CpcmCityId", "CpcmCityName", cpcmSignUser.CpcmUserCity);
-            ViewData["CpcmUserSchool"] = new SelectList(_context.CpcmSchools, "CpcmSchooldId", "CpcmSchoolName", cpcmSignUser.CpcmUserSchool);
-            ViewData["CpcmUserUniversity"] = new SelectList(_context.CpcmUniversities, "CpcmUniversityId", "CpcmUniversityName", cpcmSignUser.CpcmUserUniversity);
-            return View(cpcmSignUser);
+            try
+            {
+                ViewData["CpcmUserCity"] = new SelectList(_context.CpcmCities, "CpcmCityId", "CpcmCityName", cpcmSignUser.CpcmUserCity);
+                ViewData["CpcmUserSchool"] = new SelectList(_context.CpcmSchools, "CpcmSchooldId", "CpcmSchoolName", cpcmSignUser.CpcmUserSchool);
+                ViewData["CpcmUserUniversity"] = new SelectList(_context.CpcmUniversities, "CpcmUniversityId", "CpcmUniversityName", cpcmSignUser.CpcmUserUniversity);
+                return View(cpcmSignUser);
+            }
+            catch (DbException)
+            {
+                Response.StatusCode = 500;
+                ViewData["ErrorCode"] = 500;
+                ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
+                return View("UserError");
+            }
             //return RedirectToAction("Index");
         }
 
         [HttpPost]
         public async Task<IActionResult> CheckEmail(string CpcmUserEmail)
         {
+            if(string.IsNullOrWhiteSpace(CpcmUserEmail))
+            {
+                return Json("Email не может быть пустым или состоять из одних пробелов");
+            }
+            CpcmUserEmail = CpcmUserEmail.Trim();
             if (CpcmUserEmail.Contains("admin") || CpcmUserEmail.Contains("webmaster") || CpcmUserEmail.Contains("abuse"))
             {
                 return Json(false);
             }
-            return Json(!_context.CpcmUsers.Any(e => e.CpcmUserEmail == CpcmUserEmail));
+            bool rez = false;
+            try
+            {
+                rez = !await _context.CpcmUsers.AnyAsync(e => e.CpcmUserEmail == CpcmUserEmail);
+            }
+            catch (DbException)
+            {
+                return Json(rez);
+            }
+            return Json(rez);
         }
 
         [HttpPost]
         public async Task<IActionResult> CheckNickName(string CpcmUserNickName)
-        {
-            if (CpcmUserNickName.Contains("admin") || CpcmUserNickName.Contains("webmaster") || CpcmUserNickName.Contains("abuse"))
+         {
+            if (CpcmUserNickName == null || CpcmUserNickName.All(char.IsWhiteSpace) || CpcmUserNickName==string.Empty)
+            {
+                return Json(true);
+            }
+            CpcmUserNickName = CpcmUserNickName.Trim(); 
+            if (CpcmUserNickName.Contains("admin") || CpcmUserNickName.Contains("webmaster") || CpcmUserNickName.Contains("abuse") || CpcmUserNickName.Contains(" "))
             {
                 return Json(false);
             }
-            return Json(!_context.CpcmUsers.Any(e => e.CpcmUserNickName == CpcmUserNickName));
+            bool rez = false;
+            try
+            {
+                rez = !await _context.CpcmUsers.AnyAsync(e => e.CpcmUserNickName == CpcmUserNickName);
+            }
+            catch (DbException)
+            {
+                return Json(rez);
+            }
+            return Json(rez);
         }
 
         [HttpPost]
         public async Task<IActionResult> CheckPhone(string CpcmUserTelNum)
         {
-            return Json(!_context.CpcmUsers.Any(e => e.CpcmUserTelNum == CpcmUserTelNum));
+            if (string.IsNullOrWhiteSpace(CpcmUserTelNum))
+            {
+                return Json("Телефон не может быть пустым или состоять из одних пробелов");
+            }
+            CpcmUserTelNum = CpcmUserTelNum.Trim();
+            bool rez = false;
+            try
+            {
+                rez = !await _context.CpcmUsers.AnyAsync(e => e.CpcmUserTelNum == CpcmUserTelNum);
+            }
+            catch (DbException)
+            {
+                return Json(rez);
+            }
+            return Json(rez);
         }
 
         [HttpPost]
         public async Task<IActionResult> AddCity(string newCity)
         {
-            if (!string.IsNullOrEmpty(newCity) && !_context.CpcmCities.Any(e => e.CpcmCityName == newCity))
+            if(string.IsNullOrWhiteSpace(newCity))
+            {
+                return Json(new { success = false, message = "Некорректное значение." });
+            }
+            if (!_context.CpcmCities.Any(e => e.CpcmCityName == newCity.Trim()))
             {
                 CpcmCity city = new();
                 city.CpcmCityId = Guid.NewGuid();
+                newCity = newCity.Trim();
                 city.CpcmCityName = newCity;
 
                 _context.CpcmCities.Add(city);
-                await _context.SaveChangesAsync();
-                return Json(new { success = true });
+                try
+                {
+                    await _context.SaveChangesAsync();
+                }
+                catch (DbException)
+                {
+                    return new StatusCodeResult(500);
+                }
+                return Json(new { success = true, id = city.CpcmCityId });
+            }
+            else
+            {
+                return Json(new { success = false, message = "Город уже есть в списке." });
             }
 
-            return Json(new { success = false });
+            
         }
         [HttpPost]
         public async Task<IActionResult> AddSchool(string newSchool)
         {
-            if (!string.IsNullOrEmpty(newSchool) && !_context.CpcmSchools.Any(e => e.CpcmSchoolName == newSchool))
+            if (string.IsNullOrWhiteSpace(newSchool))
+            {
+                return Json(new { success = false, message = "Некорректное значение." });
+            }
+            if (!_context.CpcmSchools.Any(e => e.CpcmSchoolName == newSchool.Trim()))
             {
                 CpcmSchool school= new();
                 school.CpcmSchooldId = Guid.NewGuid();
+                newSchool = newSchool.Trim();
                 school.CpcmSchoolName = newSchool;
 
                 _context.CpcmSchools.Add(school);
-                await _context.SaveChangesAsync();
-                return Json(new { success = true });
+                try
+                {
+                    await _context.SaveChangesAsync();
+                }
+                catch (DbException)
+                {
+                    return new StatusCodeResult(500);
+                }
+                return Json(new { success = true, id = school.CpcmSchooldId });
             }
 
-            return Json(new { success = false });
+            return Json(new { success = false, message = "Город уже есть в списке." });
         }
         [HttpPost]
         public async Task<IActionResult> AddUniversities(string newUni)
         {
-            if (!string.IsNullOrEmpty(newUni) && !_context.CpcmUniversities.Any(e => e.CpcmUniversityName == newUni))
+            if (string.IsNullOrWhiteSpace(newUni))
+            {
+                return Json(new { success = false, message = "Некорректное значение." });
+            }
+            if (!_context.CpcmUniversities.Any(e => e.CpcmUniversityName == newUni.Trim()))
             {
                 CpcmUniversity university= new();
                 university.CpcmUniversityId = Guid.NewGuid();
+                newUni = newUni.Trim();
                 university.CpcmUniversityName = newUni;
 
                 _context.CpcmUniversities.Add(university);
-                await _context.SaveChangesAsync();
-                return Json(new { success = true });
+                try
+                {
+                    await _context.SaveChangesAsync();
+                }
+                catch (DbException)
+                {
+                    return new StatusCodeResult(500);
+                }
+                return Json(new { success = true, id = university.CpcmUniversityId });
             }
 
-            return Json(new { success = false });
+            return Json(new { success = false, message = "Город уже есть в списке." });
         }
 
         private bool CpcmUserExists(Guid id)
         {
             return _context.CpcmUsers.Any(e => e.CpcmUserId == id);
-        }
-        private static byte[] GetSha256Hash(string stringToSHA, string sol, string serversol)
-        {
-            if (stringToSHA == null || stringToSHA == String.Empty)
-            {
-                throw new ArgumentException("Строка была пустой или null");
-            }
-
-            byte[] returnValue;
-            returnValue = SHA256.HashData(Encoding.Unicode.GetBytes(stringToSHA+sol+serversol));
-            return returnValue;
-        }
-        private static string GetRandomString(int length)
-        {
-            Random rnd = new Random();
-            const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-            return new string(Enumerable.Repeat(chars, length)
-                .Select(s => s[rnd.Next(s.Length)]).ToArray());
         }
         private bool CheckIFormFileContent(IFormFile cpcmUserImage, string[] permittedTypes)
         {
