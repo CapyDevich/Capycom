@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication;
 using System.Reflection;
 using Microsoft.EntityFrameworkCore;
+using System.Data.Common;
 namespace Capycom.Controllers
 {
     public class UserLogInController : Controller
@@ -33,6 +34,7 @@ namespace Capycom.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> LogIn(UserLogInModel user)
         {
+            CpcmUser? potentialUser;
 #if AdminAutoAuth
             if(true)
 #else
@@ -41,10 +43,25 @@ if (ModelState.IsValid)
 
             {
 #if AdminAutoAuth
-                CpcmUser potentialUser = _context.CpcmUsers.Include(c => c.CpcmUserRoleNavigation).Where(e => e.CpcmUserEmail == "asdas@asd.ru").First();               
+                 potentialUser = _context.CpcmUsers.Include(c => c.CpcmUserRoleNavigation).Where(e => e.CpcmUserEmail == "asdas@asd.ru").First();               
 #else
-                CpcmUser potentialUser = _context.CpcmUsers.Where(e => e.CpcmUserEmail == user.CpcmUserEmail.Trim()).First();
+                try
+                {
+                    potentialUser = await _context.CpcmUsers.Where(e => e.CpcmUserEmail == user.CpcmUserEmail.Trim()).FirstOrDefaultAsync();
+                    if(potentialUser == null)
+                    {
+                        ViewData["Message"] = "Неверный логин или пароль";
+                        return View();
+                    }
 #endif
+                }
+                catch (DbException)
+                {
+                    Response.StatusCode = 500;
+                    ViewData["ErrorCode"] = 500;
+                    ViewData["Message"] = "Ошибка связи с сервером";
+                    return View("UserError");
+                }
                 string potentialUserSalt = potentialUser.CpcmUserSalt;
 #if AdminAutoAuth
                 if (true)
@@ -67,11 +84,12 @@ if (ModelState.IsValid)
                     await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(claimsIdentity));
                     //var kek = HttpContext.User.FindFirst(c => c.Type == "CpcmUserId" && c.Value == "1");
                     //kek.Value;
-                    return RedirectToAction("Test");
+                    return RedirectToAction("Test"); // TODO махнкть на юзер индекс
                 }
                 else
                 {
-
+                    ViewData["Message"] = "Неверный логин или пароль";
+                    return View();
                 }
             }
             return View("Index",user);
