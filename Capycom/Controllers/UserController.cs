@@ -690,7 +690,7 @@ namespace Capycom.Controllers
 
             friendList1.AddRange(friendList2);
 
-            return View(friendList1);
+            return Json(friendList1);
         }
 
 
@@ -766,7 +766,7 @@ namespace Capycom.Controllers
 
             if (user.CpcmUserNickName != null)
             {
-                return RedirectToAction("Followers", new { nickName = user.CpcmUserNickName });
+                return RedirectToAction("GetNextFollowers", new { nickName = user.CpcmUserNickName, lastId = lastId });
             }
 
             //_context.CpcmUserfriends.Select(c => c.CmcpFriend).Where(c => c.CmcpUserId == id).Include(c => c.CmcpFriend).ToList();
@@ -853,10 +853,10 @@ namespace Capycom.Controllers
                 return StatusCode(404);
             }
 
-            if (user.CpcmUserNickName != null)
-            {
-                return RedirectToAction("Followers", new { nickName = user.CpcmUserNickName });
-            }
+            //if (user.CpcmUserNickName != null)
+            //{
+            //    return RedirectToAction("GetNextFollowers", new { nickName = user.CpcmUserNickName });
+            //}
 
             //_context.CpcmUserfriends.Select(c => c.CmcpFriend).Where(c => c.CmcpUserId == id).Include(c => c.CmcpFriend).ToList();
             List<CpcmUser> followerList1;
@@ -1730,7 +1730,7 @@ namespace Capycom.Controllers
             }
             catch (DbException)
             {
-                StatusCode(500);
+                //StatusCode(500);
                 return Json(false);
             }
             return Json(rez);
@@ -1756,7 +1756,7 @@ namespace Capycom.Controllers
             }
             catch (DbException)
             {
-                StatusCode(500);
+                //StatusCode(500);
                 return Json(false);
             }
             return Json(rez);
@@ -1776,7 +1776,7 @@ namespace Capycom.Controllers
             }
             catch (DbException)
             {
-                StatusCode(500);
+                //StatusCode(500);
                 return Json(false);
             }
             return Json(rez);
@@ -1797,7 +1797,7 @@ namespace Capycom.Controllers
                 }
                 catch (DbException)
                 {
-                    StatusCode(500);
+                    //StatusCode(500);
                     return Json(false);
                 }
                return Json(rez);
