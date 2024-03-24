@@ -520,7 +520,7 @@ namespace Capycom.Controllers
             return View(friendList1);
         }
         [HttpPost]
-        public async Task<ActionResult> GetNextFriends(Guid id, Guid latsId)
+        public async Task<ActionResult> GetNextFriends(Guid id, Guid lastId)
         {
             CpcmUser user;
             try
@@ -554,8 +554,8 @@ namespace Capycom.Controllers
             List<CpcmUser> friendList2;
             try
             {
-                friendList1 = await _context.CpcmUserfriends.Where(c => c.CmcpUserId == user.CpcmUserId && c.CpcmFriendRequestStatus == true && c.CmcpFriendId.CompareTo(latsId)>0).Select(c => c.CmcpFriend).OrderBy(u => u.CpcmUserId).Take(5).ToListAsync();
-                friendList2 = await _context.CpcmUserfriends.Where(c => c.CmcpFriendId == user.CpcmUserId && c.CpcmFriendRequestStatus == true && c.CmcpUserId.CompareTo(latsId) > 0).Select(c => c.CmcpUser).OrderBy(u => u.CpcmUserId).Take(10 - friendList1.Count).ToListAsync();
+                friendList1 = await _context.CpcmUserfriends.Where(c => c.CmcpUserId == user.CpcmUserId && c.CpcmFriendRequestStatus == true && c.CmcpFriendId.CompareTo(lastId)>0).Select(c => c.CmcpFriend).OrderBy(u => u.CpcmUserId).Take(5).ToListAsync();
+                friendList2 = await _context.CpcmUserfriends.Where(c => c.CmcpFriendId == user.CpcmUserId && c.CpcmFriendRequestStatus == true && c.CmcpUserId.CompareTo(lastId) > 0).Select(c => c.CmcpUser).OrderBy(u => u.CpcmUserId).Take(10 - friendList1.Count).ToListAsync();
             }
             catch (DbException)
             {
@@ -616,7 +616,7 @@ namespace Capycom.Controllers
         }
         [HttpPost]
         [Route("User/GetNextFriends/{nickName}")]
-        public async Task<ActionResult> GetNextFriends(string nickName, Guid latsId)
+        public async Task<ActionResult> GetNextFriends(string nickName, Guid lastId)
         {
             CpcmUser user;
             try
@@ -644,8 +644,8 @@ namespace Capycom.Controllers
             List<CpcmUser> friendList2;
             try
             {
-                friendList1 = await _context.CpcmUserfriends.Where(c => c.CmcpUserId == user.CpcmUserId && c.CpcmFriendRequestStatus == true && c.CmcpFriendId.CompareTo(latsId) > 0).Select(c => c.CmcpFriend).OrderBy(u => u.CpcmUserId).Take(5).ToListAsync();
-                friendList2 = await _context.CpcmUserfriends.Where(c => c.CmcpFriendId == user.CpcmUserId && c.CpcmFriendRequestStatus == true && c.CmcpUserId.CompareTo(latsId) > 0).Select(c => c.CmcpUser).OrderBy(u => u.CpcmUserId).Take(10 - friendList1.Count).ToListAsync();
+                friendList1 = await _context.CpcmUserfriends.Where(c => c.CmcpUserId == user.CpcmUserId && c.CpcmFriendRequestStatus == true && c.CmcpFriendId.CompareTo(lastId) > 0).Select(c => c.CmcpFriend).OrderBy(u => u.CpcmUserId).Take(5).ToListAsync();
+                friendList2 = await _context.CpcmUserfriends.Where(c => c.CmcpFriendId == user.CpcmUserId && c.CpcmFriendRequestStatus == true && c.CmcpUserId.CompareTo(lastId) > 0).Select(c => c.CmcpUser).OrderBy(u => u.CpcmUserId).Take(10 - friendList1.Count).ToListAsync();
             }
             catch (DbException)
             {
@@ -696,7 +696,56 @@ namespace Capycom.Controllers
             //List<CpcmUser> followerList2;
             try
             {
-                followerList1 = await _context.CpcmUserfollowers.Where(c => c.CpcmUserId == user.CpcmUserId).Select(c => c.CpcmFollower).ToListAsync();
+                followerList1 = await _context.CpcmUserfollowers.Where(c => c.CpcmUserId == user.CpcmUserId).Select(c => c.CpcmFollower).OrderBy(u => u.CpcmUserId).Take(10).ToListAsync();
+                //followerList2 = await _context.CpcmUserfollowers.Where(c => c.CpcmFollowerId == user.CpcmUserId).Select(c => c.CpcmUser).ToListAsync();
+            }
+            catch (Exception)
+            {
+                Response.StatusCode = 500;
+                ViewData["ErrorCode"] = 500;
+                ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
+                return View("UserError");
+            }
+
+            //followerList1.AddRange(followerList2);
+
+            return View(followerList1);
+        }
+
+        public async Task<ActionResult> GetNextFollowers(Guid id, Guid lastId)
+        {
+            CpcmUser user;
+            try
+            {
+                user = await _context.CpcmUsers.Where(c => c.CpcmUserId == id).FirstOrDefaultAsync();
+            }
+            catch (Exception)
+            {
+                Response.StatusCode = 500;
+                ViewData["ErrorCode"] = 500;
+                ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
+                return View("UserError");
+            }
+
+            if (user == null)
+            {
+                Response.StatusCode = 404;
+                ViewData["ErrorCode"] = 404;
+                ViewData["Message"] = "Пользователь не найден";
+                return View("UserError");
+            }
+
+            if (user.CpcmUserNickName != null)
+            {
+                return RedirectToAction("Followers", new { nickName = user.CpcmUserNickName });
+            }
+
+            //_context.CpcmUserfriends.Select(c => c.CmcpFriend).Where(c => c.CmcpUserId == id).Include(c => c.CmcpFriend).ToList();
+            List<CpcmUser> followerList1;
+            //List<CpcmUser> followerList2;
+            try
+            {
+                followerList1 = await _context.CpcmUserfollowers.Where(c => c.CpcmUserId == user.CpcmUserId && c.CpcmFollowersId.CompareTo(lastId) > 0).Select(c => c.CpcmFollower).OrderBy(u => u.CpcmUserId).Take(10).ToListAsync();
                 //followerList2 = await _context.CpcmUserfollowers.Where(c => c.CpcmFollowerId == user.CpcmUserId).Select(c => c.CpcmUser).ToListAsync();
             }
             catch (Exception)
@@ -741,7 +790,7 @@ namespace Capycom.Controllers
             //List<CpcmUser> followerList2;
             try
             {
-                followerList1 = await _context.CpcmUserfollowers.Where(c => c.CpcmUserId == user.CpcmUserId).Select(c => c.CpcmFollower).ToListAsync();
+                followerList1 = await _context.CpcmUserfollowers.Where(c => c.CpcmUserId == user.CpcmUserId).Select(c => c.CpcmFollower).OrderBy(u => u.CpcmUserId).Take(10).ToListAsync();
                 //followerList2 = await _context.CpcmUserfollowers.Where(c => c.CpcmFollowerId == user.CpcmUserId).Select(c => c.CpcmUser).ToListAsync();
             }
             catch (DbException)
@@ -755,6 +804,54 @@ namespace Capycom.Controllers
             //followerList1.AddRange(followerList2);
 
             return View(followerList1);
+        }
+
+        [Route("User/GetNextFollowers/{nickName}")]
+        public async Task<ActionResult> GetNextFollowers(string nickName, Guid lastId)
+        {
+            CpcmUser user;
+            try
+            {
+                user = await _context.CpcmUsers.Where(c => c.CpcmUserNickName == nickName).FirstOrDefaultAsync();
+            }
+            catch (Exception)
+            {
+                Response.StatusCode = 500;
+                ViewData["ErrorCode"] = 500;
+                ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
+                return View("UserError");
+            }
+
+            if (user == null)
+            {
+                Response.StatusCode = 404;
+                ViewData["ErrorCode"] = 404;
+                ViewData["Message"] = "Пользователь не найден";
+                return View("UserError");
+            }
+
+            if (user.CpcmUserNickName != null)
+            {
+                return RedirectToAction("Followers", new { nickName = user.CpcmUserNickName });
+            }
+
+            //_context.CpcmUserfriends.Select(c => c.CmcpFriend).Where(c => c.CmcpUserId == id).Include(c => c.CmcpFriend).ToList();
+            List<CpcmUser> followerList1;
+            //List<CpcmUser> followerList2;
+            try
+            {
+                followerList1 = await _context.CpcmUserfollowers.Where(c => c.CpcmUserId == user.CpcmUserId && c.CpcmFollowersId.CompareTo(lastId) > 0).Select(c => c.CpcmFollower).OrderBy(u => u.CpcmUserId).Take(10).ToListAsync();
+                //followerList2 = await _context.CpcmUserfollowers.Where(c => c.CpcmFollowerId == user.CpcmUserId).Select(c => c.CpcmUser).ToListAsync();
+            }
+            catch (Exception)
+            {
+                Response.StatusCode = 500;
+                return StatusCode(500);
+            }
+
+            //followerList1.AddRange(followerList2);
+
+            return Json(followerList1);
         }
 
 
