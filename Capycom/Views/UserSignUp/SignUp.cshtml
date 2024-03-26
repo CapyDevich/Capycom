@@ -78,12 +78,15 @@
 			</select>
 		</div>
 		<div class="mb-3">
-			<label asp-for="CpcmUserSchool" class="form-label">Школа</label>
+			<label asp-for="CpcmUserSchool" class="form-label">Школа</label><br />
 			<select data-live-search="true" asp-for="CpcmUserSchool" asp-items="ViewBag.CpcmUserSchool" class="selectpicker" id="school">
 				<option value="" selected disabled>Выберите школу...</option>
 				<option value="">test1...</option>
 				<option value="">test2...</option>
 			</select>
+			<button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addingSchoolModal">
+				Или добавте
+			</button>
 		</div>
 		<div class="col mb-3">
 			<label asp-for="CpcmUserSite" class="form-label">Сайт</label>
@@ -112,37 +115,27 @@
 <div>
 	<a asp-action="Index" class="btn btn-light">Back to List</a>
 </div>
-<script>
-	$(document).ready(function () {
-		$('#addButton').click(function () {
-			// Открываем модальное окно
-			$('#addCityModal').show();
-		});
 
-		$('#submitCity').click(function () {
-			var newCity = $('#newCity').val();
-
-			$.ajax({
-				url: '/User/AddCity',
-				type: 'POST',
-				data: { city: newCity },
-				success: function (response) {
-					if (response.statusCode == 200) {
-						// Добавляем новый город в выпадающий список
-						$('#mySelect').append(new Option(newCity, newCity));
-						$('#mySelect').selectpicker('refresh');
-
-						// Закрываем модальное окно
-						$('#addCityModal').hide();
-					} else {
-						// Обрабатываем ошибку
-						alert('Не удалось добавить город');
-					}
-				}
-			});
-		});
-	});
-</script>
+<div class="modal fade" id="addingSchoolModal" tabindex="-1" aria-labelledby="addingSchoolModalLabel" aria-hidden="true">
+	<div class="modal-dialog">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h1 class="modal-title fs-5" id="addingSchoolModalLabel">Modal title</h1>
+				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+			</div>
+			<form>
+				<div class="modal-body">
+					<label for="schoolAddingSchool" class="col-form-label">Название</label>
+					<input type="text" class="form-control" id="schoolAddingSchool">
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отменить</button>
+					<button type="button" class="btn btn-primary">Добавить</button>
+				</div>
+			</form>
+		</div>
+	</div>
+</div>
 @section Scripts {
 	@{
 		await Html.RenderPartialAsync("_ValidationScriptsPartial");
