@@ -136,6 +136,28 @@
 		</div>
 	</div>
 </div>
+<script>
+	'use strict'
+	function sendData() {
+		$.ajax({
+			url: '/UserSignUp/AddCity',
+			type: 'POST',
+			data: { newCity: $('#schoolAddingSchool').val() },
+			success: function (response) {
+				if (response["success"] == true) {
+					console.log('Успешно: ', response);
+				}
+				else {
+					console.log('NO: ', response);
+				}
+
+			},
+			error: function (obj) {
+				console.log("HUI SERVER");
+			}
+		});
+	}
+</script>
 @section Scripts {
 	@{
 		await Html.RenderPartialAsync("_ValidationScriptsPartial");
