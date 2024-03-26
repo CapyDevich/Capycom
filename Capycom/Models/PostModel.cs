@@ -11,5 +11,7 @@
         public long LikesCount { get; set; }
 
         public long RepostsCount { get; set; }
+
+        public List<CpcmComment> TopLevelComments { get; set; }
     }
 }

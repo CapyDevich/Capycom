@@ -6,6 +6,7 @@ using Microsoft.Extensions.Hosting;
 using System.Data.Common;
 using Microsoft.EntityFrameworkCore;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
+using System.Reflection.Metadata;
 
 namespace Capycom.Controllers
 {
@@ -42,7 +43,12 @@ namespace Capycom.Controllers
                 {
                     post.CpcmPostFatherNavigation.CpcmPostFatherNavigation = await GetFathrePostReccurent(post.CpcmPostFatherNavigation);
                 }
-                
+                CpcmUser? userOwner = await _context.CpcmUsers.Where(u => u.CpcmUserId == post.CpcmUserId).FirstOrDefaultAsync();
+                CpcmGroup? groupOwner = await _context.CpcmGroups.Where(u => u.CpcmGroupId == post.CpcmGroupId).FirstOrDefaultAsync();
+                long likes = await _context.Database.ExecuteSqlInterpolatedAsync($@"SELECT COUNT(*) FROM CPCM_POSTLIKES WHERE CPCM_PostID = '{post.CpcmGroupId}'");
+                long reposts = await _context.Database.ExecuteSqlInterpolatedAsync($@"SELECT COUNT(*) FROM CPCM_POSTREPOSTS WHERE CPCM_PostID = '{post.CpcmGroupId}'");
+
+                PostModel postModel = new() { Post=post,UserOwner=userOwner, GroupOwner = groupOwner, LikesCount=likes,RepostsCount=reposts, TopLevelComments=topComments};
                 return View(post);
             }
             catch (DbException)
