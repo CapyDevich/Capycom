@@ -25,7 +25,7 @@ namespace Capycom.Controllers
         {
             try
             {
-                var post = await _context.CpcmPosts.Where(p => p.CpcmPostId == postId).Include(p => p.CpcmImages).FirstOrDefaultAsync();
+                CpcmPost? post = await _context.CpcmPosts.Where(p => p.CpcmPostId == postId).Include(p => p.CpcmImages).Include(p => p.CpcmPostFatherNavigation).FirstOrDefaultAsync();
                 if(post == null)
                 {
                     Response.StatusCode = 404;
@@ -33,16 +33,16 @@ namespace Capycom.Controllers
                     ViewData["Message"] = "Пост не найден";
                     return View("UserError");
                 }
-                //await _context.Entry(post).Navigation(p => p.).LoadAsync();
-                //await _context.Entry(post).Navigation(p => p.CpcmImages).LoadAsync();
-                await _context.Entry(post).Collection(p => p.CpcmImages).LoadAsync();
-                await _context.Entry(post).Reference(p => p.CpcmPostFatherNavigation).LoadAsync(); // TODO Узнать подгрузятся ли фотки наследников. По идеи да. 
-                await _context.Entry(post).Collection(p => p.CpcmComments).LoadAsync();
-                foreach (var comment in post.CpcmComments)
+                var topComments = await _context.CpcmComments.Where(p => p.CpcmPostId == post.CpcmPostId && p.CpcmCommentFather == null).Include(c => c.CpcmImages).Take(10).OrderBy(u => u.CpcmCommentCreationDate).ToListAsync(); // впринципе эту итерацию можно пихнуть сразу в тот метод
+                foreach (var TopComment in topComments)
                 {
-                    await _context.Entry(comment).Collection(c => c.CpcmImages).LoadAsync();
+                    TopComment.InverseCpcmCommentFatherNavigation = await GetCommentChildrenReccurent(TopComment);
                 }
-                _context.Entry(post.CpcmPostFatherNavigation).Reference(f => f.CpcmImages).LoadAsync();
+                if(post.CpcmPostFatherNavigation != null)
+                {
+                    post.CpcmPostFatherNavigation.CpcmPostFatherNavigation = await GetFathrePostReccurent(post.CpcmPostFatherNavigation);
+                }
+                
                 return View(post);
             }
             catch (DbException)
@@ -53,6 +53,30 @@ namespace Capycom.Controllers
                 return View("UserError");
             }
         }
+
+        private async Task<CpcmPost?> GetFathrePostReccurent(CpcmPost cpcmPostFatherNavigation)
+        {
+            var father = await _context.CpcmPosts.Where(p => p.CpcmPostId== cpcmPostFatherNavigation.CpcmPostFather).Include(p => p.CpcmImages).FirstOrDefaultAsync();
+            if(father != null)
+            {
+                father.CpcmPostFatherNavigation = await GetFathrePostReccurent(father);
+            }
+            return father;
+        }
+
+        private async Task<ICollection<CpcmComment>> GetCommentChildrenReccurent(CpcmComment? comm)
+        {
+            var children = await _context.CpcmComments.Where(c => c.CpcmCommentFather == comm.CpcmCommentId).Include(c => c.CpcmImages).ToListAsync();
+            if(children.Count != 0)
+            {
+                foreach (var childComm in children)
+                {
+                    childComm.InverseCpcmCommentFatherNavigation = await GetCommentChildrenReccurent(childComm);
+                }
+            }
+            return children;
+        }
+
         [Authorize]
 
         public async Task<IActionResult> AddComment(CommentAddModel userComment)
@@ -213,7 +237,7 @@ namespace Capycom.Controllers
         {
             try
             {
-                var rez = await _context.CpcmComments.Where(c => c.CpcmCommentCreationDate.CompareTo(lastCommentDate) > 0 && c.CpcmPostId==postId).OrderBy(u => u.CpcmCommentCreationDate).Take(10).ToListAsync();
+                var rez = await _context.CpcmComments.Where(c => c.CpcmCommentCreationDate.CompareTo(lastCommentDate) > 0 && c.CpcmPostId == postId && c.InverseCpcmCommentFatherNavigation == null).OrderBy(u => u.CpcmCommentCreationDate).Take(10).ToListAsync();
                 foreach (var comment in rez)
                 {
                     await _context.Entry(comment).Collection(p => p.InverseCpcmCommentFatherNavigation).LoadAsync();
