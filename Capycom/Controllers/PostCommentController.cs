@@ -240,8 +240,9 @@ namespace Capycom.Controllers
                 var rez = await _context.CpcmComments.Where(c => c.CpcmCommentCreationDate.CompareTo(lastCommentDate) > 0 && c.CpcmPostId == postId && c.InverseCpcmCommentFatherNavigation == null).OrderBy(u => u.CpcmCommentCreationDate).Take(10).ToListAsync();
                 foreach (var comment in rez)
                 {
-                    await _context.Entry(comment).Collection(p => p.InverseCpcmCommentFatherNavigation).LoadAsync();
+                    //await _context.Entry(comment).Collection(p => p.InverseCpcmCommentFatherNavigation).LoadAsync();
                     //await _context.Entry(comment).Reference(p => p.CpcmCommentFatherNavigation).LoadAsync();
+                    comment.InverseCpcmCommentFatherNavigation = await GetCommentChildrenReccurent(comment);
                 }
                 
                 return Json(rez);
