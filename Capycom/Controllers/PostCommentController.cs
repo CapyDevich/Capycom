@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Hosting;
 using System.Data.Common;
 using Microsoft.EntityFrameworkCore;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace Capycom.Controllers
 {
@@ -115,7 +116,7 @@ namespace Capycom.Controllers
                 string authUserId = HttpContext.User.FindFirst(c => c.Type == "CpcmUserId").Value;
                 if (authUserId == comment.CpcmUserId.ToString())
                 {
-                    comment.Deleted = true;
+                    comment.Deleted = true;//TODO РЕАЛИЗОВАТЬ В БД
                     await _context.SaveChangesAsync();
                 }
                 else
@@ -181,7 +182,15 @@ namespace Capycom.Controllers
         }
         public async Task<IActionResult> GetNextComments(Guid postId, DateTime lastCommentDate)
         {
-            return View();
+            try
+            {
+                var rez = await _context.CpcmComments.Where(c => c.CpcmCommentCreationDate.CompareTo(lastCommentDate) > 0 && c.CpcmPostId==postId).OrderBy(u => u.CpcmCommentCreationDate).Take(10).ToListAsync();
+                return Json(rez);
+            }
+            catch (DbException)
+            {
+                return StatusCode(500);
+            }
         }
 
 
