@@ -60,31 +60,7 @@ namespace Capycom.Controllers
             }
         }
 
-        private async Task<CpcmPost?> GetFathrePostReccurent(CpcmPost cpcmPostFatherNavigation)
-        {
-            var father = await _context.CpcmPosts.Where(p => p.CpcmPostId== cpcmPostFatherNavigation.CpcmPostFather).Include(p => p.CpcmImages).FirstOrDefaultAsync();
-            if(father != null)
-            {
-                father.CpcmPostFatherNavigation = await GetFathrePostReccurent(father);
-            }
-            return father;
-        }
-
-        private async Task<ICollection<CpcmComment>> GetCommentChildrenReccurent(CpcmComment? comm)
-        {
-            var children = await _context.CpcmComments.Where(c => c.CpcmCommentFather == comm.CpcmCommentId).Include(c => c.CpcmImages).ToListAsync();
-            if(children.Count != 0)
-            {
-                foreach (var childComm in children)
-                {
-                    childComm.InverseCpcmCommentFatherNavigation = await GetCommentChildrenReccurent(childComm);
-                }
-            }
-            return children;
-        }
-
         [Authorize]
-
         public async Task<IActionResult> AddComment(CommentAddModel userComment)
         {
             if (ModelState.IsValid)
@@ -218,7 +194,7 @@ namespace Capycom.Controllers
             
             try
             {
-                var comment = await _context.CpcmComments.Where(c => c.CpcmCommentId == commentId).FirstOrDefaultAsync();
+                var comment = await _context.CpcmComments.Where(c => c.CpcmCommentId == commentId).Include(p => p.CpcmImages).FirstOrDefaultAsync();
                 if (comment == null)
                 {
                     Response.StatusCode = 404;
@@ -259,7 +235,36 @@ namespace Capycom.Controllers
             }
         }
 
+        public async Task<IActionResult> AddLike(Guid postId)
+        {
 
+        }
+        public async Task<IActionResult> AddRepost(Guid postId)
+        {
+            // перенести в контроллер юзера и там при создании поста если есть родитель - +
+        }
+
+        private async Task<CpcmPost?> GetFathrePostReccurent(CpcmPost cpcmPostFatherNavigation)
+        {
+            var father = await _context.CpcmPosts.Where(p => p.CpcmPostId == cpcmPostFatherNavigation.CpcmPostFather).Include(p => p.CpcmImages).FirstOrDefaultAsync();
+            if (father != null)
+            {
+                father.CpcmPostFatherNavigation = await GetFathrePostReccurent(father);
+            }
+            return father;
+        }
+        private async Task<ICollection<CpcmComment>> GetCommentChildrenReccurent(CpcmComment? comm)
+        {
+            var children = await _context.CpcmComments.Where(c => c.CpcmCommentFather == comm.CpcmCommentId).Include(c => c.CpcmImages).ToListAsync();
+            if (children.Count != 0)
+            {
+                foreach (var childComm in children)
+                {
+                    childComm.InverseCpcmCommentFatherNavigation = await GetCommentChildrenReccurent(childComm);
+                }
+            }
+            return children;
+        }
 
         public async Task<IActionResult> Test()
         {
