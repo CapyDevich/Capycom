@@ -155,7 +155,29 @@ namespace Capycom.Controllers
         }
         public async Task<IActionResult> ViewComment(Guid commentId)
         {
-            return View();
+            
+            try
+            {
+                var comment = await _context.CpcmComments.Where(c => c.CpcmCommentId == commentId).FirstOrDefaultAsync();
+                if (comment == null)
+                {
+                    Response.StatusCode = 404;
+                    ViewData["ErrorCode"] = 404;
+                    ViewData["Message"] = "Коммент не найден";
+                    return View("UserError");
+                }
+                comment.CpcmCommentBanned = !comment.CpcmCommentBanned;
+                await _context.SaveChangesAsync();
+                return View(comment);
+
+            }
+            catch (DbException)
+            {
+                Response.StatusCode = 500;
+                ViewData["ErrorCode"] = 500;
+                ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
+                return View("UserError");
+            }
         }
         public async Task<IActionResult> GetNextComments(Guid postId, DateTime lastCommentDate)
         {
