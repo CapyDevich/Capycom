@@ -108,6 +108,10 @@ namespace Capycom.Controllers
             try
             {
                 var comment = await _context.CpcmComments.Where(c => c.CpcmCommentId == commentId).FirstOrDefaultAsync();
+                if(comment == null)
+                {
+                    return StatusCode(404);
+                }
                 string authUserId = HttpContext.User.FindFirst(c => c.Type == "CpcmUserId").Value;
                 if (authUserId == comment.CpcmUserId.ToString())
                 {
@@ -128,7 +132,26 @@ namespace Capycom.Controllers
         [Authorize]
         public async Task<IActionResult> BanUnbanComment(Guid commentId)
         {
-            return View();
+            if(!CheckUserPrivilege("CpcmCanDelUsersComments","True")){
+                return StatusCode(403);
+            }
+            try
+            {
+                var comment = await _context.CpcmComments.Where(c => c.CpcmCommentId == commentId).FirstOrDefaultAsync();
+                if(comment == null)
+                {
+                    return StatusCode(404);
+                }
+                comment.CpcmCommentBanned = !comment.CpcmCommentBanned;
+                await _context.SaveChangesAsync();
+                return StatusCode(200);
+
+            }
+            catch (DbException)
+            {
+
+                return StatusCode(500);
+            }
         }
         public async Task<IActionResult> ViewComment(Guid commentId)
         {
@@ -142,7 +165,15 @@ namespace Capycom.Controllers
 
 
 
-
+        private bool CheckUserPrivilege(string claimType, string claimValue)
+        {
+            var authFactor = HttpContext.User.FindFirst(c => c.Type == "claimType" && c.Value == "claimValue");
+            if (authFactor == null)
+            {
+                return false;
+            }
+            return true;
+        }
         private bool CheckIFormFileContent(IFormFile cpcmUserImage, string[] permittedTypes)//TODO: Объединить с методами при регистрации
         {
             if (cpcmUserImage != null && permittedTypes.Contains(cpcmUserImage.ContentType))
