@@ -1355,6 +1355,12 @@ namespace Capycom.Controllers
                     }
                     catch (Exception ex)
                     {
+                        foreach (var uploadedfile in filePaths)
+                        {
+                            if (System.IO.File.Exists(uploadedfile)){
+                                System.IO.File.Delete(uploadedfile);
+                            }
+                        }
                         Response.StatusCode = 500;
                         ViewData["ErrorCode"] = 500;
                         ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
@@ -1365,7 +1371,7 @@ namespace Capycom.Controllers
 
 
 
-                List<CpcmImage>? images = post.CpcmImages.Where(c => !editPost.FilesToDelete.Contains(c.CpcmImageId)).ToList();
+                List<CpcmImage>? images = post.CpcmImages.Where(c => !editPost.FilesToDelete.Contains(c.CpcmImageId)).ToList(); //TODO возможно ! тут не нужен 
                 if (images.Count != 0)
                 {
                     //_context.CpcmImages.RemoveRange(images);
