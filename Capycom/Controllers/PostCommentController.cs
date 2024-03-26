@@ -4,6 +4,7 @@ using Capycom.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Hosting;
 using System.Data.Common;
+using Microsoft.EntityFrameworkCore;
 
 namespace Capycom.Controllers
 {
@@ -24,6 +25,7 @@ namespace Capycom.Controllers
             return View();
         }
         [Authorize]
+
         public async Task<IActionResult> AddComment(CommentAddModel userComment)
         {
             if (ModelState.IsValid)
@@ -98,8 +100,33 @@ namespace Capycom.Controllers
             return StatusCode(400, new { message = "Текст не может быть пустым" });
 
         }
+
         [Authorize]
-        public async Task<IActionResult> DeleteComment(Guid postId, Guid commentId)
+        public async Task<IActionResult> DeleteComment(Guid commentId)
+        {
+            
+            try
+            {
+                var comment = await _context.CpcmComments.Where(c => c.CpcmCommentId == commentId).FirstOrDefaultAsync();
+                string authUserId = HttpContext.User.FindFirst(c => c.Type == "CpcmUserId").Value;
+                if (authUserId == comment.CpcmUserId.ToString())
+                {
+                    comment.Deleted = true;
+                    await _context.SaveChangesAsync();
+                }
+                else
+                {
+                    return StatusCode(403);
+                }
+            }
+            catch (DbException)
+            {
+                return StatusCode(500);
+            }
+        }
+
+        [Authorize]
+        public async Task<IActionResult> BanUnbanComment(Guid commentId)
         {
             return View();
         }
