@@ -35,6 +35,8 @@ namespace Capycom.Controllers
         public async Task<IActionResult> LogIn(UserLogInModel user)
         {
             CpcmUser? potentialUser;
+            if(HttpContext.User.Identity.IsAuthenticated)
+                return RedirectToAction("Index", "User");
 #if AdminAutoAuth
             if(true)
 #else
