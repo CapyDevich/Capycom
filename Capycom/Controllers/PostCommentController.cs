@@ -216,11 +216,13 @@ namespace Capycom.Controllers
                 return View("UserError");
             }
         }
-        public async Task<IActionResult> GetNextComments(Guid postId, DateTime lastCommentDate)
+        public async Task<IActionResult> GetNextComments(Guid postId, Guid lastCommentId)
         {
             try
             {
-                var rez = await _context.CpcmComments.Where(c => c.CpcmCommentCreationDate.CompareTo(lastCommentDate) > 0 && c.CpcmPostId == postId && c.InverseCpcmCommentFatherNavigation == null).OrderBy(u => u.CpcmCommentCreationDate).Take(10).ToListAsync();
+                var lastComment = await _context.CpcmComments.Where(c => c.CpcmCommentId == lastCommentId).FirstOrDefaultAsync();
+                if(lastComment == null) { return StatusCode(404); }
+                var rez = await _context.CpcmComments.Where(c => c.CpcmCommentCreationDate.CompareTo(lastComment.CpcmCommentCreationDate) > 0 && c.CpcmPostId == postId && c.InverseCpcmCommentFatherNavigation == null).OrderBy(u => u.CpcmCommentCreationDate).Take(10).ToListAsync();
                 foreach (var comment in rez)
                 {
                     //await _context.Entry(comment).Collection(p => p.InverseCpcmCommentFatherNavigation).LoadAsync();
