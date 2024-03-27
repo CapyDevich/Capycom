@@ -42,7 +42,7 @@ namespace Capycom.Controllers
                 }
                 if(post.CpcmPostFatherNavigation != null)
                 {
-                    post.CpcmPostFatherNavigation.CpcmPostFatherNavigation = await GetFathrePostReccurent(post.CpcmPostFatherNavigation);
+                    post.CpcmPostFatherNavigation.CpcmPostFatherNavigation = await GetFatherPostReccurent(post.CpcmPostFatherNavigation);
                 }
                 CpcmUser? userOwner = await _context.CpcmUsers.Where(u => u.CpcmUserId == post.CpcmUserId).FirstOrDefaultAsync();
                 CpcmGroup? groupOwner = await _context.CpcmGroups.Where(u => u.CpcmGroupId == post.CpcmGroupId).FirstOrDefaultAsync();
@@ -287,12 +287,12 @@ namespace Capycom.Controllers
         //    // перенести в контроллер юзера и там при создании поста если есть родитель - +
         //}
 
-        private async Task<CpcmPost?> GetFathrePostReccurent(CpcmPost cpcmPostFatherNavigation)
+        private async Task<CpcmPost?> GetFatherPostReccurent(CpcmPost cpcmPostFatherNavigation)
         {
             var father = await _context.CpcmPosts.Where(p => p.CpcmPostId == cpcmPostFatherNavigation.CpcmPostFather).Include(p => p.CpcmImages).FirstOrDefaultAsync();
             if (father != null)
             {
-                father.CpcmPostFatherNavigation = await GetFathrePostReccurent(father);
+                father.CpcmPostFatherNavigation = await GetFatherPostReccurent(father);
             }
             return father;
         }
