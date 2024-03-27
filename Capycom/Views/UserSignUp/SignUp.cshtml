@@ -2,6 +2,7 @@
 @{
 	ViewData["Title"] = "Регистрация";
 }
+<link href="~/css/signup.css" rel="stylesheet" />
 <div class="container">
 	<h1 class="text-center mt-5">@ViewData["Title"]</h1>
 	<form class="col-md-6 mx-auto" asp-action="Create" enctype="multipart/form-data">
@@ -64,29 +65,35 @@
 			<label for="userAbout" class="form-label">О себе</label>
 			<textarea type="text" class="form-control" id="userAbout" rows="3"></textarea>
 		</div>
-		<div class="mb-3">
-			<label asp-for="CpcmUserCity" class="form-label">Город</label>
-			<select asp-for="CpcmUserCity" asp-items="ViewBag.CpcmUserCity" class="form-select" id="city" data-live-search="true">
+
+		<label asp-for="CpcmUserCity" class="form-label">Город</label>
+		<div class="flex-grow-1 input-group d-flex justify-content-between mb-3">
+			<select data-live-search="true" asp-for="CpcmUserCity" asp-items="ViewBag.CpcmUserCity" class="selectpicker flex-grow-1" id="city" data-live-search="true">
 				<option value="" selected disabled>Выберите город...</option>
-				<option value="">Вfdsfdsfds.</option>
+				<option value="">testC1...</option>
+				<option value="">testC2...</option>
 			</select>
+			<button type="button" class="btn btn-light addOptionButton" data-bs-toggle="modal" data-bs-target="#addingCityModal">+</button>
 		</div>
-		<div class="mb-3">
-			<label asp-for="CpcmUserUniversity" class="form-label">Университет</label>
-			<select asp-for="CpcmUserUniversity" asp-items="ViewBag.CpcmUserUniversity" class="form-select" id="university">
+
+		<label asp-for="CpcmUserUniversity" class="form-label">Университет</label>
+		<div class="flex-grow-1 input-group d-flex justify-content-between mb-3">
+			<select data-live-search="true" asp-for="CpcmUserUniversity" asp-items="ViewBag.CpcmUserUniversity" class="selectpicker flex-grow-1" id="university">
 				<option value="" selected disabled>Выберите университет...</option>
+				<option value="">testU1...</option>
+				<option value="">testU2...</option>
 			</select>
+			<button type="button" class="btn btn-light addOptionButton" data-bs-toggle="modal" data-bs-target="#addingUniversityModal">+</button>
 		</div>
-		<div class="mb-3">
-			<label asp-for="CpcmUserSchool" class="form-label">Школа</label><br />
-			<select data-live-search="true" asp-for="CpcmUserSchool" asp-items="ViewBag.CpcmUserSchool" class="selectpicker" id="school">
+
+		<label asp-for="CpcmUserSchool" class="form-label">Школа</label>
+		<div class="flex-grow-1 input-group d-flex justify-content-between mb-3">
+			<select data-live-search="true" asp-for="CpcmUserSchool" asp-items="ViewBag.CpcmUserSchool" class="selectpicker flex-grow-1" id="school">
 				<option value="" selected disabled>Выберите школу...</option>
-				<option value="">test1...</option>
-				<option value="">test2...</option>
+				<option value="">testS1...</option>
+				<option value="">testS2...</option>
 			</select>
-			<button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addingSchoolModal">
-				Или добавте
-			</button>
+			<button type="button" class="btn btn-light addOptionButton" data-bs-toggle="modal" data-bs-target="#addingSchoolModal">+</button>
 		</div>
 		<div class="col mb-3">
 			<label asp-for="CpcmUserSite" class="form-label">Сайт</label>
@@ -120,17 +127,17 @@
 	<div class="modal-dialog">
 		<div class="modal-content">
 			<div class="modal-header">
-				<h1 class="modal-title fs-5" id="addingSchoolModalLabel">Modal title</h1>
+				<h1 class="modal-title fs-5" id="addingSchoolModalLabel">Добавление школы</h1>
 				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
 			</div>
 			<form>
 				<div class="modal-body">
-					<label for="schoolAddingSchool" class="col-form-label">Название</label>
-					<input type="text" class="form-control" id="schoolAddingSchool">
+					<label for="addingSchoolInput" class="col-form-label">Название</label>
+					<input type="text" class="form-control" id="addingSchoolInput">
 				</div>
 				<div class="modal-footer">
 					<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отменить</button>
-					<button type="button" class="btn btn-primary">Добавить</button>
+					<button type="button" class="btn btn-primary" onclick="sendData()">Добавить</button>
 				</div>
 			</form>
 		</div>
@@ -140,11 +147,11 @@
 	'use strict'
 	function sendData() {
 		$.ajax({
-			url: '/UserSignUp/AddCity',
+			url: '/UserSignUp/AddSchool',
 			type: 'POST',
-			data: { newCity: $('#schoolAddingSchool').val() },
+			data: { newSchool: $('#addingSchoolInput').val() },
 			success: function (response) {
-				if (response["success"] == true) {
+				if (response["success"]) {
 					console.log('Успешно: ', response);
 				}
 				else {
@@ -153,7 +160,7 @@
 
 			},
 			error: function (obj) {
-				console.log("HUI SERVER");
+				console.log("Unknown error");
 			}
 		});
 	}
