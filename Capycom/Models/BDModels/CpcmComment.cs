@@ -19,6 +19,8 @@ public partial class CpcmComment
 
     public bool CpcmCommentBanned { get; set; }
 
+    public bool CpcmIsDeleted { get; set; }
+
     public virtual CpcmComment? CpcmCommentFatherNavigation { get; set; }
 
     public virtual ICollection<CpcmImage> CpcmImages { get; set; } = new List<CpcmImage>();
