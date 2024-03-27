@@ -242,12 +242,13 @@ namespace Capycom.Controllers
             try
             {
                 var post = await _context.CpcmPosts.Where(p => p.CpcmPostId == postId).FirstOrDefaultAsync();
-                string? userId = HttpContext.User.FindFirstValue("CpcmUserId");
-                var answer = await _context.Database.ExecuteSqlInterpolatedAsync($@"SELECT COUNT(*) FROM CPCM_POSTLIKES WHERE CPCM_PostID = '{post.CpcmGroupId}' AND CPCM_UserId = '{userId}' ");
                 if (post == null)
                 {
                     return StatusCode(404);
                 }
+                string? userId = HttpContext.User.FindFirstValue("CpcmUserId");
+                var answer = await _context.Database.ExecuteSqlInterpolatedAsync($@"SELECT COUNT(*) FROM CPCM_POSTLIKES WHERE CPCM_PostID = '{post.CpcmGroupId}' AND CPCM_UserId = '{userId}' ");
+                
                 if(answer == 0)
                 {
                     var querry = await _context.Database.ExecuteSqlInterpolatedAsync($@"INSERT INTO CPCM_POSTLIKES VALUES ('{post.CpcmGroupId}','{userId}')");
@@ -281,10 +282,10 @@ namespace Capycom.Controllers
                 return StatusCode(500, new {message = "Не удалось установить соединение с сервером"});
             }
         }
-        public async Task<IActionResult> AddRepost(Guid postId)
-        {
-            // перенести в контроллер юзера и там при создании поста если есть родитель - +
-        }
+        //public async Task<IActionResult> AddRepost(Guid postId)
+        //{
+        //    // перенести в контроллер юзера и там при создании поста если есть родитель - +
+        //}
 
         private async Task<CpcmPost?> GetFathrePostReccurent(CpcmPost cpcmPostFatherNavigation)
         {
