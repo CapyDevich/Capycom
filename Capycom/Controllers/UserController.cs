@@ -1458,42 +1458,58 @@ namespace Capycom.Controllers
         public async Task<IActionResult> GetNextPosts(Guid userId, Guid lastPostId)
         {
             List<CpcmPost> posts;
+            List<PostModel> postModels = new List<PostModel>();
             try
             {
-                var date = await _context.CpcmPosts.Where(c => c.CpcmPostId == lastPostId).FirstOrDefaultAsync();
-                if (date == null)
+                var post = await _context.CpcmPosts.Where(c => c.CpcmPostId == lastPostId).FirstOrDefaultAsync();
+                if (post == null)
                 {
                     return StatusCode(404);
                 }
 
-                posts = await _context.CpcmPosts.Where(c => c.CpcmUserId == userId && c.CpcmPostId == lastPostId).Where(c => c.CpcmPostPublishedDate < date.CpcmPostPublishedDate && c.CpcmPostPublishedDate < DateTime.Now).Take(10).ToListAsync();
+                posts = await _context.CpcmPosts.Where(c => c.CpcmUserId == userId && c.CpcmPostId == lastPostId).Where(c => c.CpcmPostPublishedDate < post.CpcmPostPublishedDate && c.CpcmPostPublishedDate < DateTime.Now).Take(10).ToListAsync();
+                foreach (var postik in posts)
+                {
+                    postik.CpcmPostFatherNavigation = await GetFatherPostReccurent(postik);
+                    long likes = await _context.Database.ExecuteSqlInterpolatedAsync($@"SELECT COUNT(*) FROM CPCM_POSTLIKES WHERE CPCM_PostID = '{postik.CpcmGroupId}'");
+                    long reposts = await _context.Database.ExecuteSqlInterpolatedAsync($@"SELECT COUNT(*) FROM CPCM_POSTREPOSTS WHERE CPCM_PostID = '{postik.CpcmGroupId}'");
+                    postModels.Add(new() { Post = postik, LikesCount = likes, RepostsCount = reposts });
+                }
             }
             catch (DbException)
             {
                 return StatusCode(500);
             }
-            return Json(posts);
+            return Json(postModels);
         }
 
         [HttpPost]
         public async Task<IActionResult> GetNextNotPublishedPosts(Guid userId, Guid lastPostId)
         {
             List<CpcmPost> posts;
+            List<PostModel> postModels = new List<PostModel>();
             try
             {
-                var date = await _context.CpcmPosts.Where(c => c.CpcmPostId == lastPostId).FirstOrDefaultAsync();
-                if (date == null)
+                var lastPost = await _context.CpcmPosts.Where(c => c.CpcmPostId == lastPostId).FirstOrDefaultAsync();
+                if (lastPost == null)
                 {
                     return StatusCode(404);
                 }
 
-                posts = await _context.CpcmPosts.Where(c => c.CpcmUserId == userId && c.CpcmPostId == lastPostId).Where(c => c.CpcmPostPublishedDate < date.CpcmPostPublishedDate && c.CpcmPostPublishedDate > DateTime.Now).Take(10).ToListAsync();
+                posts = await _context.CpcmPosts.Where(c => c.CpcmUserId == userId && c.CpcmPostId == lastPostId).Where(c => c.CpcmPostPublishedDate < lastPost.CpcmPostPublishedDate && c.CpcmPostPublishedDate > DateTime.Now).Take(10).ToListAsync();
+                foreach (var postik in posts)
+                {
+                    postik.CpcmPostFatherNavigation = await GetFatherPostReccurent(postik);
+                    //long likes = await _context.Database.ExecuteSqlInterpolatedAsync($@"SELECT COUNT(*) FROM CPCM_POSTLIKES WHERE CPCM_PostID = '{postik.CpcmGroupId}'");
+                    //long reposts = await _context.Database.ExecuteSqlInterpolatedAsync($@"SELECT COUNT(*) FROM CPCM_POSTREPOSTS WHERE CPCM_PostID = '{postik.CpcmGroupId}'");
+                    postModels.Add(new() { Post = postik, LikesCount = 0, RepostsCount = 0 });
+                }
             }
             catch (DbException)
             {
                 return StatusCode(500);
             }
-            return Json(posts);
+            return Json(postModels);
         }
 
         [HttpGet]
@@ -1507,9 +1523,15 @@ namespace Capycom.Controllers
             }
 
             List<CpcmPost> posts;
+            List<PostModel> postModels = new List<PostModel>();
             try
             {
                 posts = await _context.CpcmPosts.Where(c => c.CpcmUserId == id && c.CpcmPostPublishedDate > DateTime.Now).Include(c => c.CpcmImages).OrderByDescending(c => c.CpcmPostPublishedDate).Take(10).ToListAsync();
+                foreach (var postik in posts)
+                {
+                    postik.CpcmPostFatherNavigation = await GetFatherPostReccurent(postik);
+                    postModels.Add(new() { Post = postik, LikesCount = 0, RepostsCount = 0 });
+                }
             }
             catch (DbException)
             {
@@ -1519,7 +1541,7 @@ namespace Capycom.Controllers
                 return View("UserError");
             }
 
-            return View();
+            return View(postModels);
         }
 
         [Authorize]
