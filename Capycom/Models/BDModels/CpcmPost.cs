@@ -21,6 +21,8 @@ public partial class CpcmPost
 
     public bool CpcmPostBanned { get; set; }
 
+    public bool CpcmIsDeleted { get; set; }
+
     public virtual ICollection<CpcmComment> CpcmComments { get; set; } = new List<CpcmComment>();
 
     public virtual ICollection<CpcmImage> CpcmImages { get; set; } = new List<CpcmImage>();

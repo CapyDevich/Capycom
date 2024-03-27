@@ -48,7 +48,10 @@ public partial class CpcmUser
 
     public bool CpcmUserBanned { get; set; }
 
+    public bool CpcmIsDeleted { get; set; }
+
     public virtual ICollection<CpcmGroupfollower> CpcmGroupfollowers { get; set; } = new List<CpcmGroupfollower>();
+
     public virtual CpcmCity? CpcmUserCityNavigation { get; set; }
     [ValidateNever]
     public virtual CpcmRole CpcmUserRoleNavigation { get; set; } = null!;
