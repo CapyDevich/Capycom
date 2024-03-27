@@ -1151,10 +1151,10 @@ namespace Capycom.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> CreatePost(UserPostModel userPost)
         {
-            if (userPost.Text == null && userPost.Files.Count > 0)
-            {
-                return View(userPost);
-            }
+            //if (userPost.Text == null && userPost.Files.Count > 0)
+            //{
+            //    return View(userPost);
+            //}
 
             if (ModelState.IsValid)
             {
@@ -1166,68 +1166,103 @@ namespace Capycom.Controllers
                 post.CpcmPostCreationDate = DateTime.Now;
                 post.CpcmPostPublishedDate = userPost.Published;
                 post.CpcmUserId = Guid.Parse(User.FindFirst(c => c.Type == "CpcmUserId").Value);
+ 
 
                 List<string> filePaths = new List<string>();
                 List<CpcmImage> images = new List<CpcmImage>();
 
-                int i = 0;
-                foreach (IFormFile file in userPost.Files)
+                if (userPost.PostFatherId != null)
                 {
-                    CheckIFormFile("Files", file, 8388608, new[] { "image/jpeg", "image/png", "image/gif" });
-
-                    if (!ModelState.IsValid)
+                    int i = 0;
+                    if (userPost.Files!=null)
                     {
-                        return View(userPost);
-
-                    }
-
-                    string uniqueFileName = Guid.NewGuid().ToString() + Path.GetExtension(file.FileName);
-                    filePaths.Add(Path.Combine("wwwroot", "uploads", uniqueFileName));
-
-                    try
-                    {
-                        using (var fileStream = new FileStream(filePaths.Last(), FileMode.Create))
+                        foreach (IFormFile file in userPost.Files)
                         {
-                            await file.CopyToAsync(fileStream);
+                            CheckIFormFile("Files", file, 8388608, new[] { "image/jpeg", "image/png", "image/gif" });
+
+                            if (!ModelState.IsValid)
+                            {
+                                return View(userPost);
+
+                            }
+
+                            string uniqueFileName = Guid.NewGuid().ToString() + Path.GetExtension(file.FileName);
+                            filePaths.Add(Path.Combine("wwwroot", "uploads", uniqueFileName));
+
+                            try
+                            {
+                                using (var fileStream = new FileStream(filePaths.Last(), FileMode.Create))
+                                {
+                                    await file.CopyToAsync(fileStream);
+                                }
+                                CpcmImage image = new CpcmImage();
+                                image.CpcmImageId = Guid.NewGuid();
+                                image.CpcmPostId = post.CpcmPostId;
+                                image.CpcmImagePath = filePaths.Last();
+                                image.CpcmImageOrder = 0;
+                                i++;
+
+                                images.Add(image);
+                            }
+                            catch (Exception ex)
+                            {
+                                Response.StatusCode = 500;
+                                ViewData["ErrorCode"] = 500;
+                                ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
+                                return View(userPost);
+                            }
+
                         }
-                        CpcmImage image = new CpcmImage();
-                        image.CpcmImageId = Guid.NewGuid();
-                        image.CpcmPostId = post.CpcmPostId;
-                        image.CpcmImagePath = filePaths.Last();
-                        image.CpcmImageOrder = 0;
-                        i++;
-
-                        images.Add(image);
+                        post.CpcmImages = images; 
                     }
-                    catch (Exception ex)
-                    {
-                        Response.StatusCode = 500;
-                        ViewData["ErrorCode"] = 500;
-                        ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
-                        return View(userPost);
-                    }
-
+                    //_context.CpcmImages.AddRange(images); 
                 }
-                post.CpcmImages = images;
-
                 _context.CpcmPosts.Add(post);
-                _context.CpcmImages.AddRange(images);
                 try
                 {
+                    if (userPost.PostFatherId !=null)
+                    {
+                        var fatherPost = await _context.CpcmPosts.Where(p => p.CpcmPostId == userPost.PostFatherId).FirstOrDefaultAsync(); 
+                        if(fatherPost==null || fatherPost.CpcmPostPublishedDate < DateTime.UtcNow)
+                        {
+                            return StatusCode(200, new {status=false,message= "Нельзя репостить неопубликованный пост" });
+                        }
+                    }
                     await _context.SaveChangesAsync();
                 }
                 catch (DbException)
                 {
+                    foreach (var item in filePaths)
+                    {
+                        if (System.IO.File.Exists(item))
+                        {
+                            System.IO.File.Delete(item);
+                        }
+                    }
                     Response.StatusCode = 500;
                     ViewData["ErrorCode"] = 500;
                     ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
                     return View(userPost); // TODO Продумать место для сохранения еррора
                 }
 
-                return View("Index");
+                if (userPost.PostFatherId != null)
+                {
+                    return View("Index"); 
+                }
+                else
+                {
+                    return StatusCode(200);
+                }
 
             }
-            return View(userPost);
+            if (userPost.PostFatherId != null)
+            {
+                return View(userPost); 
+            }
+            else
+            {
+                return StatusCode(200, new {status=false, message="Репост имел неккоректный вид. Возможно вы попытались прикрепить файлы. Однако этого нельзя делать для репостов."});
+            }
         }
 
         [Authorize]
@@ -1258,7 +1293,7 @@ namespace Capycom.Controllers
             }
 
 
-            _context.CpcmPosts.Remove(post);
+            post.CpcmIsDeleted = true;
             try
             {
                 await _context.SaveChangesAsync();
@@ -1307,10 +1342,10 @@ namespace Capycom.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> EditPost(UserPostEditModel editPost)
         {
-            if (editPost.Text == null && editPost.FilesToDelete.Count == 0 && editPost.NewFiles.Count == 0)
-            {
-                return View(editPost);
-            }
+            //if (editPost.Text == null && editPost.FilesToDelete.Count == 0 && editPost.NewFiles.Count == 0)
+            //{
+            //    return View(editPost);
+            //}
 
 
             if (ModelState.IsValid)
@@ -1341,11 +1376,19 @@ namespace Capycom.Controllers
 
                 post.CpcmPostText = editPost.Text.Trim();
                 post.CpcmPostPublishedDate = DateTime.Now;
+                if(post.CpcmPostFather != null)
+                {
+                    editPost.FilesToDelete = new List<Guid>();
+                    editPost.NewFiles = new();
+                }
 
-                int i = post.CpcmImages.Where(c => c.CpcmPostId == editPost.Id).OrderBy(k => k.CpcmImageOrder).Last().CpcmImageOrder;
-
+                var imageLast = post.CpcmImages.Where(c => c.CpcmPostId == editPost.Id).OrderBy(k => k.CpcmImageOrder).LastOrDefault();
+                int i = 0;
+                if (imageLast != null)
+                {
+                    i = imageLast.CpcmImageOrder;
+                }
                 List<string> filePaths = new List<string>();
-
                 foreach (var file in editPost.NewFiles)
                 {
                     CheckIFormFile("NewFiles", file, 8388608, new[] { "image/jpeg", "image/png", "image/gif" });
@@ -1389,7 +1432,6 @@ namespace Capycom.Controllers
                     }
 
                 }
-
 
 
                 List<CpcmImage>? images = post.CpcmImages.Where(c => !editPost.FilesToDelete.Contains(c.CpcmImageId)).ToList(); //TODO возможно ! тут не нужен 
@@ -1441,6 +1483,11 @@ namespace Capycom.Controllers
 
                 try
                 {
+                    if(post.CpcmPostText == null && (await _context.CpcmImages.Where(p => p.CpcmPostId == post.CpcmPostId).ToListAsync()).Count == 0)
+                    {
+                        ModelState.AddModelError("Text", "Нельзя создать пустой пост");
+                        return View(editPost);
+                    }
                     await _context.SaveChangesAsync();
                 }
                 catch (DbException)
