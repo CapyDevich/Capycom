@@ -122,7 +122,49 @@
 <div>
 	<a asp-action="Index" class="btn btn-light">Back to List</a>
 </div>
-
+<!-- Модальное окно на добавление города -->
+<div class="modal fade" id="addingCityModal" tabindex="-1" aria-labelledby="addingCityModalLabel" aria-hidden="true">
+	<div class="modal-dialog">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h1 class="modal-title fs-5" id="addingCityModalLabel">Добавление города</h1>
+				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+			</div>
+			<form>
+				<div class="modal-body">
+					<label for="addingCityInput" class="col-form-label">Название</label>
+					<input type="text" class="form-control" id="addingCityInput">
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отменить</button>
+					<button type="button" class="btn btn-primary" onclick="sendNewCityName()">Добавить</button>
+				</div>
+			</form>
+		</div>
+	</div>
+</div>
+<!-- Модальное окно на добавление университета -->
+<div class="modal fade" id="addingUniversityModal" tabindex="-1" aria-labelledby="addingUniversityModalLabel" aria-hidden="true">
+	<div class="modal-dialog">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h1 class="modal-title fs-5" id="addingUniversityModalLabel">Добавление университа</h1>
+				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+			</div>
+			<form>
+				<div class="modal-body">
+					<label for="addingUniversityInput" class="col-form-label">Название</label>
+					<input type="text" class="form-control" id="addingUniversityInput">
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отменить</button>
+					<button type="button" class="btn btn-primary" onclick="sendNewUniversityName()">Добавить</button>
+				</div>
+			</form>
+		</div>
+	</div>
+</div>
+<!-- Модальное окно на добавление школы -->
 <div class="modal fade" id="addingSchoolModal" tabindex="-1" aria-labelledby="addingSchoolModalLabel" aria-hidden="true">
 	<div class="modal-dialog">
 		<div class="modal-content">
@@ -137,34 +179,14 @@
 				</div>
 				<div class="modal-footer">
 					<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отменить</button>
-					<button type="button" class="btn btn-primary" onclick="sendData()">Добавить</button>
+					<button type="button" class="btn btn-primary" onclick="sendNewSchoolName()">Добавить</button>
 				</div>
 			</form>
 		</div>
 	</div>
 </div>
-<script>
-	'use strict'
-	function sendData() {
-		$.ajax({
-			url: '/UserSignUp/AddSchool',
-			type: 'POST',
-			data: { newSchool: $('#addingSchoolInput').val() },
-			success: function (response) {
-				if (response["success"]) {
-					console.log('Успешно: ', response);
-				}
-				else {
-					console.log('NO: ', response);
-				}
 
-			},
-			error: function (obj) {
-				console.log("Unknown error");
-			}
-		});
-	}
-</script>
+<script src="~/js/signup.js"></script>
 @section Scripts {
 	@{
 		await Html.RenderPartialAsync("_ValidationScriptsPartial");
