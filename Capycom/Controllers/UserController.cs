@@ -276,14 +276,27 @@ namespace Capycom.Controllers
                     return View("UserError");
                 }
 
-                if (user == null)
+                if (cpcmUser == null)
                 {
                     Response.StatusCode = 404;
                     ViewData["ErrorCode"] = 404;
                     ViewData["Message"] = "Пользователь не найден";
                     return View("UserError");
                 }
-
+                if (cpcmUser.CpcmUserBanned)
+                {
+                    Response.StatusCode = 403;
+                    ViewData["ErrorCode"] = 403;
+                    ViewData["Message"] = "Пользователь был заблокирован";
+                    return View("UserError");
+                }
+                if (cpcmUser.CpcmIsDeleted)
+                {
+                    Response.StatusCode = 404;
+                    ViewData["ErrorCode"] = 404;
+                    ViewData["Message"] = "Пользователь не найден";
+                    return View("UserError");
+                }
                 cpcmUser.CpcmUserAbout = user.CpcmUserAbout?.Trim();
                 cpcmUser.CpcmUserCity = user.CpcmUserCity;
                 cpcmUser.CpcmUserSite = user.CpcmUserSite?.Trim();
@@ -463,14 +476,27 @@ namespace Capycom.Controllers
                     return View("UserError");
                 }
 
-                if (user == null)
+                if (cpcmUser == null)
                 {
                     Response.StatusCode = 404;
                     ViewData["ErrorCode"] = 404;
                     ViewData["Message"] = "Пользователь не найден";
                     return View("UserError");
                 }
-
+                if (cpcmUser.CpcmUserBanned)
+                {
+                    Response.StatusCode = 403;
+                    ViewData["ErrorCode"] = 403;
+                    ViewData["Message"] = "Пользователь был заблокирован";
+                    return View("UserError");
+                }
+                if (cpcmUser.CpcmIsDeleted)
+                {
+                    Response.StatusCode = 404;
+                    ViewData["ErrorCode"] = 404;
+                    ViewData["Message"] = "Пользователь не найден";
+                    return View("UserError");
+                }
                 cpcmUser.CpcmUserEmail = user.CpcmUserEmail.Trim();
                 cpcmUser.CpcmUserTelNum = user.CpcmUserTelNum.Trim();
 
@@ -518,7 +544,7 @@ namespace Capycom.Controllers
             }
             try
             {
-                var user = await _context.CpcmUsers.Where(c => c.CpcmUserId == id).FirstOrDefaultAsync();
+                var user = await _context.CpcmUsers.Where(c => c.CpcmUserId == id && c.CpcmIsDeleted==false).FirstOrDefaultAsync();
                 if (user == null)
                 {
                     return StatusCode(404);
@@ -963,7 +989,8 @@ namespace Capycom.Controllers
                 return View("UserError");
             }
 
-            _context.CpcmUsers.Remove(user);
+            //_context.CpcmUsers.Remove(user);
+            user.CpcmIsDeleted = true;
 
             try
             {
