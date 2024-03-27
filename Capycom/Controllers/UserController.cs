@@ -1462,7 +1462,7 @@ namespace Capycom.Controllers
 
 
                 List<CpcmImage>? images = post.CpcmImages.Where(c => !editPost.FilesToDelete.Contains(c.CpcmImageId)).ToList(); //TODO возможно ! тут не нужен 
-                if (images.Count != 0)
+                if (images!=null||images.Count != 0)
                 {
                     //_context.CpcmImages.RemoveRange(images);
                     foreach (var item in images)
