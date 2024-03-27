@@ -114,7 +114,7 @@ namespace Capycom.Controllers
             List<CpcmPost> posts;
             try
             {
-                posts = await _context.CpcmPosts.Where(c => c.CpcmUserId == user.CpcmUserId && c.CpcmPostPublishedDate < DateTime.Now).Include(c => c.CpcmImages).OrderByDescending(c => c.CpcmPostPublishedDate).Take(10).ToListAsync();
+                posts = await _context.CpcmPosts.Where(c => c.CpcmUserId == user.CpcmUserId && c.CpcmPostPublishedDate < DateTime.UtcNow).Include(c => c.CpcmImages).OrderByDescending(c => c.CpcmPostPublishedDate).Take(10).ToListAsync();
             }
             catch (DbException)
             {
@@ -1190,7 +1190,7 @@ namespace Capycom.Controllers
                 post.CpcmPostText = userPost.Text.Trim();
                 post.CpcmPostId = Guid.NewGuid();
                 post.CpcmPostFather = userPost.PostFatherId;
-                post.CpcmPostCreationDate = DateTime.Now;
+                post.CpcmPostCreationDate = DateTime.UtcNow;
                 post.CpcmPostPublishedDate = userPost.Published;
                 post.CpcmUserId = Guid.Parse(User.FindFirst(c => c.Type == "CpcmUserId").Value);
  
@@ -1402,7 +1402,7 @@ namespace Capycom.Controllers
                 }
 
                 post.CpcmPostText = editPost.Text.Trim();
-                post.CpcmPostPublishedDate = DateTime.Now;
+                post.CpcmPostPublishedDate = DateTime.UtcNow;
                 if(post.CpcmPostFather != null)
                 {
                     editPost.FilesToDelete = new List<Guid>();
@@ -1541,7 +1541,7 @@ namespace Capycom.Controllers
                     return StatusCode(404);
                 }
 
-                posts = await _context.CpcmPosts.Where(c => c.CpcmUserId == userId && c.CpcmPostId == lastPostId).Where(c => c.CpcmPostPublishedDate < post.CpcmPostPublishedDate && c.CpcmPostPublishedDate < DateTime.Now).Take(10).ToListAsync();
+                posts = await _context.CpcmPosts.Where(c => c.CpcmUserId == userId && c.CpcmPostId == lastPostId).Where(c => c.CpcmPostPublishedDate < post.CpcmPostPublishedDate && c.CpcmPostPublishedDate < DateTime.UtcNow).Take(10).ToListAsync();
                 foreach (var postik in posts)
                 {
                     postik.CpcmPostFatherNavigation = await GetFatherPostReccurent(postik);
@@ -1570,7 +1570,7 @@ namespace Capycom.Controllers
                     return StatusCode(404);
                 }
 
-                posts = await _context.CpcmPosts.Where(c => c.CpcmUserId == userId && c.CpcmPostId == lastPostId).Where(c => c.CpcmPostPublishedDate < lastPost.CpcmPostPublishedDate && c.CpcmPostPublishedDate > DateTime.Now).Take(10).ToListAsync();
+                posts = await _context.CpcmPosts.Where(c => c.CpcmUserId == userId && c.CpcmPostId == lastPostId).Where(c => c.CpcmPostPublishedDate < lastPost.CpcmPostPublishedDate && c.CpcmPostPublishedDate > DateTime.UtcNow).Take(10).ToListAsync();
                 foreach (var postik in posts)
                 {
                     postik.CpcmPostFatherNavigation = await GetFatherPostReccurent(postik);
@@ -1600,7 +1600,7 @@ namespace Capycom.Controllers
             List<PostModel> postModels = new List<PostModel>();
             try
             {
-                posts = await _context.CpcmPosts.Where(c => c.CpcmUserId == id && c.CpcmPostPublishedDate > DateTime.Now).Include(c => c.CpcmImages).OrderByDescending(c => c.CpcmPostPublishedDate).Take(10).ToListAsync();
+                posts = await _context.CpcmPosts.Where(c => c.CpcmUserId == id && c.CpcmPostPublishedDate > DateTime.UtcNow).Include(c => c.CpcmImages).OrderByDescending(c => c.CpcmPostPublishedDate).Take(10).ToListAsync();
                 foreach (var postik in posts)
                 {
                     postik.CpcmPostFatherNavigation = await GetFatherPostReccurent(postik);
