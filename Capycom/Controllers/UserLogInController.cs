@@ -79,6 +79,15 @@ if (ModelState.IsValid)
                         ViewData["Message"] = "Вы забанены за нарушение условия пользования Capycom. Если вы считаете, что банхаммер прилетел неправомерно - обратитесь в администрацию";
                         return View("UserError");
                     }
+                    if (potentialUser.CpcmIsDeleted == true)
+                    {
+                        //Response.StatusCode = 404;
+                        //ViewData["ErrorCode"] = 404;
+                        //ViewData["Message"] = "Аккаунт был удалён";
+                        //return View("UserError");
+                        ViewData["Message"] = "Неверный логин или пароль";
+                        return View();
+                    }
                     List<Claim> claims = GetUserClaims(potentialUser); 
                     var claimsIdentity = new ClaimsIdentity(claims, "Cookies");
                     var claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
