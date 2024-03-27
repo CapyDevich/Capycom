@@ -12,6 +12,7 @@ using NuGet.Packaging;
 using NuGet.Protocol.Plugins;
 using System.Data.Common;
 using System.Text.RegularExpressions;
+using Microsoft.Extensions.Hosting;
 
 namespace Capycom.Controllers
 {
@@ -110,10 +111,10 @@ namespace Capycom.Controllers
             {
                 return RedirectToAction("Index", new { nickName = user.CpcmUserNickName });
             }
-
+            List<CpcmPost> posts;
             try
             {
-                user.CpcmPosts = await _context.CpcmPosts.Where(c => c.CpcmUserId == user.CpcmUserId && c.CpcmPostPublishedDate < DateTime.Now).Include(c => c.CpcmImages).OrderByDescending(c => c.CpcmPostPublishedDate).Take(10).ToListAsync();
+                posts = await _context.CpcmPosts.Where(c => c.CpcmUserId == user.CpcmUserId && c.CpcmPostPublishedDate < DateTime.Now).Include(c => c.CpcmImages).OrderByDescending(c => c.CpcmPostPublishedDate).Take(10).ToListAsync();
             }
             catch (DbException)
             {
@@ -122,8 +123,18 @@ namespace Capycom.Controllers
                 ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
                 return View("UserError");
             }
-
-            return View(user);
+            ICollection<PostModel> postsWithLikesCount = new List<PostModel>();
+            UserProfileAndPostsModel userProfile = new();
+            userProfile.User = user;
+            foreach(var postik in posts)
+            {
+                postik.CpcmPostFatherNavigation = await GetFatherPostReccurent(postik);
+                long likes = await _context.Database.ExecuteSqlInterpolatedAsync($@"SELECT COUNT(*) FROM CPCM_POSTLIKES WHERE CPCM_PostID = '{postik.CpcmGroupId}'");
+                long reposts = await _context.Database.ExecuteSqlInterpolatedAsync($@"SELECT COUNT(*) FROM CPCM_POSTREPOSTS WHERE CPCM_PostID = '{postik.CpcmGroupId}'");
+                postsWithLikesCount.Add(new PostModel() { Post = postik, UserOwner=user, LikesCount= likes, RepostsCount= reposts });
+            }
+            userProfile.Posts = postsWithLikesCount;
+            return View(userProfile);
         }
 
         [HttpGet]
@@ -155,10 +166,10 @@ namespace Capycom.Controllers
                 ViewData["Message"] = "Пользователь не найден";
                 return View("UserError");
             }
-
+            List<CpcmPost> posts;
             try
             {
-                user.CpcmPosts = await _context.CpcmPosts.Where(c => c.CpcmUserId == user.CpcmUserId).Include(c => c.CpcmImages).OrderByDescending(c => c.CpcmPostPublishedDate).Take(10).ToListAsync();
+                posts = await _context.CpcmPosts.Where(c => c.CpcmUserId == user.CpcmUserId).Include(c => c.CpcmImages).OrderByDescending(c => c.CpcmPostPublishedDate).Take(10).ToListAsync();
 
             }
             catch (DbException)
@@ -168,8 +179,18 @@ namespace Capycom.Controllers
                 ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
                 return View("UserError");
             }
-
-            return View(user);
+            ICollection<PostModel> postsWithLikesCount = new List<PostModel>();
+            UserProfileAndPostsModel userProfile = new();
+            userProfile.User = user;
+            foreach (var postik in posts)
+            {
+                postik.CpcmPostFatherNavigation = await GetFatherPostReccurent(postik);
+                long likes = await _context.Database.ExecuteSqlInterpolatedAsync($@"SELECT COUNT(*) FROM CPCM_POSTLIKES WHERE CPCM_PostID = '{postik.CpcmGroupId}'");
+                long reposts = await _context.Database.ExecuteSqlInterpolatedAsync($@"SELECT COUNT(*) FROM CPCM_POSTREPOSTS WHERE CPCM_PostID = '{postik.CpcmGroupId}'");
+                postsWithLikesCount.Add(new PostModel() { Post = postik, UserOwner = user, LikesCount = likes, RepostsCount = reposts });
+            }
+            userProfile.Posts = postsWithLikesCount;
+            return View(userProfile);
         }
 
 
@@ -1675,6 +1696,15 @@ namespace Capycom.Controllers
             return true;
         }
 
+        private async Task<CpcmPost?> GetFatherPostReccurent(CpcmPost cpcmPostFatherNavigation)
+        {
+            var father = await _context.CpcmPosts.Where(p => p.CpcmPostId == cpcmPostFatherNavigation.CpcmPostFather).Include(p => p.CpcmImages).FirstOrDefaultAsync();
+            if (father != null)
+            {
+                father.CpcmPostFatherNavigation = await GetFatherPostReccurent(father);
+            }
+            return father;
+        }
         private bool CheckIFormFileContent(IFormFile cpcmUserImage, string[] permittedTypes)//TODO: Объединить с методами при регистрации
         {
             if (cpcmUserImage != null && permittedTypes.Contains(cpcmUserImage.ContentType))
