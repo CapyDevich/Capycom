@@ -17,7 +17,7 @@ namespace Capycom.Models
 
         [Display(Name = "Номер телефона")]
         [Required]
-        [Phone(ErrorMessage = "Некорректный номер телефона")]
+        [Phone(ErrorMessage = "Некорректный номер телефона")] // [RegularExpression(@"^\+[1-9]{1}[0-9]{3,14}$", ErrorMessage="Телефон должен быть записан в формате +7")]
         [Remote(action: "CheckPhone", controller: "User", ErrorMessage = "Телефон уже занят", HttpMethod = "Post", AdditionalFields = nameof(CpcmUserId))]
         public string CpcmUserTelNum { get; set; } = null!;
 
