@@ -76,38 +76,41 @@ namespace Capycom.Controllers
                 List<string> filePaths = new List<string>();
                 List<CpcmImage> images = new List<CpcmImage>();
 
-                int i = 0;
-                foreach (var file in userComment.Files)
+                if (userComment.Files !=null)
                 {
-                    CheckIFormFile("Files", file, 8388608, new[] { "image/jpeg", "image/png", "image/gif" });
-
-                    if (!ModelState.IsValid)
+                    int i = 0;
+                    foreach (var file in userComment.Files)
                     {
-                        return StatusCode(400,new { message = "Неверный формат файла или превышен размер одного/нескольких файла"});
+                        CheckIFormFile("Files", file, 8388608, new[] { "image/jpeg", "image/png", "image/gif" });
+
+                        if (!ModelState.IsValid)
+                        {
+                            return StatusCode(400, new { message = "Неверный формат файла или превышен размер одного/нескольких файла" });
+
+                        }
+
+                        string uniqueFileName = Guid.NewGuid().ToString() + Path.GetExtension(file.FileName);
+                        filePaths.Add(Path.Combine("wwwroot", "uploads", uniqueFileName));
+
+                        CpcmImage image = new CpcmImage();
+                        image.CpcmImageId = Guid.NewGuid();
+                        image.CpcmCommentId = comment.CpcmCommentId;
+                        image.CpcmImagePath = filePaths.Last();
+                        image.CpcmImageOrder = 0;
+                        i++;
+
+                        images.Add(image);
+
+
+                        //Response.StatusCode = 500;
+                        //ViewData["ErrorCode"] = 500;
+                        //ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
+                        //return StatusCode(500, new { message = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку" });
 
                     }
 
-                    string uniqueFileName = Guid.NewGuid().ToString() + Path.GetExtension(file.FileName);
-                    filePaths.Add(Path.Combine("wwwroot", "uploads", uniqueFileName));
-
-                    CpcmImage image = new CpcmImage();
-                    image.CpcmImageId = Guid.NewGuid();
-                    image.CpcmCommentId = comment.CpcmCommentId;
-                    image.CpcmImagePath = filePaths.Last();
-                    image.CpcmImageOrder = 0;
-                    i++;
-
-                    images.Add(image);
-
-
-                    //Response.StatusCode = 500;
-                    //ViewData["ErrorCode"] = 500;
-                    //ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
-                    //return StatusCode(500, new { message = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку" });
-
+                    _context.AddRange(images); 
                 }
-
-                _context.AddRange(images);
                 _context.Add(comment);
                 try
                 {

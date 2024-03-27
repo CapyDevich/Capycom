@@ -1242,7 +1242,7 @@ namespace Capycom.Controllers
                         }
                         post.CpcmImages = images; 
                     }
-                    //_context.CpcmImages.AddRange(images); 
+                    _context.CpcmImages.AddRange(images); 
                 }
                 _context.CpcmPosts.Add(post);
                 try
