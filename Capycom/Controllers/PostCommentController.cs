@@ -7,6 +7,7 @@ using System.Data.Common;
 using Microsoft.EntityFrameworkCore;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 using System.Reflection.Metadata;
+using System.Security.Claims;
 
 namespace Capycom.Controllers
 {
@@ -235,9 +236,50 @@ namespace Capycom.Controllers
             }
         }
 
-        public async Task<IActionResult> AddLike(Guid postId)
+        [Authorize]
+        public async Task<IActionResult> AddRemoveLike(Guid postId)
         {
+            try
+            {
+                var post = await _context.CpcmPosts.Where(p => p.CpcmPostId == postId).FirstOrDefaultAsync();
+                string? userId = HttpContext.User.FindFirstValue("CpcmUserId");
+                var answer = await _context.Database.ExecuteSqlInterpolatedAsync($@"SELECT COUNT(*) FROM CPCM_POSTLIKES WHERE CPCM_PostID = '{post.CpcmGroupId}' AND CPCM_UserId = '{userId}' ");
+                if (post == null)
+                {
+                    return StatusCode(404);
+                }
+                if(answer == 0)
+                {
+                    var querry = await _context.Database.ExecuteSqlInterpolatedAsync($@"INSERT INTO CPCM_POSTLIKES VALUES ('{post.CpcmGroupId}','{userId}')");
+                    if(querry ==1)
+                    {
+                        return StatusCode(200);
+                    }
+                    else
+                    {
+                        return StatusCode(500, new { message = "Не удалось установить соединение с сервером" });
+                    }
+                }
+                else
+                {
+                    // удаление лайка
+                    var querry = await _context.Database.ExecuteSqlInterpolatedAsync($@"DELETE FROM CPCM_POSTLIKES WHERE CPCM_PostID = '{post.CpcmGroupId}' AND CPCM_UserId = '{userId}' ");
+                    if (querry == 1)
+                    {
+                        return StatusCode(200);
+                    }
+                    else
+                    {
+                        return StatusCode(500, new { message = "Не удалось установить соединение с сервером" });
+                    }
 
+                }
+
+            }
+            catch (DbException)
+            {
+                return StatusCode(500, new {message = "Не удалось установить соединение с сервером"});
+            }
         }
         public async Task<IActionResult> AddRepost(Guid postId)
         {
