@@ -1558,8 +1558,15 @@ namespace Capycom.Controllers
         }
 
         [HttpPost]
+        [Authorize]
         public async Task<IActionResult> GetNextNotPublishedPosts(Guid userId, Guid lastPostId)
         {
+            if (!CheckUserPrivilege("CpcmCanEditUsers", "True", userId))
+            {
+                ViewData["ErrorCode"] = 403;
+                ViewData["Message"] = "Доступ запрещён";
+                return View("UserError");
+            }
             List<CpcmPost> posts;
             List<PostModel> postModels = new List<PostModel>();
             try
