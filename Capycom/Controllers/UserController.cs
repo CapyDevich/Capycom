@@ -1629,13 +1629,13 @@ namespace Capycom.Controllers
             try
             {
                 var post = await _context.CpcmPosts.Where(c => c.CpcmPostId == id).FirstOrDefaultAsync();
-                if(post == null)
+                if(post == null || post.CpcmIsDeleted==true)
                 {
                     return StatusCode(404);
                 }
                 post.CpcmPostBanned = !post.CpcmPostBanned;
                 await _context.SaveChangesAsync();
-                return StatusCode(200);
+                return StatusCode(200, new {status=true});
             }
             catch (DbException)
             {
@@ -1701,10 +1701,11 @@ namespace Capycom.Controllers
             }
             catch (DbException)
             {
-                Response.StatusCode = 500;
-                ViewData["ErrorCode"] = 500;
-                ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
-                return View("UserError");
+                //Response.StatusCode = 500;
+                //ViewData["ErrorCode"] = 500;
+                //ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
+                //return View("UserError");
+                return StatusCode(500);
             }
         }
 
