@@ -572,7 +572,7 @@ namespace Capycom.Controllers
                 }
                 user.CpcmUserBanned = !user.CpcmUserBanned;
                 await _context.SaveChangesAsync();
-                return StatusCode(200);
+                return StatusCode(200 , new {status=true});
             }
             catch (DbException)
             {
@@ -1066,7 +1066,7 @@ namespace Capycom.Controllers
                 return StatusCode(500);
             }
 
-            return StatusCode(200);
+            return StatusCode(200, new {status=true});
         }
 
         [Authorize]
@@ -1101,7 +1101,7 @@ namespace Capycom.Controllers
                 return StatusCode(500);
             }
 
-            return StatusCode(200);
+            return StatusCode(200, new {status=true});
 
         }
 
@@ -1128,7 +1128,7 @@ namespace Capycom.Controllers
                 return StatusCode(500);
             }
 
-            return StatusCode(200);
+            return StatusCode(200, new { status = true });
         }
 
         [Authorize]
@@ -1162,7 +1162,7 @@ namespace Capycom.Controllers
                 return StatusCode(500);
             }
 
-            return StatusCode(200);
+            return StatusCode(200, new { status = true });
         }
 
         [Authorize]
@@ -1195,7 +1195,7 @@ namespace Capycom.Controllers
                 return StatusCode(500);
             }
 
-            return StatusCode(200);
+            return StatusCode(200, new { status = true });
         }
 
 
@@ -1320,7 +1320,7 @@ namespace Capycom.Controllers
                 }
                 else
                 {
-                    return StatusCode(200);
+                    return StatusCode(200, new { status = true });
                 }
 
             }
@@ -1374,7 +1374,7 @@ namespace Capycom.Controllers
             {
                 return StatusCode(500);
             }
-            return StatusCode(200);
+            return StatusCode(200, new { status = true });
         }
 
         [Authorize]
