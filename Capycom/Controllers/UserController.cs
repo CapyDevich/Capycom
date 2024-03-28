@@ -228,6 +228,20 @@ namespace Capycom.Controllers
                 ViewData["Message"] = "Пользователь не найден";
                 return View("UserError");
             }
+            if (user.CpcmUserBanned)
+            {
+                Response.StatusCode = 403;
+                ViewData["ErrorCode"] = 403;
+                ViewData["Message"] = "Пользователь был заблокирован";
+                return View("UserError");
+            }
+            if (user.CpcmIsDeleted)
+            {
+                Response.StatusCode = 404;
+                ViewData["ErrorCode"] = 404;
+                ViewData["Message"] = "Пользователь не найден";
+                return View("UserError");
+            }
 
             ViewData["CpcmUserCity"] = new SelectList(_context.CpcmCities, "CpcmCityId", "CpcmCityName", user.CpcmUserCity);
             ViewData["CpcmUserSchool"] = new SelectList(_context.CpcmSchools, "CpcmSchooldId", "CpcmSchoolName", user.CpcmUserSchool);
@@ -434,11 +448,18 @@ namespace Capycom.Controllers
                 ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
                 return View("UserError");
             }
-            if (user == null)
+            if (user == null || user.CpcmIsDeleted)
             {
                 Response.StatusCode = 404;
                 ViewData["ErrorCode"] = 404;
                 ViewData["Message"] = "Пользователь не найден";
+                return View("UserError");
+            }
+            if (user.CpcmUserBanned)
+            {
+                Response.StatusCode = 404;
+                ViewData["ErrorCode"] = 404;
+                ViewData["Message"] = "Доступ запрещён";
                 return View("UserError");
             }
             UserEditIdentityModel userModel = new();
