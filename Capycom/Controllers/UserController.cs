@@ -1628,7 +1628,7 @@ namespace Capycom.Controllers
             }
             try
             {
-                var post = await _context.CpcmPosts.Where(c => c.CpcmPostId == id).FirstOrDefaultAsync();
+                var post = await _context.CpcmPosts.Where(c => c.CpcmPostId == id && c.CpcmPostPublishedDate < DateTime.UtcNow).FirstOrDefaultAsync();
                 if(post == null || post.CpcmIsDeleted==true)
                 {
                     return StatusCode(404);
