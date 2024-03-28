@@ -66,11 +66,15 @@ namespace Capycom.Controllers
         {
             if (ModelState.IsValid)
             {
+                if ((string.IsNullOrEmpty(userComment.CpcmCommentText) || string.IsNullOrWhiteSpace(userComment.CpcmCommentText)) && userComment.Files==null)
+                {
+                    return StatusCode(200, new { status = false, message = "Коммент не может быть пустым" });
+                }
                 CpcmComment comment = new CpcmComment();
                 comment.CpcmCommentId = Guid.NewGuid();
                 comment.CpcmPostId = userComment.CpcmPostId;
                 comment.CpcmCommentFather = userComment.CpcmCommentFather;
-                comment.CpcmCommentText = userComment.CpcmCommentText;
+                comment.CpcmCommentText = userComment.CpcmCommentText?.Trim();
                 comment.CpcmCommentCreationDate = DateTime.UtcNow;
 
                 List<string> filePaths = new List<string>();
@@ -85,7 +89,7 @@ namespace Capycom.Controllers
 
                         if (!ModelState.IsValid)
                         {
-                            return StatusCode(400, new { message = "Неверный формат файла или превышен размер одного/нескольких файла" });
+                            return StatusCode(200, new { status=false,message = "Неверный формат файла или превышен размер одного/нескольких файла" });
 
                         }
 
@@ -134,9 +138,13 @@ namespace Capycom.Controllers
                     }
                     return StatusCode(500, new { message = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку" });
                 }
-                return StatusCode(200);
+                catch (IOException)
+                {
+                    return StatusCode(500, new { message = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку" });
+                }
+                return StatusCode(200, new { status = true });
             }
-            return StatusCode(400, new { message = "Текст не может быть пустым" });
+            return StatusCode(200, new { status=false,message = "Комментарий имеет некорректные значения." });
 
         }
 
@@ -156,7 +164,7 @@ namespace Capycom.Controllers
                 {
                     comment.CpcmIsDeleted = true;
                     await _context.SaveChangesAsync();
-                    return StatusCode(200);
+                    return StatusCode(200, new { status = true });
                 }
                 else
                 {
@@ -165,7 +173,7 @@ namespace Capycom.Controllers
             }
             catch (DbException)
             {
-                return StatusCode(500);
+                return StatusCode(500, new { message = "Не удалось установить соединение с сервером" });
             }
         }
 
@@ -184,13 +192,13 @@ namespace Capycom.Controllers
                 }
                 comment.CpcmCommentBanned = !comment.CpcmCommentBanned;
                 await _context.SaveChangesAsync();
-                return StatusCode(200);
+                return StatusCode(200, new {status=true});
 
             }
             catch (DbException)
             {
 
-                return StatusCode(500);
+                return StatusCode(500 , new {message = "Не удалось устиановить соединение с сервером"});
             }
         }
         public async Task<IActionResult> ViewComment(Guid commentId)
@@ -237,7 +245,7 @@ namespace Capycom.Controllers
             }
             catch (DbException)
             {
-                return StatusCode(500);
+                return StatusCode(500, new { message = "Не удалось установить соединение с сервером" });
             }
         }
 
@@ -259,7 +267,7 @@ namespace Capycom.Controllers
                     var querry = await _context.Database.ExecuteSqlInterpolatedAsync($@"INSERT INTO CPCM_POSTLIKES VALUES ('{post.CpcmGroupId}','{userId}')");
                     if(querry ==1)
                     {
-                        return StatusCode(200);
+                        return StatusCode(200, new { status=true});
                     }
                     else
                     {
@@ -272,7 +280,7 @@ namespace Capycom.Controllers
                     var querry = await _context.Database.ExecuteSqlInterpolatedAsync($@"DELETE FROM CPCM_POSTLIKES WHERE CPCM_PostID = '{post.CpcmGroupId}' AND CPCM_UserId = '{userId}' ");
                     if (querry == 1)
                     {
-                        return StatusCode(200);
+                        return StatusCode(200, new { status = true });
                     }
                     else
                     {
