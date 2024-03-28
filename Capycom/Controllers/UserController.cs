@@ -1225,7 +1225,15 @@ namespace Capycom.Controllers
                 post.CpcmPostId = Guid.NewGuid();
                 post.CpcmPostFather = userPost.PostFatherId;
                 post.CpcmPostCreationDate = DateTime.UtcNow;
-                post.CpcmPostPublishedDate = userPost.Published;
+                if (userPost.Published == null)
+                {
+					post.CpcmPostPublishedDate = post.CpcmPostCreationDate;
+				}
+                else
+                {
+					post.CpcmPostPublishedDate = userPost.Published;
+				}
+                
                 post.CpcmUserId = Guid.Parse(User.FindFirst(c => c.Type == "CpcmUserId").Value);
  
 
@@ -1409,6 +1417,7 @@ namespace Capycom.Controllers
             model.UserId = post.CpcmUserId;
             model.Text = post.CpcmPostText;
             model.CpcmImages = post.CpcmImages;
+            model.NewPublishDate = post.CpcmPostPublishedDate;
             return View(model);
         }
 
@@ -1454,7 +1463,17 @@ namespace Capycom.Controllers
                 }
 
                 post.CpcmPostText = editPost.Text.Trim();
-                post.CpcmPostPublishedDate = DateTime.UtcNow;
+
+				if (editPost.NewPublishDate == null)
+				{
+					post.CpcmPostPublishedDate = DateTime.UtcNow;
+				}
+				else
+				{
+					post.CpcmPostPublishedDate = editPost.NewPublishDate;
+				}
+
+				//post.CpcmPostPublishedDate = DateTime.UtcNow;
                 if(post.CpcmPostFather != null)
                 {
                     editPost.FilesToDelete = new List<Guid>();
