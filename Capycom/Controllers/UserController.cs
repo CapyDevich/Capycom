@@ -577,7 +577,7 @@ namespace Capycom.Controllers
                 return View("UserError");
             }
 
-            if (user == null)
+            if (user == null || user.CpcmIsDeleted)
             {
                 Response.StatusCode = 404;
                 ViewData["ErrorCode"] = 404;
@@ -625,7 +625,7 @@ namespace Capycom.Controllers
                 return StatusCode(500);
             }
 
-            if (user == null)
+            if (user == null || user.CpcmIsDeleted)
             {
                 Response.StatusCode = 404;
                 return StatusCode(404);
@@ -672,7 +672,7 @@ namespace Capycom.Controllers
                 return View("UserError");
             }
 
-            if (user == null)
+            if (user == null || user.CpcmIsDeleted)
             {
                 Response.StatusCode = 404;
                 ViewData["ErrorCode"] = 404;
@@ -715,7 +715,7 @@ namespace Capycom.Controllers
                 return StatusCode(500);
             }
 
-            if (user == null)
+            if (user == null || user.CpcmIsDeleted)
             {
                 Response.StatusCode = 404;
                 return StatusCode(404);
@@ -758,7 +758,7 @@ namespace Capycom.Controllers
                 return View("UserError");
             }
 
-            if (user == null)
+            if (user == null || user.CpcmIsDeleted)
             {
                 Response.StatusCode = 404;
                 ViewData["ErrorCode"] = 404;
@@ -805,7 +805,7 @@ namespace Capycom.Controllers
                 return StatusCode(500);
             }
 
-            if (user == null)
+            if (user == null || user.CpcmIsDeleted)
             {
                 Response.StatusCode = 404;
                 return StatusCode(404);
@@ -851,7 +851,7 @@ namespace Capycom.Controllers
                 return View("UserError");
             }
 
-            if (user == null)
+            if (user == null || user.CpcmIsDeleted)
             {
                 Response.StatusCode = 404;
                 ViewData["ErrorCode"] = 404;
@@ -894,7 +894,7 @@ namespace Capycom.Controllers
                 return StatusCode(500);
             }
 
-            if (user == null)
+            if (user == null||user.CpcmIsDeleted)
             {
                 Response.StatusCode = 404;
                 return StatusCode(404);
@@ -948,11 +948,18 @@ namespace Capycom.Controllers
                 return View("UserError");
             }
 
-            if (user == null)
+            if (user == null || user.CpcmIsDeleted)
             {
                 Response.StatusCode = 404;
                 ViewData["ErrorCode"] = 404;
                 ViewData["Message"] = "Пользователь не найден";
+                return View("UserError");
+            }
+            if (user.CpcmUserBanned)
+            {
+                Response.StatusCode = 403;
+                ViewData["ErrorCode"] = 403;
+                ViewData["Message"] = "Пользователь заблокирован и не может быть удалён";
                 return View("UserError");
             }
             return View(user);
@@ -981,14 +988,20 @@ namespace Capycom.Controllers
                 return View("UserError");
             }
 
-            if (user == null)
+            if (user == null || user.CpcmIsDeleted)
             {
                 Response.StatusCode = 404;
                 ViewData["ErrorCode"] = 404;
                 ViewData["Message"] = "Пользователь не найден";
                 return View("UserError");
             }
-
+            if (user.CpcmUserBanned)
+            {
+                Response.StatusCode = 403;
+                ViewData["ErrorCode"] = 403;
+                ViewData["Message"] = "Пользователь заблокирован и не может быть удалён";
+                return View("UserError");
+            }
             //_context.CpcmUsers.Remove(user);
             user.CpcmIsDeleted = true;
 
