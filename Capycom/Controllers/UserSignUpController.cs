@@ -291,7 +291,7 @@ namespace Capycom.Controllers
             {
                 return Json(new { success = false, message = "Некорректное значение." });
             }
-            if (!_context.CpcmCities.Any(e => e.CpcmCityName == newCity.Trim()))
+            if (! await _context.CpcmCities.AnyAsync(e => e.CpcmCityName == newCity.Trim()))
             {
                 CpcmCity city = new();
                 city.CpcmCityId = Guid.NewGuid();
@@ -323,7 +323,7 @@ namespace Capycom.Controllers
             {
                 return Json(new { success = false, message = "Некорректное значение." });
             }
-            if (!_context.CpcmSchools.Any(e => e.CpcmSchoolName == newSchool.Trim()))
+            if (! await _context.CpcmSchools.AnyAsync(e => e.CpcmSchoolName == newSchool.Trim()))
             {
                 CpcmSchool school= new();
                 school.CpcmSchooldId = Guid.NewGuid();
@@ -351,7 +351,7 @@ namespace Capycom.Controllers
             {
                 return Json(new { success = false, message = "Некорректное значение." });
             }
-            if (!_context.CpcmUniversities.Any(e => e.CpcmUniversityName == newUni.Trim()))
+            if (!await _context.CpcmUniversities.AnyAsync(e => e.CpcmUniversityName == newUni.Trim()))
             {
                 CpcmUniversity university= new();
                 university.CpcmUniversityId = Guid.NewGuid();
@@ -373,9 +373,9 @@ namespace Capycom.Controllers
             return Json(new { success = false, message = "Город уже есть в списке." });
         }
 
-        private bool CpcmUserExists(Guid id)
+        private async Task<bool> CpcmUserExists(Guid id)
         {
-            return _context.CpcmUsers.Any(e => e.CpcmUserId == id);
+            return (await _context.CpcmUsers.AnyAsync(e => e.CpcmUserId == id));
         }
         private bool CheckIFormFileContent(IFormFile cpcmUserImage, string[] permittedTypes)
         {

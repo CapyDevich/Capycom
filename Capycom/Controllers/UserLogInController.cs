@@ -45,7 +45,7 @@ if (ModelState.IsValid)
 
             {
 #if AdminAutoAuth
-                 potentialUser = _context.CpcmUsers.Include(c => c.CpcmUserRoleNavigation).Where(e => e.CpcmUserEmail == "asdas@asd.ru").First();               
+                 potentialUser = await _context.CpcmUsers.Include(c => c.CpcmUserRoleNavigation).Where(e => e.CpcmUserEmail == "asdas@asd.ru").FirstAsync();               
 #else
                 try
                 {
