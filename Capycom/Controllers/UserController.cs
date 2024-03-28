@@ -1349,13 +1349,16 @@ namespace Capycom.Controllers
             {
                 return StatusCode(404);
             }
-
-
+            if (post.CpcmIsDeleted)
+            {
+                return StatusCode(404);
+            }
             if (!CheckUserPrivilege("CpcmCanDelUsersPosts", "True", post.CpcmUserId.ToString()) || post.CpcmPostBanned == true)
             {
                 return View("Index");
             }
-
+            
+            
             UserPostEditModel model = new UserPostEditModel();
             model.Id = post.CpcmPostId;
             model.UserId = post.CpcmUserId;
@@ -1388,6 +1391,10 @@ namespace Capycom.Controllers
                     return StatusCode(500);
                 }
                 if (post == null)
+                {
+                    return StatusCode(404);
+                }
+                if (post.CpcmIsDeleted)
                 {
                     return StatusCode(404);
                 }
