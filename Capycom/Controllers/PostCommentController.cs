@@ -28,11 +28,18 @@ namespace Capycom.Controllers
             try
             {
                 CpcmPost? post = await _context.CpcmPosts.Where(p => p.CpcmPostId == postId).Include(p => p.CpcmImages).Include(p => p.CpcmPostFatherNavigation).FirstOrDefaultAsync();
-                if(post == null)
+                if(post == null || post.CpcmIsDeleted)
                 {
                     Response.StatusCode = 404;
                     ViewData["ErrorCode"] = 404;
                     ViewData["Message"] = "Пост не найден";
+                    return View("UserError");
+                }
+                if (post.CpcmPostBanned)
+                {
+                    Response.StatusCode = 403;
+                    ViewData["ErrorCode"] = 403;
+                    ViewData["Message"] = "Пост заблокирован";
                     return View("UserError");
                 }
                 var topComments = await _context.CpcmComments.Where(p => p.CpcmPostId == post.CpcmPostId && p.CpcmCommentFather == null).Include(c => c.CpcmImages).Take(10).OrderBy(u => u.CpcmCommentCreationDate).ToListAsync(); // впринципе эту итерацию можно пихнуть сразу в тот метод
