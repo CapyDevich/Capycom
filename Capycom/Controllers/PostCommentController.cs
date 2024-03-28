@@ -28,11 +28,18 @@ namespace Capycom.Controllers
             try
             {
                 CpcmPost? post = await _context.CpcmPosts.Where(p => p.CpcmPostId == postId).Include(p => p.CpcmImages).Include(p => p.CpcmPostFatherNavigation).FirstOrDefaultAsync();
-                if(post == null)
+                if(post == null || post.CpcmIsDeleted)
                 {
                     Response.StatusCode = 404;
                     ViewData["ErrorCode"] = 404;
                     ViewData["Message"] = "Пост не найден";
+                    return View("UserError");
+                }
+                if (post.CpcmPostBanned)
+                {
+                    Response.StatusCode = 403;
+                    ViewData["ErrorCode"] = 403;
+                    ViewData["Message"] = "Пост заблокирован";
                     return View("UserError");
                 }
                 var topComments = await _context.CpcmComments.Where(p => p.CpcmPostId == post.CpcmPostId && p.CpcmCommentFather == null).Include(c => c.CpcmImages).Take(10).OrderBy(u => u.CpcmCommentCreationDate).ToListAsync(); // впринципе эту итерацию можно пихнуть сразу в тот метод
@@ -42,7 +49,7 @@ namespace Capycom.Controllers
                 }
                 if(post.CpcmPostFatherNavigation != null)
                 {
-                    post.CpcmPostFatherNavigation.CpcmPostFatherNavigation = await GetFathrePostReccurent(post.CpcmPostFatherNavigation);
+                    post.CpcmPostFatherNavigation.CpcmPostFatherNavigation = await GetFatherPostReccurent(post.CpcmPostFatherNavigation);
                 }
                 CpcmUser? userOwner = await _context.CpcmUsers.Where(u => u.CpcmUserId == post.CpcmUserId).FirstOrDefaultAsync();
                 CpcmGroup? groupOwner = await _context.CpcmGroups.Where(u => u.CpcmGroupId == post.CpcmGroupId).FirstOrDefaultAsync();
@@ -66,48 +73,55 @@ namespace Capycom.Controllers
         {
             if (ModelState.IsValid)
             {
+                if ((string.IsNullOrEmpty(userComment.CpcmCommentText) || string.IsNullOrWhiteSpace(userComment.CpcmCommentText)) && userComment.Files==null)
+                {
+                    return StatusCode(200, new { status = false, message = "Коммент не может быть пустым" });
+                }
                 CpcmComment comment = new CpcmComment();
                 comment.CpcmCommentId = Guid.NewGuid();
                 comment.CpcmPostId = userComment.CpcmPostId;
                 comment.CpcmCommentFather = userComment.CpcmCommentFather;
-                comment.CpcmCommentText = userComment.CpcmCommentText;
+                comment.CpcmCommentText = userComment.CpcmCommentText?.Trim();
                 comment.CpcmCommentCreationDate = DateTime.UtcNow;
 
                 List<string> filePaths = new List<string>();
                 List<CpcmImage> images = new List<CpcmImage>();
 
-                int i = 0;
-                foreach (var file in userComment.Files)
+                if (userComment.Files !=null)
                 {
-                    CheckIFormFile("Files", file, 8388608, new[] { "image/jpeg", "image/png", "image/gif" });
-
-                    if (!ModelState.IsValid)
+                    int i = 0;
+                    foreach (var file in userComment.Files)
                     {
-                        return StatusCode(400,new { message = "Неверный формат файла или превышен размер одного/нескольких файла"});
+                        CheckIFormFile("Files", file, 8388608, new[] { "image/jpeg", "image/png", "image/gif" });
+
+                        if (!ModelState.IsValid)
+                        {
+                            return StatusCode(200, new { status=false,message = "Неверный формат файла или превышен размер одного/нескольких файла" });
+
+                        }
+
+                        string uniqueFileName = Guid.NewGuid().ToString() + Path.GetExtension(file.FileName);
+                        filePaths.Add(Path.Combine("wwwroot", "uploads", uniqueFileName));
+
+                        CpcmImage image = new CpcmImage();
+                        image.CpcmImageId = Guid.NewGuid();
+                        image.CpcmCommentId = comment.CpcmCommentId;
+                        image.CpcmImagePath = filePaths.Last();
+                        image.CpcmImageOrder = 0;
+                        i++;
+
+                        images.Add(image);
+
+
+                        //Response.StatusCode = 500;
+                        //ViewData["ErrorCode"] = 500;
+                        //ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
+                        //return StatusCode(500, new { message = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку" });
 
                     }
 
-                    string uniqueFileName = Guid.NewGuid().ToString() + Path.GetExtension(file.FileName);
-                    filePaths.Add(Path.Combine("wwwroot", "uploads", uniqueFileName));
-
-                    CpcmImage image = new CpcmImage();
-                    image.CpcmImageId = Guid.NewGuid();
-                    image.CpcmCommentId = comment.CpcmCommentId;
-                    image.CpcmImagePath = filePaths.Last();
-                    image.CpcmImageOrder = 0;
-                    i++;
-
-                    images.Add(image);
-
-
-                    //Response.StatusCode = 500;
-                    //ViewData["ErrorCode"] = 500;
-                    //ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
-                    //return StatusCode(500, new { message = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку" });
-
+                    _context.AddRange(images); 
                 }
-
-                _context.AddRange(images);
                 _context.Add(comment);
                 try
                 {
@@ -131,9 +145,13 @@ namespace Capycom.Controllers
                     }
                     return StatusCode(500, new { message = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку" });
                 }
-                return StatusCode(200);
+                catch (IOException)
+                {
+                    return StatusCode(500, new { message = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку" });
+                }
+                return StatusCode(200, new { status = true });
             }
-            return StatusCode(400, new { message = "Текст не может быть пустым" });
+            return StatusCode(200, new { status=false,message = "Комментарий имеет некорректные значения." });
 
         }
 
@@ -153,7 +171,7 @@ namespace Capycom.Controllers
                 {
                     comment.CpcmIsDeleted = true;
                     await _context.SaveChangesAsync();
-                    return StatusCode(200);
+                    return StatusCode(200, new { status = true });
                 }
                 else
                 {
@@ -162,7 +180,7 @@ namespace Capycom.Controllers
             }
             catch (DbException)
             {
-                return StatusCode(500);
+                return StatusCode(500, new { message = "Не удалось установить соединение с сервером" });
             }
         }
 
@@ -181,13 +199,13 @@ namespace Capycom.Controllers
                 }
                 comment.CpcmCommentBanned = !comment.CpcmCommentBanned;
                 await _context.SaveChangesAsync();
-                return StatusCode(200);
+                return StatusCode(200, new {status=true});
 
             }
             catch (DbException)
             {
 
-                return StatusCode(500);
+                return StatusCode(500 , new {message = "Не удалось устиановить соединение с сервером"});
             }
         }
         public async Task<IActionResult> ViewComment(Guid commentId)
@@ -216,11 +234,13 @@ namespace Capycom.Controllers
                 return View("UserError");
             }
         }
-        public async Task<IActionResult> GetNextComments(Guid postId, DateTime lastCommentDate)
+        public async Task<IActionResult> GetNextComments(Guid postId, Guid lastCommentId)
         {
             try
             {
-                var rez = await _context.CpcmComments.Where(c => c.CpcmCommentCreationDate.CompareTo(lastCommentDate) > 0 && c.CpcmPostId == postId && c.InverseCpcmCommentFatherNavigation == null).OrderBy(u => u.CpcmCommentCreationDate).Take(10).ToListAsync();
+                var lastComment = await _context.CpcmComments.Where(c => c.CpcmCommentId == lastCommentId).FirstOrDefaultAsync();
+                if(lastComment == null) { return StatusCode(404); }
+                var rez = await _context.CpcmComments.Where(c => c.CpcmCommentCreationDate.CompareTo(lastComment.CpcmCommentCreationDate) > 0 && c.CpcmPostId == postId && c.InverseCpcmCommentFatherNavigation == null).OrderBy(u => u.CpcmCommentCreationDate).Take(10).ToListAsync();
                 foreach (var comment in rez)
                 {
                     //await _context.Entry(comment).Collection(p => p.InverseCpcmCommentFatherNavigation).LoadAsync();
@@ -232,7 +252,7 @@ namespace Capycom.Controllers
             }
             catch (DbException)
             {
-                return StatusCode(500);
+                return StatusCode(500, new { message = "Не удалось установить соединение с сервером" });
             }
         }
 
@@ -241,7 +261,7 @@ namespace Capycom.Controllers
         {
             try
             {
-                var post = await _context.CpcmPosts.Where(p => p.CpcmPostId == postId).FirstOrDefaultAsync();
+                var post = await _context.CpcmPosts.Where(p => p.CpcmPostId == postId && p.CpcmPostPublishedDate < DateTime.UtcNow).FirstOrDefaultAsync();
                 if (post == null)
                 {
                     return StatusCode(404);
@@ -254,7 +274,7 @@ namespace Capycom.Controllers
                     var querry = await _context.Database.ExecuteSqlInterpolatedAsync($@"INSERT INTO CPCM_POSTLIKES VALUES ('{post.CpcmGroupId}','{userId}')");
                     if(querry ==1)
                     {
-                        return StatusCode(200);
+                        return StatusCode(200, new { status=true});
                     }
                     else
                     {
@@ -267,7 +287,7 @@ namespace Capycom.Controllers
                     var querry = await _context.Database.ExecuteSqlInterpolatedAsync($@"DELETE FROM CPCM_POSTLIKES WHERE CPCM_PostID = '{post.CpcmGroupId}' AND CPCM_UserId = '{userId}' ");
                     if (querry == 1)
                     {
-                        return StatusCode(200);
+                        return StatusCode(200, new { status = true });
                     }
                     else
                     {
@@ -287,12 +307,12 @@ namespace Capycom.Controllers
         //    // перенести в контроллер юзера и там при создании поста если есть родитель - +
         //}
 
-        private async Task<CpcmPost?> GetFathrePostReccurent(CpcmPost cpcmPostFatherNavigation)
+        private async Task<CpcmPost?> GetFatherPostReccurent(CpcmPost cpcmPostFatherNavigation)
         {
             var father = await _context.CpcmPosts.Where(p => p.CpcmPostId == cpcmPostFatherNavigation.CpcmPostFather).Include(p => p.CpcmImages).FirstOrDefaultAsync();
             if (father != null)
             {
-                father.CpcmPostFatherNavigation = await GetFathrePostReccurent(father);
+                father.CpcmPostFatherNavigation = await GetFatherPostReccurent(father);
             }
             return father;
         }
