@@ -1312,7 +1312,10 @@ namespace Capycom.Controllers
             {
                 return StatusCode(404);
             }
-
+            if (post.CpcmPostBanned)
+            {
+                return StatusCode(403);
+            }
 
             if (!CheckUserPrivilege("CpcmCanDelUsersPosts", "True", post.CpcmUserId.ToString()) || post.CpcmPostBanned == true)
             {
