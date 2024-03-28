@@ -27,7 +27,7 @@ namespace Capycom.Controllers
         {
             try
             {
-                CpcmPost? post = await _context.CpcmPosts.Where(p => p.CpcmPostId == postId).Include(p => p.CpcmImages).Include(p => p.CpcmPostFatherNavigation).FirstOrDefaultAsync();
+                CpcmPost? post = await _context.CpcmPosts.Where(p => p.CpcmPostId == postId).Include(p => p.CpcmImages).Include(p => p.CpcmPostFatherNavigation).ThenInclude(p => p.CpcmImages).FirstOrDefaultAsync();
                 if(post == null || post.CpcmIsDeleted)
                 {
                     Response.StatusCode = 404;
