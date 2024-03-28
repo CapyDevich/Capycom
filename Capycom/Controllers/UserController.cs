@@ -1254,6 +1254,14 @@ namespace Capycom.Controllers
                         {
                             return StatusCode(200, new {status=false,message= "Нельзя репостить неопубликованный пост" });
                         }
+                        if (fatherPost.CpcmPostBanned)
+                        {
+                            return StatusCode(200, new { status = false, message = "Нельзя репостить этот пост" });
+                        }
+                        if (fatherPost.CpcmIsDeleted)
+                        {
+                            return StatusCode(404, new { message = "Не найден родительский пост" });
+                        }
                     }
                     await _context.SaveChangesAsync();
                 }
