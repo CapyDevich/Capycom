@@ -32,7 +32,7 @@ namespace Capycom.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> LogIn(UserLogInModel user)
+        public async Task<IActionResult> Index(UserLogInModel user)
         {
             CpcmUser? potentialUser;
             if(HttpContext.User.Identity.IsAuthenticated)
