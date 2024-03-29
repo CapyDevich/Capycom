@@ -106,7 +106,7 @@ namespace Capycom.Controllers
                         CpcmImage image = new CpcmImage();
                         image.CpcmImageId = Guid.NewGuid();
                         image.CpcmCommentId = comment.CpcmCommentId;
-                        image.CpcmImagePath = filePaths.Last();
+                        image.CpcmImagePath = filePaths.Last().Replace("wwwroot","");
                         image.CpcmImageOrder = 0;
                         i++;
 
