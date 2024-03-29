@@ -122,7 +122,7 @@ namespace Capycom.Controllers
                             {
                                 await cpcmSignUser.CpcmUserImage.CopyToAsync(fileStream);
                             }
-                            cpcmUser.CpcmUserImagePath = filePathUserImage;
+                            cpcmUser.CpcmUserImagePath = filePathUserImage.Replace("wwwroot", "");
                         }
                         catch (Exception)
                         {
@@ -148,7 +148,7 @@ namespace Capycom.Controllers
                             {
                                 await cpcmSignUser.CpcmUserCoverImage.CopyToAsync(fileStream);
                             }
-                            cpcmUser.CpcmUserCoverPath = filePathUserCoverImage;
+                            cpcmUser.CpcmUserCoverPath = filePathUserCoverImage.Replace("wwwroot", "");
                         }
                         catch (Exception)
                         {

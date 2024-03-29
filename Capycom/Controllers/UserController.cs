@@ -346,7 +346,7 @@ namespace Capycom.Controllers
                             {
                                 await user.CpcmUserImage.CopyToAsync(fileStream);
                             }
-                            cpcmUser.CpcmUserImagePath = filePathUserImage;
+                            cpcmUser.CpcmUserImagePath = filePathUserImage.Replace("wwwroot", "");
                         }
                         catch (Exception ex)
                         {
@@ -372,7 +372,7 @@ namespace Capycom.Controllers
                             {
                                 await user.CpcmUserCoverImage.CopyToAsync(fileStream);
                             }
-                            cpcmUser.CpcmUserCoverPath = filePathUserCoverImage;
+                            cpcmUser.CpcmUserCoverPath = filePathUserCoverImage.Replace("wwwroot", "");
                         }
                         catch (Exception ex)
                         {
@@ -1438,7 +1438,7 @@ namespace Capycom.Controllers
                                 CpcmImage image = new CpcmImage();
                                 image.CpcmImageId = Guid.NewGuid();
                                 image.CpcmPostId = post.CpcmPostId;
-                                image.CpcmImagePath = filePaths.Last();
+                                image.CpcmImagePath = filePaths.Last().Replace("wwwroot", "");
                                 image.CpcmImageOrder = 0;
                                 i++;
 
@@ -1680,7 +1680,7 @@ namespace Capycom.Controllers
                         CpcmImage image = new CpcmImage();
                         image.CpcmImageId = Guid.NewGuid();
                         image.CpcmPostId = post.CpcmPostId;
-                        image.CpcmImagePath = filePaths.Last();
+                        image.CpcmImagePath = filePaths.Last().Replace("wwwroot", "");
                         image.CpcmImageOrder = 0;
                         i++;
 
