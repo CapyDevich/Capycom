@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Capycom;
 
@@ -22,6 +23,10 @@ public partial class CpcmPost
     public bool CpcmPostBanned { get; set; }
 
     public bool CpcmIsDeleted { get; set; }
+	[NotMapped]
+	public CpcmUser? User { get; set; }
+	[NotMapped]
+	public CpcmGroup? Group { get; set; }
 
     public virtual ICollection<CpcmComment> CpcmComments { get; set; } = new List<CpcmComment>();
 

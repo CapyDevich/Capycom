@@ -79,7 +79,8 @@ namespace Capycom.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult> Index(Guid id)
+		[Route("User/Index/{id:guid}")]
+		public async Task<ActionResult> Index(Guid id)
         {
             CpcmUser? user;
             try
@@ -128,9 +129,10 @@ namespace Capycom.Controllers
             userProfile.User = user;
             foreach(var postik in posts)
             {
+                postik.User = user;
                 postik.CpcmPostFatherNavigation = await GetFatherPostReccurent(postik);
-                long likes = await _context.Database.ExecuteSqlInterpolatedAsync($@"SELECT COUNT(*) FROM CPCM_POSTLIKES WHERE CPCM_PostID = '{postik.CpcmGroupId}'");
-                long reposts = await _context.Database.ExecuteSqlInterpolatedAsync($@"SELECT COUNT(*) FROM CPCM_POSTREPOSTS WHERE CPCM_PostID = '{postik.CpcmGroupId}'");
+                long likes = await _context.Database.ExecuteSqlInterpolatedAsync($@"SELECT COUNT(*) FROM CPCM_POSTLIKES WHERE CPCM_PostID = {postik.CpcmGroupId}");
+                long reposts = await _context.Database.ExecuteSqlInterpolatedAsync($@"SELECT COUNT(*) FROM CPCM_POSTREPOSTS WHERE CPCM_PostID = {postik.CpcmGroupId}");
                 postsWithLikesCount.Add(new PostModel() { Post = postik, UserOwner=user, LikesCount= likes, RepostsCount= reposts });
             }
             userProfile.Posts = postsWithLikesCount;
@@ -138,7 +140,7 @@ namespace Capycom.Controllers
         }
 
         [HttpGet]
-        [Route("User/{nickName}")]
+        [Route("User/Index/{nickName}")]
         public async Task<ActionResult> Index(string nickName)
         {
             CpcmUser? user;
@@ -184,9 +186,10 @@ namespace Capycom.Controllers
             userProfile.User = user;
             foreach (var postik in posts)
             {
-                postik.CpcmPostFatherNavigation = await GetFatherPostReccurent(postik);
-                long likes = await _context.Database.ExecuteSqlInterpolatedAsync($@"SELECT COUNT(*) FROM CPCM_POSTLIKES WHERE CPCM_PostID = '{postik.CpcmGroupId}'");
-                long reposts = await _context.Database.ExecuteSqlInterpolatedAsync($@"SELECT COUNT(*) FROM CPCM_POSTREPOSTS WHERE CPCM_PostID = '{postik.CpcmGroupId}'");
+				postik.User = user;
+				postik.CpcmPostFatherNavigation = await GetFatherPostReccurent(postik);
+                long likes = await _context.Database.ExecuteSqlInterpolatedAsync($@"SELECT COUNT(*) FROM CPCM_POSTLIKES WHERE CPCM_PostID = {postik.CpcmGroupId}");
+                long reposts = await _context.Database.ExecuteSqlInterpolatedAsync($@"SELECT COUNT(*) FROM CPCM_POSTREPOSTS WHERE CPCM_PostID = {postik.CpcmGroupId}");
                 postsWithLikesCount.Add(new PostModel() { Post = postik, UserOwner = user, LikesCount = likes, RepostsCount = reposts });
             }
             userProfile.Posts = postsWithLikesCount;
@@ -1616,8 +1619,8 @@ namespace Capycom.Controllers
                 foreach (var postik in posts)
                 {
                     postik.CpcmPostFatherNavigation = await GetFatherPostReccurent(postik);
-                    long likes = await _context.Database.ExecuteSqlInterpolatedAsync($@"SELECT COUNT(*) FROM CPCM_POSTLIKES WHERE CPCM_PostID = '{postik.CpcmGroupId}'");
-                    long reposts = await _context.Database.ExecuteSqlInterpolatedAsync($@"SELECT COUNT(*) FROM CPCM_POSTREPOSTS WHERE CPCM_PostID = '{postik.CpcmGroupId}'");
+                    long likes = await _context.Database.ExecuteSqlInterpolatedAsync($@"SELECT COUNT(*) FROM CPCM_POSTLIKES WHERE CPCM_PostID = {postik.CpcmGroupId}");
+                    long reposts = await _context.Database.ExecuteSqlInterpolatedAsync($@"SELECT COUNT(*) FROM CPCM_POSTREPOSTS WHERE CPCM_PostID = {postik.CpcmGroupId}");
                     postModels.Add(new() { Post = postik, LikesCount = likes, RepostsCount = reposts });
                 }
             }
@@ -1877,7 +1880,9 @@ namespace Capycom.Controllers
             if (father != null)
             {
                 father.CpcmPostFatherNavigation = await GetFatherPostReccurent(father);
-            }
+                father.User = await _context.CpcmUsers.Where(p => p.CpcmUserId==father.CpcmUserId).FirstOrDefaultAsync();
+                father.Group = await _context.CpcmGroups.Where(p => p.CpcmGroupId == father.CpcmGroupId).FirstOrDefaultAsync();
+			}
             return father;
         }
         private bool CheckIFormFileContent(IFormFile cpcmUserImage, string[] permittedTypes)//TODO: Объединить с методами при регистрации
