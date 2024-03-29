@@ -680,8 +680,8 @@ namespace Capycom.Controllers
             return Json(friendList1);
         }
 
-        [Route("User/Friends/{nickName}")]
-        public async Task<ActionResult> Friends(string nickName)
+        //[Route("User/Friends/{nickName}")]
+        public async Task<ActionResult> FriendsByNick(string nickName)
         {
             CpcmUser user;
             try
@@ -725,8 +725,8 @@ namespace Capycom.Controllers
             return View(friendList1);
         }
         [HttpPost]
-        [Route("User/GetNextFriends/{nickName}")]
-        public async Task<ActionResult> GetNextFriends(string nickName, Guid lastId)
+        //[Route("User/GetNextFriends/{nickName}")]
+        public async Task<ActionResult> GetNextFriendsByNick(string nickName, Guid lastId)
         {
             CpcmUser user;
             try
@@ -815,8 +815,8 @@ namespace Capycom.Controllers
 
             return View(followerList1);
         }
-
-        public async Task<ActionResult> GetNextFollowers(Guid id, Guid lastId)
+		[HttpPost]
+		public async Task<ActionResult> GetNextFollowers(Guid id, Guid lastId)
         {
             CpcmUser user;
             try
@@ -859,8 +859,8 @@ namespace Capycom.Controllers
             return Json(followerList1);
         }
 
-        [Route("User/Followers/{nickName}")]
-        public async Task<ActionResult> Followers(string nickName)
+        //[Route("User/FollowersByN/{nickName}")]
+        public async Task<ActionResult> FollowersByNick(string nickName)
         {
             CpcmUser user;
             try
@@ -905,7 +905,8 @@ namespace Capycom.Controllers
         }
 
         [Route("User/GetNextFollowers/{nickName}")]
-        public async Task<ActionResult> GetNextFollowers(string nickName, Guid lastId)
+		[HttpPost]
+		public async Task<ActionResult> GetNextFollowersByNick(string nickName, Guid lastId)
         {
             CpcmUser user;
             try
