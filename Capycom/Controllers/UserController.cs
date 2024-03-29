@@ -586,12 +586,19 @@ namespace Capycom.Controllers
 
 
 
-        public async Task<ActionResult> Friends(Guid id)
+        public async Task<ActionResult> Friends(UserFilterModel filters)
         {
-            CpcmUser user;
+            CpcmUser user = null ;
             try
             {
-                user = await _context.CpcmUsers.Where(c => c.CpcmUserId == id).FirstOrDefaultAsync();
+                if (filters.NickName == null)
+                {
+                    user = await _context.CpcmUsers.Where(c => c.CpcmUserId == filters.UserId).FirstOrDefaultAsync(); 
+                }
+                else
+                {
+                    user = await _context.CpcmUsers.Where(c => c.CpcmUserNickName == filters.NickName).FirstOrDefaultAsync();
+				}
             }
             catch (DbException)
             {
@@ -607,12 +614,6 @@ namespace Capycom.Controllers
                 ViewData["ErrorCode"] = 404;
                 ViewData["Message"] = "Пользователь не найден";
                 return View("UserError");
-            }
-
-
-            if (user.CpcmUserNickName != null)
-            {
-                return RedirectToAction("Friends", new { nickName = user.CpcmUserNickName });
             }
 
             //_context.CpcmUserfriends.Select(c => c.CmcpFriend).Where(c => c.CmcpUserId == id).Include(c => c.CmcpFriend).ToList();
@@ -633,15 +634,56 @@ namespace Capycom.Controllers
 
             friendList1.AddRange(friendList2);
 
-            return View(friendList1);
+			if (filters.CityId.HasValue)
+			{
+				//ViewData["cityId"]=cityId;
+				friendList1 = friendList1.Where(u => u.CpcmUserCity == filters.CityId).ToList();
+			}
+			if (filters.SchoolId.HasValue)
+			{
+				//ViewData["scgoolId"]=schoolId;
+				friendList1 = friendList1.Where(u => u.CpcmUserSchool == filters.SchoolId).ToList();
+			}
+			if (filters.UniversityId.HasValue)
+			{
+				//ViewData["universityId"] = universityId;
+				friendList1 = friendList1.Where(u => u.CpcmUserUniversity == filters.UniversityId).ToList();
+			}
+			if (!string.IsNullOrEmpty(filters.FirstName))
+			{
+				//ViewData["firstName"] = firstName;
+				friendList1 = friendList1.Where(u => u.CpcmUserFirstName == filters.FirstName).ToList();
+			}
+			if (!string.IsNullOrEmpty(filters.SecondName))
+			{
+				//ViewData["secondName"] = secondName;
+				friendList1 = friendList1.Where(u => u.CpcmUserSecondName == filters.SecondName).ToList();
+			}
+			if (!string.IsNullOrEmpty(filters.AdditionalName))
+			{
+				//ViewData["additionalName"] = additionalName;
+				friendList1 = friendList1.Where(u => u.CpcmUserAdditionalName == filters.AdditionalName).ToList();
+			}
+
+
+			return View(friendList1);
+
+
         }
         [HttpPost]
-        public async Task<ActionResult> GetNextFriends(Guid id, Guid lastId)
+        public async Task<ActionResult> GetNextFriends(UserFilterModel filters)
         {
-            CpcmUser user;
+            CpcmUser user = null;
             try
             {
-                user = await _context.CpcmUsers.Where(c => c.CpcmUserId == id).FirstOrDefaultAsync();
+                if (filters.NickName == null)
+                {
+                    user = await _context.CpcmUsers.Where(c => c.CpcmUserId == filters.UserId).FirstOrDefaultAsync(); 
+                }
+                else
+                {
+					user = await _context.CpcmUsers.Where(c => c.CpcmUserNickName == filters.NickName).FirstOrDefaultAsync();
+				}
             }
             catch (DbException)
             {
@@ -666,8 +708,8 @@ namespace Capycom.Controllers
             List<CpcmUser> friendList2;
             try
             {
-                friendList1 = await _context.CpcmUserfriends.Where(c => c.CmcpUserId == user.CpcmUserId && c.CpcmFriendRequestStatus == true && c.CmcpFriendId.CompareTo(lastId) > 0).Select(c => c.CmcpFriend).OrderBy(u => u.CpcmUserId).Take(5).ToListAsync();
-                friendList2 = await _context.CpcmUserfriends.Where(c => c.CmcpFriendId == user.CpcmUserId && c.CpcmFriendRequestStatus == true && c.CmcpUserId.CompareTo(lastId) > 0).Select(c => c.CmcpUser).OrderBy(u => u.CpcmUserId).Take(10 - friendList1.Count).ToListAsync();
+                friendList1 = await _context.CpcmUserfriends.Where(c => c.CmcpUserId == user.CpcmUserId && c.CpcmFriendRequestStatus == true && c.CmcpFriendId.CompareTo(filters.lastId) > 0).Select(c => c.CmcpFriend).OrderBy(u => u.CpcmUserId).Take(5).ToListAsync();
+                friendList2 = await _context.CpcmUserfriends.Where(c => c.CmcpFriendId == user.CpcmUserId && c.CpcmFriendRequestStatus == true && c.CmcpUserId.CompareTo(filters.lastId) > 0).Select(c => c.CmcpUser).OrderBy(u => u.CpcmUserId).Take(10 - friendList1.Count).ToListAsync();
             }
             catch (DbException)
             {
@@ -676,93 +718,123 @@ namespace Capycom.Controllers
             }
 
             friendList1.AddRange(friendList2);
+			if (filters.CityId.HasValue)
+			{
+				//ViewData["cityId"]=cityId;
+				friendList1 = friendList1.Where(u => u.CpcmUserCity == filters.CityId).ToList();
+			}
+			if (filters.SchoolId.HasValue)
+			{
+				//ViewData["scgoolId"]=schoolId;
+				friendList1 = friendList1.Where(u => u.CpcmUserSchool == filters.SchoolId).ToList();
+			}
+			if (filters.UniversityId.HasValue)
+			{
+				//ViewData["universityId"] = universityId;
+				friendList1 = friendList1.Where(u => u.CpcmUserUniversity == filters.UniversityId).ToList();
+			}
+			if (!string.IsNullOrEmpty(filters.FirstName))
+			{
+				//ViewData["firstName"] = firstName;
+				friendList1 = friendList1.Where(u => u.CpcmUserFirstName == filters.FirstName).ToList();
+			}
+			if (!string.IsNullOrEmpty(filters.SecondName))
+			{
+				//ViewData["secondName"] = secondName;
+				friendList1 = friendList1.Where(u => u.CpcmUserSecondName == filters.SecondName).ToList();
+			}
+			if (!string.IsNullOrEmpty(filters.AdditionalName))
+			{
+				//ViewData["additionalName"] = additionalName;
+				friendList1 = friendList1.Where(u => u.CpcmUserAdditionalName == filters.AdditionalName).ToList();
+			}
 
-            return Json(friendList1);
+			return Json(friendList1);
         }
 
-        //[Route("User/Friends/{nickName}")]
-        public async Task<ActionResult> FriendsByNick(string nickName)
-        {
-            CpcmUser user;
-            try
-            {
-                user = await _context.CpcmUsers.Where(c => c.CpcmUserNickName == nickName).FirstOrDefaultAsync();
-            }
-            catch (DbException)
-            {
-                Response.StatusCode = 500;
-                ViewData["ErrorCode"] = 500;
-                ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
-                return View("UserError");
-            }
+        ////[Route("User/Friends/{nickName}")]
+        //public async Task<ActionResult> FriendsByNick(string nickName)
+        //{
+        //    CpcmUser user;
+        //    try
+        //    {
+        //        user = await _context.CpcmUsers.Where(c => c.CpcmUserNickName == nickName).FirstOrDefaultAsync();
+        //    }
+        //    catch (DbException)
+        //    {
+        //        Response.StatusCode = 500;
+        //        ViewData["ErrorCode"] = 500;
+        //        ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
+        //        return View("UserError");
+        //    }
 
-            if (user == null || user.CpcmIsDeleted)
-            {
-                Response.StatusCode = 404;
-                ViewData["ErrorCode"] = 404;
-                ViewData["Message"] = "Пользователь не найден";
-                return View("UserError");
-            }
+        //    if (user == null || user.CpcmIsDeleted)
+        //    {
+        //        Response.StatusCode = 404;
+        //        ViewData["ErrorCode"] = 404;
+        //        ViewData["Message"] = "Пользователь не найден";
+        //        return View("UserError");
+        //    }
 
-            //_context.CpcmUserfriends.Select(c => c.CmcpFriend).Where(c => c.CmcpUserId == id).Include(c => c.CmcpFriend).ToList();
-            List<CpcmUser> friendList1;
-            List<CpcmUser> friendList2;
-            try
-            {
-                friendList1 = await _context.CpcmUserfriends.Where(c => c.CmcpUserId == user.CpcmUserId && c.CpcmFriendRequestStatus == true).Select(c => c.CmcpFriend).OrderBy(u => u.CpcmUserId).Take(5).ToListAsync();
-                friendList2 = await _context.CpcmUserfriends.Where(c => c.CmcpFriendId == user.CpcmUserId && c.CpcmFriendRequestStatus == true).Select(c => c.CmcpUser).OrderBy(u => u.CpcmUserId).Take(10 - friendList1.Count).ToListAsync();
-            }
-            catch (DbException)
-            {
-                Response.StatusCode = 500;
-                ViewData["ErrorCode"] = 500;
-                ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
-                return View("UserError");
-            }
+        //    //_context.CpcmUserfriends.Select(c => c.CmcpFriend).Where(c => c.CmcpUserId == id).Include(c => c.CmcpFriend).ToList();
+        //    List<CpcmUser> friendList1;
+        //    List<CpcmUser> friendList2;
+        //    try
+        //    {
+        //        friendList1 = await _context.CpcmUserfriends.Where(c => c.CmcpUserId == user.CpcmUserId && c.CpcmFriendRequestStatus == true).Select(c => c.CmcpFriend).OrderBy(u => u.CpcmUserId).Take(5).ToListAsync();
+        //        friendList2 = await _context.CpcmUserfriends.Where(c => c.CmcpFriendId == user.CpcmUserId && c.CpcmFriendRequestStatus == true).Select(c => c.CmcpUser).OrderBy(u => u.CpcmUserId).Take(10 - friendList1.Count).ToListAsync();
+        //    }
+        //    catch (DbException)
+        //    {
+        //        Response.StatusCode = 500;
+        //        ViewData["ErrorCode"] = 500;
+        //        ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
+        //        return View("UserError");
+        //    }
 
-            friendList1.AddRange(friendList2);
+        //    friendList1.AddRange(friendList2);
 
-            return View(friendList1);
-        }
-        [HttpPost]
-        //[Route("User/GetNextFriends/{nickName}")]
-        public async Task<ActionResult> GetNextFriendsByNick(string nickName, Guid lastId)
-        {
-            CpcmUser user;
-            try
-            {
-                user = await _context.CpcmUsers.Where(c => c.CpcmUserNickName == nickName).FirstOrDefaultAsync();
-            }
-            catch (DbException)
-            {
-                Response.StatusCode = 500;
-                return StatusCode(500);
-            }
+        //    return View(friendList1);
+        //}
+        //[HttpPost]
+        ////[Route("User/GetNextFriends/{nickName}")]
+        //public async Task<ActionResult> GetNextFriendsByNick(string nickName, Guid lastId)
+        //{
+        //    CpcmUser user;
+        //    try
+        //    {
+        //        user = await _context.CpcmUsers.Where(c => c.CpcmUserNickName == nickName).FirstOrDefaultAsync();
+        //    }
+        //    catch (DbException)
+        //    {
+        //        Response.StatusCode = 500;
+        //        return StatusCode(500);
+        //    }
 
-            if (user == null || user.CpcmIsDeleted)
-            {
-                Response.StatusCode = 404;
-                return StatusCode(404);
-            }
+        //    if (user == null || user.CpcmIsDeleted)
+        //    {
+        //        Response.StatusCode = 404;
+        //        return StatusCode(404);
+        //    }
 
-            //_context.CpcmUserfriends.Select(c => c.CmcpFriend).Where(c => c.CmcpUserId == id).Include(c => c.CmcpFriend).ToList();
-            List<CpcmUser> friendList1;
-            List<CpcmUser> friendList2;
-            try
-            {
-                friendList1 = await _context.CpcmUserfriends.Where(c => c.CmcpUserId == user.CpcmUserId && c.CpcmFriendRequestStatus == true && c.CmcpFriendId.CompareTo(lastId) > 0).Select(c => c.CmcpFriend).OrderBy(u => u.CpcmUserId).Take(5).ToListAsync();
-                friendList2 = await _context.CpcmUserfriends.Where(c => c.CmcpFriendId == user.CpcmUserId && c.CpcmFriendRequestStatus == true && c.CmcpUserId.CompareTo(lastId) > 0).Select(c => c.CmcpUser).OrderBy(u => u.CpcmUserId).Take(10 - friendList1.Count).ToListAsync();
-            }
-            catch (DbException)
-            {
-                Response.StatusCode = 500;
-                return StatusCode(500);
-            }
+        //    //_context.CpcmUserfriends.Select(c => c.CmcpFriend).Where(c => c.CmcpUserId == id).Include(c => c.CmcpFriend).ToList();
+        //    List<CpcmUser> friendList1;
+        //    List<CpcmUser> friendList2;
+        //    try
+        //    {
+        //        friendList1 = await _context.CpcmUserfriends.Where(c => c.CmcpUserId == user.CpcmUserId && c.CpcmFriendRequestStatus == true && c.CmcpFriendId.CompareTo(lastId) > 0).Select(c => c.CmcpFriend).OrderBy(u => u.CpcmUserId).Take(5).ToListAsync();
+        //        friendList2 = await _context.CpcmUserfriends.Where(c => c.CmcpFriendId == user.CpcmUserId && c.CpcmFriendRequestStatus == true && c.CmcpUserId.CompareTo(lastId) > 0).Select(c => c.CmcpUser).OrderBy(u => u.CpcmUserId).Take(10 - friendList1.Count).ToListAsync();
+        //    }
+        //    catch (DbException)
+        //    {
+        //        Response.StatusCode = 500;
+        //        return StatusCode(500);
+        //    }
 
-            friendList1.AddRange(friendList2);
+        //    friendList1.AddRange(friendList2);
 
-            return Json(friendList1);
-        }
+        //    return Json(friendList1);
+        //}
 
 
 
