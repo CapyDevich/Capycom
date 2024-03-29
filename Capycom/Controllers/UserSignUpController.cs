@@ -47,14 +47,14 @@ namespace Capycom.Controllers
             return View(capycomContext);
         }
 
-        public IActionResult SignUp()
+        public async Task<IActionResult> Create()
         {
             try
             {
-                ViewData["CpcmUserCity"] = new SelectList(_context.CpcmCities, "CpcmCityId", "CpcmCityId");
-                ViewData["CpcmUserRole"] = new SelectList(_context.CpcmRoles, "CpcmRoleId", "CpcmRoleId");
-                ViewData["CpcmUserSchool"] = new SelectList(_context.CpcmSchools, "CpcmSchooldId", "CpcmSchooldId");
-                ViewData["CpcmUserUniversity"] = new SelectList(_context.CpcmUniversities, "CpcmUniversityId", "CpcmUniversityId");
+                ViewData["CpcmUserCity"] = new SelectList(await _context.CpcmCities.ToListAsync(), "CpcmCityId", "CpcmCityId");
+                ViewData["CpcmUserRole"] = new SelectList(await _context.CpcmRoles.ToListAsync(), "CpcmRoleId", "CpcmRoleId");
+                ViewData["CpcmUserSchool"] = new SelectList(await _context.CpcmSchools.ToListAsync(), "CpcmSchooldId", "CpcmSchooldId");
+                ViewData["CpcmUserUniversity"] = new SelectList(await _context.CpcmUniversities.ToListAsync(), "CpcmUniversityId", "CpcmUniversityId");
                 return View();
             }
             catch (DbException)
@@ -161,9 +161,9 @@ namespace Capycom.Controllers
                 {
                     try
                     {
-                        ViewData["CpcmUserCity"] = new SelectList(_context.CpcmCities, "CpcmCityId", "CpcmCityName", cpcmSignUser.CpcmUserCity);
-                        ViewData["CpcmUserSchool"] = new SelectList(_context.CpcmSchools, "CpcmSchooldId", "CpcmSchoolName", cpcmSignUser.CpcmUserSchool);
-                        ViewData["CpcmUserUniversity"] = new SelectList(_context.CpcmUniversities, "CpcmUniversityId", "CpcmUniversityName", cpcmSignUser.CpcmUserUniversity);
+                        ViewData["CpcmUserCity"] = new SelectList(await _context.CpcmCities.ToListAsync(), "CpcmCityId", "CpcmCityName", cpcmSignUser.CpcmUserCity);
+                        ViewData["CpcmUserSchool"] = new SelectList(await _context.CpcmSchools.ToListAsync(), "CpcmSchooldId", "CpcmSchoolName", cpcmSignUser.CpcmUserSchool);
+                        ViewData["CpcmUserUniversity"] = new SelectList(await _context.CpcmUniversities.ToListAsync(), "CpcmUniversityId", "CpcmUniversityName", cpcmSignUser.CpcmUserUniversity);
                         return View(cpcmSignUser);
                     }
                     catch (DbException)
@@ -201,9 +201,9 @@ namespace Capycom.Controllers
             }
             try
             {
-                ViewData["CpcmUserCity"] = new SelectList(_context.CpcmCities, "CpcmCityId", "CpcmCityName", cpcmSignUser.CpcmUserCity);
-                ViewData["CpcmUserSchool"] = new SelectList(_context.CpcmSchools, "CpcmSchooldId", "CpcmSchoolName", cpcmSignUser.CpcmUserSchool);
-                ViewData["CpcmUserUniversity"] = new SelectList(_context.CpcmUniversities, "CpcmUniversityId", "CpcmUniversityName", cpcmSignUser.CpcmUserUniversity);
+                ViewData["CpcmUserCity"] = new SelectList(await _context.CpcmCities.ToListAsync(), "CpcmCityId", "CpcmCityName", cpcmSignUser.CpcmUserCity);
+                ViewData["CpcmUserSchool"] = new SelectList(await _context.CpcmSchools.ToListAsync(), "CpcmSchooldId", "CpcmSchoolName", cpcmSignUser.CpcmUserSchool);
+                ViewData["CpcmUserUniversity"] = new SelectList(await _context.CpcmUniversities.ToListAsync(), "CpcmUniversityId", "CpcmUniversityName", cpcmSignUser.CpcmUserUniversity);
                 return View(cpcmSignUser);
             }
             catch (DbException)
@@ -291,7 +291,7 @@ namespace Capycom.Controllers
             {
                 return Json(new { success = false, message = "Некорректное значение." });
             }
-            if (!_context.CpcmCities.Any(e => e.CpcmCityName == newCity.Trim()))
+            if (! await _context.CpcmCities.AnyAsync(e => e.CpcmCityName == newCity.Trim()))
             {
                 CpcmCity city = new();
                 city.CpcmCityId = Guid.NewGuid();
@@ -323,7 +323,7 @@ namespace Capycom.Controllers
             {
                 return Json(new { success = false, message = "Некорректное значение." });
             }
-            if (!_context.CpcmSchools.Any(e => e.CpcmSchoolName == newSchool.Trim()))
+            if (! await _context.CpcmSchools.AnyAsync(e => e.CpcmSchoolName == newSchool.Trim()))
             {
                 CpcmSchool school= new();
                 school.CpcmSchooldId = Guid.NewGuid();
@@ -351,7 +351,7 @@ namespace Capycom.Controllers
             {
                 return Json(new { success = false, message = "Некорректное значение." });
             }
-            if (!_context.CpcmUniversities.Any(e => e.CpcmUniversityName == newUni.Trim()))
+            if (!await _context.CpcmUniversities.AnyAsync(e => e.CpcmUniversityName == newUni.Trim()))
             {
                 CpcmUniversity university= new();
                 university.CpcmUniversityId = Guid.NewGuid();
@@ -373,9 +373,9 @@ namespace Capycom.Controllers
             return Json(new { success = false, message = "Город уже есть в списке." });
         }
 
-        private bool CpcmUserExists(Guid id)
+        private async Task<bool> CpcmUserExists(Guid id)
         {
-            return _context.CpcmUsers.Any(e => e.CpcmUserId == id);
+            return (await _context.CpcmUsers.AnyAsync(e => e.CpcmUserId == id));
         }
         private bool CheckIFormFileContent(IFormFile cpcmUserImage, string[] permittedTypes)
         {

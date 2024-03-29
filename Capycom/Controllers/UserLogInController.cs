@@ -16,9 +16,9 @@ namespace Capycom.Controllers
     {
         private readonly CapycomContext _context;
         private readonly MyConfig _config;
-        private readonly ILogger<HomeController> _logger;
+        private readonly ILogger<UserLogInController> _logger;
 
-        public UserLogInController(ILogger<HomeController> logger, CapycomContext context, IOptions<MyConfig> config)
+        public UserLogInController(ILogger<UserLogInController> logger, CapycomContext context, IOptions<MyConfig> config)
         {
             _context = context;
             _config = config.Value;
@@ -32,8 +32,11 @@ namespace Capycom.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> LogIn(UserLogInModel user)
+        public async Task<IActionResult> Index(UserLogInModel user)
         {
+            CpcmUser? potentialUser;
+            if(HttpContext.User.Identity.IsAuthenticated)
+                return RedirectToAction("Index", "User");
 #if AdminAutoAuth
             if(true)
 #else
@@ -42,15 +45,24 @@ if (ModelState.IsValid)
 
             {
 #if AdminAutoAuth
-                CpcmUser potentialUser = _context.CpcmUsers.Include(c => c.CpcmUserRoleNavigation).Where(e => e.CpcmUserEmail == "asdas@asd.ru").First();               
+                 potentialUser = await _context.CpcmUsers.Include(c => c.CpcmUserRoleNavigation).Where(e => e.CpcmUserEmail == "asdas@asd.ru").FirstAsync();               
 #else
-                CpcmUser potentialUser = _context.CpcmUsers.Where(e => e.CpcmUserEmail == user.CpcmUserEmail.Trim()).First();
-#endif
-                if(potentialUser == null)
+                try
                 {
-                    ViewData["Error"] = "Не найден пользователь с данным именем и//или паролем";
-                    StatusCode(StatusCodes.Status400BadRequest);
-                    return View("Index");
+                    potentialUser = await _context.CpcmUsers.Where(e => e.CpcmUserEmail == user.CpcmUserEmail.Trim()).FirstOrDefaultAsync();
+                    if(potentialUser == null)
+                    {
+                        ViewData["Message"] = "Неверный логин или пароль";
+                        return View();
+                    }
+#endif
+                }
+                catch (DbException)
+                {
+                    Response.StatusCode = 500;
+                    ViewData["ErrorCode"] = 500;
+                    ViewData["Message"] = "Ошибка связи с сервером";
+                    return View("UserError");
                 }
                 string potentialUserSalt = potentialUser.CpcmUserSalt;
 #if AdminAutoAuth
@@ -67,6 +79,15 @@ if (ModelState.IsValid)
                         ViewData["Message"] = "Вы забанены за нарушение условия пользования Capycom. Если вы считаете, что банхаммер прилетел неправомерно - обратитесь в администрацию";
                         return View("UserError");
                     }
+                    if (potentialUser.CpcmIsDeleted == true)
+                    {
+                        //Response.StatusCode = 404;
+                        //ViewData["ErrorCode"] = 404;
+                        //ViewData["Message"] = "Аккаунт был удалён";
+                        //return View("UserError");
+                        ViewData["Message"] = "Неверный логин или пароль";
+                        return View();
+                    }
                     List<Claim> claims = GetUserClaims(potentialUser); 
                     var claimsIdentity = new ClaimsIdentity(claims, "Cookies");
                     var claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
@@ -74,13 +95,13 @@ if (ModelState.IsValid)
                     await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(claimsIdentity));
                     //var kek = HttpContext.User.FindFirst(c => c.Type == "CpcmUserId" && c.Value == "1");
                     //kek.Value;
-                    return RedirectToAction("Test");
+                    return RedirectToAction("Test"); // TODO махнкть на юзер индекс
                 }
                 else
                 {
-                    ViewData["Error"] = "Не найден пользователь с данным именем и//или паролем";
-					return View();
-				}
+                    ViewData["Message"] = "Неверный логин или пароль";
+                    return View();
+                }
             }
             return View("Index");
         }
