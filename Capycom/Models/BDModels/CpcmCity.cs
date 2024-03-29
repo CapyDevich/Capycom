@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Capycom;
+namespace Capycom; 
+
 
 public partial class CpcmCity
 {

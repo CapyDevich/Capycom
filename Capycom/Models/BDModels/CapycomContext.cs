@@ -47,6 +47,7 @@ public partial class CapycomContext : DbContext
     {
         //optionsBuilder.UseLazyLoadingProxies();
     }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<CpcmCity>(entity =>
@@ -74,6 +75,7 @@ public partial class CapycomContext : DbContext
                 .HasColumnName("CPCM_CommentCreationDate");
             entity.Property(e => e.CpcmCommentFather).HasColumnName("CPCM_CommentFather");
             entity.Property(e => e.CpcmCommentText).HasColumnName("CPCM_CommentText");
+            entity.Property(e => e.CpcmIsDeleted).HasColumnName("CPCM_IsDeleted");
             entity.Property(e => e.CpcmPostId).HasColumnName("CPCM_PostID");
             entity.Property(e => e.CpcmUserId).HasColumnName("CPCM_UserID");
 
@@ -106,6 +108,7 @@ public partial class CapycomContext : DbContext
                 .HasColumnName("CPCM_GroupNickName");
             entity.Property(e => e.CpcmGroupSubject).HasColumnName("CPCM_GroupSubject");
             entity.Property(e => e.CpcmGroupTelNum).HasColumnName("CPCM_GroupTelNum");
+            entity.Property(e => e.CpcmIsDeleted).HasColumnName("CPCM_IsDeleted");
 
             entity.HasOne(d => d.CpcmGroupSubjectNavigation).WithMany(p => p.CpcmGroups)
                 .HasForeignKey(d => d.CpcmGroupSubject)
@@ -196,6 +199,7 @@ public partial class CapycomContext : DbContext
                 .ValueGeneratedNever()
                 .HasColumnName("CPCM_PostID");
             entity.Property(e => e.CpcmGroupId).HasColumnName("CPCM_GroupID");
+            entity.Property(e => e.CpcmIsDeleted).HasColumnName("CPCM_IsDeleted");
             entity.Property(e => e.CpcmPostBanned).HasColumnName("CPCM_PostBanned");
             entity.Property(e => e.CpcmPostCreationDate)
                 .HasColumnType("datetime")
@@ -308,6 +312,7 @@ public partial class CapycomContext : DbContext
             entity.Property(e => e.CpcmUserId)
                 .ValueGeneratedNever()
                 .HasColumnName("CPCM_UserId");
+            entity.Property(e => e.CpcmIsDeleted).HasColumnName("CPCM_IsDeleted");
             entity.Property(e => e.CpcmUserAbout).HasColumnName("CPCM_UserAbout");
             entity.Property(e => e.CpcmUserAdditionalName).HasColumnName("CPCM_UserAdditionalName");
             entity.Property(e => e.CpcmUserBanned).HasColumnName("CPCM_UserBanned");
