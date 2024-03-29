@@ -1,20 +1,32 @@
 'use strict'
+function addOptionToSelectpicker(selectElement, value, text) {
+	$(selectElement).selectpicker("destroy");
+	$(selectElement).append(`<option value="${value}">${text}</option>`);
+	$(selectElement).addClass('selectpicker').selectpicker("render");
+};
+
 function sendNewCityName() {
 	$.ajax({
 		url: '/UserSignUp/AddCity',
 		type: 'POST',
 		data: { newCity: $('#addingCityInput').val() },
 		success: function (response) {
-			if (response["success"]) {
-				console.log('Успешно: ', response);
+			if (response['success']) {
+				addOptionToSelectpicker('#city', response['id'], $('#addingCityInput').val());
+				$('#addingCityModal').modal('hide');
+				$('#addingCityModalAlert').hide();
 			}
 			else {
-				console.log('NO: ', response);
+				$('#addingSchoolModalAlert').empty();
+				$('#addingCityModalAlert').append(response['message']);
+				$('#addingCityModalAlert').show();
 			}
 
 		},
 		error: function (obj) {
-			console.log("Unknown error");
+			$('#addingCityModalAlert').empty();
+			$('#addingCityModalAlert').append('Неизвестная ошибка. Попробуйте позже.');
+			$('#addingCityModalAlert').show();
 		}
 	});
 }
@@ -25,15 +37,21 @@ function sendNewUniversityName() {
 		data: { newUni: $('#addingUniversityInput').val() },
 		success: function (response) {
 			if (response["success"]) {
-				console.log('Успешно: ', response);
+				addOptionToSelectpicker('#university', response['id'], $('#addingUniversityInput').val());
+				$('#addingUniversityModal').modal('hide');
+				$('#addingUniversityModalAlert').hide();
 			}
 			else {
-				console.log('NO: ', response);
+				$('#addingSchoolModalAlert').empty();
+				$('#addingUniversityModalAlert').append(response['message']);
+				$('#addingUniversityModalAlert').show();
 			}
 
 		},
 		error: function (obj) {
-			console.log("Unknown error");
+			$('#addingUniversityModalAlert').empty();
+			$('#addingUniversityModalAlert').append('Неизвестная ошибка. Попробуйте позже.');
+			$('#addingUniversityModalAlert').show();
 		}
 	});
 }
@@ -44,15 +62,21 @@ function sendNewSchoolName() {
 		data: { newSchool: $('#addingSchoolInput').val() },
 		success: function (response) {
 			if (response["success"]) {
-				console.log('Успешно: ', response);
+				addOptionToSelectpicker('#school', response['id'], $('#addingSchoolInput').val());
+				$('#addingSchoolModal').modal('hide');
+				$('#addingSchoolModalAlert').hide();
 			}
 			else {
-				console.log('NO: ', response);
+				$('#addingSchoolModalAlert').empty();
+				$('#addingSchoolModalAlert').append(response['message']);
+				$('#addingSchoolModalAlert').show();
 			}
 
 		},
 		error: function (obj) {
-			console.log("Unknown error");
+			$('#addingSchoolModalAlert').empty();
+			$('#addingSchoolModalAlert').append('Неизвестная ошибка. Попробуйте позже.');
+			$('#addingSchoolModalAlert').show();
 		}
 	});
 }
