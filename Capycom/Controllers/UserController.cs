@@ -653,17 +653,17 @@ namespace Capycom.Controllers
 			if (!string.IsNullOrEmpty(filters.FirstName))
 			{
 				//ViewData["firstName"] = firstName;
-				friendList1 = friendList1.Where(u => u.CpcmUserFirstName == filters.FirstName);
+				friendList1 = friendList1.Where(u => EF.Functions.Like(u.CpcmUserFirstName, $"%{filters.FirstName}%"));
 			}
 			if (!string.IsNullOrEmpty(filters.SecondName))
 			{
 				//ViewData["secondName"] = secondName;
-				friendList1 = friendList1.Where(u => u.CpcmUserSecondName == filters.SecondName);
+				friendList1 = friendList1.Where(u => EF.Functions.Like(u.CpcmUserSecondName, $"%{filters.SecondName}%"));
 			}
 			if (!string.IsNullOrEmpty(filters.AdditionalName))
 			{
 				//ViewData["additionalName"] = additionalName;
-				friendList1 = friendList1.Where(u => u.CpcmUserAdditionalName == filters.AdditionalName);
+				friendList1 = friendList1.Where(u => EF.Functions.Like(u.CpcmUserAdditionalName, $"%{filters.AdditionalName}%"));
 			}
 
 			var result = await friendList1.OrderBy(p => p.CpcmUserId).Take(10).ToListAsync();
@@ -727,17 +727,17 @@ namespace Capycom.Controllers
 			if (!string.IsNullOrEmpty(filters.FirstName))
 			{
 				//ViewData["firstName"] = firstName;
-				friendList1 = friendList1.Where(u => u.CpcmUserFirstName == filters.FirstName);
+				friendList1 = friendList1.Where(u => EF.Functions.Like(u.CpcmUserFirstName, $"%{filters.FirstName}%"));
 			}
 			if (!string.IsNullOrEmpty(filters.SecondName))
 			{
 				//ViewData["secondName"] = secondName;
-				friendList1 = friendList1.Where(u => u.CpcmUserSecondName == filters.SecondName);
+				friendList1 = friendList1.Where(u => EF.Functions.Like(u.CpcmUserSecondName, $"%{filters.SecondName}%"));
 			}
 			if (!string.IsNullOrEmpty(filters.AdditionalName))
 			{
 				//ViewData["additionalName"] = additionalName;
-				friendList1 = friendList1.Where(u => u.CpcmUserAdditionalName == filters.AdditionalName);
+				friendList1 = friendList1.Where(u => EF.Functions.Like(u.CpcmUserAdditionalName, $"%{filters.AdditionalName}%"));
 			}
 			var result = await friendList1.OrderBy(p => p.CpcmUserId).Take(10).ToListAsync();
 			return Json(result);
@@ -896,18 +896,17 @@ namespace Capycom.Controllers
 			if (!string.IsNullOrEmpty(filters.FirstName))
 			{
 				//ViewData["firstName"] = firstName;
-				followerList1 = followerList1.Where(u => u.CpcmUserFirstName == filters.FirstName);
-				groupsList = groupsList.Where(u => EF.Functions.Like(u.CpcmUserFirstName, $"%{filters.FirstName}%"));
+				followerList1 = followerList1.Where(u => EF.Functions.Like(u.CpcmUserFirstName, $"%{filters.FirstName}%"));
 			}
 			if (!string.IsNullOrEmpty(filters.SecondName))
 			{
 				//ViewData["secondName"] = secondName;
-				followerList1 = followerList1.Where(u => u.CpcmUserSecondName == filters.SecondName);
+				followerList1 = followerList1.Where(u => EF.Functions.Like(u.CpcmUserSecondName, $"%{filters.SecondName}%"));
 			}
 			if (!string.IsNullOrEmpty(filters.AdditionalName))
 			{
 				//ViewData["additionalName"] = additionalName;
-				followerList1 = followerList1.Where(u => u.CpcmUserAdditionalName == filters.AdditionalName);
+				followerList1 = followerList1.Where(u => EF.Functions.Like(u.CpcmUserAdditionalName, $"%{filters.AdditionalName}%"));
 			}
 
 			var result = await followerList1.OrderBy(p => p.CpcmUserId).Take(10).ToListAsync();
@@ -972,17 +971,17 @@ namespace Capycom.Controllers
 			if (!string.IsNullOrEmpty(filters.FirstName))
 			{
 				//ViewData["firstName"] = firstName;
-				followerList1 = followerList1.Where(u => u.CpcmUserFirstName == filters.FirstName);
+				followerList1 = followerList1.Where(u => EF.Functions.Like(u.CpcmUserFirstName, $"%{filters.FirstName}%"));
 			}
 			if (!string.IsNullOrEmpty(filters.SecondName))
 			{
 				//ViewData["secondName"] = secondName;
-				followerList1 = followerList1.Where(u => u.CpcmUserSecondName == filters.SecondName);
+				followerList1 = followerList1.Where(u => EF.Functions.Like(u.CpcmUserSecondName, $"%{filters.SecondName}%"));
 			}
 			if (!string.IsNullOrEmpty(filters.AdditionalName))
 			{
 				//ViewData["additionalName"] = additionalName;
-				followerList1 = followerList1.Where(u => u.CpcmUserAdditionalName == filters.AdditionalName);
+				followerList1 = followerList1.Where(u => EF.Functions.Like(u.CpcmUserAdditionalName, $"%{filters.AdditionalName}%"));
 			}
 
 			var result = await followerList1.OrderBy(p => p.CpcmUserId).Take(10).ToListAsync();
@@ -1894,119 +1893,119 @@ namespace Capycom.Controllers
         }
 
 
-        public async Task<IActionResult> FindUser()
-        {
-            return View();
-        }
+        //public async Task<IActionResult> FindUser()
+        //{
+        //    return View();
+        //}
 
         [HttpGet]
-        public async Task<IActionResult> FindUser(Guid? id, string? nick, Guid? cityId, Guid? schoolId, Guid? universityId, string? firstName, string? secondName, string? additionalName)
+        public async Task<IActionResult> FindUser(UserFilterModel filters)
         {
             var query = _context.CpcmUsers.AsQueryable();
-            if (id.HasValue)
+            if (filters.UserId.HasValue)
             {
                 //ViewData["id"] = id;
-                query = query.Where(u => u.CpcmUserId == id);
+                query = query.Where(u => u.CpcmUserId == filters.UserId);
             }
-            if (!string.IsNullOrEmpty(nick))
+            if (!string.IsNullOrEmpty(filters.NickName))
             {
                 //ViewData["nick"]=nick;
-                query = query.Where( u => u.CpcmUserNickName== nick);
-            }
-            if (cityId.HasValue)
+                query = query.Where( u => EF.Functions.Like(u.CpcmUserNickName, $"%{filters.NickName}%"));
+			}
+            if (filters.CityId.HasValue)
             {
                 //ViewData["cityId"]=cityId;
-                query = query.Where(u => u.CpcmUserCity == cityId);
+                query = query.Where(u => u.CpcmUserCity == filters.CityId);
             }
-            if (schoolId.HasValue)
+            if (filters.SchoolId.HasValue)
             {
                 //ViewData["scgoolId"]=schoolId;
-                query = query.Where(u => u.CpcmUserSchool ==  schoolId);
+                query = query.Where(u => u.CpcmUserSchool == filters.SchoolId);
             }
-            if (universityId.HasValue)
+            if (filters.UniversityId.HasValue)
             {
                 //ViewData["universityId"] = universityId;
-                query = query.Where(u => u.CpcmUserUniversity == universityId);
+                query = query.Where(u => u.CpcmUserUniversity == filters.UniversityId);
             }
-            if (!string.IsNullOrEmpty(firstName))
+            if (!string.IsNullOrEmpty(filters.FirstName))
             {
                 //ViewData["firstName"] = firstName;
-                query = query.Where(u => u.CpcmUserFirstName == firstName);
-            }
-            if (!string.IsNullOrEmpty(secondName))
+                query = query.Where(u => EF.Functions.Like(u.CpcmUserFirstName, $"%{filters.FirstName}%"));
+			}
+            if (!string.IsNullOrEmpty(filters.SecondName))
             {
                 //ViewData["secondName"] = secondName;
-                query = query.Where(u => u.CpcmUserSecondName == secondName);
+                query = query.Where(u => EF.Functions.Like(u.CpcmUserSecondName, $"%{filters.SecondName}%"));
             }
-            if (!string.IsNullOrEmpty(additionalName))
+            if (!string.IsNullOrEmpty(filters.AdditionalName))
             {
                 //ViewData["additionalName"] = additionalName;
-                query = query.Where(u => u.CpcmUserAdditionalName == additionalName);
+                query = query.Where(u => EF.Functions.Like(u.CpcmUserAdditionalName, $"%{filters.AdditionalName}%"));
             }
 
             try
             {
                 var rez = await query.OrderBy(u => u.CpcmUserId).Take(10).ToListAsync();
-                return Json(rez);
+                return View(rez);
             }
             catch (DbException)
             {
-                //Response.StatusCode = 500;
-                //ViewData["ErrorCode"] = 500;
-                //ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
-                //return View("UserError");
-                return StatusCode(500);
+                Response.StatusCode = 500;
+                ViewData["ErrorCode"] = 500;
+                ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
+                return View("UserError");
+                //return StatusCode(500);
             }
         }
 
         [HttpGet]
-        public async Task<IActionResult> FindNextUser(Guid? id, string? nick, Guid? cityId, Guid? schoolId, Guid? universityId, string? firstName, string? secondName, string? additionalName, Guid lastId)
+        public async Task<IActionResult> FindNextUser(UserFilterModel filters)
         {
             var query = _context.CpcmUsers.AsQueryable();
-            if (id.HasValue)
-            {
-                ViewData["id"] = id;
-                query = query.Where(u => u.CpcmUserId == id);
-            }
-            if (!string.IsNullOrEmpty(nick))
-            {
-                ViewData["nick"] = nick;
-                query = query.Where(u => u.CpcmUserNickName == nick);
-            }
-            if (cityId.HasValue)
-            {
-                ViewData["cityId"] = cityId;
-                query = query.Where(u => u.CpcmUserCity == cityId);
-            }
-            if (schoolId.HasValue)
-            {
-                ViewData["scgoolId"] = schoolId;
-                query = query.Where(u => u.CpcmUserSchool == schoolId);
-            }
-            if (universityId.HasValue)
-            {
-                ViewData["universityId"] = universityId;
-                query = query.Where(u => u.CpcmUserUniversity == universityId);
-            }
-            if (!string.IsNullOrEmpty(firstName))
-            {
-                ViewData["firstName"] = firstName;
-                query = query.Where(u => u.CpcmUserFirstName == firstName);
-            }
-            if (!string.IsNullOrEmpty(secondName))
-            {
-                ViewData["secondName"] = secondName;
-                query = query.Where(u => u.CpcmUserSecondName == secondName);
-            }
-            if (!string.IsNullOrEmpty(additionalName))
-            {
-                ViewData["additionalName"] = additionalName;
-                query = query.Where(u => u.CpcmUserAdditionalName == additionalName);
-            }
+			if (filters.UserId.HasValue)
+			{
+				//ViewData["id"] = id;
+				query = query.Where(u => u.CpcmUserId == filters.UserId);
+			}
+			if (!string.IsNullOrEmpty(filters.NickName))
+			{
+				//ViewData["nick"]=nick;
+				query = query.Where(u => EF.Functions.Like(u.CpcmUserNickName, $"%{filters.NickName}%"));
+			}
+			if (filters.CityId.HasValue)
+			{
+				//ViewData["cityId"]=cityId;
+				query = query.Where(u => u.CpcmUserCity == filters.CityId);
+			}
+			if (filters.SchoolId.HasValue)
+			{
+				//ViewData["scgoolId"]=schoolId;
+				query = query.Where(u => u.CpcmUserSchool == filters.SchoolId);
+			}
+			if (filters.UniversityId.HasValue)
+			{
+				//ViewData["universityId"] = universityId;
+				query = query.Where(u => u.CpcmUserUniversity == filters.UniversityId);
+			}
+			if (!string.IsNullOrEmpty(filters.FirstName))
+			{
+				//ViewData["firstName"] = firstName;
+				query = query.Where(u => EF.Functions.Like(u.CpcmUserFirstName, $"%{filters.FirstName}%"));
+			}
+			if (!string.IsNullOrEmpty(filters.SecondName))
+			{
+				//ViewData["secondName"] = secondName;
+				query = query.Where(u => EF.Functions.Like(u.CpcmUserSecondName, $"%{filters.SecondName}%"));
+			}
+			if (!string.IsNullOrEmpty(filters.AdditionalName))
+			{
+				//ViewData["additionalName"] = additionalName;
+				query = query.Where(u => EF.Functions.Like(u.CpcmUserAdditionalName, $"%{filters.AdditionalName}%"));
+			}
 
-            try
+			try
             {
-                var rez = await query.Where(u => u.CpcmUserId.CompareTo(lastId) > 0).OrderBy(u => u.CpcmUserId).Take(10).ToListAsync();
+                var rez = await query.Where(u => u.CpcmUserId.CompareTo(filters.lastId) > 0).OrderBy(u => u.CpcmUserId).Take(10).ToListAsync();
                 return Json(rez);
             }
             catch (DbException)
