@@ -313,7 +313,9 @@ namespace Capycom.Controllers
             if (father != null)
             {
                 father.CpcmPostFatherNavigation = await GetFatherPostReccurent(father);
-            }
+				father.User = await _context.CpcmUsers.Where(p => p.CpcmUserId == father.CpcmUserId).FirstOrDefaultAsync();
+				father.Group = await _context.CpcmGroups.Where(p => p.CpcmGroupId == father.CpcmGroupId).FirstOrDefaultAsync();
+			}
             return father;
         }
         private async Task<ICollection<CpcmComment>> GetCommentChildrenReccurent(CpcmComment? comm)
