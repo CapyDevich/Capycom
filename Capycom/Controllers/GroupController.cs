@@ -70,9 +70,15 @@ namespace Capycom.Controllers
 
 
 			List<CpcmPost> posts;
+			long liked;
+			CpcmGroupfollower follower = null;
 			try
 			{
 				posts = await _context.CpcmPosts.Where(c => c.CpcmGroupId == group.CpcmGroupId && c.CpcmPostPublishedDate < DateTime.UtcNow).Include(c => c.CpcmImages).OrderByDescending(c => c.CpcmPostPublishedDate).Take(10).ToListAsync();
+				if (User.Identity.IsAuthenticated)
+				{
+					follower = await _context.CpcmGroupfollowers.Where(f => f.CpcmGroupId == group.CpcmGroupId && f.CpcmUserId.ToString() == User.FindFirstValue("CpcmUserId")).FirstOrDefaultAsync(); 
+				}
 			}
 			catch (DbException)
 			{
@@ -95,11 +101,31 @@ namespace Capycom.Controllers
 
 				if (User.Identity.IsAuthenticated)
 				{
-					long liked = await _context.Database.SqlQuery<long>($@"SELECT * FROM CPCM_POSTLIKES WHERE CPCM_PostID = {postik.CpcmPostId} && CPCM_UserID = {postik.CpcmUserId}").CountAsync();
+					try
+					{
+						liked = await _context.Database.SqlQuery<long>($@"SELECT * FROM CPCM_POSTLIKES WHERE CPCM_PostID = {postik.CpcmPostId} && CPCM_UserID = {postik.CpcmUserId}").CountAsync();
+					}
+					catch (DbException)
+					{
+						Response.StatusCode = 500;
+						ViewData["ErrorCode"] = 500;
+						ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
+						return View("UserError");
+					}
 					if (liked > 0)
 						postik.IsLiked = true;
 					else
 						postik.IsLiked = false;
+
+					if (follower != null)
+					{
+						group.IsFollowed = true;
+						if(follower.CpcmUserRole==CpcmGroupfollower.AuthorRole || follower.CpcmUserRole == CpcmGroupfollower.AdminRole)
+						{
+							group.IsAdmin = true;
+						}
+					}
+
 				}
 
 				postsWithLikesCount.Add(postik);
@@ -218,7 +244,7 @@ namespace Capycom.Controllers
 						ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
 						return View("UserError");
 					}
-					CpcmGroupfollower gf = new() { CpcmUserId = user.CpcmUserId, CpcmGroupId = group.CpcmGroupId, CpcmUserRole = 0 };
+					CpcmGroupfollower gf = new() { CpcmUserId = user.CpcmUserId, CpcmGroupId = group.CpcmGroupId, CpcmUserRole = CpcmGroupfollower.AuthorRole };
 					_context.CpcmGroupfollowers.Add(gf);
 
 					await _context.SaveChangesAsync();
@@ -566,7 +592,7 @@ namespace Capycom.Controllers
 			}
 
 			ViewData["GroupId"] = id;
-			ViewData["CpcmUserRoles"] = new SelectList(await _context.CpcmGroupRoles.Where(r => r.CpcmRoleId != 0).ToListAsync(), "CpcmRoleId", "CpcmRoleName");
+			ViewData["CpcmUserRoles"] = new SelectList(await _context.CpcmGroupRoles.Where(r => r.CpcmRoleId != CpcmGroupfollower.AuthorRole).ToListAsync(), "CpcmRoleId", "CpcmRoleName");
 			return View();
 
 		}
@@ -871,9 +897,42 @@ namespace Capycom.Controllers
 
 		[Authorize]
 		[HttpPost]
-		public async Task<ActionResult> GetNextFollowers()
+		public async Task<ActionResult> FollowUnfollow(Guid id)
 		{
+			CpcmGroup group;
+			try
+			{
+				group = await _context.CpcmGroups.Where(g => g.CpcmGroupId == id).FirstOrDefaultAsync();
+			}
+			catch (DbException)
+			{
+				return StatusCode(500);
+			}
+			if (group == null || group.CpcmIsDeleted)
+			{
+				Response.StatusCode = 404;
+				return StatusCode(404);
+			}
 
+			try
+			{
+				var follow = await _context.CpcmGroupfollowers.Where(f => f.CpcmGroupId == group.CpcmGroupId && f.CpcmUserId.ToString() == User.FindFirstValue("CpcmUserId")).Include(f=>f.CpcmUserRoleNavigation).FirstOrDefaultAsync();
+				if(follow == null)
+				{
+					CpcmGroupfollower ff = new() { CpcmGroupId = group.CpcmGroupId, CpcmUserId = Guid.Parse(User.FindFirstValue("CpcmUserId")), CpcmUserRole = CpcmGroupfollower.FollowerRole };
+					_context.CpcmGroupfollowers.Add(ff);
+				}
+				else
+				{
+					_context.CpcmGroupfollowers.Remove(follow);
+				}
+				await _context.SaveChangesAsync();
+				return StatusCode(200, new { status = true });
+			}
+			catch (DbException)
+			{
+				return StatusCode(500);
+			}
 		}
 
 
