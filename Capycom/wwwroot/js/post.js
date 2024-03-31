@@ -15,6 +15,33 @@ function shortenNumber(number) {
 		return number;
 }
 
+function likePost(button, postId) {
+	let icon = button.querySelectorAll('img')[0];
+	$.ajax({
+		url: '/PostComment/AddRemoveLike',
+		type: 'POST',
+		data: { postID: postId },
+		success: function (response) {
+			if (response['success']) {
+				if (icon.src.match('tangerine_black')) {
+					icon.src = icon.src.replace('black', 'colored');
+				}
+				else if (icon.src.match('tangerine_colored')) {
+					icon.src = icon.src.replace('colored', 'black');
+				}
+			}
+			else {
+				console.log("response was not successful");
+			}
+
+		},
+		error: function (obj) {
+			if (obj.status == 401)
+				window.location.replace("/UserLogIn");
+		}
+	});
+}
+
 let classesNames = ['likes-count', 'comments-count', 'repost-count'];
 for (let i = 0; i < classesNames.length; i++) {
 	let elements = document.getElementsByClassName(classesNames[i]);
