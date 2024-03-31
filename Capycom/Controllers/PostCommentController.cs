@@ -42,7 +42,7 @@ namespace Capycom.Controllers
                     ViewData["Message"] = "Пост заблокирован";
                     return View("UserError");
                 }
-                var topComments = await _context.CpcmComments.Where(p => p.CpcmPostId == post.CpcmPostId && p.CpcmCommentFather == null).Include(c => c.CpcmImages).Take(10).OrderBy(u => u.CpcmCommentCreationDate).ToListAsync(); // впринципе эту итерацию можно пихнуть сразу в тот метод
+                var topComments = await _context.CpcmComments.Where(p => p.CpcmPostId == post.CpcmPostId && p.CpcmCommentFather == null).Include(c => c.CpcmImages).Include(c => c.CpcmUser).Take(10).OrderBy(u => u.CpcmCommentCreationDate).ToListAsync(); // впринципе эту итерацию можно пихнуть сразу в тот метод
                 foreach (var TopComment in topComments)
                 {
                     TopComment.InverseCpcmCommentFatherNavigation = await GetCommentChildrenReccurent(TopComment);
@@ -83,6 +83,7 @@ namespace Capycom.Controllers
                 comment.CpcmCommentFather = userComment.CpcmCommentFather;
                 comment.CpcmCommentText = userComment.CpcmCommentText?.Trim();
                 comment.CpcmCommentCreationDate = DateTime.UtcNow;
+                comment.CpcmUserId = Guid.Parse(User.FindFirstValue("CpcmUserId"));
 
                 List<string> filePaths = new List<string>();
                 List<CpcmImage> images = new List<CpcmImage>();
@@ -213,7 +214,7 @@ namespace Capycom.Controllers
             
             try
             {
-                var comment = await _context.CpcmComments.Where(c => c.CpcmCommentId == commentId).Include(p => p.CpcmImages).FirstOrDefaultAsync();
+                var comment = await _context.CpcmComments.Where(c => c.CpcmCommentId == commentId).Include(p => p.CpcmImages).Include(c => c.CpcmUser).FirstOrDefaultAsync();
                 if (comment == null)
                 {
                     Response.StatusCode = 404;
@@ -240,7 +241,7 @@ namespace Capycom.Controllers
             {
                 var lastComment = await _context.CpcmComments.Where(c => c.CpcmCommentId == lastCommentId).FirstOrDefaultAsync();
                 if(lastComment == null) { return StatusCode(404); }
-                var rez = await _context.CpcmComments.Where(c => c.CpcmCommentCreationDate.CompareTo(lastComment.CpcmCommentCreationDate) > 0 && c.CpcmPostId == postId && c.InverseCpcmCommentFatherNavigation == null).OrderBy(u => u.CpcmCommentCreationDate).Take(10).ToListAsync();
+                var rez = await _context.CpcmComments.Where(c => c.CpcmCommentCreationDate.CompareTo(lastComment.CpcmCommentCreationDate) > 0 && c.CpcmPostId == postId && c.InverseCpcmCommentFatherNavigation == null).Include( c=>c.CpcmUser).OrderBy(u => u.CpcmCommentCreationDate).Take(10).ToListAsync();
                 foreach (var comment in rez)
                 {
                     //await _context.Entry(comment).Collection(p => p.InverseCpcmCommentFatherNavigation).LoadAsync();
@@ -320,7 +321,7 @@ namespace Capycom.Controllers
         }
         private async Task<ICollection<CpcmComment>> GetCommentChildrenReccurent(CpcmComment? comm)
         {
-            var children = await _context.CpcmComments.Where(c => c.CpcmCommentFather == comm.CpcmCommentId).Include(c => c.CpcmImages).ToListAsync();
+            var children = await _context.CpcmComments.Where(c => c.CpcmCommentFather == comm.CpcmCommentId).Include(c => c.CpcmImages).Include(c=>c.CpcmUser).ToListAsync();
             if (children.Count != 0)
             {
                 foreach (var childComm in children)
