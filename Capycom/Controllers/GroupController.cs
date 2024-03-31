@@ -57,6 +57,13 @@ namespace Capycom.Controllers
 				ViewData["Message"] = "Группа не найдена";
 				return View("UserError");
 			}
+			if (group.CpcmIsDeleted)
+			{
+				Response.StatusCode = 404;
+				ViewData["ErrorCode"] = 404;
+				ViewData["Message"] = "Группа не найдена";
+				return View("UserError");
+			}
 
 
 
@@ -271,6 +278,20 @@ namespace Capycom.Controllers
 				ViewData["Message"] = "Группа не найдена";
 				return View("UserError");
 			}
+			if (group.CpcmGroupBanned)
+			{
+				Response.StatusCode = 403;
+				ViewData["ErrorCode"] = 403;
+				ViewData["Message"] = "Группа заблокирована";
+				return View("UserError");
+			}
+			if (group.CpcmIsDeleted)
+			{
+				Response.StatusCode = 404;
+				ViewData["ErrorCode"] = 404;
+				ViewData["Message"] = "Группа не найдена";
+				return View("UserError");
+			}
 			if (!await CheckUserPrivilege("CpcmCanEditGroup", "True", "CpcmCanEditGroups", "True"))
 			{
 				Response.StatusCode = 403;
@@ -331,6 +352,20 @@ namespace Capycom.Controllers
 					return View("UserError");
 				}
 				if (group == null)
+				{
+					Response.StatusCode = 404;
+					ViewData["ErrorCode"] = 404;
+					ViewData["Message"] = "Группа не найдена";
+					return View("UserError");
+				}
+				if (group.CpcmGroupBanned)
+				{
+					Response.StatusCode = 403;
+					ViewData["ErrorCode"] = 403;
+					ViewData["Message"] = "Группа заблокирована";
+					return View("UserError");
+				}
+				if (group.CpcmIsDeleted)
 				{
 					Response.StatusCode = 404;
 					ViewData["ErrorCode"] = 404;
@@ -474,7 +509,7 @@ namespace Capycom.Controllers
 
 		[Authorize]
 
-		public async Task<IActionResult> EdtiUserGroupRole(Guid id)
+		public async Task<IActionResult> EditUserGroupRole(Guid id)
 		{
 			CpcmGroup? group;
 			try
@@ -496,6 +531,21 @@ namespace Capycom.Controllers
 				ViewData["Message"] = "Группа не найдена";
 				return View("UserError");
 			}
+			if (group.CpcmGroupBanned)
+			{
+				Response.StatusCode = 403;
+				ViewData["ErrorCode"] = 403;
+				ViewData["Message"] = "Группа заблокирована";
+				return View("UserError");
+			}
+			if (group.CpcmIsDeleted)
+			{
+				Response.StatusCode = 404;
+				ViewData["ErrorCode"] = 404;
+				ViewData["Message"] = "Группа не найдена";
+				return View("UserError");
+			}
+
 			if (!await CheckUserPrivilege("CpcmCanEditGroup", "True", "CpcmCanEditGroups", "True"))
 			{
 				Response.StatusCode = 403;
@@ -503,6 +553,7 @@ namespace Capycom.Controllers
 				ViewData["Message"] = "Недостаточно прав";
 				return View("UserError");
 			}
+
 			ViewData["GroupId"] = id;
 			ViewData["CpcmUserRoles"] = new SelectList(await _context.CpcmGroupRoles.Where(r => r.CpcmRoleId!=0).ToListAsync(), "CpcmRoleId", "CpcmRoleName");
 			return View();
@@ -527,10 +578,19 @@ namespace Capycom.Controllers
 			{
 				return StatusCode(404, new { status = false, message = "Группа не найдена" });
 			}
+			if (group.CpcmGroupBanned)
+			{
+				return StatusCode(403, new { status = false, message = "Группа заблокирована" });
+			}
+			if (group.CpcmIsDeleted)
+			{
+				return StatusCode(404, new { status = false, message = "Группа не найдена" });
+			}
 			if (!await CheckUserPrivilege("CpcmCanEditGroup", "True", "CpcmCanEditGroups", "True"))
 			{
 				return StatusCode(403, new { status = false, message = "Недостаточно прав" });
 			}
+
 
 			try
 			{
@@ -551,7 +611,34 @@ namespace Capycom.Controllers
 
 		}
 
+		[Authorize]
+		[HttpPost]
+		public async Task<IActionResult> BanUnbanGroup(Guid userId, Guid groupId)
+		{
 
+			try
+			{
+				var group = await _context.CpcmGroups.Where(g => g.CpcmGroupId==groupId).FirstOrDefaultAsync();
+				if(group == null)
+				{
+					return StatusCode(404);
+				}
+				if (CheckUserPrivilege("CpcmCanEditGroups", "True"))
+				{
+					group.CpcmGroupBanned = !group.CpcmGroupBanned;
+					await _context.SaveChangesAsync();
+					return StatusCode(200, new {status=true}); 
+				}
+				else
+				{
+					return StatusCode(403);
+				}
+			}
+			catch (DbException)
+			{
+				return StatusCode(500);
+			}
+		}
 
 
 
@@ -695,7 +782,7 @@ namespace Capycom.Controllers
 			return rezFollower || rezUser;
 
 		}
-		[Obsolete("Не использовать. Поведение некорректное",true)]
+		//[Obsolete("Не использовать. Поведение некорректное",true)]
 		private async Task<bool> CheckUserPrivilege(string propertyName, object propertyValue)
 		{
 			CpcmUser? user;
