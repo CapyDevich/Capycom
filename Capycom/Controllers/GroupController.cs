@@ -275,7 +275,7 @@ namespace Capycom.Controllers
 			{
 				Response.StatusCode = 403;
 				ViewData["ErrorCode"] = 403;
-				ViewData["Message"] = "Группа не найдена";
+				ViewData["Message"] = "Недостаточно прав";
 				return View("UserError");
 			}
 			CreateEditGroupModel model = new CreateEditGroupModel()
@@ -341,7 +341,7 @@ namespace Capycom.Controllers
 				{
 					Response.StatusCode = 403;
 					ViewData["ErrorCode"] = 403;
-					ViewData["Message"] = "Группа не найдена";
+					ViewData["Message"] = "Недостаточно прав";
 					return View("UserError");
 				}
 				group.CpcmGroupName = model.CpcmGroupName;
@@ -401,6 +401,58 @@ namespace Capycom.Controllers
 					}
 				}
 
+				if (!ModelState.IsValid)
+				{
+					try
+					{
+						ViewData["CpcmGroupCity"] = new SelectList(await _context.CpcmCities.ToListAsync(), "CpcmCityId", "CpcmCityName", model.CpcmGroupCity);
+						ViewData["CpcmUserSchool"] = new SelectList(await _context.CpcmGroupsubjects.ToListAsync(), "CpcmSubjectId", "CpcmSubjectName", model.CpcmGroupSubject);
+
+						return View(model);
+					}
+					catch (DbException)
+					{
+						Response.StatusCode = 500;
+						ViewData["ErrorCode"] = 500;
+						ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
+						return View("UserError");
+					}
+				}
+
+
+
+				try
+				{
+					//CpcmUser user = await _context.CpcmUsers.Where(u => u.CpcmUserId.ToString() == User.FindFirstValue("CpcmUserId")).FirstOrDefaultAsync();
+					//if (user == null)
+					//{
+					//	Response.StatusCode = 500;
+					//	ViewData["ErrorCode"] = 500;
+					//	ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
+					//	return View("UserError");
+					//}
+					//CpcmGroupfollower gf = new() { CpcmUserId = user.CpcmUserId, CpcmGroupId = group.CpcmGroupId, CpcmUserRole = 0 };
+					//_context.CpcmGroupfollowers.Add(gf);
+
+					await _context.SaveChangesAsync();
+				}
+				catch (DbException)
+				{
+					Response.StatusCode = 500;
+					ViewData["ErrorCode"] = 500;
+					ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
+
+					if (System.IO.File.Exists(filePathGroupImage))
+					{
+						System.IO.File.Delete(filePathGroupImage);
+					}
+					if (System.IO.File.Exists(filePathGroupCovet))
+					{
+						System.IO.File.Delete(filePathGroupCovet);
+					}
+					return View("UserError");
+				}
+				return View(nameof(Index), new GroupFilterModel() { GroupId = group.CpcmGroupId });
 			}
 			else
 			{
@@ -419,6 +471,92 @@ namespace Capycom.Controllers
 				return View(model);
 			}
 		}
+
+		[Authorize]
+
+		public async Task<IActionResult> EdtiUserGroupRole(Guid id)
+		{
+			CpcmGroup? group;
+			try
+			{
+				group = await _context.CpcmGroups.Where(g => g.CpcmGroupId == id)
+					.FirstOrDefaultAsync();
+			}
+			catch (DbException)
+			{
+				Response.StatusCode = 500;
+				ViewData["ErrorCode"] = 500;
+				ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
+				return View("UserError");
+			}
+			if (group == null)
+			{
+				Response.StatusCode = 404;
+				ViewData["ErrorCode"] = 404;
+				ViewData["Message"] = "Группа не найдена";
+				return View("UserError");
+			}
+			if (!await CheckUserPrivilege("CpcmCanEditGroup", "True", "CpcmCanEditGroups", "True"))
+			{
+				Response.StatusCode = 403;
+				ViewData["ErrorCode"] = 403;
+				ViewData["Message"] = "Недостаточно прав";
+				return View("UserError");
+			}
+			ViewData["GroupId"] = id;
+			ViewData["CpcmUserRoles"] = new SelectList(await _context.CpcmGroupRoles.Where(r => r.CpcmRoleId!=0).ToListAsync(), "CpcmRoleId", "CpcmRoleName");
+			return View();
+
+		}
+		[Authorize]
+		[HttpPost]
+		[ValidateAntiForgeryToken]
+		public async Task<IActionResult> EdtiUserGroupRole(Guid userId,Guid groupId,int roleID)
+		{
+			CpcmGroup? group;
+			try
+			{
+				group = await _context.CpcmGroups.Where(g => g.CpcmGroupId == groupId)
+					.FirstOrDefaultAsync();
+			}
+			catch (DbException)
+			{
+				return StatusCode(500, new { status = false, message = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку" });				
+			}
+			if (group == null)
+			{
+				return StatusCode(404, new { status = false, message = "Группа не найдена" });
+			}
+			if (!await CheckUserPrivilege("CpcmCanEditGroup", "True", "CpcmCanEditGroups", "True"))
+			{
+				return StatusCode(403, new { status = false, message = "Недостаточно прав" });
+			}
+
+			try
+			{
+				var follower = await _context.CpcmGroupfollowers.Where(f => f.CpcmUserId == userId && f.CpcmGroupId == groupId).FirstOrDefaultAsync();
+				if(follower == null)
+				{
+					return StatusCode(404, new { status = false, message = "Пользователь не найден" });
+				}
+				if (roleID == 0) return StatusCode(403, new { status = false, message = "Нельзя выдать статус \"Автор\" " });
+				follower.CpcmUserRole = roleID;
+				await _context.SaveChangesAsync();
+				return StatusCode(200);
+			}
+			catch (DbException)
+			{
+				return StatusCode(500, new { status = false, message = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку" });
+			}
+
+		}
+
+
+
+
+
+
+
 
 
 		public async Task<IActionResult> CheckCreateNickName(string CpcmGroupNickName)
