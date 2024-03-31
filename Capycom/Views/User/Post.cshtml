@@ -2,7 +2,7 @@
 <div class="card mb-2">
 	<div class="card-body">
 		<div class="d-flex align-items-center mb-3">
-			<img src="~/uploads/capy.png"
+			<img src="~/uploads/@Model.Post.User?.CpcmUserImagePath"
 				 class="rounded-circle me-3" style="width: 50px; height: 50px;">
 			<div>
 				<h5>@Model.Post.User?.CpcmUserFirstName @Model.Post.User?.CpcmUserSecondName @Model.Post.User?.CpcmUserAdditionalName</h5>
@@ -41,11 +41,11 @@
 					<span class="likes-count-show"></span>
 					<span class="likes-count" style="display: none">@Model.LikesCount</span>
 				</button>
-				<button class="btn btn-outline-primary me-2 button-bottom">
+				<a asp-area="" asp-controller="PostComment" asp-action="ViewPost" asp-route-postId="@Model.Post.CpcmPostId" class="btn btn-outline-primary me-2 button-bottom">
 					<img src="~/images/comments.svg" />
 					<span class="comments-count-show"></span>
 					<span class="comments-count" style="display: none">@Model.Post.CpcmComments.Count</span>
-				</button>
+				</a>
 				<button class="btn btn-outline-primary me-2 button-bottom">
 					<img src="~/images/repost.svg" />
 					<span class="repost-count-show"></span>

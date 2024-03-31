@@ -58,7 +58,7 @@ namespace Capycom.Controllers
 
 				if (User.Identity.IsAuthenticated)
 				{
-					long liked = await _context.Database.SqlQuery<long>($@"SELECT * FROM CPCM_POSTLIKES WHERE CPCM_PostID = {post.CpcmPostId} && CPCM_UserID = {post.CpcmUserId}").CountAsync();
+					long liked = await _context.Database.SqlQuery<long>($@"SELECT * FROM CPCM_POSTLIKES WHERE CPCM_PostID = {post.CpcmPostId} AND CPCM_UserID = {post.CpcmUserId}").CountAsync();
 					if (liked > 0)
 						post.IsLiked = true;
 					else
