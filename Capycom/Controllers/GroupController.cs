@@ -661,7 +661,7 @@ namespace Capycom.Controllers
 				{
 					return StatusCode(404);
 				}
-				if (await CheckUserPrivilege("CpcmCanEditGroups", true))
+				if (await CheckUserPrivilegeClaim("CpcmCanEditGroups", "True"))
 				{
 					group.CpcmGroupBanned = !group.CpcmGroupBanned;
 					await _context.SaveChangesAsync();
@@ -1158,12 +1158,70 @@ namespace Capycom.Controllers
 				return StatusCode(200, new { status = false, message = "Репост имел неккоректный вид. Возможно вы попытались прикрепить файлы. Однако этого нельзя делать для репостов." });
 			}
 		}
+		[Authorize]
+		[HttpPost]
+		public async Task<IActionResult> DeletePost(Guid postGuid)
+		{
+
+			CpcmPost? post = null;
+			try
+			{
+				post = await _context.CpcmPosts.Where(c => c.CpcmPostId == postGuid).FirstOrDefaultAsync();
+			}
+			catch (DbException)
+			{
+				return StatusCode(500);
+			}
+			if (post == null||!post.CpcmIsDeleted)
+			{
+				return StatusCode(404);
+			}
+			if (post.CpcmPostBanned)
+			{
+				return StatusCode(403);
+			}
+
+			if (!await CheckOnlyGroupPrivelege("CpcmCanDelPost", true))
+			{
+				return StatusCode(403);
+			}
 
 
-
-
-
-
+			post.CpcmIsDeleted = true;
+			try
+			{
+				await _context.SaveChangesAsync();
+			}
+			catch (DbException)
+			{
+				return StatusCode(500);
+			}
+			return StatusCode(200, new { status = true });
+		}
+		[Authorize]
+		[HttpPost]
+		public async Task<IActionResult> BanUnbanPost(Guid id)
+		{
+			if (!await CheckUserPrivilegeClaim("CpcmCanDelUsersPosts", "True"))
+			{
+				return StatusCode(403);
+			}
+			try
+			{
+				var post = await _context.CpcmPosts.Where(c => c.CpcmPostId == id && c.CpcmPostPublishedDate < DateTime.UtcNow).FirstOrDefaultAsync();
+				if (post == null || post.CpcmIsDeleted == true)
+				{
+					return StatusCode(404);
+				}
+				post.CpcmPostBanned = !post.CpcmPostBanned;
+				await _context.SaveChangesAsync();
+				return StatusCode(200, new { status = true });
+			}
+			catch (DbException)
+			{
+				return StatusCode(500);
+			}
+		}
 
 
 
@@ -1376,7 +1434,7 @@ namespace Capycom.Controllers
 
 		//	return propertyValue != null && propertyValue.Equals(value);
 		//}
-		private async Task<bool> CheckUserPrivilege(string claimType, string claimValue)
+		private async Task<bool> CheckUserPrivilegeClaim(string claimType, string claimValue)
 		{
 			var authFactor = HttpContext.User.FindFirst(c => c.Type == claimType && c.Value == claimValue);
 			if (authFactor == null)
