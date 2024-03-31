@@ -1920,7 +1920,7 @@ namespace Capycom.Controllers
                     return StatusCode(404);
                 }
 
-                posts = await _context.CpcmPosts.Where(c => c.CpcmUserId == userId && c.CpcmPostId == lastPostId).Where(c => c.CpcmPostPublishedDate < post.CpcmPostPublishedDate && c.CpcmPostPublishedDate < DateTime.UtcNow).Take(10).ToListAsync();
+                posts = await _context.CpcmPosts.Where(c => c.CpcmUserId == userId).Where(c => c.CpcmPostPublishedDate < post.CpcmPostPublishedDate && c.CpcmPostPublishedDate < DateTime.UtcNow).Take(10).ToListAsync();
                 foreach (var postik in posts)
                 {
                     postik.CpcmPostFatherNavigation = await GetFatherPostReccurent(postik);
