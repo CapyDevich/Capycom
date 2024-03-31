@@ -789,11 +789,11 @@ namespace Capycom.Controllers
 			{
 				if (filters.NickName == null)
 				{
-					group = await _context.CpcmUsers.Where(c => c.CpcmUserId == filters.UserId).FirstOrDefaultAsync();
+					group = await _context.CpcmGroups.Where(c => c.CpcmGroupId == filters.GroupId).FirstOrDefaultAsync();
 				}
 				else
 				{
-					group = await _context.CpcmUsers.Where(c => c.CpcmUserNickName == filters.NickName).FirstOrDefaultAsync();
+					group = await _context.CpcmGroups.Where(c => c.CpcmGroupNickName == filters.NickName).FirstOrDefaultAsync();
 				}
 			}
 			catch (Exception)
@@ -813,7 +813,7 @@ namespace Capycom.Controllers
 			//List<CpcmUser> followerList2;
 			try
 			{
-				followerList1 = _context.CpcmUserfollowers.Where(c => c.CpcmUserId == group.CpcmUserId && c.CpcmFollowersId.CompareTo(filters.lastId) > 0).Select(c => c.CpcmFollower);
+				followerList1 = _context.CpcmGroupfollowers.Where(c => c.CpcmGroupId == group.CpcmGroupId && c.CpcmUserId.CompareTo(filters.lastId) > 0).Select(c => c.CpcmUser);
 				//followerList2 = await _context.CpcmUserfollowers.Where(c => c.CpcmFollowerId == user.CpcmUserId).Select(c => c.CpcmUser).ToListAsync();
 			}
 			catch (Exception)
