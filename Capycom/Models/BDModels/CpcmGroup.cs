@@ -27,6 +27,8 @@ public partial class CpcmGroup
 
     public bool CpcmIsDeleted { get; set; }
 
+    public virtual CpcmCity? CpcmGroupCityNavigation { get; set; }
+
     public virtual CpcmGroupsubject CpcmGroupSubjectNavigation { get; set; } = null!;
 
     public virtual ICollection<CpcmGroupfollower> CpcmGroupfollowers { get; set; } = new List<CpcmGroupfollower>();

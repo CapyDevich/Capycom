@@ -53,8 +53,8 @@ public partial class CpcmUser
     public virtual ICollection<CpcmGroupfollower> CpcmGroupfollowers { get; set; } = new List<CpcmGroupfollower>();
 
     public virtual CpcmCity? CpcmUserCityNavigation { get; set; }
-    [ValidateNever]
-    public virtual CpcmRole CpcmUserRoleNavigation { get; set; } = null!;
+	[ValidateNever]
+	public virtual CpcmRole CpcmUserRoleNavigation { get; set; } = null!;
 
     public virtual CpcmSchool? CpcmUserSchoolNavigation { get; set; }
 
