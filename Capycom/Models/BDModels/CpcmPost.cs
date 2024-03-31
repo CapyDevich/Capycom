@@ -23,6 +23,9 @@ public partial class CpcmPost
     public bool CpcmPostBanned { get; set; }
 
     public bool CpcmIsDeleted { get; set; }
+
+
+
 	[NotMapped]
 	public CpcmUser? User { get; set; }
 	[NotMapped]
@@ -35,8 +38,6 @@ public partial class CpcmPost
 	public long RepostsCount { get; set; }
 	[NotMapped]
 	public List<CpcmComment> TopLevelComments { get; set; }
-
-    
 
 
 

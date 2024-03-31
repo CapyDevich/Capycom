@@ -47,7 +47,6 @@ public partial class CapycomContext : DbContext
 	{
 		//optionsBuilder.UseLazyLoadingProxies();
 	}
-
 	protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<CpcmCity>(entity =>
@@ -86,6 +85,11 @@ public partial class CapycomContext : DbContext
             entity.HasOne(d => d.CpcmPost).WithMany(p => p.CpcmComments)
                 .HasForeignKey(d => d.CpcmPostId)
                 .HasConstraintName("FK_CPCM_COMMENTS_CPCM_POSTS");
+
+            entity.HasOne(d => d.CpcmUser).WithMany(p => p.CpcmComments)
+                .HasForeignKey(d => d.CpcmUserId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_CPCM_COMMENTS_CPCM_USERS");
         });
 
         modelBuilder.Entity<CpcmGroup>(entity =>
