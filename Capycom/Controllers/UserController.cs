@@ -1518,7 +1518,7 @@ namespace Capycom.Controllers
         [Authorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> CreatePost(UserPostModel userPost)
+        public async Task<IActionResult> CreatePost(GroupPostModel userPost)
         {
             //if (userPost.Text == null && userPost.Files.Count > 0)
             //{
@@ -1640,7 +1640,7 @@ namespace Capycom.Controllers
                 }
 
             }
-            if (userPost.PostFatherId != null)
+            if (userPost.PostFatherId == null)
             {
                 return View(userPost); 
             }
