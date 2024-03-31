@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Capycom;
 
@@ -71,4 +72,11 @@ public partial class CpcmUser
     public virtual ICollection<CpcmPost> CpcmPosts { get; set; } = new List<CpcmPost>();
 
     public virtual ICollection<CpcmPost> CpcmPostsNavigation { get; set; } = new List<CpcmPost>();
+
+
+
+	[NotMapped]
+	public bool? IsFriend { get; set; }
+	[NotMapped]
+	public bool IsFollowing { get; set; }
 }
