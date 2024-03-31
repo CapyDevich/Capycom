@@ -170,10 +170,7 @@ namespace Capycom.Controllers
 						}
 						catch (DbException)
 						{
-							Response.StatusCode = 500;
-							ViewData["ErrorCode"] = 500;
-							ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
-							return View("UserError");
+							return StatusCode(500);
 						}
 						if (liked > 0)
 							postik.IsLiked = true;
@@ -1065,7 +1062,7 @@ namespace Capycom.Controllers
 				//return StatusCode(500);
 			}
 		}
-
+		[Authorize]
 		public async Task<IActionResult> CreatePost(Guid groupId)
 		{
 			if (!await CheckOnlyGroupPrivelege("CpcmCanMakePost", true, groupId))
@@ -1499,8 +1496,94 @@ namespace Capycom.Controllers
 			return View(editPost);
 		}
 
+		[HttpPost]
+		[Authorize]
+		public async Task<IActionResult> GetNextNotPublishedPosts(Guid groupId, Guid lastPostId)
+		{
+			List<CpcmPost> posts;
+			ICollection<CpcmPost> postsWithLikesCount = new List<CpcmPost>();
+			try
+			{
+				var post = await _context.CpcmPosts.Where(c => c.CpcmPostId == lastPostId).FirstOrDefaultAsync();
+				if (post == null)
+				{
+					return StatusCode(404);
+				}
+
+				if (!await CheckOnlyGroupPrivelege("CpcmCanMakePost", true, groupId))
+				{
+					return StatusCode(403);
+				}
+				long liked;
+				posts = await _context.CpcmPosts.Where(c => c.CpcmGroupId == groupId).Where(c => c.CpcmPostPublishedDate < post.CpcmPostPublishedDate && c.CpcmPostPublishedDate > DateTime.UtcNow).Take(10).ToListAsync();
+
+				foreach (var postik in posts)
+				{
+					postik.CpcmPostFatherNavigation = await GetFatherPostReccurent(postik);
+					long likes = await _context.Database.SqlQuery<long>($@"SELECT * FROM CPCM_POSTLIKES WHERE CPCM_PostID = {postik.CpcmPostId}").CountAsync();
+					long reposts = await _context.Database.SqlQuery<long>($@"SELECT * FROM CPCM_POSTREPOSTS WHERE CPCM_PostID = {postik.CpcmPostId}").CountAsync();
+					postik.LikesCount = likes;
+					postik.RepostsCount = reposts;
 
 
+
+					if (User.Identity.IsAuthenticated)
+					{
+						try
+						{
+							liked = await _context.Database.SqlQuery<long>($@"SELECT * FROM CPCM_POSTLIKES WHERE CPCM_PostID = {postik.CpcmPostId} && CPCM_UserID = {postik.CpcmUserId}").CountAsync();
+						}
+						catch (DbException)
+						{
+							return StatusCode(500);
+						}
+						if (liked > 0)
+							postik.IsLiked = true;
+						else
+							postik.IsLiked = false;
+
+					}
+				}
+
+
+			}
+			catch (DbException)
+			{
+				return StatusCode(500);
+			}
+			return Json(postsWithLikesCount);
+		}
+
+
+		[Authorize]
+		[HttpGet]
+		public async Task<IActionResult> NotPublishedPosts(Guid groupId)
+		{
+			if (!await CheckOnlyGroupPrivelege("CpcmCanMakePost", true, groupId))
+			{
+				return StatusCode(403);
+			}
+
+			List<CpcmPost> posts;
+			//ICollection<CpcmPost> postsWithLikesCount = new List<CpcmPost>();
+			try
+			{
+				posts = await _context.CpcmPosts.Where(c => c.CpcmGroupId == groupId && c.CpcmPostPublishedDate > DateTime.UtcNow).Include(c => c.CpcmImages).OrderByDescending(c => c.CpcmPostPublishedDate).Take(10).ToListAsync();
+				foreach (var postik in posts)
+				{
+					postik.CpcmPostFatherNavigation = await GetFatherPostReccurent(postik);
+				}
+			}
+			catch (DbException)
+			{
+				Response.StatusCode = 500;
+				ViewData["ErrorCode"] = 500;
+				ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
+				return View("UserError");
+			}
+
+			return View(posts);
+		}
 
 
 		public async Task<IActionResult> CheckCreateNickName(string CpcmGroupNickName)
