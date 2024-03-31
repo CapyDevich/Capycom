@@ -50,6 +50,8 @@ public partial class CpcmUser
 
     public bool CpcmIsDeleted { get; set; }
 
+    public virtual ICollection<CpcmComment> CpcmComments { get; set; } = new List<CpcmComment>();
+
     public virtual ICollection<CpcmGroupfollower> CpcmGroupfollowers { get; set; } = new List<CpcmGroupfollower>();
 
     public virtual CpcmCity? CpcmUserCityNavigation { get; set; }
