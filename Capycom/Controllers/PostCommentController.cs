@@ -386,7 +386,7 @@ namespace Capycom.Controllers
 
         private bool CheckUserPrivilege(string claimType, string claimValue)
         {
-            var authFactor = HttpContext.User.FindFirst(c => c.Type == "claimType" && c.Value == "claimValue");
+            var authFactor = HttpContext.User.FindFirst(c => c.Type == claimType && c.Value == claimValue);
             if (authFactor == null)
             {
                 return false;
