@@ -17,14 +17,18 @@
 			</div>
 			<div class="row row-cols-1 @(Model.Post.CpcmImages.Count > 1 ? "row-cols-md-2 row-cols-lg-2" : "") g-4">
 				@{
-					foreach (var image in Model.Post.CpcmImages)
-					{
-						<div class="col m-0" style="padding: 1px;">
-							<img src="~/uploads/@image.CpcmImagePath" class="rounded card-img-top object-fit-cover h-100" alt="Изображение">
-						</div>
-					}
+					if (Model.Post.CpcmPostFatherNavigation == null)
+						foreach (var image in Model.Post.CpcmImages)
+						{
+							<div class="col m-0" style="padding: 1px;">
+								<img src="~/uploads/@image.CpcmImagePath" class="rounded card-img-top object-fit-cover h-100" alt="Изображение">
+							</div>
+						}
+					if (Model.Post.CpcmPostFatherNavigation != null)
+						@await Html.PartialAsync("PostChild", Model.Post.CpcmPostFatherNavigation)
 				}
 			</div>
+
 			<div class="d-grid d-flex mt-1 justify-content-md-start">
 				<button class="btn btn-outline-primary me-2 button-bottom" onclick="likePost(this);">
 					<img src="~/images/tangerine_black.svg" />
@@ -42,12 +46,3 @@
 		</div>
 	</div>
 </div>
-<script>
-	function likePost(element) {
-		let icon = element.querySelectorAll('img')[0];
-		if (icon.src.match('tangerine_black'))
-			icon.src = icon.src.replace('black', 'colored');
-		else if (icon.src.match('tangerine_colored'))
-			icon.src = icon.src.replace('colored', 'black');
-	}
-</script>
