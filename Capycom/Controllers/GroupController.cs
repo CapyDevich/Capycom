@@ -330,7 +330,7 @@ namespace Capycom.Controllers
 				ViewData["Message"] = "Группа не найдена";
 				return View("UserError");
 			}
-			if (!await CheckUserPrivilege("CpcmCanEditGroup", "True", "CpcmCanEditGroups", "True"))
+			if (!await CheckUserPrivilege("CpcmCanEditGroup", true, "CpcmCanEditGroups", true))
 			{
 				Response.StatusCode = 403;
 				ViewData["ErrorCode"] = 403;
@@ -410,7 +410,7 @@ namespace Capycom.Controllers
 					ViewData["Message"] = "Группа не найдена";
 					return View("UserError");
 				}
-				if (!await CheckUserPrivilege("CpcmCanEditGroup", "True", "CpcmCanEditGroups", "True"))
+				if (!await CheckUserPrivilege("CpcmCanEditGroup", true, "CpcmCanEditGroups", true))
 				{
 					Response.StatusCode = 403;
 					ViewData["ErrorCode"] = 403;
@@ -584,7 +584,7 @@ namespace Capycom.Controllers
 				return View("UserError");
 			}
 
-			if (!await CheckUserPrivilege("CpcmCanEditGroup", "True", "CpcmCanEditGroups", "True"))
+			if (!await CheckUserPrivilege("CpcmCanEditGroup", true, "CpcmCanEditGroups", true))
 			{
 				Response.StatusCode = 403;
 				ViewData["ErrorCode"] = 403;
@@ -624,7 +624,7 @@ namespace Capycom.Controllers
 			{
 				return StatusCode(404, new { status = false, message = "Группа не найдена" });
 			}
-			if (!await CheckUserPrivilege("CpcmCanEditGroup", "True", "CpcmCanEditGroups", "True"))
+			if (!await CheckUserPrivilege("CpcmCanEditGroup", true, "CpcmCanEditGroups", true))
 			{
 				return StatusCode(403, new { status = false, message = "Недостаточно прав" });
 			}
@@ -661,7 +661,7 @@ namespace Capycom.Controllers
 				{
 					return StatusCode(404);
 				}
-				if (await CheckUserPrivilege("CpcmCanEditGroups", "True"))
+				if (await CheckUserPrivilege("CpcmCanEditGroups", true))
 				{
 					group.CpcmGroupBanned = !group.CpcmGroupBanned;
 					await _context.SaveChangesAsync();
@@ -691,7 +691,7 @@ namespace Capycom.Controllers
 					ViewData["Message"] = "Группа не найдена";
 					return View("UserError");
 				}
-				if (await CheckUserPrivilege("CpcmCanEditGroup", "True", "CpcmCanEditGroups", "True"))
+				if (await CheckUserPrivilege("CpcmCanEditGroup", true, "CpcmCanEditGroups", true))
 				{
 					return View();
 				}
@@ -719,7 +719,7 @@ namespace Capycom.Controllers
 				{
 					return StatusCode(404);
 				}
-				if (await CheckUserPrivilege("CpcmCanEditGroup", "True", "CpcmCanEditGroups", "True"))
+				if (await CheckUserPrivilege("CpcmCanEditGroup", true, "CpcmCanEditGroups", true))
 				{
 					group.CpcmIsDeleted = !group.CpcmIsDeleted;
 					await _context.SaveChangesAsync();
@@ -1009,6 +1009,160 @@ namespace Capycom.Controllers
 			}
 		}
 
+		public async Task<IActionResult> CreatePost(Guid groupId)
+		{
+			if (!await CheckOnlyGroupPrivelege("CpcmCanMakePost", true))
+			{
+				Response.StatusCode = 403;
+				ViewData["ErrorCode"] = 403;
+				ViewData["Message"] = "Недостаточно прав";
+				return View("UserError");
+			}
+			GroupPostModel groupPost = new() { GroupId = groupId };
+			return View(groupPost);
+		}
+		[Authorize]
+		[HttpPost]
+		[ValidateAntiForgeryToken]
+		public async Task<IActionResult> CreatePost(GroupPostModel groupPost)
+		{
+			if (!await CheckOnlyGroupPrivelege("CpcmCanMakePost", true))
+			{
+				Response.StatusCode = 403;
+				ViewData["ErrorCode"] = 403;
+				ViewData["Message"] = "Недостаточно прав";
+				return View("UserError");
+			}
+
+			if (ModelState.IsValid)
+			{
+				CpcmPost post = new CpcmPost();
+
+				post.CpcmPostText = groupPost.Text.Trim();
+				post.CpcmPostId = Guid.NewGuid();
+				post.CpcmPostFather = groupPost.PostFatherId;
+				post.CpcmPostCreationDate = DateTime.UtcNow;
+				if (groupPost.Published == null)
+				{
+					post.CpcmPostPublishedDate = post.CpcmPostCreationDate;
+				}
+				else
+				{
+					post.CpcmPostPublishedDate = groupPost.Published;
+				}
+
+				//post.CpcmUserId = Guid.Parse(User.FindFirst(c => c.Type == "CpcmUserId").Value);
+				post.CpcmGroupId = groupPost.GroupId;
+
+				List<string> filePaths = new List<string>();
+				List<CpcmImage> images = new List<CpcmImage>();
+
+				if (groupPost.PostFatherId != null)
+				{
+					int i = 0;
+					if (groupPost.Files != null)
+					{
+						foreach (IFormFile file in groupPost.Files)
+						{
+							CheckIFormFile("Files", file, 8388608, new[] { "image/jpeg", "image/png", "image/gif" });
+
+							if (!ModelState.IsValid)
+							{
+								return View(groupPost);
+
+							}
+
+							string uniqueFileName = Guid.NewGuid().ToString() + Path.GetExtension(file.FileName);
+							filePaths.Add(Path.Combine("wwwroot", "uploads", uniqueFileName));
+
+							try
+							{
+								using (var fileStream = new FileStream(filePaths.Last(), FileMode.Create))
+								{
+									await file.CopyToAsync(fileStream);
+								}
+								CpcmImage image = new CpcmImage();
+								image.CpcmImageId = Guid.NewGuid();
+								image.CpcmPostId = post.CpcmPostId;
+								image.CpcmImagePath = filePaths.Last().Replace("wwwroot", "");
+								image.CpcmImageOrder = 0;
+								i++;
+
+								images.Add(image);
+							}
+							catch (Exception ex)
+							{
+								Response.StatusCode = 500;
+								ViewData["ErrorCode"] = 500;
+								ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
+								return View(groupPost);
+							}
+
+						}
+						post.CpcmImages = images;
+					}
+					_context.CpcmImages.AddRange(images);
+				}
+				_context.CpcmPosts.Add(post);
+				try
+				{
+					if (groupPost.PostFatherId != null)
+					{
+						var fatherPost = await _context.CpcmPosts.Where(p => p.CpcmPostId == groupPost.PostFatherId).FirstOrDefaultAsync();
+						if (fatherPost == null || fatherPost.CpcmPostPublishedDate < DateTime.UtcNow)
+						{
+							return StatusCode(200, new { status = false, message = "Нельзя репостить неопубликованный пост" });
+						}
+						if (fatherPost.CpcmPostBanned)
+						{
+							return StatusCode(200, new { status = false, message = "Нельзя репостить этот пост" });
+						}
+						if (fatherPost.CpcmIsDeleted)
+						{
+							return StatusCode(404, new { message = "Не найден родительский пост" });
+						}
+					}
+					await _context.SaveChangesAsync();
+				}
+				catch (DbException)
+				{
+					foreach (var item in filePaths)
+					{
+						if (System.IO.File.Exists(item))
+						{
+							System.IO.File.Delete(item);
+						}
+					}
+					Response.StatusCode = 500;
+					ViewData["ErrorCode"] = 500;
+					ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
+					return View(groupPost); // TODO Продумать место для сохранения еррора
+				}
+
+				if (groupPost.PostFatherId != null)
+				{
+					return View("Index");
+				}
+				else
+				{
+					return StatusCode(200, new { status = true });
+				}
+
+			}
+			if (groupPost.PostFatherId == null)
+			{
+				return View(groupPost);
+			}
+			else
+			{
+				return StatusCode(200, new { status = false, message = "Репост имел неккоректный вид. Возможно вы попытались прикрепить файлы. Однако этого нельзя делать для репостов." });
+			}
+		}
+
+
+
+
+
 
 
 
@@ -1110,6 +1264,30 @@ namespace Capycom.Controllers
 			}
 			return status;
 		}
+
+		
+		private async Task<bool> CheckOnlyGroupPrivelege(string propertyName, object propertyValue)
+		{
+			CpcmGroupfollower? follower;
+			try
+			{
+				follower = await _context.CpcmGroupfollowers.Where(f => f.CpcmUserId.ToString() == User.FindFirstValue("CpcmUserId")).Include(f => f.CpcmUserRoleNavigation).FirstOrDefaultAsync();
+				
+			}
+			catch (DbException)
+			{
+				return (false);
+			}
+			if (follower == null)
+			{
+				return false;
+			}
+			Type type = follower.CpcmUserRoleNavigation.GetType();
+			PropertyInfo propertyInfo = type.GetProperty(propertyName);
+			var value = propertyInfo.GetValue(follower.CpcmUserRoleNavigation);
+			bool rezFollower = propertyValue != null && propertyValue.Equals(value);
+			return rezFollower;
+		}
 		private async Task<bool> CheckUserPrivilege(string propertyName, object propertyValue, string userPropName, object userPropVal, Guid id)
 		{
 			CpcmGroupfollower? follower;
@@ -1175,29 +1353,29 @@ namespace Capycom.Controllers
 
 		}
 		//[Obsolete("Не использовать. Поведение некорректное",true)]
-		private async Task<bool> CheckUserPrivilege(string propertyName, object propertyValue)
-		{
-			CpcmUser? user;
-			try
-			{
-				user = await _context.CpcmUsers.Where(f => f.CpcmUserId.ToString() == HttpContext.User.FindFirst(c => c.Type == "CpcmUserId").Value).Include(f => f.CpcmUserRoleNavigation).FirstOrDefaultAsync();
+		//private async Task<bool> CheckUserPrivilege(string propertyName, object propertyValue)
+		//{
+		//	CpcmUser? user;
+		//	try
+		//	{
+		//		user = await _context.CpcmUsers.Where(f => f.CpcmUserId.ToString() == HttpContext.User.FindFirst(c => c.Type == "CpcmUserId").Value).Include(f => f.CpcmUserRoleNavigation).FirstOrDefaultAsync();
 
-			}
-			catch (DbException)
-			{
-				return (false);
-			}
-			if (user == null)
-			{
-				return false;
-			}
+		//	}
+		//	catch (DbException)
+		//	{
+		//		return (false);
+		//	}
+		//	if (user == null)
+		//	{
+		//		return false;
+		//	}
 
-			Type type = user.CpcmUserRoleNavigation.GetType();
-			PropertyInfo propertyInfo = type.GetProperty(propertyName);
-			var value = propertyInfo.GetValue(user.CpcmUserRoleNavigation);
+		//	Type type = user.CpcmUserRoleNavigation.GetType();
+		//	PropertyInfo propertyInfo = type.GetProperty(propertyName);
+		//	var value = propertyInfo.GetValue(user.CpcmUserRoleNavigation);
 
-			return propertyValue != null && propertyValue.Equals(value);
-		}
+		//	return propertyValue != null && propertyValue.Equals(value);
+		//}
 		private async Task<bool> CheckUserPrivilege(string claimType, string claimValue)
 		{
 			var authFactor = HttpContext.User.FindFirst(c => c.Type == claimType && c.Value == claimValue);
