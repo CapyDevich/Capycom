@@ -22,4 +22,6 @@ public partial class CpcmGroupfollower
     public static readonly int FollowerRole = 2;
     [NotMapped]
     public static readonly int AuthorRole = 0;
+	[NotMapped]
+	public static readonly int AdminRole = 1;
 }

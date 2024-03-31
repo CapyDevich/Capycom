@@ -8,6 +8,7 @@ using Microsoft.Extensions.Options;
 using System.Data.Common;
 using System.Reflection;
 using System.Security.Claims;
+using static NuGet.Packaging.PackagingConstants;
 
 namespace Capycom.Controllers
 {
@@ -735,7 +736,7 @@ namespace Capycom.Controllers
 			}
 		}
 
-		public async Task<ActionResult> Followers(UserFilterModel filters)
+		public async Task<IActionResult> Followers(UserFilterModel filters)
 		{
 			CpcmGroup group;
 			try
@@ -819,7 +820,7 @@ namespace Capycom.Controllers
 			return View(followerList1);
 		}
 		[HttpPost]
-		public async Task<ActionResult> GetNextFollowers(UserFilterModel filters)
+		public async Task<IActionResult> GetNextFollowers(UserFilterModel filters)
 		{
 			CpcmGroup group;
 			try
@@ -897,7 +898,7 @@ namespace Capycom.Controllers
 
 		[Authorize]
 		[HttpPost]
-		public async Task<ActionResult> FollowUnfollow(Guid id)
+		public async Task<IActionResult> FollowUnfollow(Guid id)
 		{
 			CpcmGroup group;
 			try
@@ -934,6 +935,81 @@ namespace Capycom.Controllers
 				return StatusCode(500);
 			}
 		}
+
+		[HttpGet]
+		public async Task<IActionResult> FindGroups(GroupFilterModel filters)
+		{
+			var query = _context.CpcmGroups.AsQueryable();
+			if (filters.CityId.HasValue)
+			{
+				//ViewData["cityId"]=cityId;
+				query = query.Where(u => u.CpcmGroupCity == filters.CityId);
+
+			}
+			if (!string.IsNullOrEmpty(filters.Name))
+			{
+				//ViewData["scgoolId"]=schoolId;
+				//groupsList = groupsList.Where(u => u.CpcmGroupName == filters.Name);
+				query = query.Where(u => EF.Functions.Like(u.CpcmGroupName, $"%{filters.Name}%"));
+			}
+			if (filters.SubjectID.HasValue)
+			{
+				//ViewData["universityId"] = universityId;
+				query = query.Where(u => u.CpcmGroupSubject == filters.SubjectID);
+			}
+
+			try
+			{
+				var rez = await query.OrderBy(u => u.CpcmGroupId).Take(10).ToListAsync();
+				return View(rez);
+			}
+			catch (DbException)
+			{
+				Response.StatusCode = 500;
+				ViewData["ErrorCode"] = 500;
+				ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
+				return View("UserError");
+				//return StatusCode(500);
+			}
+		}
+		[HttpPost]
+		public async Task<IActionResult> FindNextGroups(GroupFilterModel filters)
+		{
+			var query = _context.CpcmGroups.AsQueryable();
+			if (filters.CityId.HasValue)
+			{
+				//ViewData["cityId"]=cityId;
+				query = query.Where(u => u.CpcmGroupCity == filters.CityId);
+
+			}
+			if (!string.IsNullOrEmpty(filters.Name))
+			{
+				//ViewData["scgoolId"]=schoolId;
+				//groupsList = groupsList.Where(u => u.CpcmGroupName == filters.Name);
+				query = query.Where(u => EF.Functions.Like(u.CpcmGroupName, $"%{filters.Name}%"));
+			}
+			if (filters.SubjectID.HasValue)
+			{
+				//ViewData["universityId"] = universityId;
+				query = query.Where(u => u.CpcmGroupSubject == filters.SubjectID);
+			}
+
+			try
+			{
+				var rez = await query.OrderBy(u => u.CpcmGroupId).Where(g=>g.CpcmGroupId.CompareTo(filters.lastId)>0).Take(10).ToListAsync();
+				return View(rez);
+			}
+			catch (DbException)
+			{
+				Response.StatusCode = 500;
+				ViewData["ErrorCode"] = 500;
+				ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
+				return View("UserError");
+				//return StatusCode(500);
+			}
+		}
+
+
 
 
 
