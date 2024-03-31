@@ -56,7 +56,17 @@ namespace Capycom.Controllers
                 long likes = await _context.Database.SqlQuery<long>($@"SELECT * FROM CPCM_POSTLIKES WHERE CPCM_PostID = {post.CpcmPostId}").CountAsync();
                 long reposts = await _context.Database.SqlQuery<long>($@"SELECT * FROM CPCM_POSTREPOSTS WHERE CPCM_PostID = {post.CpcmPostId}").CountAsync();
 
-                PostModel postModel = new() { Post=post,UserOwner=userOwner, GroupOwner = groupOwner, LikesCount=likes,RepostsCount=reposts, TopLevelComments=topComments};
+				if (User.Identity.IsAuthenticated)
+				{
+					long liked = await _context.Database.SqlQuery<long>($@"SELECT * FROM CPCM_POSTLIKES WHERE CPCM_PostID = {post.CpcmPostId} && CPCM_UserID = {post.CpcmUserId}").CountAsync();
+					if (liked > 0)
+						post.IsLiked = true;
+					else
+						post.IsLiked = false;
+				}
+
+
+				PostModel postModel = new() { Post=post,UserOwner=userOwner, GroupOwner = groupOwner, LikesCount=likes,RepostsCount=reposts, TopLevelComments=topComments};
                 return View(post);
             }
             catch (DbException)
@@ -106,7 +116,7 @@ namespace Capycom.Controllers
                         CpcmImage image = new CpcmImage();
                         image.CpcmImageId = Guid.NewGuid();
                         image.CpcmCommentId = comment.CpcmCommentId;
-                        image.CpcmImagePath = filePaths.Last();
+                        image.CpcmImagePath = filePaths.Last().Replace("wwwroot","");
                         image.CpcmImageOrder = 0;
                         i++;
 
@@ -386,7 +396,7 @@ namespace Capycom.Controllers
 
         private bool CheckUserPrivilege(string claimType, string claimValue)
         {
-            var authFactor = HttpContext.User.FindFirst(c => c.Type == "claimType" && c.Value == "claimValue");
+            var authFactor = HttpContext.User.FindFirst(c => c.Type == claimType && c.Value == claimValue);
             if (authFactor == null)
             {
                 return false;
