@@ -1,4 +1,5 @@
-﻿<style>
+﻿@model CpcmUser
+<style>
 	.profile-block {
 		background-color: #f7f7f7;
 	}
@@ -10,17 +11,52 @@
 		</div>
 		
 		<div class="text-center">
-			<h4>Превдоним</h4>
+			<h4 class="mb-0">@Model.CpcmUserFirstName @Model.CpcmUserSecondName @Model.CpcmUserAdditionalName</h4>
+			<small class="text-muted">@@<a href="~/User/Index/@Model.CpcmUserNickName">@Model.CpcmUserNickName</a></small>
 		</div>
 		<div class="mt-1">
 			<ul class="list-group list-group-flush">
-				<li class="list-group-item profile-block">Lorem ipsum dolor sit amet consectetur adipisicing elit. Illum quos quibusdam fugit harum repellendus ducimus vero quidem soluta aut optio?</li>
-				<li class="list-group-item profile-block">Lorem ipsum dolor sit amet consectetur adipisicing elit. Quaerat, debitis!</li>
-				<li class="list-group-item profile-block">Lorem ipsum dolor sit, amet consectetur adipisicing elit. Incidunt blanditiis recusandae explicabo ipsam temporibus aliquid.</li>
-				<li class="list-group-item profile-block">Сайт: <a href="#">www.siteeeeeeeeeeeeeeeeeeeee.com</a></li>
+				@if (@Model.CpcmUserAbout != string.Empty)
+				{
+					<p class="m-0">О себе</p>
+					<li class="list-group-item profile-block">@Model.CpcmUserAbout</li>
+				}
+				@if (@Model.CpcmUserCity.HasValue)
+				{
+					<p class="m-0">Город</p>
+					<li class="list-group-item profile-block">@Model.CpcmUserCity.Value</li>
+				}
+				@if (@Model.CpcmUserUniversity.HasValue)
+				{
+					<p class="m-0">Университет</p>
+					<li class="list-group-item profile-block">@Model.CpcmUserUniversity.Value</li>
+				}
+				@if (@Model.CpcmUserSchool.HasValue)
+				{
+					<p class="m-0">Университет</p>
+					<li class="list-group-item profile-block">@Model.CpcmUserSchool.Value</li>
+				}
+				@if (@Model.CpcmUserBooks != string.Empty)
+				{
+					<p class="m-0">Книги</p>
+					<li class="list-group-item profile-block">@Model.CpcmUserBooks</li>
+				}
+				@if (@Model.CpcmUserFilms != string.Empty)
+				{
+					<p class="m-0">Фильмы</p>
+					<li class="list-group-item profile-block">@Model.CpcmUserFilms</li>
+				}
+				@if (@Model.CpcmUserMusics != string.Empty)
+				{
+					<p class="m-0">Музыка</p>
+					<li class="list-group-item profile-block">@Model.CpcmUserMusics</li>
+				}
+				@if (@Model.CpcmUserSite != string.Empty)
+				{
+					<p class="m-0">Сайт</p>
+					<li class="list-group-item profile-block"><a href="@Model.CpcmUserSite">@Model.CpcmUserSite</a></li>
+				}
 			</ul>
-			<hr>
-			<p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Velit et, consequuntur possimus maxime atque expedita laborum quibusdam magnam nostrum est, voluptas officia temporibus quidem quae.</p>
 		</div>
 	</div>
 </div>

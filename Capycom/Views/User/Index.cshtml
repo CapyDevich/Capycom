@@ -6,7 +6,7 @@
 <div class="container mt-5">
 	<div class="row">
 		<div class="col-lg-4">
-			@await Html.PartialAsync("UserCard")
+			@await Html.PartialAsync("UserCard", Model.User)
 		</div>
 		<div class="col-lg-8">
 			@if (Model.Posts != null)
