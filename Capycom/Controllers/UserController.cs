@@ -1571,7 +1571,7 @@ namespace Capycom.Controllers
         [Authorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> CreatePost(UserPostModel userPost)
+        public async Task<IActionResult> CreatePost(GroupPostModel userPost)
         {
             //if (userPost.Text == null && userPost.Files.Count > 0)
             //{
@@ -1693,7 +1693,7 @@ namespace Capycom.Controllers
                 }
 
             }
-            if (userPost.PostFatherId != null)
+            if (userPost.PostFatherId == null)
             {
                 return View(userPost); 
             }
@@ -1973,7 +1973,7 @@ namespace Capycom.Controllers
                     return StatusCode(404);
                 }
 
-                posts = await _context.CpcmPosts.Where(c => c.CpcmUserId == userId && c.CpcmPostId == lastPostId).Where(c => c.CpcmPostPublishedDate < post.CpcmPostPublishedDate && c.CpcmPostPublishedDate < DateTime.UtcNow).Take(10).ToListAsync();
+                posts = await _context.CpcmPosts.Where(c => c.CpcmUserId == userId).Where(c => c.CpcmPostPublishedDate < post.CpcmPostPublishedDate && c.CpcmPostPublishedDate < DateTime.UtcNow).Take(10).ToListAsync();
                 foreach (var postik in posts)
                 {
                     postik.CpcmPostFatherNavigation = await GetFatherPostReccurent(postik);
@@ -2024,8 +2024,8 @@ namespace Capycom.Controllers
             }
             return Json(postModels);
         }
-
-        [HttpGet]
+		[Authorize]
+		[HttpGet]
         public async Task<IActionResult> NotPublishedPosts(Guid id)
         {
             if (!CheckUserPrivilege("CpcmCanEditUsers", "True", id))

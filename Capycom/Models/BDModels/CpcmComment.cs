@@ -27,5 +27,7 @@ public partial class CpcmComment
 
     public virtual CpcmPost CpcmPost { get; set; } = null!;
 
+    public virtual CpcmUser CpcmUser { get; set; } = null!;
+
     public virtual ICollection<CpcmComment> InverseCpcmCommentFatherNavigation { get; set; } = new List<CpcmComment>();
 }
