@@ -80,7 +80,7 @@ namespace Capycom.Controllers
 
         }
 
-        [HttpGet]
+        //[HttpGet]
 		//[Route("User/Index/{id:guid}")]
 		//public async Task<ActionResult> Index(UserFilterModel filter)
   //      {
@@ -193,7 +193,32 @@ namespace Capycom.Controllers
             try
             {
                 posts = await _context.CpcmPosts.Where(c => c.CpcmUserId == user.CpcmUserId).Include(c => c.CpcmImages).OrderByDescending(c => c.CpcmPostPublishedDate).Take(10).ToListAsync();
-
+                if (HttpContext.User.Identity.IsAuthenticated && user.CpcmUserId.ToString() != User.FindFirstValue("CpcmUserId"))
+                {
+                    var friend = await _context.CpcmUserfriends.Where(f => f.CmcpUserId == user.CpcmUserId && f.CmcpFriendId.ToString() == User.FindFirstValue("CpcmUserId")).FirstOrDefaultAsync();
+                    if (friend == null)
+                    {
+                        await _context.CpcmUserfriends.Where(f => f.CmcpUserId.ToString() == User.FindFirstValue("CpcmUserId") && f.CmcpFriendId == user.CpcmUserId).FirstOrDefaultAsync();
+                    }
+                    if (friend != null)
+                    {
+                        user.IsFriend = friend.CpcmFriendRequestStatus;
+					}
+                    var follower = await _context.CpcmUserfollowers.Where(f => f.CpcmUserId.ToString() == User.FindFirstValue("CpcmUserId") && f.CpcmFollowerId == user.CpcmUserId).FirstOrDefaultAsync();
+                    if (follower == null)
+                    {
+						user.IsFollowing = false;
+					}
+                    else
+                    {
+                        user.IsFollowing = true;
+                    }
+                }
+                else
+                {
+                    user.IsFriend = null;
+                    user.IsFollowing = false;
+                }
             }
             catch (DbException)
             {
