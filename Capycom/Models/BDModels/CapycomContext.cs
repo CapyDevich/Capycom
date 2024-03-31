@@ -43,12 +43,11 @@ public partial class CapycomContext : DbContext
 
     public virtual DbSet<CpcmUserfriend> CpcmUserfriends { get; set; }
 
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-    {
-        //optionsBuilder.UseLazyLoadingProxies();
-    }
-
-    protected override void OnModelCreating(ModelBuilder modelBuilder)
+	protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+	{
+		//optionsBuilder.UseLazyLoadingProxies();
+	}
+	protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<CpcmCity>(entity =>
         {
@@ -86,6 +85,11 @@ public partial class CapycomContext : DbContext
             entity.HasOne(d => d.CpcmPost).WithMany(p => p.CpcmComments)
                 .HasForeignKey(d => d.CpcmPostId)
                 .HasConstraintName("FK_CPCM_COMMENTS_CPCM_POSTS");
+
+            entity.HasOne(d => d.CpcmUser).WithMany(p => p.CpcmComments)
+                .HasForeignKey(d => d.CpcmUserId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_CPCM_COMMENTS_CPCM_USERS");
         });
 
         modelBuilder.Entity<CpcmGroup>(entity =>
@@ -109,6 +113,10 @@ public partial class CapycomContext : DbContext
             entity.Property(e => e.CpcmGroupSubject).HasColumnName("CPCM_GroupSubject");
             entity.Property(e => e.CpcmGroupTelNum).HasColumnName("CPCM_GroupTelNum");
             entity.Property(e => e.CpcmIsDeleted).HasColumnName("CPCM_IsDeleted");
+
+            entity.HasOne(d => d.CpcmGroupCityNavigation).WithMany(p => p.CpcmGroups)
+                .HasForeignKey(d => d.CpcmGroupCity)
+                .HasConstraintName("FK_CPCM_GROUPS_CPCM_CITIES");
 
             entity.HasOne(d => d.CpcmGroupSubjectNavigation).WithMany(p => p.CpcmGroups)
                 .HasForeignKey(d => d.CpcmGroupSubject)
