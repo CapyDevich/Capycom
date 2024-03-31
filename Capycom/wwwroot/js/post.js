@@ -12,12 +12,13 @@ function shortenNumber(number) {
 		return number + "M";
 	}
 	else
-		return "";
+		return number;
 }
 
 let classesNames = ['likes-count', 'comments-count', 'repost-count'];
 for (let i = 0; i < classesNames.length; i++) {
 	let elements = document.getElementsByClassName(classesNames[i]);
+	let toShowElements = document.getElementsByClassName(classesNames[i] + "-show");
 	for (let j = 0; j < elements.length; j++)
-		elements[j].innerText = shortenNumber(elements[j].innerText);
+		toShowElements[j].innerText = shortenNumber(elements[j].innerText);
 }
