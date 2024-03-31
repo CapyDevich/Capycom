@@ -81,79 +81,98 @@ namespace Capycom.Controllers
         }
 
         [HttpGet]
-		[Route("User/Index/{id:guid}")]
-		public async Task<ActionResult> Index(Guid id)
-        {
-            CpcmUser? user;
-            try
-            {
-                user = await _context.CpcmUsers
-                .Include(c => c.CpcmUserCityNavigation)
-                .Include(c => c.CpcmUserRoleNavigation)
-                .Include(c => c.CpcmUserSchoolNavigation)
-                .Include(c => c.CpcmUserUniversityNavigation)
-                .Where(c => c.CpcmUserId == id).FirstOrDefaultAsync();
-            }
-            catch (DbException)
-            {
-                Response.StatusCode = 500;
-                ViewData["ErrorCode"] = 500;
-                ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
-                return View("UserError");
-            }
+		//[Route("User/Index/{id:guid}")]
+		//public async Task<ActionResult> Index(UserFilterModel filter)
+  //      {
+  //          CpcmUser? user;
+  //          try
+  //          {
+  //              user = await _context.CpcmUsers
+  //              .Include(c => c.CpcmUserCityNavigation)
+  //              .Include(c => c.CpcmUserRoleNavigation)
+  //              .Include(c => c.CpcmUserSchoolNavigation)
+  //              .Include(c => c.CpcmUserUniversityNavigation)
+  //              .Where(c => c.CpcmUserId == id).FirstOrDefaultAsync();
+  //          }
+  //          catch (DbException)
+  //          {
+  //              Response.StatusCode = 500;
+  //              ViewData["ErrorCode"] = 500;
+  //              ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
+  //              return View("UserError");
+  //          }
 
-            if (user == null)
-            {
-                Response.StatusCode = 404;
-                ViewData["ErrorCode"] = 404;
-                ViewData["Message"] = "Пользователь не найден";
-                return View("UserError");
-            }
+  //          if (user == null)
+  //          {
+  //              Response.StatusCode = 404;
+  //              ViewData["ErrorCode"] = 404;
+  //              ViewData["Message"] = "Пользователь не найден";
+  //              return View("UserError");
+  //          }
 
-            if (user.CpcmUserNickName != null)
-            {
-                return RedirectToAction("Index", new { nickName = user.CpcmUserNickName });
-            }
-            List<CpcmPost> posts;
-            try
-            {
-                posts = await _context.CpcmPosts.Where(c => c.CpcmUserId == user.CpcmUserId && c.CpcmPostPublishedDate < DateTime.UtcNow).Include(c => c.CpcmImages).OrderByDescending(c => c.CpcmPostPublishedDate).Take(10).ToListAsync();
-            }
-            catch (DbException)
-            {
-                Response.StatusCode = 500;
-                ViewData["ErrorCode"] = 500;
-                ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
-                return View("UserError");
-            }
-            ICollection<PostModel> postsWithLikesCount = new List<PostModel>();
-            UserProfileAndPostsModel userProfile = new();
-            userProfile.User = user;
-            foreach(var postik in posts)
-            {
-                postik.User = user;
-                postik.CpcmPostFatherNavigation = await GetFatherPostReccurent(postik);
-                long likes = await _context.Database.SqlQuery<long>($@"SELECT * FROM CPCM_POSTLIKES WHERE CPCM_PostID = {postik.CpcmPostId}").CountAsync();
-                long reposts = await _context.Database.SqlQuery<long>($@"SELECT * FROM CPCM_POSTREPOSTS WHERE CPCM_PostID = {postik.CpcmPostId}").CountAsync();
-                postsWithLikesCount.Add(new PostModel() { Post = postik, UserOwner=user, LikesCount= likes, RepostsCount= reposts });
-            }
-            userProfile.Posts = postsWithLikesCount;
-            return View(userProfile);
-        }
+  //          if (user.CpcmUserNickName != null)
+  //          {
+  //              return RedirectToAction("Index", new { nickName = user.CpcmUserNickName });
+  //          }
+  //          List<CpcmPost> posts;
+  //          try
+  //          {
+  //              posts = await _context.CpcmPosts.Where(c => c.CpcmUserId == user.CpcmUserId && c.CpcmPostPublishedDate < DateTime.UtcNow).Include(c => c.CpcmImages).OrderByDescending(c => c.CpcmPostPublishedDate).Take(10).ToListAsync();
+  //          }
+  //          catch (DbException)
+  //          {
+  //              Response.StatusCode = 500;
+  //              ViewData["ErrorCode"] = 500;
+  //              ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
+  //              return View("UserError");
+  //          }
+  //          ICollection<PostModel> postsWithLikesCount = new List<PostModel>();
+  //          UserProfileAndPostsModel userProfile = new();
+  //          userProfile.User = user;
+  //          foreach(var postik in posts)
+  //          {
+  //              postik.User = user;
+  //              postik.CpcmPostFatherNavigation = await GetFatherPostReccurent(postik);
+  //              long likes = await _context.Database.SqlQuery<long>($@"SELECT * FROM CPCM_POSTLIKES WHERE CPCM_PostID = {postik.CpcmPostId}").CountAsync();
+  //              long reposts = await _context.Database.SqlQuery<long>($@"SELECT * FROM CPCM_POSTREPOSTS WHERE CPCM_PostID = {postik.CpcmPostId}").CountAsync();
+  //              postsWithLikesCount.Add(new PostModel() { Post = postik, UserOwner=user, LikesCount= likes, RepostsCount= reposts });
+  //          }
+  //          userProfile.Posts = postsWithLikesCount;
+  //          return View(userProfile);
+  //      }
 
         [HttpGet]
-        [Route("User/Index/{nickName}")]
-        public async Task<ActionResult> Index(string nickName)
+        //[Route("User/Index/{nickName}")]
+        public async Task<ActionResult> Index(UserFilterModel filter)
         {
+   //         if (string.IsNullOrWhiteSpace(filter.NickName))
+   //         {
+			//	Response.StatusCode = 400;
+			//	ViewData["ErrorCode"] = 400;
+			//	ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
+			//	return View("UserError");
+			//}
             CpcmUser? user;
             try
             {
-                user = await _context.CpcmUsers
-                .Include(c => c.CpcmUserCityNavigation)
-                .Include(c => c.CpcmUserRoleNavigation)
-                .Include(c => c.CpcmUserSchoolNavigation)
-                .Include(c => c.CpcmUserUniversityNavigation)
-                .Where(c => c.CpcmUserNickName == nickName).FirstOrDefaultAsync(); //_context.Entry(user).Reference(u => u.CpcmUserCityNavigation).Load();
+                if (!string.IsNullOrWhiteSpace(filter.NickName))
+                {
+                    user = await _context.CpcmUsers
+                            .Include(c => c.CpcmUserCityNavigation)
+                            .Include(c => c.CpcmUserRoleNavigation)
+                            .Include(c => c.CpcmUserSchoolNavigation)
+                            .Include(c => c.CpcmUserUniversityNavigation)
+                            .Where(c => c.CpcmUserNickName == filter.NickName).FirstOrDefaultAsync(); 
+                } //_context.Entry(user).Reference(u => u.CpcmUserCityNavigation).Load();
+                else
+                {
+					user = await _context.CpcmUsers
+							.Include(c => c.CpcmUserCityNavigation)
+							.Include(c => c.CpcmUserRoleNavigation)
+							.Include(c => c.CpcmUserSchoolNavigation)
+							.Include(c => c.CpcmUserUniversityNavigation)
+							.Where(c => c.CpcmUserId == filter.UserId).FirstOrDefaultAsync();
+				}
             }
             catch (DbException)
             {
@@ -163,7 +182,7 @@ namespace Capycom.Controllers
                 return View("UserError");
             }
 
-            if (user == null)
+            if (user == null||user.CpcmIsDeleted)
             {
                 Response.StatusCode = 404;
                 ViewData["ErrorCode"] = 404;
