@@ -3,13 +3,10 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using System.Data.Common;
 using System.Reflection;
 using System.Security.Claims;
-using System.Text.RegularExpressions;
-using static NuGet.Packaging.PackagingConstants;
 
 namespace Capycom.Controllers
 {
@@ -600,7 +597,6 @@ namespace Capycom.Controllers
 		}
 
 		[Authorize]
-
 		public async Task<IActionResult> EditUserGroupRole(Guid id)
 		{
 			CpcmGroup? group;
@@ -731,7 +727,8 @@ namespace Capycom.Controllers
 				return StatusCode(500);
 			}
 		}
-
+		[Authorize]
+		[HttpGet]
 		public async Task<IActionResult> DelGroup(Guid groupId)
 		{
 
@@ -759,10 +756,14 @@ namespace Capycom.Controllers
 			}
 			catch (DbException)
 			{
-				return StatusCode(500);
+				Response.StatusCode = 403;
+				ViewData["ErrorCode"] = 500;
+				ViewData["Message"] = "Ошибка связи с сервером";
+				return View("UserError");
 			}
 		}
-
+		[Authorize]
+		[HttpPost]
 		public async Task<IActionResult> DelGroup(Guid groupId, bool del)
 		{
 
@@ -1333,7 +1334,7 @@ namespace Capycom.Controllers
 				CpcmPost? post = null;
 				try
 				{
-					post = await _context.CpcmPosts.Include(c => c.CpcmImages).Where(c => c.CpcmPostId == editPost.Id).FirstOrDefaultAsync();
+					post = await _context.CpcmPosts.Include(c => c.CpcmImages).Where(c => c.CpcmPostId == editPost.Id && c.CpcmGroupId==editPost.GroupId).FirstOrDefaultAsync();
 
 				}
 				catch (DbException)
