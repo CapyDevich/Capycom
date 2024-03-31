@@ -14,6 +14,7 @@ using System.Data.Common;
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.Hosting;
 using static NuGet.Packaging.PackagingConstants;
+using System.Security.Claims;
 
 namespace Capycom.Controllers
 {
@@ -1368,11 +1369,147 @@ namespace Capycom.Controllers
 
             return StatusCode(200, new { status = true });
         }
+		[Authorize]
+		public async Task<IActionResult> ViewFriendRequests(UserFilterModel filters)
+        {
+			CpcmUser user = null;
+			try
+			{
+				user = await _context.CpcmUsers.Where(c => c.CpcmUserId == filters.UserId).FirstOrDefaultAsync();
+			}
+			catch (DbException)
+			{
+				Response.StatusCode = 500;
+				return StatusCode(500);
+			}
+			if (user == null || user.CpcmIsDeleted)
+			{
+				Response.StatusCode = 404;
+				return StatusCode(404);
+			}
+            if (user.CpcmUserId.ToString() != User.FindFirstValue("CpcmUserId"))
+            {
+                Response.StatusCode = 403;
 
+                return StatusCode(403);
+            }
+			IQueryable<CpcmUser> friendList1;
+			try
+			{
+				friendList1 = _context.CpcmUserfriends.Where(c => c.CmcpFriendId == user.CpcmUserId && (c.CpcmFriendRequestStatus == null|| c.CpcmFriendRequestStatus == false)).Select(c => c.CmcpUser);//followerList2 = await _context.CpcmUserfollowers.Where(c => c.CpcmFollowerId == user.CpcmUserId).Select(c => c.CpcmUser).ToListAsync();
+			}
+			catch (Exception)
+			{
+				Response.StatusCode = 500;
+				return StatusCode(500);
+			}
+			if (filters.CityId.HasValue)
+			{
+				//ViewData["cityId"]=cityId;
+				friendList1 = friendList1.Where(u => u.CpcmUserCity == filters.CityId);
+			}
+			if (filters.SchoolId.HasValue)
+			{
+				//ViewData["scgoolId"]=schoolId;
+				friendList1 = friendList1.Where(u => u.CpcmUserSchool == filters.SchoolId);
+			}
+			if (filters.UniversityId.HasValue)
+			{
+				//ViewData["universityId"] = universityId;
+				friendList1 = friendList1.Where(u => u.CpcmUserUniversity == filters.UniversityId);
+			}
+			if (!string.IsNullOrEmpty(filters.FirstName))
+			{
+				//ViewData["firstName"] = firstName;
+				friendList1 = friendList1.Where(u => EF.Functions.Like(u.CpcmUserFirstName, $"%{filters.FirstName}%"));
+			}
+			if (!string.IsNullOrEmpty(filters.SecondName))
+			{
+				//ViewData["secondName"] = secondName;
+				friendList1 = friendList1.Where(u => EF.Functions.Like(u.CpcmUserSecondName, $"%{filters.SecondName}%"));
+			}
+			if (!string.IsNullOrEmpty(filters.AdditionalName))
+			{
+				//ViewData["additionalName"] = additionalName;
+				friendList1 = friendList1.Where(u => EF.Functions.Like(u.CpcmUserAdditionalName, $"%{filters.AdditionalName}%"));
+			}
 
+			var result = await friendList1.OrderBy(p => p.CpcmUserId).Take(10).ToListAsync();
+			//followerList1.AddRange(followerList2);
 
+			return View(friendList1);
+		}
 
-        [Authorize]
+		public async Task<IActionResult> GetNextFriendRequests(UserFilterModel filters)
+		{
+			CpcmUser user = null;
+			try
+			{
+				user = await _context.CpcmUsers.Where(c => c.CpcmUserId == filters.UserId).FirstOrDefaultAsync();
+			}
+			catch (DbException)
+			{
+				Response.StatusCode = 500;
+				return StatusCode(500);
+			}
+			if (user == null || user.CpcmIsDeleted)
+			{
+				Response.StatusCode = 404;
+				return StatusCode(404);
+			}
+			if (user.CpcmUserId.ToString() != User.FindFirstValue("CpcmUserId"))
+			{
+				Response.StatusCode = 403;
+
+				return StatusCode(403);
+			}
+			IQueryable<CpcmUser> friendList1;
+			try
+			{
+				friendList1 = _context.CpcmUserfriends.Where(c => c.CmcpFriendId == user.CpcmUserId && (c.CpcmFriendRequestStatus == null || c.CpcmFriendRequestStatus == false) && c.CmcpUserId.CompareTo(filters.lastId) > 0).Select(c => c.CmcpUser);//followerList2 = await _context.CpcmUserfollowers.Where(c => c.CpcmFollowerId == user.CpcmUserId).Select(c => c.CpcmUser).ToListAsync();
+			}
+			catch (Exception)
+			{
+				Response.StatusCode = 500;
+				return StatusCode(500);
+			}
+			if (filters.CityId.HasValue)
+			{
+				//ViewData["cityId"]=cityId;
+				friendList1 = friendList1.Where(u => u.CpcmUserCity == filters.CityId);
+			}
+			if (filters.SchoolId.HasValue)
+			{
+				//ViewData["scgoolId"]=schoolId;
+				friendList1 = friendList1.Where(u => u.CpcmUserSchool == filters.SchoolId);
+			}
+			if (filters.UniversityId.HasValue)
+			{
+				//ViewData["universityId"] = universityId;
+				friendList1 = friendList1.Where(u => u.CpcmUserUniversity == filters.UniversityId);
+			}
+			if (!string.IsNullOrEmpty(filters.FirstName))
+			{
+				//ViewData["firstName"] = firstName;
+				friendList1 = friendList1.Where(u => EF.Functions.Like(u.CpcmUserFirstName, $"%{filters.FirstName}%"));
+			}
+			if (!string.IsNullOrEmpty(filters.SecondName))
+			{
+				//ViewData["secondName"] = secondName;
+				friendList1 = friendList1.Where(u => EF.Functions.Like(u.CpcmUserSecondName, $"%{filters.SecondName}%"));
+			}
+			if (!string.IsNullOrEmpty(filters.AdditionalName))
+			{
+				//ViewData["additionalName"] = additionalName;
+				friendList1 = friendList1.Where(u => EF.Functions.Like(u.CpcmUserAdditionalName, $"%{filters.AdditionalName}%"));
+			}
+
+			var result = await friendList1.OrderBy(p => p.CpcmUserId).Take(10).ToListAsync();
+			//followerList1.AddRange(followerList2);
+
+			return Json(friendList1);
+		}
+		[Authorize]
         public async Task<IActionResult> CreatePost()
         {
             return View();
@@ -2016,7 +2153,7 @@ namespace Capycom.Controllers
 
         private bool CheckUserPrivilege(string claimType, string claimValue, string id)
         {
-            var authFactor = HttpContext.User.FindFirst(c => c.Type == "CpcmUserId" && c.Value == id || c.Type == "claimType" && c.Value == "claimValue");
+            var authFactor = HttpContext.User.FindFirst(c => c.Type == "CpcmUserId" && c.Value == id || c.Type == claimType && c.Value == claimValue);
             if (authFactor == null)
             {
                 return false;
@@ -2025,7 +2162,7 @@ namespace Capycom.Controllers
         }
         private bool CheckUserPrivilege(string claimType, string claimValue, Guid id)
         {
-            var authFactor = HttpContext.User.FindFirst(c => c.Type == "CpcmUserId" && c.Value == id.ToString() || c.Type == "claimType" && c.Value == "claimValue");
+            var authFactor = HttpContext.User.FindFirst(c => c.Type == "CpcmUserId" && c.Value == id.ToString() || c.Type == claimType && c.Value == claimValue);
             if (authFactor == null)
             {
                 return false;
@@ -2034,7 +2171,7 @@ namespace Capycom.Controllers
         }
         private bool CheckUserPrivilege(string claimType, string claimValue)
         {
-            var authFactor = HttpContext.User.FindFirst(c => c.Type == "claimType" && c.Value == "claimValue");
+            var authFactor = HttpContext.User.FindFirst(c => c.Type == claimType && c.Value == claimValue);
             if (authFactor == null)
             {
                 return false;
