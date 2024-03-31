@@ -8,6 +8,7 @@ using Microsoft.Extensions.Options;
 using System.Data.Common;
 using System.Reflection;
 using System.Security.Claims;
+using System.Text.RegularExpressions;
 using static NuGet.Packaging.PackagingConstants;
 
 namespace Capycom.Controllers
@@ -1011,7 +1012,7 @@ namespace Capycom.Controllers
 
 		public async Task<IActionResult> CreatePost(Guid groupId)
 		{
-			if (!await CheckOnlyGroupPrivelege("CpcmCanMakePost", true))
+			if (!await CheckOnlyGroupPrivelege("CpcmCanMakePost", true, groupId))
 			{
 				Response.StatusCode = 403;
 				ViewData["ErrorCode"] = 403;
@@ -1026,7 +1027,7 @@ namespace Capycom.Controllers
 		[ValidateAntiForgeryToken]
 		public async Task<IActionResult> CreatePost(GroupPostModel groupPost)
 		{
-			if (!await CheckOnlyGroupPrivelege("CpcmCanMakePost", true))
+			if (!await CheckOnlyGroupPrivelege("CpcmCanMakePost", true, groupPost.GroupId))
 			{
 				Response.StatusCode = 403;
 				ViewData["ErrorCode"] = 403;
@@ -1160,7 +1161,7 @@ namespace Capycom.Controllers
 		}
 		[Authorize]
 		[HttpPost]
-		public async Task<IActionResult> DeletePost(Guid postGuid)
+		public async Task<IActionResult> DeletePost(Guid postGuid, Guid groupId)
 		{
 
 			CpcmPost? post = null;
@@ -1181,7 +1182,7 @@ namespace Capycom.Controllers
 				return StatusCode(403);
 			}
 
-			if (!await CheckOnlyGroupPrivelege("CpcmCanDelPost", true))
+			if (!await CheckOnlyGroupPrivelege("CpcmCanDelPost", true, groupId))
 			{
 				return StatusCode(403);
 			}
@@ -1222,6 +1223,226 @@ namespace Capycom.Controllers
 				return StatusCode(500);
 			}
 		}
+
+
+		[Authorize]
+		public async Task<IActionResult> EditPost(Guid postGuid, Guid groupId)
+		{
+			CpcmPost? post = null;
+			try
+			{
+				post = await _context.CpcmPosts.Where(c => c.CpcmPostId == postGuid && c.CpcmGroupId==groupId).FirstOrDefaultAsync();
+			}
+			catch (DbException)
+			{
+				return StatusCode(500);
+			}
+
+			if (post == null)
+			{
+				return StatusCode(404);
+			}
+			if (post.CpcmIsDeleted)
+			{
+				return StatusCode(404);
+			}
+			if (!await CheckOnlyGroupPrivelege("CpcmCanEditPost", true, groupId) || post.CpcmPostBanned)
+			{
+				Response.StatusCode = 403;
+				ViewData["ErrorCode"] = 403;
+				ViewData["Message"] = "Недостаточно прав";
+				return View("UserError");
+			}
+
+
+			GroupPostEditModel model = new GroupPostEditModel();
+			model.Id = post.CpcmPostId;
+			model.GroupId = groupId;
+			model.Text = post.CpcmPostText;
+			model.CpcmImages = post.CpcmImages;
+			model.NewPublishDate = post.CpcmPostPublishedDate;
+			return View(model);
+		}
+
+		[Authorize]
+		[HttpPost]
+		[ValidateAntiForgeryToken]
+		public async Task<IActionResult> EditPost(GroupPostEditModel editPost)
+		{
+			//if (editPost.Text == null && editPost.FilesToDelete.Count == 0 && editPost.NewFiles.Count == 0)
+			//{
+			//    return View(editPost);
+			//}
+
+
+			if (ModelState.IsValid)
+			{
+				CpcmPost? post = null;
+				try
+				{
+					post = await _context.CpcmPosts.Include(c => c.CpcmImages).Where(c => c.CpcmPostId == editPost.Id).FirstOrDefaultAsync();
+
+				}
+				catch (DbException)
+				{
+					return StatusCode(500);
+				}
+				if (post == null)
+				{
+					return StatusCode(404);
+				}
+				if (post.CpcmIsDeleted)
+				{
+					return StatusCode(404);
+				}
+				if (!await CheckOnlyGroupPrivelege("CpcmCanEditPost", true, editPost.GroupId) || post.CpcmPostBanned)
+				{
+					return StatusCode(403);
+				}
+				if (post.CpcmImages.Count - editPost.FilesToDelete.Count + editPost.NewFiles.Count > 4)
+				{
+					ModelState.AddModelError("NewFiles", "В посте не может быть больше 4 фотографий");
+					return View(editPost);
+				}
+
+				post.CpcmPostText = editPost.Text.Trim();
+
+				if (editPost.NewPublishDate == null)
+				{
+					post.CpcmPostPublishedDate = DateTime.UtcNow;
+				}
+				else
+				{
+					post.CpcmPostPublishedDate = editPost.NewPublishDate;
+				}
+
+				//post.CpcmPostPublishedDate = DateTime.UtcNow;
+				if (post.CpcmPostFather != null)
+				{
+					editPost.FilesToDelete = new List<Guid>();
+					editPost.NewFiles = new();
+				}
+
+				var imageLast = post.CpcmImages.Where(c => c.CpcmPostId == editPost.Id).OrderBy(k => k.CpcmImageOrder).LastOrDefault();
+				int i = 0;
+				if (imageLast != null)
+				{
+					i = imageLast.CpcmImageOrder;
+				}
+				List<string> filePaths = new List<string>();
+				foreach (var file in editPost.NewFiles)
+				{
+					CheckIFormFile("NewFiles", file, 8388608, new[] { "image/jpeg", "image/png", "image/gif" });
+
+					if (!ModelState.IsValid)
+					{
+						return View(editPost);
+
+					}
+
+					string uniqueFileName = Guid.NewGuid().ToString() + Path.GetExtension(file.FileName);
+					filePaths.Add(Path.Combine("wwwroot", "uploads", uniqueFileName));
+
+					try
+					{
+						using (var fileStream = new FileStream(filePaths.Last(), FileMode.Create))
+						{
+							await file.CopyToAsync(fileStream);
+						}
+						CpcmImage image = new CpcmImage();
+						image.CpcmImageId = Guid.NewGuid();
+						image.CpcmPostId = post.CpcmPostId;
+						image.CpcmImagePath = filePaths.Last().Replace("wwwroot", "");
+						image.CpcmImageOrder = 0;
+						i++;
+
+						post.CpcmImages.Add(image);
+					}
+					catch (Exception ex)
+					{
+						foreach (var uploadedfile in filePaths)
+						{
+							if (System.IO.File.Exists(uploadedfile))
+							{
+								System.IO.File.Delete(uploadedfile);
+							}
+						}
+						Response.StatusCode = 500;
+						ViewData["ErrorCode"] = 500;
+						ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
+						return View(editPost);
+					}
+
+				}
+
+
+				List<CpcmImage>? images = post.CpcmImages.Where(c => !editPost.FilesToDelete.Contains(c.CpcmImageId)).ToList(); //TODO возможно ! тут не нужен 
+				if (images != null || images.Count != 0)
+				{
+					//_context.CpcmImages.RemoveRange(images);
+					foreach (var item in images)
+					{
+						post.CpcmImages.Remove(item);
+					}
+
+					try
+					{
+						await _context.SaveChangesAsync();
+
+						var imagesAfterDeletion = post.CpcmImages.Where(c => c.CpcmPostId == post.CpcmPostId).OrderBy(i => i.CpcmImageOrder).ToList();
+
+						for (int j = 0; j < imagesAfterDeletion.Count; j++)
+						{
+							imagesAfterDeletion[j].CpcmImageOrder = j;
+						}
+						i = imagesAfterDeletion.Last().CpcmImageOrder;
+
+
+						foreach (var image in images)
+						{
+							if (System.IO.File.Exists(image.CpcmImagePath))
+							{
+								System.IO.File.Delete(image.CpcmImagePath);
+							}
+						}
+
+					}
+					catch (DbException)
+					{
+
+						foreach (var path in filePaths)
+						{
+							if (System.IO.File.Exists(path))
+							{
+								System.IO.File.Delete(path);
+							}
+						}
+
+						return StatusCode(500);
+					}
+				}
+
+
+				try
+				{
+					if (post.CpcmPostText == null && (await _context.CpcmImages.Where(p => p.CpcmPostId == post.CpcmPostId).ToListAsync()).Count == 0)
+					{
+						ModelState.AddModelError("Text", "Нельзя создать пустой пост");
+						return View(editPost);
+					}
+					await _context.SaveChangesAsync();
+				}
+				catch (DbException)
+				{
+					Response.StatusCode = 418;
+					ViewData["Message"] = "Не удалось сохранить пост. Пожалуйста, повторите запрос позднее или обратитесь к Администратору.";
+					return View(editPost); // TODO Продумать место для сохранения еррора
+				}
+
+			}
+			return View(editPost);
+		}
+
 
 
 
@@ -1324,12 +1545,12 @@ namespace Capycom.Controllers
 		}
 
 		
-		private async Task<bool> CheckOnlyGroupPrivelege(string propertyName, object propertyValue)
+		private async Task<bool> CheckOnlyGroupPrivelege(string propertyName, object propertyValue, Guid? groupId)
 		{
 			CpcmGroupfollower? follower;
 			try
 			{
-				follower = await _context.CpcmGroupfollowers.Where(f => f.CpcmUserId.ToString() == User.FindFirstValue("CpcmUserId")).Include(f => f.CpcmUserRoleNavigation).FirstOrDefaultAsync();
+				follower = await _context.CpcmGroupfollowers.Where(f => f.CpcmUserId.ToString() == User.FindFirstValue("CpcmUserId") && f.CpcmGroupId == groupId).Include(f => f.CpcmUserRoleNavigation).FirstOrDefaultAsync();
 				
 			}
 			catch (DbException)
