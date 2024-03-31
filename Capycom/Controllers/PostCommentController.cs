@@ -56,7 +56,17 @@ namespace Capycom.Controllers
                 long likes = await _context.Database.SqlQuery<long>($@"SELECT * FROM CPCM_POSTLIKES WHERE CPCM_PostID = {post.CpcmPostId}").CountAsync();
                 long reposts = await _context.Database.SqlQuery<long>($@"SELECT * FROM CPCM_POSTREPOSTS WHERE CPCM_PostID = {post.CpcmPostId}").CountAsync();
 
-                PostModel postModel = new() { Post=post,UserOwner=userOwner, GroupOwner = groupOwner, LikesCount=likes,RepostsCount=reposts, TopLevelComments=topComments};
+				if (User.Identity.IsAuthenticated)
+				{
+					long liked = await _context.Database.SqlQuery<long>($@"SELECT * FROM CPCM_POSTLIKES WHERE CPCM_PostID = {post.CpcmPostId} && CPCM_UserID = {post.CpcmUserId}").CountAsync();
+					if (liked > 0)
+						post.IsLiked = true;
+					else
+						post.IsLiked = false;
+				}
+
+
+				PostModel postModel = new() { Post=post,UserOwner=userOwner, GroupOwner = groupOwner, LikesCount=likes,RepostsCount=reposts, TopLevelComments=topComments};
                 return View(post);
             }
             catch (DbException)
