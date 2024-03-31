@@ -623,7 +623,7 @@ namespace Capycom.Controllers
 				{
 					return StatusCode(404);
 				}
-				if (CheckUserPrivilege("CpcmCanEditGroups", "True"))
+				if (await CheckUserPrivilege("CpcmCanEditGroups", "True"))
 				{
 					group.CpcmGroupBanned = !group.CpcmGroupBanned;
 					await _context.SaveChangesAsync();
@@ -640,7 +640,63 @@ namespace Capycom.Controllers
 			}
 		}
 
+		public async Task<IActionResult> DelGroup(Guid groupId)
+		{
 
+			try
+			{
+				var group = await _context.CpcmGroups.Where(g => g.CpcmGroupId == groupId).FirstOrDefaultAsync();
+				if (group == null)
+				{
+					Response.StatusCode = 404;
+					ViewData["ErrorCode"] = 404;
+					ViewData["Message"] = "Группа не найдена";
+					return View("UserError");
+				}
+				if (await CheckUserPrivilege("CpcmCanEditGroup", "True", "CpcmCanEditGroups", "True"))
+				{
+					return View();
+				}
+				else
+				{
+					Response.StatusCode = 403;
+					ViewData["ErrorCode"] = 403;
+					ViewData["Message"] = "Недостаточно прав";
+					return View("UserError");
+				}
+			}
+			catch (DbException)
+			{
+				return StatusCode(500);
+			}
+		}
+
+		public async Task<IActionResult> DelGroup(Guid groupId, bool del)
+		{
+
+			try
+			{
+				var group = await _context.CpcmGroups.Where(g => g.CpcmGroupId == groupId).FirstOrDefaultAsync();
+				if (group == null)
+				{
+					return StatusCode(404);
+				}
+				if (await CheckUserPrivilege("CpcmCanEditGroup", "True", "CpcmCanEditGroups", "True"))
+				{
+					group.CpcmIsDeleted = !group.CpcmIsDeleted;
+					await _context.SaveChangesAsync();
+					return StatusCode(200, new { status = true });
+				}
+				else
+				{
+					return StatusCode(403);
+				}
+			}
+			catch (DbException)
+			{
+				return StatusCode(500);
+			}
+		}
 
 
 
@@ -806,7 +862,7 @@ namespace Capycom.Controllers
 
 			return propertyValue != null && propertyValue.Equals(value);
 		}
-		private bool CheckUserPrivilege(string claimType, string claimValue)
+		private async Task<bool> CheckUserPrivilege(string claimType, string claimValue)
 		{
 			var authFactor = HttpContext.User.FindFirst(c => c.Type == claimType && c.Value == claimValue);
 			if (authFactor == null)
