@@ -7,7 +7,7 @@
 	<form class="col-md-6 mx-auto" asp-action="Index">
 		@Html.AntiForgeryToken()
 		<div asp-validation-summary="ModelOnly" class="text-danger"></div>
-		<label for="login" class="form-label" asp-for="CpcmUserEmail">Логин (почта или телефон)</label>
+		<label for="login" class="form-label" asp-for="CpcmUserEmail">Email</label>
 		<div class="input-group">
 			<input type="text" class="form-control" id="login" required asp-for="CpcmUserEmail">
 		</div>
@@ -17,6 +17,10 @@
 			<input type="password" class="form-control" id="password" required asp-for="CpcmUserPwd">
 		</div>
 		<span asp-validation-for="CpcmUserPwd" class="text-danger"></span>
-		<button type="submit" class="btn btn-primary">Войти</button>
+		<span class="text-danger">@ViewData["Message"]</span>
+		<button type="submit" class="col-md-12 btn btn-primary">Войти</button>
 	</form>
+	<div class="col-md-6 mx-auto mt-2">
+		<a class="col-md-12 btn btn-secondary" asp-area="" asp-controller="UserSignUp" asp-action="Create">Зарегистрироваться</a>
+	</div>
 </div>

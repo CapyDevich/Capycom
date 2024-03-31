@@ -49,7 +49,7 @@ if (ModelState.IsValid)
 #else
                 try
                 {
-                    potentialUser = await _context.CpcmUsers.Where(e => e.CpcmUserEmail == user.CpcmUserEmail.Trim()).FirstOrDefaultAsync();
+                    potentialUser = await _context.CpcmUsers.Where(e => e.CpcmUserEmail == user.CpcmUserEmail.Trim()).Include(p => p.CpcmUserRoleNavigation).FirstOrDefaultAsync();
                     if(potentialUser == null)
                     {
                         ViewData["Message"] = "Неверный логин или пароль";
@@ -68,10 +68,10 @@ if (ModelState.IsValid)
 #if AdminAutoAuth
                 if (true)
 #else
-                if (potentialUser.CpcmUserPwdHash == MyConfig.GetSha256Hash(user.CpcmUserPwd.Trim(), potentialUserSalt, _config.ServerSol))
+				if (potentialUser.CpcmUserPwdHash.SequenceEqual(MyConfig.GetSha256Hash(user.CpcmUserPwd.Trim(), potentialUserSalt, _config.ServerSol)))
 #endif
 
-                {
+				{
                     if(potentialUser.CpcmUserBanned == true)
                     {
                         Response.StatusCode = 403;
