@@ -1971,8 +1971,8 @@ namespace Capycom.Controllers
             }
             return Json(postModels);
         }
-
-        [HttpGet]
+		[Authorize]
+		[HttpGet]
         public async Task<IActionResult> NotPublishedPosts(Guid id)
         {
             if (!CheckUserPrivilege("CpcmCanEditUsers", "True", id))
