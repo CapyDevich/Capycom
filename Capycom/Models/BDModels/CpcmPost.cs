@@ -28,7 +28,7 @@ public partial class CpcmPost
 	[NotMapped]
 	public CpcmGroup? Group { get; set; }
 
-    public virtual ICollection<CpcmComment> CpcmComments { get; set; } = new List<CpcmComment>();
+	public virtual ICollection<CpcmComment> CpcmComments { get; set; } = new List<CpcmComment>();
 
     public virtual ICollection<CpcmImage> CpcmImages { get; set; } = new List<CpcmImage>();
 
