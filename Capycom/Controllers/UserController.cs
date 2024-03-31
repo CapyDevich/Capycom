@@ -1719,7 +1719,7 @@ namespace Capycom.Controllers
             {
                 return StatusCode(500);
             }
-            if (post == null)
+            if (post == null || !post.CpcmIsDeleted)
             {
                 return StatusCode(404);
             }
@@ -1728,7 +1728,7 @@ namespace Capycom.Controllers
                 return StatusCode(403);
             }
 
-            if (!CheckUserPrivilege("CpcmCanDelUsersPosts", "True", post.CpcmUserId.ToString()) || post.CpcmPostBanned == true)
+            if (!CheckUserPrivilege("CpcmCanDelUsersPosts", "True", post.CpcmUserId.ToString()))
             {
                 return StatusCode(403);
             }
