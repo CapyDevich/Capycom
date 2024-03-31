@@ -28,6 +28,8 @@ public partial class CpcmPost
 	[NotMapped]
 	public CpcmGroup? Group { get; set; }
 	[NotMapped]
+	public bool IsLiked { get; set; }
+	[NotMapped]
 	public long LikesCount { get; set; }
 	[NotMapped]
 	public long RepostsCount { get; set; }
