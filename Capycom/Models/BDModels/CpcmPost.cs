@@ -27,6 +27,8 @@ public partial class CpcmPost
 	public CpcmUser? User { get; set; }
 	[NotMapped]
 	public CpcmGroup? Group { get; set; }
+	[NotMapped]
+	public bool IsLiked { get; set; }
 
     public virtual ICollection<CpcmComment> CpcmComments { get; set; } = new List<CpcmComment>();
 
