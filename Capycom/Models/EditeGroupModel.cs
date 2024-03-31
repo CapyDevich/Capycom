@@ -1,11 +1,10 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 
 namespace Capycom.Models
 {
-    public class CreateEditGroupModel
-    {
+	public class EditeGroupModel
+	{
 		[Display(Name = "Название группы")]
 		[Required(ErrorMessage = "Укажите название группы")]
 		public string CpcmGroupName { get; set; } = null!;
@@ -24,7 +23,7 @@ namespace Capycom.Models
 		public string? CpcmGroupTelNum { get; set; }
 
 		[Display(Name = "NickName группы")]
-		[Remote(action: "CheckCreateNickName", controller: "Group", ErrorMessage = "Nickname уже занят", HttpMethod = "Post")]
+		[Remote(action: "CheckCreateNickName", controller: "Group", ErrorMessage = "Nickname уже занят", HttpMethod = "Post", AdditionalFields = nameof(GroupId))]
 		public string? CpcmGroupNickName { get; set; }
 		[Display(Name = "Аватарка группы")]
 		public IFormFile? CpcmGroupImage { get; set; }
