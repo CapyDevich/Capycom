@@ -27,5 +27,19 @@
 				}
 			</div>
 		</div>
+		@foreach (var comment in Model.CpcmComments)
+		{
+			<div class="card mt-2">
+				<div class="d-flex align-items-center mb-3">
+					<img src="~/uploads/@Model.User?.CpcmUserImagePath"
+						 class="rounded-circle mt-2 ms-2 me-3" style="width: 50px; height: 50px;">
+					<div>
+						<p class="mt-2">@Model.User?.CpcmUserFirstName @Model.User?.CpcmUserSecondName @Model.User?.CpcmUserAdditionalName</p>
+						<small class="text-muted">@comment.CpcmCommentCreationDate.ToString("dd.MM.yyyy hh:mm")</small>
+						<p>@comment.CpcmCommentText</p>
+					</div>
+				</div>
+			</div>
+		}
 	</div>
 </div>
