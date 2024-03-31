@@ -646,7 +646,7 @@ namespace Capycom.Controllers
 			try
 			{
 				var group = await _context.CpcmGroups.Where(g => g.CpcmGroupId == groupId).FirstOrDefaultAsync();
-				if (group == null)
+				if (group == null || group.CpcmIsDeleted)
 				{
 					Response.StatusCode = 404;
 					ViewData["ErrorCode"] = 404;
@@ -677,7 +677,7 @@ namespace Capycom.Controllers
 			try
 			{
 				var group = await _context.CpcmGroups.Where(g => g.CpcmGroupId == groupId).FirstOrDefaultAsync();
-				if (group == null)
+				if (group == null || group.CpcmIsDeleted)
 				{
 					return StatusCode(404);
 				}
@@ -697,6 +697,167 @@ namespace Capycom.Controllers
 				return StatusCode(500);
 			}
 		}
+
+		public async Task<ActionResult> Followers(UserFilterModel filters)
+		{
+			CpcmGroup group;
+			try
+			{
+				if (filters.NickName == null)
+				{
+					group = await _context.CpcmGroups.Where(c => c.CpcmGroupId == filters.GroupId).FirstOrDefaultAsync();
+				}
+				else
+				{
+					group = await _context.CpcmGroups.Where(c => c.CpcmGroupNickName == filters.NickName).FirstOrDefaultAsync();
+				}
+			}
+			catch (Exception)
+			{
+				Response.StatusCode = 500;
+				ViewData["ErrorCode"] = 500;
+				ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
+				return View("UserError");
+			}
+
+			if (group == null || group.CpcmIsDeleted)
+			{
+				Response.StatusCode = 404;
+				ViewData["ErrorCode"] = 404;
+				ViewData["Message"] = "Группа не найден";
+				return View("UserError");
+			}
+
+			//_context.CpcmUserfriends.Select(c => c.CmcpFriend).Where(c => c.CmcpUserId == id).Include(c => c.CmcpFriend).ToList();
+			IQueryable<CpcmUser> followerList1;
+			//List<CpcmUser> followerList2;
+			try
+			{
+				followerList1 = _context.CpcmGroupfollowers.Where(c => c.CpcmGroupId == group.CpcmGroupId).Select(c => c.CpcmUser);
+				//followerList2 = await _context.CpcmUserfollowers.Where(c => c.CpcmFollowerId == user.CpcmUserId).Select(c => c.CpcmUser).ToListAsync();
+			}
+			catch (Exception)
+			{
+				Response.StatusCode = 500;
+				ViewData["ErrorCode"] = 500;
+				ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
+				return View("UserError");
+			}
+
+			//followerList1.AddRange(followerList2);
+			if (filters.CityId.HasValue)
+			{
+				//ViewData["cityId"]=cityId;
+				followerList1 = followerList1.Where(u => u.CpcmUserCity == filters.CityId);
+
+			}
+			if (filters.SchoolId.HasValue)
+			{
+				//ViewData["scgoolId"]=schoolId;
+				followerList1 = followerList1.Where(u => u.CpcmUserSchool == filters.SchoolId);
+			}
+			if (filters.UniversityId.HasValue)
+			{
+				//ViewData["universityId"] = universityId;
+				followerList1 = followerList1.Where(u => u.CpcmUserUniversity == filters.UniversityId);
+			}
+			if (!string.IsNullOrEmpty(filters.FirstName))
+			{
+				//ViewData["firstName"] = firstName;
+				followerList1 = followerList1.Where(u => EF.Functions.Like(u.CpcmUserFirstName, $"%{filters.FirstName}%"));
+			}
+			if (!string.IsNullOrEmpty(filters.SecondName))
+			{
+				//ViewData["secondName"] = secondName;
+				followerList1 = followerList1.Where(u => EF.Functions.Like(u.CpcmUserSecondName, $"%{filters.SecondName}%"));
+			}
+			if (!string.IsNullOrEmpty(filters.AdditionalName))
+			{
+				//ViewData["additionalName"] = additionalName;
+				followerList1 = followerList1.Where(u => EF.Functions.Like(u.CpcmUserAdditionalName, $"%{filters.AdditionalName}%"));
+			}
+
+			var result = await followerList1.OrderBy(p => p.CpcmUserId).Take(10).ToListAsync();
+
+			return View(followerList1);
+		}
+		[HttpPost]
+		public async Task<ActionResult> GetNextFollowers(UserFilterModel filters)
+		{
+			CpcmGroup group;
+			try
+			{
+				if (filters.NickName == null)
+				{
+					group = await _context.CpcmUsers.Where(c => c.CpcmUserId == filters.UserId).FirstOrDefaultAsync();
+				}
+				else
+				{
+					group = await _context.CpcmUsers.Where(c => c.CpcmUserNickName == filters.NickName).FirstOrDefaultAsync();
+				}
+			}
+			catch (Exception)
+			{
+				Response.StatusCode = 500;
+				return StatusCode(500);
+			}
+
+			if (group == null || group.CpcmIsDeleted)
+			{
+				Response.StatusCode = 404;
+				return StatusCode(404);
+			}
+
+			//_context.CpcmUserfriends.Select(c => c.CmcpFriend).Where(c => c.CmcpUserId == id).Include(c => c.CmcpFriend).ToList();
+			IQueryable<CpcmUser> followerList1;
+			//List<CpcmUser> followerList2;
+			try
+			{
+				followerList1 = _context.CpcmUserfollowers.Where(c => c.CpcmUserId == group.CpcmUserId && c.CpcmFollowersId.CompareTo(filters.lastId) > 0).Select(c => c.CpcmFollower);
+				//followerList2 = await _context.CpcmUserfollowers.Where(c => c.CpcmFollowerId == user.CpcmUserId).Select(c => c.CpcmUser).ToListAsync();
+			}
+			catch (Exception)
+			{
+				Response.StatusCode = 500;
+				return StatusCode(500);
+			}
+			if (filters.CityId.HasValue)
+			{
+				//ViewData["cityId"]=cityId;
+				followerList1 = followerList1.Where(u => u.CpcmUserCity == filters.CityId);
+			}
+			if (filters.SchoolId.HasValue)
+			{
+				//ViewData["scgoolId"]=schoolId;
+				followerList1 = followerList1.Where(u => u.CpcmUserSchool == filters.SchoolId);
+			}
+			if (filters.UniversityId.HasValue)
+			{
+				//ViewData["universityId"] = universityId;
+				followerList1 = followerList1.Where(u => u.CpcmUserUniversity == filters.UniversityId);
+			}
+			if (!string.IsNullOrEmpty(filters.FirstName))
+			{
+				//ViewData["firstName"] = firstName;
+				followerList1 = followerList1.Where(u => EF.Functions.Like(u.CpcmUserFirstName, $"%{filters.FirstName}%"));
+			}
+			if (!string.IsNullOrEmpty(filters.SecondName))
+			{
+				//ViewData["secondName"] = secondName;
+				followerList1 = followerList1.Where(u => EF.Functions.Like(u.CpcmUserSecondName, $"%{filters.SecondName}%"));
+			}
+			if (!string.IsNullOrEmpty(filters.AdditionalName))
+			{
+				//ViewData["additionalName"] = additionalName;
+				followerList1 = followerList1.Where(u => EF.Functions.Like(u.CpcmUserAdditionalName, $"%{filters.AdditionalName}%"));
+			}
+
+			var result = await followerList1.OrderBy(p => p.CpcmUserId).Take(10).ToListAsync();
+			//followerList1.AddRange(followerList2);
+
+			return Json(followerList1);
+		}
+
 
 
 
