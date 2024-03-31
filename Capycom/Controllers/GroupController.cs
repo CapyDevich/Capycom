@@ -136,6 +136,62 @@ namespace Capycom.Controllers
 			return View(groupProfile);
 		}
 
+		public async Task<IActionResult> GetNextPosts(Guid groupId, Guid lastPostId)
+		{
+			List<CpcmPost> posts;
+			ICollection<CpcmPost> postsWithLikesCount = new List<CpcmPost>();
+			try
+			{
+				var post = await _context.CpcmPosts.Where(c => c.CpcmPostId == lastPostId).FirstOrDefaultAsync();
+				if (post == null)
+				{
+					return StatusCode(404);
+				}
+
+
+				long liked;
+				posts = await _context.CpcmPosts.Where(c => c.CpcmGroupId == groupId).Where(c => c.CpcmPostPublishedDate < post.CpcmPostPublishedDate && c.CpcmPostPublishedDate < DateTime.UtcNow).Take(10).ToListAsync();
+
+				foreach (var postik in posts)
+				{
+					postik.CpcmPostFatherNavigation = await GetFatherPostReccurent(postik);
+					long likes = await _context.Database.SqlQuery<long>($@"SELECT * FROM CPCM_POSTLIKES WHERE CPCM_PostID = {postik.CpcmPostId}").CountAsync();
+					long reposts = await _context.Database.SqlQuery<long>($@"SELECT * FROM CPCM_POSTREPOSTS WHERE CPCM_PostID = {postik.CpcmPostId}").CountAsync();
+					postik.LikesCount = likes;
+					postik.RepostsCount = reposts;
+
+
+
+					if (User.Identity.IsAuthenticated)
+					{
+						try
+						{
+							liked = await _context.Database.SqlQuery<long>($@"SELECT * FROM CPCM_POSTLIKES WHERE CPCM_PostID = {postik.CpcmPostId} && CPCM_UserID = {postik.CpcmUserId}").CountAsync();
+						}
+						catch (DbException)
+						{
+							Response.StatusCode = 500;
+							ViewData["ErrorCode"] = 500;
+							ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
+							return View("UserError");
+						}
+						if (liked > 0)
+							postik.IsLiked = true;
+						else
+							postik.IsLiked = false;
+
+					}
+				}
+
+				
+			}
+			catch (DbException)
+			{
+				return StatusCode(500);
+			}
+			return Json(postsWithLikesCount);
+		}
+
 		[Authorize]
 		public async Task<IActionResult> CreateGroup()
 		{
