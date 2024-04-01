@@ -23,7 +23,7 @@
 								<img src="~/uploads/@image.CpcmImagePath" class="rounded card-img-top object-fit-cover h-100" alt="Изображение">
 							</div>
 						}
-					if (Model.Post.CpcmPostFatherNavigation != null)
+					else
 						@await Html.PartialAsync("PostChild", Model.Post.CpcmPostFatherNavigation)
 				}
 			</div>
