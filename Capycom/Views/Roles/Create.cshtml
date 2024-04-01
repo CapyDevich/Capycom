@@ -1,0 +1,80 @@
+﻿@model Capycom.CpcmRole
+
+@{
+    ViewData["Title"] = "Create";
+}
+
+<h1>Create</h1>
+
+<h4>CpcmRole</h4>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="Create">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            @* <div class="form-group">
+                <label asp-for="CpcmRoleId" class="control-label"></label>
+                <input asp-for="CpcmRoleId" class="form-control" />
+                <span asp-validation-for="CpcmRoleId" class="text-danger"></span>
+            </div> *@
+            <div class="form-group">
+                <label asp-for="CpcmRoleName" class="control-label"></label>
+                <input asp-for="CpcmRoleName" class="form-control" />
+                <span asp-validation-for="CpcmRoleName" class="text-danger"></span>
+            </div>
+            <div class="form-group form-check">
+                <label class="form-check-label">
+                    <input class="form-check-input" asp-for="CpcmCanEditUsers" /> @Html.DisplayNameFor(model => model.CpcmCanEditUsers)
+                </label>
+            </div>
+            <div class="form-group form-check">
+                <label class="form-check-label">
+                    <input class="form-check-input" asp-for="CpcmCanEditGroups" /> @Html.DisplayNameFor(model => model.CpcmCanEditGroups)
+                </label>
+            </div>
+            <div class="form-group form-check">
+                <label class="form-check-label">
+                    <input class="form-check-input" asp-for="CpcmCanEditRoles" /> @Html.DisplayNameFor(model => model.CpcmCanEditRoles)
+                </label>
+            </div>
+            <div class="form-group form-check">
+                <label class="form-check-label">
+                    <input class="form-check-input" asp-for="CpcmCanDelUsersPosts" /> @Html.DisplayNameFor(model => model.CpcmCanDelUsersPosts)
+                </label>
+            </div>
+            <div class="form-group form-check">
+                <label class="form-check-label">
+                    <input class="form-check-input" asp-for="CpcmCanDelUsersComments" /> @Html.DisplayNameFor(model => model.CpcmCanDelUsersComments)
+                </label>
+            </div>
+            <div class="form-group form-check">
+                <label class="form-check-label">
+                    <input class="form-check-input" asp-for="CpcmCanDelGroupsPosts" /> @Html.DisplayNameFor(model => model.CpcmCanDelGroupsPosts)
+                </label>
+            </div>
+            <div class="form-group form-check">
+                <label class="form-check-label">
+                    <input class="form-check-input" asp-for="CpcmCanAddPost" /> @Html.DisplayNameFor(model => model.CpcmCanAddPost)
+                </label>
+            </div>
+            <div class="form-group form-check">
+                <label class="form-check-label">
+                    <input class="form-check-input" asp-for="CpcmCanAddGroups" /> @Html.DisplayNameFor(model => model.CpcmCanAddGroups)
+                </label>
+            </div>
+            <div class="form-group form-check">
+                <label class="form-check-label">
+                    <input class="form-check-input" asp-for="CpcmCanAddComments" /> @Html.DisplayNameFor(model => model.CpcmCanAddComments)
+                </label>
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Create" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+
+<div>
+    <a asp-action="Index">Back to List</a>
+</div>
+
