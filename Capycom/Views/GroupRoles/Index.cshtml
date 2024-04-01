@@ -1,0 +1,59 @@
+﻿@model IEnumerable<Capycom.CpcmGroupRole>
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<h1>Index</h1>
+
+<p>
+    <a asp-action="Create">Create New</a>
+</p>
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.CpcmRoleName)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.CpcmCanEditGroup)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.CpcmCanMakePost)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.CpcmCanDelPost)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.CpcmCanEditPost)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model) {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.CpcmRoleName)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.CpcmCanEditGroup)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.CpcmCanMakePost)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.CpcmCanDelPost)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.CpcmCanEditPost)
+            </td>
+            <td>
+                <a asp-action="Edit" asp-route-id="@item.CpcmRoleId">Edit</a> |
+                <a asp-action="Details" asp-route-id="@item.CpcmRoleId">Details</a> |
+                <a asp-action="Delete" asp-route-id="@item.CpcmRoleId">Delete</a>
+            </td>
+        </tr>
+}
+    </tbody>
+</table>

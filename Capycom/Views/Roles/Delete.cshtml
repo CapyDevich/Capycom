@@ -1,0 +1,81 @@
+﻿@model Capycom.CpcmRole
+
+@{
+    ViewData["Title"] = "Delete";
+}
+
+<h1>Delete</h1>
+
+<h3>Are you sure you want to delete this?</h3>
+<div>
+    <h4>CpcmRole</h4>
+    <hr />
+    <dl class="row">
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.CpcmRoleName)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.CpcmRoleName)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.CpcmCanEditUsers)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.CpcmCanEditUsers)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.CpcmCanEditGroups)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.CpcmCanEditGroups)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.CpcmCanEditRoles)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.CpcmCanEditRoles)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.CpcmCanDelUsersPosts)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.CpcmCanDelUsersPosts)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.CpcmCanDelUsersComments)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.CpcmCanDelUsersComments)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.CpcmCanDelGroupsPosts)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.CpcmCanDelGroupsPosts)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.CpcmCanAddPost)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.CpcmCanAddPost)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.CpcmCanAddGroups)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.CpcmCanAddGroups)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.CpcmCanAddComments)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.CpcmCanAddComments)
+        </dd>
+    </dl>
+    
+    <form asp-action="Delete">
+        <input type="hidden" asp-for="CpcmRoleId" />
+        <input type="submit" value="Delete" class="btn btn-danger" /> |
+        <a asp-action="Index">Back to List</a>
+    </form>
+</div>
