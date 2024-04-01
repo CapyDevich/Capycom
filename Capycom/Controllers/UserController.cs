@@ -239,7 +239,7 @@ namespace Capycom.Controllers
 
                 if(User.Identity.IsAuthenticated)
                 {
-					long liked = await _context.Database.SqlQuery<long>($@"SELECT * FROM CPCM_POSTLIKES WHERE CPCM_PostID = {postik.CpcmPostId} AND CPCM_UserID = {User.FindFirstValue("CpcmUserId")}").CountAsync();
+					long liked = await _context.Database.SqlQuery<long>($@"SELECT * FROM CPCM_POSTLIKES WHERE CPCM_PostID = {postik.CpcmPostId} && CPCM_UserID = {User.FindFirstValue("CpcmUserId")}").CountAsync();
                     if(liked >0)
 					    postik.IsLiked =true;
                     else
@@ -1580,6 +1580,13 @@ namespace Capycom.Controllers
 
             if (ModelState.IsValid)
             {
+                if(string.IsNullOrEmpty(userPost.Text)||string.IsNullOrWhiteSpace(userPost.Text) && userPost.Files == null)
+                {
+					Response.StatusCode = 400;
+					ViewData["ErrorCode"] = 400;
+					ViewData["Message"] = "Нельзя создавать пустой пост";
+					return View(userPost);
+				}
                 CpcmPost post = new CpcmPost();
 
                 post.CpcmPostText = userPost.Text.Trim();
@@ -1693,13 +1700,13 @@ namespace Capycom.Controllers
                 }
 
             }
-            if (userPost.PostFatherId != null)
+            if (userPost.PostFatherId == null)
             {
                 return View(userPost); 
             }
             else
             {
-                return StatusCode(200, new {status=false, message="Репост имел неккоректный вид. Возможно вы попытались прикрепить файлы. Однако этого нельзя делать для репостов."});
+                return StatusCode(200, new {status=false, message="Репост имел неккоректный вид. Возможно вы попытались прикрепить файлы. Однако этого нельзя делать для репостов.", errors= ModelState.SelectMany(x => x.Value.Errors.Select(e => e.ErrorMessage)).ToList() });
             }
         }
 
@@ -1719,7 +1726,7 @@ namespace Capycom.Controllers
             {
                 return StatusCode(500);
             }
-            if (post == null)
+            if (post == null || !post.CpcmIsDeleted)
             {
                 return StatusCode(404);
             }
@@ -1728,7 +1735,7 @@ namespace Capycom.Controllers
                 return StatusCode(403);
             }
 
-            if (!CheckUserPrivilege("CpcmCanDelUsersPosts", "True", post.CpcmUserId.ToString()) || post.CpcmPostBanned == true)
+            if (!CheckUserPrivilege("CpcmCanDelUsersPosts", "True", post.CpcmUserId.ToString()))
             {
                 return StatusCode(403);
             }
@@ -1973,7 +1980,7 @@ namespace Capycom.Controllers
                     return StatusCode(404);
                 }
 
-                posts = await _context.CpcmPosts.Where(c => c.CpcmUserId == userId && c.CpcmPostId == lastPostId).Where(c => c.CpcmPostPublishedDate < post.CpcmPostPublishedDate && c.CpcmPostPublishedDate < DateTime.UtcNow).Take(10).ToListAsync();
+                posts = await _context.CpcmPosts.Where(c => c.CpcmUserId == userId).Where(c => c.CpcmPostPublishedDate < post.CpcmPostPublishedDate && c.CpcmPostPublishedDate < DateTime.UtcNow).Take(10).ToListAsync();
                 foreach (var postik in posts)
                 {
                     postik.CpcmPostFatherNavigation = await GetFatherPostReccurent(postik);
@@ -2024,8 +2031,8 @@ namespace Capycom.Controllers
             }
             return Json(postModels);
         }
-
-        [HttpGet]
+		[Authorize]
+		[HttpGet]
         public async Task<IActionResult> NotPublishedPosts(Guid id)
         {
             if (!CheckUserPrivilege("CpcmCanEditUsers", "True", id))

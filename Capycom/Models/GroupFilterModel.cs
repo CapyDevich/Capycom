@@ -4,6 +4,7 @@
 	{
 		public Guid? UserId { get; set; }
 		public string? NickName { get; set; }
+		public Guid? GroupId { get; set; }
 		public string? Name { get; set; }
 		public int? SubjectID { get; set; }
 		public Guid? CityId { get; set; }

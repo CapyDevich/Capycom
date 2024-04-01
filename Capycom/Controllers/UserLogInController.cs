@@ -68,10 +68,11 @@ if (ModelState.IsValid)
 #if AdminAutoAuth
                 if (true)
 #else
-				if (potentialUser.CpcmUserPwdHash.SequenceEqual(MyConfig.GetSha256Hash(user.CpcmUserPwd.Trim(), potentialUserSalt, _config.ServerSol)))
+                //if (potentialUser.CpcmUserPwdHash == MyConfig.GetSha256Hash(user.CpcmUserPwd.Trim(), potentialUserSalt, _config.ServerSol))
+                if (potentialUser.CpcmUserPwdHash.SequenceEqual(MyConfig.GetSha256Hash(user.CpcmUserPwd.Trim(), potentialUserSalt, _config.ServerSol)))
 #endif
 
-				{
+					{
                     if(potentialUser.CpcmUserBanned == true)
                     {
                         Response.StatusCode = 403;

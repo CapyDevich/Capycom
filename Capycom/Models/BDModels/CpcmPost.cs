@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -23,14 +23,25 @@ public partial class CpcmPost
     public bool CpcmPostBanned { get; set; }
 
     public bool CpcmIsDeleted { get; set; }
+
+
+
 	[NotMapped]
 	public CpcmUser? User { get; set; }
 	[NotMapped]
 	public CpcmGroup? Group { get; set; }
 	[NotMapped]
 	public bool IsLiked { get; set; }
+	[NotMapped]
+	public long LikesCount { get; set; }
+	[NotMapped]
+	public long RepostsCount { get; set; }
+	[NotMapped]
+	public List<CpcmComment> TopLevelComments { get; set; }
 
-    public virtual ICollection<CpcmComment> CpcmComments { get; set; } = new List<CpcmComment>();
+
+
+	public virtual ICollection<CpcmComment> CpcmComments { get; set; } = new List<CpcmComment>();
 
     public virtual ICollection<CpcmImage> CpcmImages { get; set; } = new List<CpcmImage>();
 
