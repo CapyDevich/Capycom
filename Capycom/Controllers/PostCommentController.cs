@@ -162,7 +162,7 @@ namespace Capycom.Controllers
                 }
                 return StatusCode(200, new { status = true });
             }
-            return StatusCode(200, new { status=false,message = "Комментарий имеет некорректные значения." });
+            return StatusCode(200, new { status=false,message = "Комментарий имеет некорректные значения.",errors= ModelState.SelectMany(x => x.Value.Errors.Select(e => e.ErrorMessage)).ToList() });
 
         }
 
