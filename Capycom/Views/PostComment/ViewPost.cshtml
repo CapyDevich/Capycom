@@ -16,14 +16,15 @@
 			</div>
 			<div class="row row-cols-1 @(Model.CpcmImages.Count > 1 ? "row-cols-md-2 row-cols-lg-2" : "") g-4">
 				@{
-					foreach (var image in Model.CpcmImages)
-					{
-						<div class="col m-0" style="padding: 1px;">
-							<img src="~/uploads/@image.CpcmImagePath" class="rounded card-img-top object-fit-cover h-100" alt="Изображение">
-						</div>
-					}
-					if (Model.CpcmPostFatherNavigation != null)
-						@await Html.PartialAsync("PostChild", Model.CpcmPostFatherNavigation)
+					if (Model.CpcmPostFatherNavigation == null)
+						foreach (var image in Model.CpcmImages)
+						{
+							<div class="col m-0" style="padding: 1px;">
+								<img src="~/uploads/@image.CpcmImagePath" class="rounded card-img-top object-fit-cover h-100" alt="Изображение">
+							</div>
+						}
+					else
+						@await Html.PartialAsync("/Views/User/PostChild.cshtml", Model.CpcmPostFatherNavigation)
 				}
 			</div>
 		</div>
