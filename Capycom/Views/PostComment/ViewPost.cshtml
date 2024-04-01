@@ -5,7 +5,7 @@
 			<img src="~/uploads/@Model.User?.CpcmUserImagePath"
 				 class="rounded-circle me-3" style="width: 50px; height: 50px;">
 			<div>
-				<h5>@Model.User?.CpcmUserFirstName @Model.User?.CpcmUserSecondName @Model.User?.CpcmUserAdditionalName</h5>
+				<h5>Nickname</h5>
 				<small class="text-muted">@Model.CpcmPostPublishedDate?.ToString("dd.MM.yyyy hh:mm")</small>
 			</div>
 		</div>
@@ -31,13 +31,13 @@
 		@foreach (var comment in Model.CpcmComments)
 		{
 			<div class="card mt-2">
-				<div class="d-flex align-items-center mb-3">
+				<div class="d-flex">
 					<img src="~/uploads/@Model.User?.CpcmUserImagePath"
-						 class="rounded-circle mt-2 ms-2 me-3" style="width: 50px; height: 50px;">
-					<div class="row g-1 p-1">
-						<p class="mt-2">@Model.User?.CpcmUserFirstName @Model.User?.CpcmUserSecondName @Model.User?.CpcmUserAdditionalName</p>
+						 class="rounded-circle mt-3 ms-2 me-3" style="width: 50px; height: 50px;">
+					<div class="row p-1">
+						<p class="mt-2 mb-1">Nickname</p>
 						<small class="text-muted">@comment.CpcmCommentCreationDate.ToString("dd.MM.yyyy hh:mm")</small>
-						<p>@comment.CpcmCommentText</p>
+						<p class="mb-0">@comment.CpcmCommentText</p>
 					</div>
 				</div>
 				<div class="row row-cols-1 ps-2 pb-1 @(Model.CpcmImages.Count > 1 ? "row-cols-md-2 row-cols-lg-2" : "") g-2">
