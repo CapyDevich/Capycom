@@ -39,13 +39,14 @@
 						<textarea type="text" class="form-control comment-text" id="commentText" rows="1" required />
 						</textarea>
 						<div class="d-flex align-items-center btn btn-light border-top border-bottom">
-							<label class="paperclip-label" for="file">
+							<label class="paperclip-label" for="fileInput">
 								<img class="paperclip-icon" src="~/images/paperclip.svg" />
 							</label>
 						</div>
-						<input id="file" name="file" type="file" multiple hidden />
 						<button type="submit" class="btn btn-light border" value="">Отправить</button>
 					</div>
+					<input id="fileInput" name="file" type="file" multiple hidden/>
+					<div class="file-list"></div>
 				</div>
 			</form>
 			<div class="row row-cols-1 ps-2 pb-1 @(Model.CpcmImages.Count > 1 ? "row-cols-md-2 row-cols-lg-2" : "") g-2">
