@@ -28,8 +28,17 @@ namespace Capycom
 
             builder.Services.AddAuthorization();
 
-            // Add services to the container.
-            builder.Services.AddControllersWithViews();
+
+			builder.Services.AddAuthorization(options =>
+			{
+				options.AddPolicy("CpcmCanEditRoles", policy => policy.RequireClaim("CpcmCanEditRoles", "True"));
+			});
+
+
+
+
+			// Add services to the container.
+			builder.Services.AddControllersWithViews();
 
             var app = builder.Build();
 

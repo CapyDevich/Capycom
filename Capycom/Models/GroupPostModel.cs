@@ -1,7 +1,8 @@
 ﻿namespace Capycom.Models
 {
-	public class UserPostModel
+	public class GroupPostModel
 	{
+
 		[MaxFileCount(4)]
 		public IFormFileCollection? Files { get; set; }
 
@@ -11,8 +12,8 @@
 
 		[FutureDate]
 		public DateTime? Published { get; set; }
+
+		public Guid GroupId { get; set; }
+
 	}
-
-
 }
-
