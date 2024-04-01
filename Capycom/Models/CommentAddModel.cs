@@ -13,7 +13,7 @@ namespace Capycom.Models
         public Guid CpcmPostId { get; set; }
 
         
-        [RequiredNonEmptyString]
+        
         public string? CpcmCommentText { get; set; }
 
         [Required]
