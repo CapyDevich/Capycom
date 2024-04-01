@@ -8,21 +8,26 @@ using Microsoft.EntityFrameworkCore;
 using Capycom;
 using System.Data.Common;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.Extensions.Options;
 
 namespace Capycom.Controllers
 {
 	[Authorize(Policy = "CanEditRoles")]
 	public class RolesController : Controller
     {
-        private readonly CapycomContext _context;
+		private readonly CapycomContext _context;
+		private readonly MyConfig _config;
+		private readonly ILogger<RolesController> _logger;
 
-        public RolesController(CapycomContext context)
-        {
-            _context = context;
-        }
+		public RolesController(ILogger<RolesController> logger, CapycomContext context, IOptions<MyConfig> config)
+		{
+			_context = context;
+			_config = config.Value;
+			_logger = logger;
+		}
 
-        // GET: Roles
-        public async Task<IActionResult> Index()
+		// GET: Roles
+		public async Task<IActionResult> Index()
         {
             try
             {
@@ -83,7 +88,7 @@ namespace Capycom.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("CpcmRoleId,CpcmRoleName,CpcmCanEditUsers,CpcmCanEditGroups,CpcmCanEditRoles,CpcmCanDelUsersPosts,CpcmCanDelUsersComments,CpcmCanDelGroupsPosts,CpcmCanAddPost,CpcmCanAddGroups,CpcmCanAddComments")] CpcmRole cpcmRole)
+        public async Task<IActionResult> Create([Bind("CpcmRoleName,CpcmCanEditUsers,CpcmCanEditGroups,CpcmCanEditRoles,CpcmCanDelUsersPosts,CpcmCanDelUsersComments,CpcmCanDelGroupsPosts,CpcmCanAddPost,CpcmCanAddGroups,CpcmCanAddComments")] CpcmRole cpcmRole)
         {
             if (ModelState.IsValid)
             {
@@ -152,7 +157,7 @@ namespace Capycom.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("CpcmRoleId,CpcmRoleName,CpcmCanEditUsers,CpcmCanEditGroups,CpcmCanEditRoles,CpcmCanDelUsersPosts,CpcmCanDelUsersComments,CpcmCanDelGroupsPosts,CpcmCanAddPost,CpcmCanAddGroups,CpcmCanAddComments")] CpcmRole cpcmRole)
+        public async Task<IActionResult> Edit(int id, [Bind("CpcmRoleName,CpcmCanEditUsers,CpcmCanEditGroups,CpcmCanEditRoles,CpcmCanDelUsersPosts,CpcmCanDelUsersComments,CpcmCanDelGroupsPosts,CpcmCanAddPost,CpcmCanAddGroups,CpcmCanAddComments")] CpcmRole cpcmRole)
         {
             if (id != cpcmRole.CpcmRoleId)
             {
@@ -177,8 +182,11 @@ namespace Capycom.Controllers
                     }
                     else
                     {
-                        throw;
-                    }
+						Response.StatusCode = 500;
+						ViewData["ErrorCode"] = 500;
+						ViewData["Message"] = "Ошибка связи с сервером";
+						return View("UserError");
+					}
                 }
                 return RedirectToAction(nameof(Index));
             }
