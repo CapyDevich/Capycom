@@ -1571,7 +1571,7 @@ namespace Capycom.Controllers
         [Authorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> CreatePost(GroupPostModel userPost)
+        public async Task<IActionResult> CreatePost(UserPostModel userPost)
         {
             //if (userPost.Text == null && userPost.Files.Count > 0)
             //{
@@ -1580,6 +1580,13 @@ namespace Capycom.Controllers
 
             if (ModelState.IsValid)
             {
+                if(string.IsNullOrEmpty(userPost.Text)||string.IsNullOrWhiteSpace(userPost.Text) && userPost.Files == null)
+                {
+					Response.StatusCode = 400;
+					ViewData["ErrorCode"] = 400;
+					ViewData["Message"] = "Нельзя создавать пустой пост";
+					return View(userPost);
+				}
                 CpcmPost post = new CpcmPost();
 
                 post.CpcmPostText = userPost.Text.Trim();
@@ -1699,7 +1706,7 @@ namespace Capycom.Controllers
             }
             else
             {
-                return StatusCode(200, new {status=false, message="Репост имел неккоректный вид. Возможно вы попытались прикрепить файлы. Однако этого нельзя делать для репостов."});
+                return StatusCode(200, new {status=false, message="Репост имел неккоректный вид. Возможно вы попытались прикрепить файлы. Однако этого нельзя делать для репостов.", errors= ModelState.SelectMany(x => x.Value.Errors.Select(e => e.ErrorMessage)).ToList() });
             }
         }
 
