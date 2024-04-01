@@ -1,10 +1,12 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
+using System;
 using System.Collections.Generic;
 
 namespace Capycom;
 
 public partial class CpcmRole
 {
+    [ValidateNever]
     public int CpcmRoleId { get; set; }
 
     public string CpcmRoleName { get; set; } = null!;
