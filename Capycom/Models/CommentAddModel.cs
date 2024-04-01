@@ -16,8 +16,7 @@ namespace Capycom.Models
         
         public string? CpcmCommentText { get; set; }
 
-        [Required]
-        [HiddenInput]
+
         public Guid CpcmUserId { get; set; }
 
         [HiddenInput]
