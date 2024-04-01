@@ -34,11 +34,19 @@
 				<div class="d-flex align-items-center mb-3">
 					<img src="~/uploads/@Model.User?.CpcmUserImagePath"
 						 class="rounded-circle mt-2 ms-2 me-3" style="width: 50px; height: 50px;">
-					<div>
+					<div class="row g-1 p-1">
 						<p class="mt-2">@Model.User?.CpcmUserFirstName @Model.User?.CpcmUserSecondName @Model.User?.CpcmUserAdditionalName</p>
 						<small class="text-muted">@comment.CpcmCommentCreationDate.ToString("dd.MM.yyyy hh:mm")</small>
 						<p>@comment.CpcmCommentText</p>
 					</div>
+				</div>
+				<div class="row row-cols-1 ps-2 pb-1 @(Model.CpcmImages.Count > 1 ? "row-cols-md-2 row-cols-lg-2" : "") g-2">
+					@foreach (var image in Model.CpcmImages)
+					{
+						<div class="col" style="padding: 1px; width: 256px; height:256px;">
+							<img src="~/uploads/@image.CpcmImagePath" class="rounded card-img-top object-fit-cover h-100 mt-0" alt="Изображение">
+						</div>
+					}
 				</div>
 			</div>
 		}
