@@ -67,7 +67,7 @@ namespace Capycom.Controllers
 
 
 				PostModel postModel = new() { Post=post,UserOwner=userOwner, GroupOwner = groupOwner, LikesCount=likes,RepostsCount=reposts, TopLevelComments=topComments};
-                return View(post);
+                return View(postModel);
             }
             catch (DbException)
             {

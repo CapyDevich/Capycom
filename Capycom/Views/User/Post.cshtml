@@ -20,7 +20,7 @@
 						foreach (var image in Model.Post.CpcmImages)
 						{
 							<div class="col m-0" style="padding: 1px;">
-								<img src="~/uploads/@image.CpcmImagePath" class="rounded card-img-top object-fit-cover h-100" alt="Изображение">
+								<img src="@Url.Content(@image.CpcmImagePath)" class="rounded card-img-top object-fit-cover h-100" alt="Изображение">
 							</div>
 						}
 					else
