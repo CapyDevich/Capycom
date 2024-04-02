@@ -60,7 +60,7 @@
 		</div>
 	</div>
 </div>
-@if (User.Identity.IsAuthenticated)
+@if (User.Identity.IsAuthenticated && User.Identity.IsAuthenticated && Model.CpcmUserId.ToString() != User.FindAll(x => x.Type == "CpcmUserId").FirstOrDefault().Value)
 {
 	<button class="btn btn-outline-primary mb-1">
 		<span>Добавить в друзья</span>
