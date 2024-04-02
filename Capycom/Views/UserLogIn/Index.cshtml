@@ -1,32 +1,26 @@
 ﻿@model Capycom.Models.UserLogInModel
 @{
-    ViewData["Title"] = "Вход в аккаунт";
+	ViewData["Title"] = "Вход";
 }
-
-<h1>Войти в аккаунт</h1>
-
-<h4>CpcmUser</h4>
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="LogIn">
-            @Html.AntiForgeryToken()
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <div class="form-group">
-
-                <label asp-for="CpcmUserEmail" class="control-label"></label>
-                <input asp-for="CpcmUserEmail" class="form-control" />
-                <span asp-validation-for="CpcmUserEmail" class="text-danger"></span>
-            </div>          
-            <div class="form-group">
-                <label asp-for="CpcmUserPwd" class="control-label"></label>
-                <input asp-for="CpcmUserPwd" class="form-control" />
-                <span asp-validation-for="CpcmUserPwd" class="text-danger"></span>
-            </div>     
-            <div class="form-group">
-                <input type="submit" value="Create" class="btn btn-primary" />
-            </div>
-        </form>
-    </div>
+<div class="container">
+	<h1 class="text-center mt-5">@ViewData["Title"]</h1>
+	<form class="col-md-6 mx-auto" asp-action="Index">
+		@Html.AntiForgeryToken()
+		<div asp-validation-summary="ModelOnly" class="text-danger"></div>
+		<label for="login" class="form-label" asp-for="CpcmUserEmail">Email</label>
+		<div class="input-group">
+			<input type="text" class="form-control" id="login" required asp-for="CpcmUserEmail">
+		</div>
+		<span asp-validation-for="CpcmUserEmail" class="text-danger d-block"></span>
+		<div class="mb-3">
+			<label for="password" class="form-label" asp-for="CpcmUserPwd">Пароль</label>
+			<input type="password" class="form-control" id="password" required asp-for="CpcmUserPwd">
+		</div>
+		<span asp-validation-for="CpcmUserPwd" class="text-danger"></span>
+		<span class="text-danger">@ViewData["Message"]</span>
+		<button type="submit" class="col-md-12 btn btn-primary">Войти</button>
+	</form>
+	<div class="col-md-6 mx-auto mt-2">
+		<a class="col-md-12 btn btn-secondary" asp-area="" asp-controller="UserSignUp" asp-action="Create">Зарегистрироваться</a>
+	</div>
 </div>
-

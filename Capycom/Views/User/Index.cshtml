@@ -1,0 +1,26 @@
+﻿@model UserProfileAndPostsModel
+@{
+	ViewData["Title"] = "Профиль";
+}
+<link href="~/css/post.css" rel="stylesheet" />
+<div class="container mt-5">
+	<div class="row">
+		<div class="col-lg-4">
+			@await Html.PartialAsync("UserCard", Model.User)
+		</div>
+		<div class="col-lg-8">
+			@if (User.Identity.IsAuthenticated && Model.User.CpcmUserId.ToString() == User.FindAll(x => x.Type == "CpcmUserId").FirstOrDefault().Value)
+			{
+				<a asp-area="" asp-controller="User" asp-action="CreatePost" asp-route-postId="" class="btn btn-outline-primary col-12 mb-1">Добавить пост</a>
+			}
+			@if (Model.Posts != null)
+			{
+				@foreach (var item in Model.Posts)
+				{
+					@await Html.PartialAsync("Post", item)
+				}
+			}
+		</div>
+	</div>
+</div>
+<script src="~/js/post.js"></script>

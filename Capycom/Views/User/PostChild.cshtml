@@ -1,0 +1,32 @@
+﻿@model CpcmPost
+<div class="card mb-2">
+	<div class="card-body">
+		<div class="d-flex align-items-center mb-3">
+			<img src="~/uploads/@Model.User?.CpcmUserImagePath"
+				 class="rounded-circle me-3" style="width: 50px; height: 50px;">
+			<div>
+				<h5>@Model.User?.CpcmUserFirstName @Model.User?.CpcmUserSecondName @Model.User?.CpcmUserAdditionalName</h5>
+				<small class="text-muted">@Model.CpcmPostPublishedDate?.ToString("dd.MM.yyyy hh:mm")</small>
+			</div>
+		</div>
+
+		<div class="g-2">
+			<div class="row g-1 p-1">
+				@Model.CpcmPostText
+			</div>
+			<div class="row row-cols-1 @(Model.CpcmImages.Count > 1 ? "row-cols-md-2 row-cols-lg-2" : "") g-4">
+				@{
+					if (Model.CpcmPostFatherNavigation == null)
+						foreach (var image in Model.CpcmImages)
+						{
+							<div class="col m-0" style="padding: 1px;">
+								<img src="@Url.Content(@image.CpcmImagePath)" class="rounded card-img-top object-fit-cover h-100" alt="Изображение">
+							</div>
+						}
+						else
+							@await Html.PartialAsync("PostChild", Model.CpcmPostFatherNavigation)
+				}
+			</div>
+		</div>
+	</div>
+</div>
