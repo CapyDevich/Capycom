@@ -205,7 +205,7 @@ namespace Capycom.Controllers
             List<CpcmPost> posts;
             try
             {
-                posts = await _context.CpcmPosts.Where(c => c.CpcmUserId == user.CpcmUserId).Include(c => c.CpcmImages).OrderByDescending(c => c.CpcmPostPublishedDate).Take(10).ToListAsync();
+                posts = await _context.CpcmPosts.Where(c => c.CpcmUserId == user.CpcmUserId && c.CpcmPostPublishedDate>DateTime.UtcNow).Include(c => c.CpcmImages).OrderByDescending(c => c.CpcmPostPublishedDate).Take(10).ToListAsync();
                 if (HttpContext.User.Identity.IsAuthenticated && user.CpcmUserId.ToString() != User.FindFirstValue("CpcmUserId"))
                 {
                     var friend = await _context.CpcmUserfriends.Where(f => f.CmcpUserId == user.CpcmUserId && f.CmcpFriendId.ToString() == User.FindFirstValue("CpcmUserId")).FirstOrDefaultAsync();
