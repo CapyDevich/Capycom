@@ -60,9 +60,12 @@
 		</div>
 	</div>
 </div>
-<button class="btn btn-outline-primary mb-1">
-	<span>Добавить в друзья</span>
-</button>
-<button class="btn btn-outline-primary mb-1">
-	<span>Подписаться</span>
-</button>
+@if (User.Identity.IsAuthenticated)
+{
+	<button class="btn btn-outline-primary mb-1">
+		<span>Добавить в друзья</span>
+	</button>
+	<button class="btn btn-outline-primary mb-1">
+		<span>Подписаться</span>
+	</button>
+}
