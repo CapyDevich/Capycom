@@ -155,24 +155,37 @@ namespace Capycom.Controllers
             CpcmUser? user;
             try
             {
-                if (!string.IsNullOrWhiteSpace(filter.NickName))
-                {
-                    user = await _context.CpcmUsers
-                            .Include(c => c.CpcmUserCityNavigation)
-                            .Include(c => c.CpcmUserRoleNavigation)
-                            .Include(c => c.CpcmUserSchoolNavigation)
-                            .Include(c => c.CpcmUserUniversityNavigation)
-                            .Where(c => c.CpcmUserNickName == filter.NickName).FirstOrDefaultAsync(); 
-                } //_context.Entry(user).Reference(u => u.CpcmUserCityNavigation).Load();
-                else
+                if (User.Identity.IsAuthenticated && (filter.NickName == null ||filter.UserId==null))
                 {
 					user = await _context.CpcmUsers
+							.Where(c => c.CpcmUserId.ToString() == User.FindFirst(f=>f.Type=="CpcmSserId").Value)
 							.Include(c => c.CpcmUserCityNavigation)
 							.Include(c => c.CpcmUserRoleNavigation)
 							.Include(c => c.CpcmUserSchoolNavigation)
 							.Include(c => c.CpcmUserUniversityNavigation)
-							.Where(c => c.CpcmUserId == filter.UserId).FirstOrDefaultAsync();
+                            .FirstOrDefaultAsync();
 				}
+                else
+                {
+                    if (!string.IsNullOrWhiteSpace(filter.NickName))
+                    {
+                        user = await _context.CpcmUsers
+                                .Include(c => c.CpcmUserCityNavigation)
+                                .Include(c => c.CpcmUserRoleNavigation)
+                                .Include(c => c.CpcmUserSchoolNavigation)
+                                .Include(c => c.CpcmUserUniversityNavigation)
+                                .Where(c => c.CpcmUserNickName == filter.NickName).FirstOrDefaultAsync();
+                    } //_context.Entry(user).Reference(u => u.CpcmUserCityNavigation).Load();
+                    else
+                    {
+                        user = await _context.CpcmUsers
+                                .Include(c => c.CpcmUserCityNavigation)
+                                .Include(c => c.CpcmUserRoleNavigation)
+                                .Include(c => c.CpcmUserSchoolNavigation)
+                                .Include(c => c.CpcmUserUniversityNavigation)
+                                .Where(c => c.CpcmUserId == filter.UserId).FirstOrDefaultAsync();
+                    } 
+                }
             }
             catch (DbException)
             {
@@ -1690,9 +1703,9 @@ namespace Capycom.Controllers
                     return View(userPost); // TODO Продумать место для сохранения еррора
                 }
 
-                if (userPost.PostFatherId != null)
+                if (userPost.PostFatherId == null)
                 {
-                    return View("Index"); 
+                    return RedirectToAction("Index"); 
                 }
                 else
                 {
@@ -1962,6 +1975,7 @@ namespace Capycom.Controllers
                     ViewData["Message"] = "Не удалось сохранить пост. Пожалуйста, повторите запрос позднее или обратитесь к Администратору.";
                     return View(editPost); // TODO Продумать место для сохранения еррора
                 }
+                RedirectToAction("Index");
 
             }
             return View(editPost);
