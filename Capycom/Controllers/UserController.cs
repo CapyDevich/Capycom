@@ -166,6 +166,10 @@ namespace Capycom.Controllers
 							.Include(c => c.CpcmUserUniversityNavigation)
                             .FirstOrDefaultAsync();
 				}
+                else if(!User.Identity.IsAuthenticated && (filter.NickName == null || filter.UserId == null))
+				{
+                    RedirectToAction("Index", "UserLogIn");
+                }
                 else
                 {
                     if (!string.IsNullOrWhiteSpace(filter.NickName))
