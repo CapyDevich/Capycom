@@ -1,4 +1,5 @@
-﻿const fileInput = document.getElementById('fileInput');
+﻿'use strict'
+const fileInput = document.getElementById('fileInput');
 const fileList = document.querySelector('.file-list');
 
 fileInput.addEventListener('change', function () {
@@ -45,27 +46,4 @@ textarea.addEventListener('input', function () {
 		this.style.height = 'auto';
 		this.style.height = (this.scrollHeight) + 'px';
 	}
-});
-
-$(document).ready(function () {
-    $('#commentForm').submit(function (e) {
-        e.preventDefault();
-
-        let formData = new FormData(this);
-        console.log(formData);
-        $.ajax({
-            type: 'POST',
-            url: '/PostComment/AddComment', // Укажите URL вашего обработчика на сервере
-            data: formData,
-            processData: false,
-            contentType: false,
-            success: function (response) {
-                console.log('Данные успешно отправлены!');
-                console.log(response);
-            },
-            error: function (error) {
-                console.error('Ошибка при отправке данных:', error);
-            }
-        });
-    });
 });

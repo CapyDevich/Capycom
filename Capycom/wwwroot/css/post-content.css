@@ -1,4 +1,5 @@
-﻿.block-image {
+﻿/* Набор стилей для textarea с значком скрепки для загрузки файлов */
+.block-image {
     padding: 1px;
     width: 256px;
     height: 256px;
