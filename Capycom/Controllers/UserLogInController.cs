@@ -104,7 +104,7 @@ if (ModelState.IsValid)
                     return View();
                 }
             }
-            return View("Index",user);
+            return View("Index");
         }
 
         [Authorize]

@@ -1,0 +1,71 @@
+﻿@model CpcmUser
+<style>
+	.profile-block {
+		background-color: #f7f7f7;
+	}
+</style>
+<div class="row">
+	<div class="pt-2 pb-2 profile-block card mb-2">
+		<div class="mx-auto" style="width: 256px; height: 256px;">
+			<img src="~/uploads/@Model.CpcmUserImagePath" class="img-fluid rounded object-fit-cover h-100 w-100" alt="Иконка пользователя">
+		</div>
+		
+		<div class="text-center">
+			<h4 class="mb-0">@Model.CpcmUserFirstName @Model.CpcmUserSecondName @Model.CpcmUserAdditionalName</h4>
+			<small class="text-muted">@@<a href="~/User/Index?NickName=@Model.CpcmUserNickName">@Model.CpcmUserNickName</a></small>
+		</div>
+		<div class="mt-1">
+			<ul class="list-group list-group-flush">
+				@if (@Model.CpcmUserAbout != string.Empty)
+				{
+					<p class="m-0">О себе</p>
+					<li class="list-group-item profile-block">@Model.CpcmUserAbout</li>
+				}
+				@if (@Model.CpcmUserCity.HasValue)
+				{
+					<p class="m-0">Город</p>
+					<li class="list-group-item profile-block">@Model.CpcmUserCity.Value</li>
+				}
+				@if (@Model.CpcmUserUniversity.HasValue)
+				{
+					<p class="m-0">Университет</p>
+					<li class="list-group-item profile-block">@Model.CpcmUserUniversity.Value</li>
+				}
+				@if (@Model.CpcmUserSchool.HasValue)
+				{
+					<p class="m-0">Университет</p>
+					<li class="list-group-item profile-block">@Model.CpcmUserSchool.Value</li>
+				}
+				@if (@Model.CpcmUserBooks != string.Empty)
+				{
+					<p class="m-0">Книги</p>
+					<li class="list-group-item profile-block">@Model.CpcmUserBooks</li>
+				}
+				@if (@Model.CpcmUserFilms != string.Empty)
+				{
+					<p class="m-0">Фильмы</p>
+					<li class="list-group-item profile-block">@Model.CpcmUserFilms</li>
+				}
+				@if (@Model.CpcmUserMusics != string.Empty)
+				{
+					<p class="m-0">Музыка</p>
+					<li class="list-group-item profile-block">@Model.CpcmUserMusics</li>
+				}
+				@if (@Model.CpcmUserSite != string.Empty)
+				{
+					<p class="m-0">Сайт</p>
+					<li class="list-group-item profile-block"><a href="@Model.CpcmUserSite">@Model.CpcmUserSite</a></li>
+				}
+			</ul>
+		</div>
+	</div>
+</div>
+@if (User.Identity.IsAuthenticated && User.Identity.IsAuthenticated && Model.CpcmUserId.ToString() != User.FindAll(x => x.Type == "CpcmUserId").FirstOrDefault().Value)
+{
+	<button class="btn btn-outline-primary mb-1">
+		<span>Добавить в друзья</span>
+	</button>
+	<button class="btn btn-outline-primary mb-1">
+		<span>Подписаться</span>
+	</button>
+}
