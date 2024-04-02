@@ -168,7 +168,7 @@ namespace Capycom.Controllers
 				}
                 else if(!User.Identity.IsAuthenticated && (filter.NickName == null || filter.UserId == null))
 				{
-                    RedirectToAction("Index", "UserLogIn");
+                    return RedirectToAction("Index", "UserLogIn");
                 }
                 else
                 {
