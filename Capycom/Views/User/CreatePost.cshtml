@@ -1,0 +1,24 @@
+﻿@model UserPostModel
+<link href="~/css/comment.css" rel="stylesheet" />
+<div class="container align-content-center">
+	<div class="card mt-2">
+		<form class="d-flex" id="commentForm" enctype="multipart/form-data">
+			@* 		<img src="~/uploads/@Model.Post.User?.CpcmUserImagePath"
+			class="rounded-circle mt-3 ms-2 me-3 user-icon"> *@
+			<div class="row p-1">
+				<div class="input-group mb-3">
+					<textarea name="CpcmCommentText" type="text" class="form-control comment-text" id="commentText" rows="1" required></textarea>
+					<div class="d-flex align-items-center btn btn-light border-top border-bottom">
+						<label class="paperclip-label" for="fileInput">
+							<img class="paperclip-icon" src="~/images/paperclip.svg" />
+						</label>
+					</div>
+					<button type="submit" class="btn btn-light border" value="">Отправить</button>
+				</div>
+				<input name="Files" id="fileInput" type="file" multiple hidden />
+				<div class="file-list"></div>
+			</div>
+		</form>
+	</div>
+</div>
+<script src="~/js/comment.js"></script>
