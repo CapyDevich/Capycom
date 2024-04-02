@@ -155,7 +155,7 @@ namespace Capycom.Controllers
             CpcmUser? user;
             try
             {
-                if (User.Identity.IsAuthenticated && (filter.NickName == null ||filter.UserId==null))
+                if (User.Identity.IsAuthenticated && (filter.NickName == null && filter.UserId==null))
                 {
                     var guidstring = User.FindFirst(f => f.Type == "CpcmUserId").Value;
 					user = await _context.CpcmUsers
@@ -166,7 +166,7 @@ namespace Capycom.Controllers
 							.Include(c => c.CpcmUserUniversityNavigation)
                             .FirstOrDefaultAsync();
 				}
-                else if(!User.Identity.IsAuthenticated && (filter.NickName == null || filter.UserId == null))
+                else if(!User.Identity.IsAuthenticated && (filter.NickName == null && filter.UserId == null))
 				{
                     return RedirectToAction("Index", "UserLogIn");
                 }
