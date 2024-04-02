@@ -1,5 +1,8 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
+using Serilog.Events;
+using Serilog.Sinks.MSSqlServer;
+using Serilog;
 using System.Configuration;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
@@ -34,6 +37,20 @@ namespace Capycom
 				options.AddPolicy("CpcmCanEditRoles", policy => policy.RequireClaim("CpcmCanEditRoles", "True"));
 			});
 
+
+			builder.Logging.ClearProviders();
+            Log.Logger = new LoggerConfiguration()
+                .MinimumLevel.Debug() //Information()
+				.MinimumLevel.Override("Microsoft", LogEventLevel.Information) //все события от Microsoft, Microsoft.AspNetCore, Microsoft.AspNetCore.Hosting и т.д., будут записываться на уровне Information и выше.
+				.Enrich.FromLogContext()
+	            .WriteTo.Console()
+	            .WriteTo.Async(a=> a.File("Logs/log-.txt", rollingInterval: RollingInterval.Day))
+	            .WriteTo.Async(a=> a.MSSqlServer(
+		            connectionString: builder.Configuration.GetSection("Test1")["OurDB"],
+		            sinkOptions: new MSSqlServerSinkOptions { TableName = "LogEvents", AutoCreateSqlTable = true }))
+	            .CreateLogger();
+
+			builder.Host.UseSerilog();
 
 
 
