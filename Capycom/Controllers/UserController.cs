@@ -157,8 +157,9 @@ namespace Capycom.Controllers
             {
                 if (User.Identity.IsAuthenticated && (filter.NickName == null ||filter.UserId==null))
                 {
+                    var guidstring = User.FindFirst(f => f.Type == "CpcmUserId").Value;
 					user = await _context.CpcmUsers
-							.Where(c => c.CpcmUserId.ToString() == User.FindFirst(f=>f.Type=="CpcmSserId").Value)
+							.Where(c => c.CpcmUserId.ToString() == guidstring)
 							.Include(c => c.CpcmUserCityNavigation)
 							.Include(c => c.CpcmUserRoleNavigation)
 							.Include(c => c.CpcmUserSchoolNavigation)
