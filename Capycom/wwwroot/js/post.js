@@ -119,65 +119,57 @@ const subscribeButton = document.getElementById('subscribeButton');
 
 function unfollow() {
     const userID = document.getElementById('userID').innerHTML;
-    subscribeButton.removeEventListener('click', unfollow);
-    console.log('Подписаться');
-    subscribeButton.innerHTML = 'Подписаться'
-    subscribeButton.addEventListener('click', follow);
-    //let dataToSend = {
-    //    CpcmUserId: userID,
-    //};
-    //$.ajax({
-    //    url: '/User/Unfollow',
-    //    type: 'POST',
-    //    data: dataToSend,
-    //    success: function (response) {
-    //        if (response['status']) {
-    //            console.log("response was successful");
-    //            subscribeButton.removeEventListener('click', unfollow);
-    //            subscribeButton.textContent = 'Подписаться'
-    //            subscribeButton.addEventListener('click', follow);
-    //        }
-    //        else {
-    //            console.log("response was not successful");
-    //        }
+    let dataToSend = {
+        CpcmUserId: userID,
+    };
+    $.ajax({
+        url: '/User/Unfollow',
+        type: 'POST',
+        data: dataToSend,
+        success: function (response) {
+            if (response['status']) {
+                console.log("response was successful");
+                subscribeButton.removeEventListener('click', unfollow);
+                subscribeButton.innerHTML = 'РџРѕРґРїРёСЃР°С‚СЊСЃСЏ'
+                subscribeButton.addEventListener('click', follow);
+            }
+            else {
+                console.log("response was not successful");
+            }
 
-    //    },
-    //    error: function (obj) {
-    //        if (obj.status == 401)
-    //            window.location.replace("/UserLogIn");
-    //    }
-    //});
+        },
+        error: function (obj) {
+            if (obj.status == 401)
+                window.location.replace("/UserLogIn");
+        }
+    });
 }
 function follow() {
     const userID = document.getElementById('userID').innerHTML;
-    console.log('Отписаться');
-    subscribeButton.removeEventListener('click', follow);
-    subscribeButton.innerHTML = 'Отписаться'
-    subscribeButton.addEventListener('click', unfollow);
-    //let dataToSend = {
-    //    CpcmUserId: userID,
-    //};
-    //$.ajax({
-    //    url: '/User/Follow',
-    //    type: 'POST',
-    //    data: dataToSend,
-    //    success: function (response) {
-    //        if (response['status']) {
-    //            console.log("response was successful");
-    //            subscribeButton.removeEventListener('click', follow);
-    //            subscribeButton.textContent = 'Отписаться'
-    //            subscribeButton.addEventListener('click', unfollow);
-    //        }
-    //        else {
-    //            console.log("response was not successful");
-    //        }
+    let dataToSend = {
+        CpcmUserId: userID,
+    };
+    $.ajax({
+        url: '/User/Follow',
+        type: 'POST',
+        data: dataToSend,
+        success: function (response) {
+            if (response['status']) {
+                console.log("response was successful");
+                subscribeButton.removeEventListener('click', follow);
+                subscribeButton.innerHTML = 'РћС‚РїРёСЃР°С‚СЊСЃСЏ'
+                subscribeButton.addEventListener('click', unfollow);
+            }
+            else {
+                console.log("response was not successful");
+            }
 
-    //    },
-    //    error: function (obj) {
-    //        if (obj.status == 401)
-    //            window.location.replace("/UserLogIn");
-    //    }
-    //});
+        },
+        error: function (obj) {
+            if (obj.status == 401)
+                window.location.replace("/UserLogIn");
+        }
+    });
 }
 
 friendButton.addEventListener('click', unfollow);
