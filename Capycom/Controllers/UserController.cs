@@ -1291,28 +1291,36 @@ namespace Capycom.Controllers
 
 		[Authorize]
         [HttpPost]
-        //[ValidateAntiForgeryToken]
-        public async Task<IActionResult> Follow(Guid CpcmUserId)
-        {
+		//[ValidateAntiForgeryToken]
+		public async Task<IActionResult> Follow(Guid CpcmUserId)
+		{
+			CpcmUserfollower follower = new();
+			follower.CpcmFollowersId = Guid.NewGuid();
+			follower.CpcmUserId = CpcmUserId;
+			follower.CpcmFollowerId = Guid.Parse(HttpContext.User.FindFirst(c => c.Type == "CpcmUserId").Value);
 
-            CpcmUserfollower follower = new();
-            follower.CpcmFollowerId = CpcmUserId;
-            follower.CpcmUserId = Guid.Parse(HttpContext.User.FindFirst(c => c.Type == "CpcmUserId").Value);
-            _context.CpcmUserfollowers.Add(follower);
+			try
+			{
+				Guid id = Guid.Parse(HttpContext.User.FindFirst(c => c.Type == "CpcmUserId").Value);
 
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbException)
-            {
-                return StatusCode(500);
-            }
+				var follow = await _context.CpcmUserfollowers.Where(e => e.CpcmUserId == CpcmUserId && e.CpcmFollowerId == id).FirstOrDefaultAsync();
+				if (follow == null)
+				{
+					_context.CpcmUserfollowers.Add(follower);
+					await _context.SaveChangesAsync();
+				}
+				else
+					return StatusCode(200, new { status = false, message = "Вы уже подписаны на этого человека" });
+			}
+			catch (DbException)
+			{
+				return StatusCode(500);
+			}
 
-            return StatusCode(200, new {status=true});
-        }
+			return StatusCode(200, new { status = true });
+		}
 
-        [Authorize]
+		[Authorize]
         [HttpPost]
         //[ValidateAntiForgeryToken]
         public async Task<IActionResult> Unfollow(Guid CpcmUserId)

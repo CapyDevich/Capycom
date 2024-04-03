@@ -1,4 +1,4 @@
-'use strict';
+'use strict'
 function shortenNumber(number) {
     if (number < 1_000) {
         return number;
@@ -116,35 +116,69 @@ cancelButton.addEventListener('click', function () {
 
 const friendButton = document.getElementById('friendButton');
 const subscribeButton = document.getElementById('subscribeButton');
-friendButton.addEventListener('click', function () {
-    const userID = document.getElementById('userID');
 
-});
-subscribeButton.addEventListener('click', function () {
+function unfollow() {
     const userID = document.getElementById('userID').innerHTML;
-    let dataToSend = {
-        CpcmUserId: userID,
-    };
-    $.ajax({
-        url: '/User/Follow',
-        type: 'POST',
-        data: dataToSend,
-        success: function (response) {
-            if (response['status']) {
-                repostCountElement.innerText = Number(repostCountElement.innerText) + 1;
-                renderPostButtons();
-                postID = "";
-                inputText = "";
-                document.getElementById('repostInput').value = "";
-            }
-            else {
-                console.log("response was not successful");
-            }
+    subscribeButton.removeEventListener('click', unfollow);
+    console.log('Подписаться');
+    subscribeButton.innerHTML = 'Подписаться'
+    subscribeButton.addEventListener('click', follow);
+    //let dataToSend = {
+    //    CpcmUserId: userID,
+    //};
+    //$.ajax({
+    //    url: '/User/Unfollow',
+    //    type: 'POST',
+    //    data: dataToSend,
+    //    success: function (response) {
+    //        if (response['status']) {
+    //            console.log("response was successful");
+    //            subscribeButton.removeEventListener('click', unfollow);
+    //            subscribeButton.textContent = 'Подписаться'
+    //            subscribeButton.addEventListener('click', follow);
+    //        }
+    //        else {
+    //            console.log("response was not successful");
+    //        }
 
-        },
-        error: function (obj) {
-            if (obj.status == 401)
-                window.location.replace("/UserLogIn");
-        }
-    });
-});
+    //    },
+    //    error: function (obj) {
+    //        if (obj.status == 401)
+    //            window.location.replace("/UserLogIn");
+    //    }
+    //});
+}
+function follow() {
+    const userID = document.getElementById('userID').innerHTML;
+    console.log('Отписаться');
+    subscribeButton.removeEventListener('click', follow);
+    subscribeButton.innerHTML = 'Отписаться'
+    subscribeButton.addEventListener('click', unfollow);
+    //let dataToSend = {
+    //    CpcmUserId: userID,
+    //};
+    //$.ajax({
+    //    url: '/User/Follow',
+    //    type: 'POST',
+    //    data: dataToSend,
+    //    success: function (response) {
+    //        if (response['status']) {
+    //            console.log("response was successful");
+    //            subscribeButton.removeEventListener('click', follow);
+    //            subscribeButton.textContent = 'Отписаться'
+    //            subscribeButton.addEventListener('click', unfollow);
+    //        }
+    //        else {
+    //            console.log("response was not successful");
+    //        }
+
+    //    },
+    //    error: function (obj) {
+    //        if (obj.status == 401)
+    //            window.location.replace("/UserLogIn");
+    //    }
+    //});
+}
+
+friendButton.addEventListener('click', unfollow);
+subscribeButton.addEventListener('click', follow);
