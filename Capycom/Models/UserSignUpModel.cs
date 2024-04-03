@@ -12,14 +12,14 @@ namespace Capycom.Models
         [Display(Name = "Адрес электронной почты")]
         [Required(ErrorMessage = "Некорректный адрес")]
         [EmailAddress(ErrorMessage = "Некорректный адрес")]
-        [Remote(action:"CheckEmail",controller: "UserSignUp",ErrorMessage ="Email уже занят", HttpMethod = "Post")]
+        [Remote(action:"CheckEmail",controller: "UserSignUp", HttpMethod = "Post")]
         public string CpcmUserEmail { get; set; } = null!;
 
         [Display(Name = "Номер телефона")]
         [Required(ErrorMessage = "Некорректный номер телефона")]
 		//[Phone(ErrorMessage = "Некорректный номер телефона")] 
 		[RegularExpression(@"^\+[1-9]\d{10,14}$", ErrorMessage = "Телефон должен быть записан в формате +ХХХХХХХХХХХХХХХ, при этом первой цифрой не может быть 0, от 11 до 14 цифр.")] //Стандарт E.164 ^\+[1-9]{1}[0-9]{3,14}$
-		[Remote(action: "CheckPhone", controller: "UserSignUp", ErrorMessage = "Телефон уже занят", HttpMethod = "Post")]
+		[Remote(action: "CheckPhone", controller: "UserSignUp", HttpMethod = "Post")]
         public string CpcmUserTelNum { get; set; } = null!;
 
         [Display(Name = "Пароль")]
@@ -63,7 +63,7 @@ namespace Capycom.Models
 
         [Display(Name = "Мой Nickname")]
         //[Required(ErrorMessage = "Не указан Nickname")]
-        [Remote(action: "CheckNickName", controller: "UserSignUp", ErrorMessage = "Nickname уже занят",HttpMethod ="Post")]     
+        [Remote(action: "CheckNickName", controller: "UserSignUp",HttpMethod ="Post")]     
         public string? CpcmUserNickName { get; set; }
 
         [Display(Name = "Моё имя")]
