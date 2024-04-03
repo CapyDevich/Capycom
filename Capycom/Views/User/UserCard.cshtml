@@ -64,6 +64,12 @@
 @if (User.Identity.IsAuthenticated && User.Identity.IsAuthenticated && Model.CpcmUserId.ToString() != User.FindAll(x => x.Type == "CpcmUserId").FirstOrDefault().Value)
 {
 	<button class="btn btn-outline-primary mb-1" id="friendButton">Добавить в друзья</button>
-	@* @if (User.Identity.) *@
-	<button class="btn btn-outline-primary mb-1" id="subscribeButton">Подписаться</button>
+	@if (!Model.IsFollowing)
+	{
+		<button class="btn btn-outline-primary mb-1" id="subscribeButton" onclick="follow()">Подписаться</button>
+	}
+	else
+	{
+		<button class="btn btn-outline-primary mb-1" id="subscribeButton" onclick="unfollow()">Отписаться</button>
+	}
 }

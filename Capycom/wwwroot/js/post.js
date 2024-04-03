@@ -171,6 +171,3 @@ function follow() {
         }
     });
 }
-
-friendButton.addEventListener('click', unfollow);
-subscribeButton.addEventListener('click', follow);
