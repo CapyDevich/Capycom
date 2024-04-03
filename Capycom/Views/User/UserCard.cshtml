@@ -12,6 +12,7 @@
 		
 		<div class="text-center">
 			<h4 class="mb-0">@Model.CpcmUserFirstName @Model.CpcmUserSecondName @Model.CpcmUserAdditionalName</h4>
+			<div id="userID" hidden>@Model.CpcmUserId</div>
 			<small class="text-muted">@@<a href="~/User/Index?NickName=@Model.CpcmUserNickName">@Model.CpcmUserNickName</a></small>
 		</div>
 		<div class="mt-1">
@@ -33,7 +34,7 @@
 				}
 				@if (@Model.CpcmUserSchool.HasValue)
 				{
-					<p class="m-0">Университет</p>
+					<p class="m-0">Школа</p>
 					<li class="list-group-item profile-block">@Model.CpcmUserSchool.Value</li>
 				}
 				@if (@Model.CpcmUserBooks != string.Empty)
@@ -62,10 +63,6 @@
 </div>
 @if (User.Identity.IsAuthenticated && User.Identity.IsAuthenticated && Model.CpcmUserId.ToString() != User.FindAll(x => x.Type == "CpcmUserId").FirstOrDefault().Value)
 {
-	<button class="btn btn-outline-primary mb-1">
-		<span>Добавить в друзья</span>
-	</button>
-	<button class="btn btn-outline-primary mb-1">
-		<span>Подписаться</span>
-	</button>
+	<button class="btn btn-outline-primary mb-1" id="friendButton">Добавить в друзья</button>
+	<button class="btn btn-outline-primary mb-1" id="subscribeButton">Подписаться</button>
 }

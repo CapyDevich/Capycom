@@ -1291,7 +1291,7 @@ namespace Capycom.Controllers
 
 		[Authorize]
         [HttpPost]
-        [ValidateAntiForgeryToken]
+        //[ValidateAntiForgeryToken]
         public async Task<IActionResult> Follow(Guid CpcmUserId)
         {
 
@@ -1314,7 +1314,7 @@ namespace Capycom.Controllers
 
         [Authorize]
         [HttpPost]
-        [ValidateAntiForgeryToken]
+        //[ValidateAntiForgeryToken]
         public async Task<IActionResult> Unfollow(Guid CpcmUserId)
         {
             CpcmUserfollower? follow;

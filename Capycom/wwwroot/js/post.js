@@ -113,3 +113,38 @@ const cancelButton = document.getElementById('cancelButton');
 cancelButton.addEventListener('click', function () {
     textarea.value = "";
 });
+
+const friendButton = document.getElementById('friendButton');
+const subscribeButton = document.getElementById('subscribeButton');
+friendButton.addEventListener('click', function () {
+    const userID = document.getElementById('userID');
+
+});
+subscribeButton.addEventListener('click', function () {
+    const userID = document.getElementById('userID').innerHTML;
+    let dataToSend = {
+        CpcmUserId: userID,
+    };
+    $.ajax({
+        url: '/User/Follow',
+        type: 'POST',
+        data: dataToSend,
+        success: function (response) {
+            if (response['status']) {
+                repostCountElement.innerText = Number(repostCountElement.innerText) + 1;
+                renderPostButtons();
+                postID = "";
+                inputText = "";
+                document.getElementById('repostInput').value = "";
+            }
+            else {
+                console.log("response was not successful");
+            }
+
+        },
+        error: function (obj) {
+            if (obj.status == 401)
+                window.location.replace("/UserLogIn");
+        }
+    });
+});
