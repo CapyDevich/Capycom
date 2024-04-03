@@ -226,8 +226,8 @@ namespace Capycom.Controllers
             CpcmUserEmail = CpcmUserEmail.Trim();
             if (CpcmUserEmail.Contains("admin") || CpcmUserEmail.Contains("webmaster") || CpcmUserEmail.Contains("abuse"))
             {
-                return Json(false);
-            }
+				return Json(data: $"{CpcmUserEmail} зарезервировано");
+			}
             bool rez = false;
             try
             {
@@ -237,6 +237,8 @@ namespace Capycom.Controllers
             {
                 return Json(rez);
             }
+            if (!rez)
+                return Json(data: "Данный адрес уже занят");
             return Json(rez);
         }
 
@@ -250,7 +252,7 @@ namespace Capycom.Controllers
             CpcmUserNickName = CpcmUserNickName.Trim(); 
             if (CpcmUserNickName.Contains("admin") || CpcmUserNickName.Contains("webmaster") || CpcmUserNickName.Contains("abuse") || CpcmUserNickName.Contains(" "))
             {
-                return Json(false);
+                return Json(data: $"{CpcmUserNickName} зарезервировано");
             }
             bool rez = false;
             try
@@ -261,7 +263,9 @@ namespace Capycom.Controllers
             {
                 return Json(rez);
             }
-            return Json(rez);
+			if (!rez)
+				return Json(data: "Данный nickname уже занят");
+			return Json(rez);
         }
 
         [HttpPost]
@@ -269,7 +273,7 @@ namespace Capycom.Controllers
         {
             if (string.IsNullOrWhiteSpace(CpcmUserTelNum))
             {
-                return Json("Телефон не может быть пустым или состоять из одних пробелов");
+                return Json(data:"Телефон не может быть пустым или состоять из одних пробелов");
             }
             CpcmUserTelNum = CpcmUserTelNum.Trim();
             bool rez = false;
@@ -281,7 +285,9 @@ namespace Capycom.Controllers
             {
                 return Json(rez);
             }
-            return Json(rez);
+			if (!rez)
+				return Json(data: "Данный телефон уже занят");
+			return Json(rez);
         }
 
         [HttpPost]
