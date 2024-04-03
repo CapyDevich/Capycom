@@ -1589,7 +1589,7 @@ namespace Capycom.Controllers
         [Authorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> CreatePost(UserPostModel userPost)
+        public async Task<IActionResult> CreatePostP(UserPostModel userPost)
         {
             //if (userPost.Text == null && userPost.Files.Count > 0)
             //{
@@ -1678,7 +1678,7 @@ namespace Capycom.Controllers
                     if (userPost.PostFatherId !=null)
                     {
                         var fatherPost = await _context.CpcmPosts.Where(p => p.CpcmPostId == userPost.PostFatherId).FirstOrDefaultAsync(); 
-                        if(fatherPost==null || fatherPost.CpcmPostPublishedDate < DateTime.UtcNow)
+                        if(fatherPost==null || fatherPost.CpcmPostPublishedDate > DateTime.UtcNow)
                         {
                             return StatusCode(200, new {status=false,message= "Нельзя репостить неопубликованный пост" });
                         }
@@ -1727,6 +1727,9 @@ namespace Capycom.Controllers
                 return StatusCode(200, new {status=false, message="Репост имел неккоректный вид. Возможно вы попытались прикрепить файлы. Однако этого нельзя делать для репостов.", errors= ModelState.SelectMany(x => x.Value.Errors.Select(e => e.ErrorMessage)).ToList() });
             }
         }
+
+
+
 
         [Authorize]
         [HttpPost]
@@ -2313,14 +2316,14 @@ namespace Capycom.Controllers
         {
             if (string.IsNullOrWhiteSpace(CpcmUserEmail))
             {
-                return Json("Email не может быть пустым или состоять из одних пробелов");
+                return Json(data: "Email не может быть пустым или состоять из одних пробелов");
             }
 
             var authFactor = HttpContext.User.FindFirst(c => c.Type == "CpcmCanEditUsers" && c.Value == "True");
             CpcmUserEmail = CpcmUserEmail.Trim();
             if (CpcmUserEmail.Contains("admin") || CpcmUserEmail.Contains("webmaster") || CpcmUserEmail.Contains("abuse") && authFactor == null)
             {
-                return Json(false);
+                return Json(data: $"{CpcmUserEmail} зарезервировано");
             }
 
             bool rez = false;
@@ -2330,10 +2333,12 @@ namespace Capycom.Controllers
             }
             catch (DbException)
             {
-                //StatusCode(500);
-                return Json(false);
-            }
-            return Json(rez);
+				//StatusCode(500);
+				return Json(data: "Не удалось установить соединение с сервером");
+			}
+			if (!rez)
+				return Json(data: "Данный Email уже занят");
+			return Json(rez);
         }
         [HttpPost]//TODO: Объединить с методами при регистрации
         public async Task<IActionResult> CheckNickName(string CpcmUserNickName, Guid CpcmUserId)
@@ -2347,7 +2352,7 @@ namespace Capycom.Controllers
             var authFactor = HttpContext.User.FindFirst(c => c.Type == "CpcmCanEditUsers" && c.Value == "True");
             if (CpcmUserNickName.Contains("admin") || CpcmUserNickName.Contains("webmaster") || CpcmUserNickName.Contains("abuse") && authFactor==null)
             {
-                return Json(false);
+                return Json(data: $"{CpcmUserNickName} зарезервировано");
             }
             bool rez = false;
             try
@@ -2356,17 +2361,19 @@ namespace Capycom.Controllers
             }
             catch (DbException)
             {
-                //StatusCode(500);
-                return Json(false);
-            }
-            return Json(rez);
+				//StatusCode(500);
+				return Json(data: "Не удалось установить соединение с сервером");
+			}
+			if (!rez)
+				return Json(data: "Данный nickname уже занят");
+			return Json(rez);
         }
         [HttpPost]//TODO: Объединить с методами при регистрации
         public async Task<IActionResult> CheckPhone(string CpcmUserTelNum, Guid CpcmUserId)
         {
             if (string.IsNullOrWhiteSpace(CpcmUserTelNum))
             {
-                return Json("Телефон не может быть пустым или состоять из одних пробелов");
+                return Json(data: "Телефон не может быть пустым или состоять из одних пробелов");
             }
             CpcmUserTelNum = CpcmUserTelNum.Trim();
             bool rez = false;
@@ -2376,10 +2383,12 @@ namespace Capycom.Controllers
             }
             catch (DbException)
             {
-                //StatusCode(500);
-                return Json(false);
-            }
-            return Json(rez);
+				//StatusCode(500);
+				return Json(data: "Не удалось установить соединение с сервером");
+			}
+			if (!rez)
+				return Json(data: "Данный телефон уже занят");
+			return Json(rez);
         }
         [HttpPost]//TODO: Объединить с методами при регистрации
         public async Task<IActionResult> CheckPwd(string pwd)

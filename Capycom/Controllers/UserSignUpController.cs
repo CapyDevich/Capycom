@@ -235,8 +235,8 @@ namespace Capycom.Controllers
             }
             catch (DbException)
             {
-                return Json(rez);
-            }
+				return Json(data: "Не удалось установить соединение с сервером");
+			}
             if (!rez)
                 return Json(data: "Данный адрес уже занят");
             return Json(rez);
@@ -261,8 +261,8 @@ namespace Capycom.Controllers
             }
             catch (DbException)
             {
-                return Json(rez);
-            }
+				return Json(data: "Не удалось установить соединение с сервером");
+			}
 			if (!rez)
 				return Json(data: "Данный nickname уже занят");
 			return Json(rez);
@@ -283,8 +283,8 @@ namespace Capycom.Controllers
             }
             catch (DbException)
             {
-                return Json(rez);
-            }
+				return Json(data: "Не удалось установить соединение с сервером");
+			}
 			if (!rez)
 				return Json(data: "Данный телефон уже занят");
 			return Json(rez);

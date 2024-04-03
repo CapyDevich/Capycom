@@ -1606,7 +1606,7 @@ namespace Capycom.Controllers
 			}
 			catch (DbException)
 			{
-				return Json(false);
+				return Json(data: "Не удалось установить соединение с сервером");
 			}
 			if (!rez)
 				return Json(data: "Данный nickname уже занят");
@@ -1632,7 +1632,7 @@ namespace Capycom.Controllers
 			}
 			catch (DbException)
 			{
-				return Json(false);
+				return Json(data: "Не удалось установить соединение с сервером");
 			}
 			if (!rez)
 				return Json(data: "Данный nickname уже занят");
