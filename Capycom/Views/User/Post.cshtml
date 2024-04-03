@@ -48,7 +48,7 @@
 					<span class="comments-count-show"></span>
 					<span class="comments-count" style="display: none">@Model.Post.CpcmComments.Count</span>
 				</a>
-				<button class="btn btn-outline-primary me-2 button-bottom" onclick="repost(this, '@Model.Post.CpcmPostId');">
+				<button class="btn btn-outline-primary me-2 button-bottom" data-bs-toggle="modal" data-bs-target="#repostModal" onclick="repost(this, '@Model.Post.CpcmPostId');">
 					<img src="~/images/repost.svg" />
 					<span class="repost-count-show"></span>
 					<span class="repost-count" style="display: none">@Model.RepostsCount</span>

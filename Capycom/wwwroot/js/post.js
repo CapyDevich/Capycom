@@ -49,26 +49,37 @@ function likePost(button, postId) {
 
 function repost(button, postId) {
     console.log("repost");
-    //let repostCount = button.querySelectorAll('.repost-count')[0];
-    //$.ajax({
-    //    url: '/PostComment/...',
-    //    type: 'POST',
-    //    data: { postID: postId },
-    //    success: function (response) {
-    //        if (response['status']) {
-    //            repostCount.innerText = Number(repostCount.innerText) + 1;
-    //            renderPostButtons();
-    //        }
-    //        else {
-    //            console.log("response was not successful");
-    //        }
+    let repostCountElement = button.querySelectorAll('.repost-count')[0];
+    
+    $('#repostForm').submit(function (e) {
+        let formData = new FormData(this);
+        let inputText = $('#repostInput').val();
+        //formData.append('PostFatherId', postId);
+        //console.log(new Response(formData).text().then(console.log));
+        $.ajax({
+            url: '/User/CreatePost',
+            type: 'POST',
+            data: {
+                PostFatherId: postId,
+                Text: inputText,
+            },
+            success: function (response) {
+                if (response['status']) {
+                    repostCountElement.innerText = Number(repostCountElement.innerText) + 1;
+                    renderPostButtons();
+                    console.log("успешно");
+                }
+                else {
+                    console.log("response was not successful");
+                }
 
-    //    },
-    //    error: function (obj) {
-    //        if (obj.status == 401)
-    //            window.location.replace("/UserLogIn");
-    //    }
-    //});
+            },
+            error: function (obj) {
+                if (obj.status == 401)
+                    window.location.replace("/UserLogIn");
+            }
+        });
+    });
 }
 
 function renderPostButtons() {
@@ -82,3 +93,20 @@ function renderPostButtons() {
 }
 
 renderPostButtons();
+
+const textarea = document.getElementById('repostInput');
+textarea.addEventListener('input', function () {
+
+    if (this.scrollHeight > 200)
+        this.style.overflow = 'scroll';
+    else {
+        this.style.overflow = 'hidden';
+        this.style.height = 'auto';
+        this.style.height = (this.scrollHeight) + 'px';
+    }
+});
+
+const cancelButton = document.getElementById('cancelButton');
+cancelButton.addEventListener('click', function () {
+    textarea.value = "";
+});

@@ -7,7 +7,7 @@ $(document).ready(function () {
         console.log(formData);
         $.ajax({
             type: 'POST',
-            url: '/PostComment/AddComment', // Укажите URL вашего обработчика на сервере
+            url: '/PostComment/AddComment',
             data: formData,
             processData: false,
             contentType: false,
