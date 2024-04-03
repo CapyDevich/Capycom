@@ -812,7 +812,7 @@ namespace Capycom.Controllers
 				friendList1 = friendList1.Where(u => EF.Functions.Like(u.CpcmUserAdditionalName, $"%{filters.AdditionalName}%"));
 			}
 			var result = await friendList1.OrderBy(p => p.CpcmUserId).Take(10).ToListAsync();
-			return Json(result);
+			return PartialView(result);
         }
 
         ////[Route("User/Friends/{nickName}")]
@@ -1059,7 +1059,7 @@ namespace Capycom.Controllers
 			var result = await followerList1.OrderBy(p => p.CpcmUserId).Take(10).ToListAsync();
 			//followerList1.AddRange(followerList2);
 
-			return Json(followerList1);
+			return PartialView(followerList1);
         }
 
 		public async Task<IActionResult> Groups(GroupFilterModel filters)
@@ -1125,7 +1125,7 @@ namespace Capycom.Controllers
 
 
 			var result = await groupsList.OrderBy(p => p.CpcmGroupId).Take(10).ToListAsync();
-			return Json(groupsList);
+			return View(groupsList);
 		}
 
 		public async Task<IActionResult> GetNextGroups(GroupFilterModel filters)
@@ -1191,7 +1191,7 @@ namespace Capycom.Controllers
 
 
 			var result = await groupsList.OrderBy(p => p.CpcmGroupId).Take(10).ToListAsync();
-			return Json(groupsList);
+			return PartialView(groupsList);
 		}
 
 		[Authorize]
@@ -1296,13 +1296,24 @@ namespace Capycom.Controllers
         {
 
             CpcmUserfollower follower = new();
-            follower.CpcmFollowerId = CpcmUserId;
-            follower.CpcmUserId = Guid.Parse(HttpContext.User.FindFirst(c => c.Type == "CpcmUserId").Value);
-            _context.CpcmUserfollowers.Add(follower);
+            follower.CpcmFollowersId = Guid.NewGuid();
+            follower.CpcmUserId = CpcmUserId;
+            follower.CpcmFollowerId = Guid.Parse(HttpContext.User.FindFirst(c => c.Type == "CpcmUserId").Value);
+            
+			
 
-            try
+			try
             {
-                await _context.SaveChangesAsync();
+                Guid id = Guid.Parse(HttpContext.User.FindFirst(c => c.Type == "CpcmUserId").Value);
+
+				var follow = await _context.CpcmUserfollowers.Where(e => e.CpcmUserId == CpcmUserId && e.CpcmFollowerId == id).FirstOrDefaultAsync();
+                if (follow == null)
+                {
+					_context.CpcmUserfollowers.Add(follower);
+					await _context.SaveChangesAsync();
+				}                    
+                else
+                    return StatusCode(200, new { status = false, message = "Вы уже подписаны на этого человека" });
             }
             catch (DbException)
             {
@@ -1578,7 +1589,7 @@ namespace Capycom.Controllers
 			var result = await friendList1.OrderBy(p => p.CpcmUserId).Take(10).ToListAsync();
 			//followerList1.AddRange(followerList2);
 
-			return Json(friendList1);
+			return PartialView(friendList1);
 		}
 		[Authorize]
         public async Task<IActionResult> CreatePost()
@@ -2015,7 +2026,7 @@ namespace Capycom.Controllers
             {
                 return StatusCode(500);
             }
-            return Json(postModels);
+            return PartialView(postModels);
         }
 
         [HttpPost]
@@ -2051,7 +2062,7 @@ namespace Capycom.Controllers
             {
                 return StatusCode(500);
             }
-            return Json(postModels);
+            return PartialView(postModels);
         }
 		[Authorize]
 		[HttpGet]

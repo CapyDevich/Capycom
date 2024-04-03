@@ -136,7 +136,7 @@ namespace Capycom.Controllers
 					postsModel.Add(postModel);
 				}
 
-				return Json(postsModel);
+				return PartialView(postsModel);
 			}
 			catch (DbException)
 			{
