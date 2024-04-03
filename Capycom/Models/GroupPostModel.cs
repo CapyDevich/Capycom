@@ -1,11 +1,13 @@
-﻿namespace Capycom.Models
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace Capycom.Models
 {
 	public class GroupPostModel
 	{
 
 		[MaxFileCount(4)]
 		public IFormFileCollection? Files { get; set; }
-
+		[MaxLength(500, ErrorMessage = "Текст поста не может состоять из более чем 500 символов")]
 		public string? Text { get; set; }
 
 		public Guid? PostFatherId { get; set; }
