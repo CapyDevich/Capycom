@@ -222,8 +222,8 @@ namespace Capycom.Controllers
                     {
                         user.IsFriend = friend.CpcmFriendRequestStatus;
 					}
-                    var follower = await _context.CpcmUserfollowers.Where(f => f.CpcmUserId.ToString() == User.FindFirstValue("CpcmUserId") && f.CpcmFollowerId == user.CpcmUserId).FirstOrDefaultAsync();
-                    if (follower == null)
+					var follower = await _context.CpcmUserfollowers.Where(f => f.CpcmFollowerId.ToString() == User.FindFirstValue("CpcmUserId") && f.CpcmUserId == user.CpcmUserId).FirstOrDefaultAsync();
+					if (follower == null)
                     {
 						user.IsFollowing = false;
 					}
