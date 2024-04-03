@@ -27,8 +27,9 @@
 		<label asp-for="CpcmUserNickName" class="form-label">Псевдоним</label>
 		<div class="input-group">
 			<span class="input-group-text" id="inputGroupPrepend">@@</span>
-			<input asp-for="CpcmUserNickName" type="text" class="form-control" id="validationCustomUsername" aria-describedby="inputGroupPrepend">
+			<input asp-for="CpcmUserNickName" type="text" class="form-control" id="validationCustomUsername">
 		</div>
+		<span asp-validation-for="CpcmUserNickName" class="text-danger"></span>
 		<div class="mb-3">
 			<label asp-for="CpcmUserEmail" class="form-label">Электронная почта</label>
 			<input asp-for="CpcmUserEmail" type="email" class="form-control" id="email" required>
