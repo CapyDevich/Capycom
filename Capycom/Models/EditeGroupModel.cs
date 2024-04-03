@@ -26,6 +26,7 @@ namespace Capycom.Models
 
 		[Display(Name = "NickName группы")]
 		[Remote(action: "CheckCreateNickName", controller: "Group", HttpMethod = "Post", AdditionalFields = nameof(GroupId))]
+		[RegularExpression(@"^[a-zA-Z0-9_\-]*$", ErrorMessage = "Nickname может содержать только буквы латиницы, цифры, подчеркивания и дефисы.")]
 		[MaxLength(30, ErrorMessage = "Nickname не может состоять из более чем 30 символов")]
 		public string? CpcmGroupNickName { get; set; }
 		[Display(Name = "Аватарка группы")]
