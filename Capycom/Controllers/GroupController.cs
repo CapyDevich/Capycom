@@ -183,7 +183,7 @@ namespace Capycom.Controllers
 			{
 				return StatusCode(500);
 			}
-			return Json(postsWithLikesCount);
+			return PartialView(postsWithLikesCount);
 		}
 
 		[Authorize]
@@ -948,7 +948,7 @@ namespace Capycom.Controllers
 			var result = await followerList1.OrderBy(p => p.CpcmUserId).Take(10).ToListAsync();
 			//followerList1.AddRange(followerList2);
 
-			return Json(followerList1);
+			return PartialView(followerList1);
 		}
 
 		[Authorize]
@@ -1552,7 +1552,7 @@ namespace Capycom.Controllers
 			{
 				return StatusCode(500);
 			}
-			return Json(postsWithLikesCount);
+			return PartialView(postsWithLikesCount);
 		}
 
 
