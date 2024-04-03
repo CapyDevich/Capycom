@@ -14,9 +14,7 @@
 			<div class="row g-1 p-1">
 				@Model.Post.CpcmPostText
 			</div>
-			@if (Model.Post.CpcmImages.Count != 0)
-			{
-			<div class="row row-cols-1 @(Model.Post.CpcmImages.Count > 1 ? "row-cols-md-2 row-cols-lg-2" : "") g-4">
+			<div class="@(Model.Post.CpcmImages.Count != 0 ? ("row row-cols-1" + (Model.Post.CpcmImages.Count > 1 ? "row-cols-md-2 row-cols-lg-2" : "") + "g-4") : "")">
 				@{
 					if (Model.Post.CpcmPostFatherNavigation == null)
 						foreach (var image in Model.Post.CpcmImages)
@@ -29,7 +27,6 @@
 						@await Html.PartialAsync("PostChild", Model.Post.CpcmPostFatherNavigation)
 				}
 			</div>
-			}
 			<div class="d-grid d-flex mt-1 justify-content-md-start">
 				<button class="btn btn-outline-primary me-2 button-bottom" onclick="likePost(this, '@Model.Post.CpcmPostId');">
 					@if (@Model.Post.IsLiked)

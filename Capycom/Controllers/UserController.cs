@@ -1588,8 +1588,8 @@ namespace Capycom.Controllers
 
         [Authorize]
         [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> CreatePost(UserPostModel userPost)
+        //[ValidateAntiForgeryToken]
+        public async Task<IActionResult> CreatePostP(UserPostModel userPost)
         {
             //if (userPost.Text == null && userPost.Files.Count > 0)
             //{
@@ -1626,7 +1626,7 @@ namespace Capycom.Controllers
                 List<string> filePaths = new List<string>();
                 List<CpcmImage> images = new List<CpcmImage>();
 
-                if (userPost.PostFatherId != null)
+                if (userPost.PostFatherId == null)
                 {
                     int i = 0;
                     if (userPost.Files!=null)
@@ -1678,7 +1678,7 @@ namespace Capycom.Controllers
                     if (userPost.PostFatherId !=null)
                     {
                         var fatherPost = await _context.CpcmPosts.Where(p => p.CpcmPostId == userPost.PostFatherId).FirstOrDefaultAsync(); 
-                        if(fatherPost==null || fatherPost.CpcmPostPublishedDate < DateTime.UtcNow)
+                        if(fatherPost==null || fatherPost.CpcmPostPublishedDate > DateTime.UtcNow)
                         {
                             return StatusCode(200, new {status=false,message= "Нельзя репостить неопубликованный пост" });
                         }

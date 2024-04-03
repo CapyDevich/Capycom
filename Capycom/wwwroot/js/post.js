@@ -47,27 +47,30 @@ function likePost(button, postId) {
     });
 }
 
+let repostCountElement;
+let postID;
 function repost(button, postId) {
     console.log("repost");
-    let repostCountElement = button.querySelectorAll('.repost-count')[0];
-    
-    $('#repostForm').submit(function (e) {
-        let formData = new FormData(this);
+    repostCountElement = button.querySelectorAll('.repost-count')[0];
+    postID = postId;
+    $('#repostSend').click(function () {
         let inputText = $('#repostInput').val();
-        //formData.append('PostFatherId', postId);
-        //console.log(new Response(formData).text().then(console.log));
+
+        let dataToSend = {
+            PostFatherId: postId,
+            Text: inputText
+        };
         $.ajax({
-            url: '/User/CreatePost',
+            url: '/User/CreatePostP',
             type: 'POST',
-            data: {
-                PostFatherId: postId,
-                Text: inputText,
-            },
+            data: dataToSend,
             success: function (response) {
                 if (response['status']) {
                     repostCountElement.innerText = Number(repostCountElement.innerText) + 1;
                     renderPostButtons();
-                    console.log("успешно");
+                    postID = "";
+                    inputText = "";
+                    document.getElementById('repostInput').value = "";
                 }
                 else {
                     console.log("response was not successful");
