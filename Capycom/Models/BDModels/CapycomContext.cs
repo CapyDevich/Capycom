@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
+using Serilog;
 
 namespace Capycom;
 
@@ -420,4 +421,46 @@ public partial class CapycomContext : DbContext
     }
 
     partial void OnModelCreatingPartial(ModelBuilder modelBuilder);
+
+	public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default(CancellationToken))
+	{
+		var entries = ChangeTracker.Entries()
+			.Where(e => e.State == EntityState.Added || e.State == EntityState.Modified);
+
+		foreach (var entry in entries)
+		{
+			if (entry.State == EntityState.Added)
+			{
+				// Если сущность новая, логируем все текущие значения
+				Log.Information("New entity {EntityName} has the following values: {Values}",
+					entry.Entity.GetType().Name,
+					entry.CurrentValues.ToObject());
+			}
+			else if (entry.State == EntityState.Modified)
+			{
+				// Если сущность была изменена, логируем только измененные значения
+				var originalValues = entry.OriginalValues.Clone();
+				var currentValues = entry.CurrentValues;
+				var changedValues = new Dictionary<string, object>();
+
+				foreach (var property in entry.Properties)
+				{
+					var propertyName = property.Metadata.Name;
+					var originalValue = originalValues[propertyName];
+					var currentValue = currentValues[propertyName];
+
+					if (!object.Equals(originalValue, currentValue))
+					{
+						changedValues[propertyName] = new { Original = originalValue, Current = currentValue };
+					}
+				}
+
+				Log.Information("Entity {EntityName} has the following changed values: {Values}",
+					entry.Entity.GetType().Name,
+					changedValues);
+			}
+		}
+
+		return await base.SaveChangesAsync(cancellationToken);
+	}
 }
