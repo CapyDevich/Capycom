@@ -12,14 +12,14 @@ namespace Capycom.Models
         [Display(Name = "Адрес электронной почты")]
         [Required(ErrorMessage = "Некорректный адрес")]
         [EmailAddress(ErrorMessage = "Некорректный адрес")]
-        [Remote(action:"CheckEmail",controller: "UserSignUp",ErrorMessage ="Email уже занят", HttpMethod = "Post")]
+        [Remote(action:"CheckEmail",controller: "UserSignUp", HttpMethod = "Post")]
         public string CpcmUserEmail { get; set; } = null!;
 
         [Display(Name = "Номер телефона")]
         [Required(ErrorMessage = "Некорректный номер телефона")]
 		//[Phone(ErrorMessage = "Некорректный номер телефона")] 
 		[RegularExpression(@"^\+[1-9]\d{10,14}$", ErrorMessage = "Телефон должен быть записан в формате +ХХХХХХХХХХХХХХХ, при этом первой цифрой не может быть 0, от 11 до 14 цифр.")] //Стандарт E.164 ^\+[1-9]{1}[0-9]{3,14}$
-		[Remote(action: "CheckPhone", controller: "UserSignUp", ErrorMessage = "Телефон уже занят", HttpMethod = "Post")]
+		[Remote(action: "CheckPhone", controller: "UserSignUp", HttpMethod = "Post")]
         public string CpcmUserTelNum { get; set; } = null!;
 
         [Display(Name = "Пароль")]
@@ -34,22 +34,27 @@ namespace Capycom.Models
         public string CpcmUserPwdConfirm { get; set; } = null!;
 
         [Display(Name = "Обо мне")]
-        public string? CpcmUserAbout { get; set; }
+		[MaxLength(300, ErrorMessage = "В данное поле можно указать не более 300 символов")]
+		public string? CpcmUserAbout { get; set; }
 
         [Display(Name = "Город")]
         public Guid? CpcmUserCity { get; set; }
 
         [Display(Name = "Мой сайт")]
-        public string? CpcmUserSite { get; set; }
+		[MaxLength(100, ErrorMessage = "В данное поле можно указать не более 100 символов")]
+		public string? CpcmUserSite { get; set; }
 
         [Display(Name = "Мои любимые книги")]
-        public string? CpcmUserBooks { get; set; }
+		[MaxLength(100, ErrorMessage = "В данное поле можно указать не более 100 символов")]
+		public string? CpcmUserBooks { get; set; }
 
         [Display(Name = "Мои любимые фильмы")]
-        public string? CpcmUserFilms { get; set; }
+		[MaxLength(100, ErrorMessage = "В данное поле можно указать не более 100 символов")]
+		public string? CpcmUserFilms { get; set; }
 
         [Display(Name = "Моя любимая музыка")]
-        public string? CpcmUserMusics { get; set; }
+		[MaxLength(100, ErrorMessage = "В данное поле можно указать не более 100 символов")]
+		public string? CpcmUserMusics { get; set; }
 
         [Display(Name = "Школа")]
         public Guid? CpcmUserSchool { get; set; }
@@ -63,22 +68,30 @@ namespace Capycom.Models
 
         [Display(Name = "Мой Nickname")]
         //[Required(ErrorMessage = "Не указан Nickname")]
-        [Remote(action: "CheckNickName", controller: "UserSignUp", ErrorMessage = "Nickname уже занят",HttpMethod ="Post")]     
-        public string? CpcmUserNickName { get; set; }
+        [Remote(action: "CheckNickName", controller: "UserSignUp",HttpMethod ="Post")]
+		[RegularExpression(@"^[a-zA-Z0-9_\-]*$", ErrorMessage = "Nickname может содержать только буквы латиницы, цифры, подчеркивания и дефисы.")]
+		[MaxLength(30, ErrorMessage = "Nickname не может состоять из более чем 30 символов")]
+		public string? CpcmUserNickName { get; set; }
 
         [Display(Name = "Моё имя")]
         [Required(ErrorMessage ="Укажите ваше имя")]
         [WordCount(1, ErrorMessage ="Имя не может состоять из более чем 1 слова")]
-        public string CpcmUserFirstName { get; set; } = null!;
+		[MaxLength(30, ErrorMessage = "Имя не может быть состоять из более чем 30 символов")]
+		[RegularExpression(@"^[a-zA-Z0-9_\-а-яА-ЯёЁ]*$", ErrorMessage = "Имя может содержать только буквы (латиницу и кириллицу), цифры, подчеркивания и дефисы.")]
+		public string CpcmUserFirstName { get; set; } = null!;
 
         [Display(Name = "Моя фамилия")]
         [Required(ErrorMessage = "Укажите вашу фамилию")]
         [WordCount(1, ErrorMessage = "Фамилия не может состоять из более чем 1 слова")]
-        public string CpcmUserSecondName { get; set; } = null!;
+		[MaxLength(30, ErrorMessage = "Имя не может быть состоять из более чем 30 символов")]
+		[RegularExpression(@"^[a-zA-Z0-9_\-а-яА-ЯёЁ]*$", ErrorMessage = "Имя может содержать только буквы (латиницу и кириллицу), цифры, подчеркивания и дефисы.")]
+		public string CpcmUserSecondName { get; set; } = null!;
 
         [Display(Name = "Моё отчество")]
         [WordCount(1, ErrorMessage = "Отчество не может состоять из более чем 1 слова")]
-        public string? CpcmUserAdditionalName { get; set; }
+		[MaxLength(30, ErrorMessage = "Имя не может быть состоять из более чем 30 символов")]
+		[RegularExpression(@"^[a-zA-Z0-9_\-а-яА-ЯёЁ]*$", ErrorMessage = "Имя может содержать только буквы (латиницу и кириллицу), цифры, подчеркивания и дефисы.")]
+		public string? CpcmUserAdditionalName { get; set; }
 
         public IFormFile? CpcmUserImage { get; set; }
 

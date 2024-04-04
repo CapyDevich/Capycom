@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
+﻿using Capycom.Enums;
+using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -78,7 +79,7 @@ public partial class CpcmUser
 
 
 	[NotMapped]
-	public bool? IsFriend { get; set; }
+	public FriendStatusEnum IsFriend { get; set; }
 	[NotMapped]
 	public bool IsFollowing { get; set; }
 }

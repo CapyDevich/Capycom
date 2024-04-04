@@ -1,4 +1,4 @@
-﻿//#define AdminAutoAuth
+﻿#define AdminAutoAuth
 using Microsoft.AspNetCore.Mvc;
 using Capycom.Models;
 using Microsoft.Extensions.Options;
@@ -45,7 +45,7 @@ if (ModelState.IsValid)
 
             {
 #if AdminAutoAuth
-                 potentialUser = await _context.CpcmUsers.Include(c => c.CpcmUserRoleNavigation).Where(e => e.CpcmUserEmail == "asdas@asd.ru").FirstAsync();               
+                 potentialUser = await _context.CpcmUsers.Include(c => c.CpcmUserRoleNavigation).Where(e => e.CpcmUserEmail == "mafioznik@mail.ru").FirstAsync();
 #else
                 try
                 {
@@ -55,7 +55,7 @@ if (ModelState.IsValid)
                         ViewData["Message"] = "Неверный логин или пароль";
                         return View();
                     }
-#endif
+
                 }
                 catch (DbException)
                 {
@@ -65,8 +65,9 @@ if (ModelState.IsValid)
                     return View("UserError");
                 }
                 string potentialUserSalt = potentialUser.CpcmUserSalt;
+#endif
 #if AdminAutoAuth
-                if (true)
+				if (true)
 #else
                 //if (potentialUser.CpcmUserPwdHash == MyConfig.GetSha256Hash(user.CpcmUserPwd.Trim(), potentialUserSalt, _config.ServerSol))
                 if (potentialUser.CpcmUserPwdHash.SequenceEqual(MyConfig.GetSha256Hash(user.CpcmUserPwd.Trim(), potentialUserSalt, _config.ServerSol)))

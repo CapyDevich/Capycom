@@ -46,10 +46,24 @@ namespace Capycom.Controllers
                 foreach (var TopComment in topComments)
                 {
                     TopComment.InverseCpcmCommentFatherNavigation = await GetCommentChildrenReccurent(TopComment);
-                }
+					if (HttpContext.Request.Cookies.ContainsKey("TimeZone"))
+					{
+						string timezoneOffsetCookie = HttpContext.Request.Cookies["TimeZone"];
+						if (timezoneOffsetCookie != null)
+						{
+							if (int.TryParse(timezoneOffsetCookie, out int timezoneOffsetMinutes))
+							{
+								TimeSpan offset = TimeSpan.FromMinutes(timezoneOffsetMinutes);
+
+								TopComment.CpcmCommentCreationDate -= offset;
+
+							}
+						}
+					}
+				}
                 if(post.CpcmPostFatherNavigation != null)
                 {
-                    post.CpcmPostFatherNavigation.CpcmPostFatherNavigation = await GetFatherPostReccurent(post.CpcmPostFatherNavigation);
+                    post.CpcmPostFatherNavigation = await GetFatherPostReccurent(post);
                 }
                 CpcmUser? userOwner = await _context.CpcmUsers.Where(u => u.CpcmUserId == post.CpcmUserId).FirstOrDefaultAsync();
                 CpcmGroup? groupOwner = await _context.CpcmGroups.Where(u => u.CpcmGroupId == post.CpcmGroupId).FirstOrDefaultAsync();
@@ -63,6 +77,21 @@ namespace Capycom.Controllers
 						post.IsLiked = true;
 					else
 						post.IsLiked = false;
+				}
+
+				if (HttpContext.Request.Cookies.ContainsKey("TimeZone"))
+				{
+					string timezoneOffsetCookie = HttpContext.Request.Cookies["TimeZone"];
+					if (timezoneOffsetCookie != null)
+					{
+						if (int.TryParse(timezoneOffsetCookie, out int timezoneOffsetMinutes))
+						{
+							TimeSpan offset = TimeSpan.FromMinutes(timezoneOffsetMinutes);
+
+							post.CpcmPostPublishedDate -= offset;
+
+						}
+					}
 				}
 
 
@@ -93,7 +122,21 @@ namespace Capycom.Controllers
                 comment.CpcmCommentFather = userComment.CpcmCommentFather;
                 comment.CpcmCommentText = userComment.CpcmCommentText?.Trim();
                 comment.CpcmCommentCreationDate = DateTime.UtcNow;
-                comment.CpcmUserId = Guid.Parse(User.FindFirstValue("CpcmUserId"));
+				if (HttpContext.Request.Cookies.ContainsKey("TimeZone"))
+				{
+					string timezoneOffsetCookie = HttpContext.Request.Cookies["TimeZone"];
+					if (timezoneOffsetCookie != null)
+					{
+						if (int.TryParse(timezoneOffsetCookie, out int timezoneOffsetMinutes))
+						{
+							TimeSpan offset = TimeSpan.FromMinutes(timezoneOffsetMinutes);
+
+							comment.CpcmCommentCreationDate += offset;
+
+						}
+					}
+				}
+				comment.CpcmUserId = Guid.Parse(User.FindFirstValue("CpcmUserId"));
 
                 List<string> filePaths = new List<string>();
                 List<CpcmImage> images = new List<CpcmImage>();
@@ -160,7 +203,8 @@ namespace Capycom.Controllers
                 {
                     return StatusCode(500, new { message = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку" });
                 }
-                return StatusCode(200, new { status = true });
+                //return StatusCode(200, new { status = true });
+                return PartialView(comment.CpcmImages = images);
             }
             return StatusCode(200, new { status=false,message = "Комментарий имеет некорректные значения.",errors= ModelState.SelectMany(x => x.Value.Errors.Select(e => e.ErrorMessage)).ToList() });
 
@@ -233,7 +277,21 @@ namespace Capycom.Controllers
                     return View("UserError");
                 }
                 comment.CpcmCommentBanned = !comment.CpcmCommentBanned;
-                await _context.SaveChangesAsync();
+				if (HttpContext.Request.Cookies.ContainsKey("TimeZone"))
+				{
+					string timezoneOffsetCookie = HttpContext.Request.Cookies["TimeZone"];
+					if (timezoneOffsetCookie != null)
+					{
+						if (int.TryParse(timezoneOffsetCookie, out int timezoneOffsetMinutes))
+						{
+							TimeSpan offset = TimeSpan.FromMinutes(timezoneOffsetMinutes);
+
+							comment.CpcmCommentCreationDate -= offset;
+
+						}
+					}
+				}
+				await _context.SaveChangesAsync();
                 return View(comment);
 
             }
@@ -257,7 +315,21 @@ namespace Capycom.Controllers
                     //await _context.Entry(comment).Collection(p => p.InverseCpcmCommentFatherNavigation).LoadAsync();
                     //await _context.Entry(comment).Reference(p => p.CpcmCommentFatherNavigation).LoadAsync();
                     comment.InverseCpcmCommentFatherNavigation = await GetCommentChildrenReccurent(comment);
-                }
+					if (HttpContext.Request.Cookies.ContainsKey("TimeZone"))
+					{
+						string timezoneOffsetCookie = HttpContext.Request.Cookies["TimeZone"];
+						if (timezoneOffsetCookie != null)
+						{
+							if (int.TryParse(timezoneOffsetCookie, out int timezoneOffsetMinutes))
+							{
+								TimeSpan offset = TimeSpan.FromMinutes(timezoneOffsetMinutes);
+
+								comment.CpcmCommentCreationDate -= offset;
+
+							}
+						}
+					}
+				}
                 
                 return Json(rez);
             }
@@ -326,6 +398,20 @@ namespace Capycom.Controllers
                 father.CpcmPostFatherNavigation = await GetFatherPostReccurent(father);
 				father.User = await _context.CpcmUsers.Where(p => p.CpcmUserId == father.CpcmUserId).FirstOrDefaultAsync();
 				father.Group = await _context.CpcmGroups.Where(p => p.CpcmGroupId == father.CpcmGroupId).FirstOrDefaultAsync();
+				if (HttpContext.Request.Cookies.ContainsKey("TimeZone"))
+				{
+					string timezoneOffsetCookie = HttpContext.Request.Cookies["TimeZone"];
+					if (timezoneOffsetCookie != null)
+					{
+						if (int.TryParse(timezoneOffsetCookie, out int timezoneOffsetMinutes))
+						{
+							TimeSpan offset = TimeSpan.FromMinutes(timezoneOffsetMinutes);
+
+							father.CpcmPostPublishedDate -= offset;
+
+						}
+					}
+				}
 			}
             return father;
         }
@@ -337,7 +423,21 @@ namespace Capycom.Controllers
                 foreach (var childComm in children)
                 {
                     childComm.InverseCpcmCommentFatherNavigation = await GetCommentChildrenReccurent(childComm);
-                }
+					if (HttpContext.Request.Cookies.ContainsKey("TimeZone"))
+					{
+						string timezoneOffsetCookie = HttpContext.Request.Cookies["TimeZone"];
+						if (timezoneOffsetCookie != null)
+						{
+							if (int.TryParse(timezoneOffsetCookie, out int timezoneOffsetMinutes))
+							{
+								TimeSpan offset = TimeSpan.FromMinutes(timezoneOffsetMinutes);
+
+								childComm.CpcmCommentCreationDate -= offset;
+
+							}
+						}
+					}
+				}
             }
             return children;
         }

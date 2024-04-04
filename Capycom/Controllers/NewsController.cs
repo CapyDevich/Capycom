@@ -67,6 +67,21 @@ namespace Capycom.Controllers
 					long likes = await _context.Database.SqlQuery<long>($@"SELECT * FROM CPCM_POSTLIKES WHERE CPCM_PostID = {post.CpcmPostId}").CountAsync();
 					long reposts = await _context.Database.SqlQuery<long>($@"SELECT * FROM CPCM_POSTREPOSTS WHERE CPCM_PostID = {post.CpcmPostId}").CountAsync();
 
+					if (HttpContext.Request.Cookies.ContainsKey("TimeZone"))
+					{
+						string timezoneOffsetCookie = HttpContext.Request.Cookies["TimeZone"];
+						if (timezoneOffsetCookie != null)
+						{
+							if (int.TryParse(timezoneOffsetCookie, out int timezoneOffsetMinutes))
+							{
+								TimeSpan offset = TimeSpan.FromMinutes(timezoneOffsetMinutes);
+
+								post.CpcmPostPublishedDate-= offset;
+
+							}
+						}
+					}
+
 					PostModel postModel = new() { Post = post, UserOwner = userOwner, GroupOwner = groupOwner, LikesCount = likes, RepostsCount = reposts };
 					postsModel.Add(postModel);
 				}
@@ -131,12 +146,25 @@ namespace Capycom.Controllers
 					CpcmGroup? groupOwner = await _context.CpcmGroups.Where(u => u.CpcmGroupId == post.CpcmGroupId).FirstOrDefaultAsync();
 					long likes = await _context.Database.SqlQuery<long>($@"SELECT * FROM CPCM_POSTLIKES WHERE CPCM_PostID = {post.CpcmPostId}").CountAsync();
 					long reposts = await _context.Database.SqlQuery<long>($@"SELECT * FROM CPCM_POSTREPOSTS WHERE CPCM_PostID = {post.CpcmPostId}").CountAsync();
+					if (HttpContext.Request.Cookies.ContainsKey("TimeZone"))
+					{
+						string timezoneOffsetCookie = HttpContext.Request.Cookies["TimeZone"];
+						if (timezoneOffsetCookie != null)
+						{
+							if (int.TryParse(timezoneOffsetCookie, out int timezoneOffsetMinutes))
+							{
+								TimeSpan offset = TimeSpan.FromMinutes(timezoneOffsetMinutes);
 
+								post.CpcmPostPublishedDate -= offset;
+
+							}
+						}
+					}
 					PostModel postModel = new() { Post = post, UserOwner = userOwner, GroupOwner = groupOwner, LikesCount = likes, RepostsCount = reposts };
 					postsModel.Add(postModel);
 				}
 
-				return Json(postsModel);
+				return PartialView(postsModel);
 			}
 			catch (DbException)
 			{
