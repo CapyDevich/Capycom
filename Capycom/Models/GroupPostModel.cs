@@ -1,4 +1,6 @@
-﻿namespace Capycom.Models
+﻿using Capycom.Attributes;
+
+namespace Capycom.Models
 {
 	public class GroupPostModel
 	{
