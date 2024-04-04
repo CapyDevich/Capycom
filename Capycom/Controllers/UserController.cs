@@ -1331,7 +1331,8 @@ namespace Capycom.Controllers
 			CpcmUser user = null;
 			try
 			{
-				user = await _context.CpcmUsers.Where(c => c.CpcmUserId == filters.UserId).FirstOrDefaultAsync();
+				var stringGuid = User.FindFirstValue("CpcmUserId");
+				user = await _context.CpcmUsers.Where(c => c.CpcmUserId.ToString() == stringGuid).FirstOrDefaultAsync();
 			}
 			catch (DbException)
 			{
@@ -1393,15 +1394,16 @@ namespace Capycom.Controllers
 			var result = await friendList1.OrderBy(p => p.CpcmUserId).Take(10).ToListAsync();
 			//followerList1.AddRange(followerList2);
 
-			return View(friendList1);
+			return View(result);
 		}
-
+        [Authorize]
 		public async Task<IActionResult> GetNextFriendRequests(UserFilterModel filters)
 		{
 			CpcmUser user = null;
 			try
 			{
-				user = await _context.CpcmUsers.Where(c => c.CpcmUserId == filters.UserId).FirstOrDefaultAsync();
+				var stringGuid = User.FindFirstValue("CpcmUserId");
+				user = await _context.CpcmUsers.Where(c => c.CpcmUserId.ToString() == stringGuid).FirstOrDefaultAsync();
 			}
 			catch (DbException)
 			{

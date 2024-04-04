@@ -130,7 +130,7 @@ function unfollow() {
                 subscribeButton.innerHTML = 'Подписаться'
                 //subscribeButton.removeEventListener('click', unfollow);
                 //subscribeButton.addEventListener('click', follow);
-                subscribeButton.onclick = 'follow()';
+                subscribeButton.onclick = follow;
             }
             else {
                 console.log("response was not successful");
