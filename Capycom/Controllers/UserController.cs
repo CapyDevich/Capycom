@@ -1427,7 +1427,9 @@ namespace Capycom.Controllers
             CpcmUserfriend? friendRequest;
             try
             {
-                friendRequest = await _context.CpcmUserfriends.Where(c => c.CmcpUserId.ToString() == HttpContext.User.FindFirst(c => c.Type == "CpcmUserId").Value
+                var guid = HttpContext.User.FindFirst(d => d.Type == "CpcmUserId").Value;
+
+				friendRequest = await _context.CpcmUserfriends.Where(c => c.CmcpUserId.ToString() == guid
                    && c.CmcpFriendId == CpcmUserId).FirstOrDefaultAsync();
             }
             catch (DbException)
