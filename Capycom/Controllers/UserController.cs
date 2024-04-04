@@ -155,24 +155,42 @@ namespace Capycom.Controllers
             CpcmUser? user;
             try
             {
-                if (!string.IsNullOrWhiteSpace(filter.NickName))
+                if (User.Identity.IsAuthenticated && (filter.NickName == null && filter.UserId==null))
                 {
-                    user = await _context.CpcmUsers
-                            .Include(c => c.CpcmUserCityNavigation)
-                            .Include(c => c.CpcmUserRoleNavigation)
-                            .Include(c => c.CpcmUserSchoolNavigation)
-                            .Include(c => c.CpcmUserUniversityNavigation)
-                            .Where(c => c.CpcmUserNickName == filter.NickName).FirstOrDefaultAsync(); 
-                } //_context.Entry(user).Reference(u => u.CpcmUserCityNavigation).Load();
-                else
-                {
+                    var guidstring = User.FindFirst(f => f.Type == "CpcmUserId").Value;
 					user = await _context.CpcmUsers
+							.Where(c => c.CpcmUserId.ToString() == guidstring)
 							.Include(c => c.CpcmUserCityNavigation)
 							.Include(c => c.CpcmUserRoleNavigation)
 							.Include(c => c.CpcmUserSchoolNavigation)
 							.Include(c => c.CpcmUserUniversityNavigation)
-							.Where(c => c.CpcmUserId == filter.UserId).FirstOrDefaultAsync();
+                            .FirstOrDefaultAsync();
 				}
+                else if(!User.Identity.IsAuthenticated && (filter.NickName == null && filter.UserId == null))
+				{
+                    return RedirectToAction("Index", "UserLogIn");
+                }
+                else
+                {
+                    if (!string.IsNullOrWhiteSpace(filter.NickName))
+                    {
+                        user = await _context.CpcmUsers
+                                .Include(c => c.CpcmUserCityNavigation)
+                                .Include(c => c.CpcmUserRoleNavigation)
+                                .Include(c => c.CpcmUserSchoolNavigation)
+                                .Include(c => c.CpcmUserUniversityNavigation)
+                                .Where(c => c.CpcmUserNickName == filter.NickName).FirstOrDefaultAsync();
+                    } //_context.Entry(user).Reference(u => u.CpcmUserCityNavigation).Load();
+                    else
+                    {
+                        user = await _context.CpcmUsers
+                                .Include(c => c.CpcmUserCityNavigation)
+                                .Include(c => c.CpcmUserRoleNavigation)
+                                .Include(c => c.CpcmUserSchoolNavigation)
+                                .Include(c => c.CpcmUserUniversityNavigation)
+                                .Where(c => c.CpcmUserId == filter.UserId).FirstOrDefaultAsync();
+                    } 
+                }
             }
             catch (DbException)
             {
@@ -192,7 +210,7 @@ namespace Capycom.Controllers
             List<CpcmPost> posts;
             try
             {
-                posts = await _context.CpcmPosts.Where(c => c.CpcmUserId == user.CpcmUserId).Include(c => c.CpcmImages).OrderByDescending(c => c.CpcmPostPublishedDate).Take(10).ToListAsync();
+                posts = await _context.CpcmPosts.Where(c => c.CpcmUserId == user.CpcmUserId && c.CpcmPostPublishedDate < DateTime.UtcNow).Include(c => c.CpcmImages).OrderByDescending(c => c.CpcmPostPublishedDate).Take(10).ToListAsync();
                 if (HttpContext.User.Identity.IsAuthenticated && user.CpcmUserId.ToString() != User.FindFirstValue("CpcmUserId"))
                 {
                     var friend = await _context.CpcmUserfriends.Where(f => f.CmcpUserId == user.CpcmUserId && f.CmcpFriendId.ToString() == User.FindFirstValue("CpcmUserId")).FirstOrDefaultAsync();
@@ -204,8 +222,8 @@ namespace Capycom.Controllers
                     {
                         user.IsFriend = friend.CpcmFriendRequestStatus;
 					}
-                    var follower = await _context.CpcmUserfollowers.Where(f => f.CpcmUserId.ToString() == User.FindFirstValue("CpcmUserId") && f.CpcmFollowerId == user.CpcmUserId).FirstOrDefaultAsync();
-                    if (follower == null)
+					var follower = await _context.CpcmUserfollowers.Where(f => f.CpcmFollowerId.ToString() == User.FindFirstValue("CpcmUserId") && f.CpcmUserId == user.CpcmUserId).FirstOrDefaultAsync();
+					if (follower == null)
                     {
 						user.IsFollowing = false;
 					}
@@ -794,7 +812,7 @@ namespace Capycom.Controllers
 				friendList1 = friendList1.Where(u => EF.Functions.Like(u.CpcmUserAdditionalName, $"%{filters.AdditionalName}%"));
 			}
 			var result = await friendList1.OrderBy(p => p.CpcmUserId).Take(10).ToListAsync();
-			return Json(result);
+			return PartialView(result);
         }
 
         ////[Route("User/Friends/{nickName}")]
@@ -1041,7 +1059,7 @@ namespace Capycom.Controllers
 			var result = await followerList1.OrderBy(p => p.CpcmUserId).Take(10).ToListAsync();
 			//followerList1.AddRange(followerList2);
 
-			return Json(followerList1);
+			return PartialView(followerList1);
         }
 
 		public async Task<IActionResult> Groups(GroupFilterModel filters)
@@ -1107,7 +1125,7 @@ namespace Capycom.Controllers
 
 
 			var result = await groupsList.OrderBy(p => p.CpcmGroupId).Take(10).ToListAsync();
-			return Json(groupsList);
+			return View(groupsList);
 		}
 
 		public async Task<IActionResult> GetNextGroups(GroupFilterModel filters)
@@ -1173,7 +1191,7 @@ namespace Capycom.Controllers
 
 
 			var result = await groupsList.OrderBy(p => p.CpcmGroupId).Take(10).ToListAsync();
-			return Json(groupsList);
+			return PartialView(groupsList);
 		}
 
 		[Authorize]
@@ -1278,13 +1296,24 @@ namespace Capycom.Controllers
         {
 
             CpcmUserfollower follower = new();
-            follower.CpcmFollowerId = CpcmUserId;
-            follower.CpcmUserId = Guid.Parse(HttpContext.User.FindFirst(c => c.Type == "CpcmUserId").Value);
-            _context.CpcmUserfollowers.Add(follower);
+            follower.CpcmFollowersId = Guid.NewGuid();
+            follower.CpcmUserId = CpcmUserId;
+            follower.CpcmFollowerId = Guid.Parse(HttpContext.User.FindFirst(c => c.Type == "CpcmUserId").Value);
+            
+			
 
-            try
+			try
             {
-                await _context.SaveChangesAsync();
+                Guid id = Guid.Parse(HttpContext.User.FindFirst(c => c.Type == "CpcmUserId").Value);
+
+				var follow = await _context.CpcmUserfollowers.Where(e => e.CpcmUserId == CpcmUserId && e.CpcmFollowerId == id).FirstOrDefaultAsync();
+                if (follow == null)
+                {
+					_context.CpcmUserfollowers.Add(follower);
+					await _context.SaveChangesAsync();
+				}                    
+                else
+                    return StatusCode(200, new { status = false, message = "Вы уже подписаны на этого человека" });
             }
             catch (DbException)
             {
@@ -1560,7 +1589,7 @@ namespace Capycom.Controllers
 			var result = await friendList1.OrderBy(p => p.CpcmUserId).Take(10).ToListAsync();
 			//followerList1.AddRange(followerList2);
 
-			return Json(friendList1);
+			return PartialView(friendList1);
 		}
 		[Authorize]
         public async Task<IActionResult> CreatePost()
@@ -1571,7 +1600,7 @@ namespace Capycom.Controllers
         [Authorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> CreatePost(UserPostModel userPost)
+        public async Task<IActionResult> CreatePostP(UserPostModel userPost)
         {
             //if (userPost.Text == null && userPost.Files.Count > 0)
             //{
@@ -1660,7 +1689,7 @@ namespace Capycom.Controllers
                     if (userPost.PostFatherId !=null)
                     {
                         var fatherPost = await _context.CpcmPosts.Where(p => p.CpcmPostId == userPost.PostFatherId).FirstOrDefaultAsync(); 
-                        if(fatherPost==null || fatherPost.CpcmPostPublishedDate < DateTime.UtcNow)
+                        if(fatherPost==null || fatherPost.CpcmPostPublishedDate > DateTime.UtcNow)
                         {
                             return StatusCode(200, new {status=false,message= "Нельзя репостить неопубликованный пост" });
                         }
@@ -1690,9 +1719,9 @@ namespace Capycom.Controllers
                     return View(userPost); // TODO Продумать место для сохранения еррора
                 }
 
-                if (userPost.PostFatherId != null)
+                if (userPost.PostFatherId == null)
                 {
-                    return View("Index"); 
+                    return RedirectToAction("Index"); 
                 }
                 else
                 {
@@ -1709,6 +1738,9 @@ namespace Capycom.Controllers
                 return StatusCode(200, new {status=false, message="Репост имел неккоректный вид. Возможно вы попытались прикрепить файлы. Однако этого нельзя делать для репостов.", errors= ModelState.SelectMany(x => x.Value.Errors.Select(e => e.ErrorMessage)).ToList() });
             }
         }
+
+
+
 
         [Authorize]
         [HttpPost]
@@ -1962,6 +1994,7 @@ namespace Capycom.Controllers
                     ViewData["Message"] = "Не удалось сохранить пост. Пожалуйста, повторите запрос позднее или обратитесь к Администратору.";
                     return View(editPost); // TODO Продумать место для сохранения еррора
                 }
+                RedirectToAction("Index");
 
             }
             return View(editPost);
@@ -1993,7 +2026,7 @@ namespace Capycom.Controllers
             {
                 return StatusCode(500);
             }
-            return Json(postModels);
+            return PartialView(postModels);
         }
 
         [HttpPost]
@@ -2029,7 +2062,7 @@ namespace Capycom.Controllers
             {
                 return StatusCode(500);
             }
-            return Json(postModels);
+            return PartialView(postModels);
         }
 		[Authorize]
 		[HttpGet]
@@ -2294,14 +2327,14 @@ namespace Capycom.Controllers
         {
             if (string.IsNullOrWhiteSpace(CpcmUserEmail))
             {
-                return Json("Email не может быть пустым или состоять из одних пробелов");
+                return Json(data: "Email не может быть пустым или состоять из одних пробелов");
             }
 
             var authFactor = HttpContext.User.FindFirst(c => c.Type == "CpcmCanEditUsers" && c.Value == "True");
             CpcmUserEmail = CpcmUserEmail.Trim();
             if (CpcmUserEmail.Contains("admin") || CpcmUserEmail.Contains("webmaster") || CpcmUserEmail.Contains("abuse") && authFactor == null)
             {
-                return Json(false);
+                return Json(data: $"{CpcmUserEmail} зарезервировано");
             }
 
             bool rez = false;
@@ -2311,10 +2344,12 @@ namespace Capycom.Controllers
             }
             catch (DbException)
             {
-                //StatusCode(500);
-                return Json(false);
-            }
-            return Json(rez);
+				//StatusCode(500);
+				return Json(data: "Не удалось установить соединение с сервером");
+			}
+			if (!rez)
+				return Json(data: "Данный Email уже занят");
+			return Json(rez);
         }
         [HttpPost]//TODO: Объединить с методами при регистрации
         public async Task<IActionResult> CheckNickName(string CpcmUserNickName, Guid CpcmUserId)
@@ -2328,7 +2363,7 @@ namespace Capycom.Controllers
             var authFactor = HttpContext.User.FindFirst(c => c.Type == "CpcmCanEditUsers" && c.Value == "True");
             if (CpcmUserNickName.Contains("admin") || CpcmUserNickName.Contains("webmaster") || CpcmUserNickName.Contains("abuse") && authFactor==null)
             {
-                return Json(false);
+                return Json(data: $"{CpcmUserNickName} зарезервировано");
             }
             bool rez = false;
             try
@@ -2337,17 +2372,19 @@ namespace Capycom.Controllers
             }
             catch (DbException)
             {
-                //StatusCode(500);
-                return Json(false);
-            }
-            return Json(rez);
+				//StatusCode(500);
+				return Json(data: "Не удалось установить соединение с сервером");
+			}
+			if (!rez)
+				return Json(data: "Данный nickname уже занят");
+			return Json(rez);
         }
         [HttpPost]//TODO: Объединить с методами при регистрации
         public async Task<IActionResult> CheckPhone(string CpcmUserTelNum, Guid CpcmUserId)
         {
             if (string.IsNullOrWhiteSpace(CpcmUserTelNum))
             {
-                return Json("Телефон не может быть пустым или состоять из одних пробелов");
+                return Json(data: "Телефон не может быть пустым или состоять из одних пробелов");
             }
             CpcmUserTelNum = CpcmUserTelNum.Trim();
             bool rez = false;
@@ -2357,10 +2394,12 @@ namespace Capycom.Controllers
             }
             catch (DbException)
             {
-                //StatusCode(500);
-                return Json(false);
-            }
-            return Json(rez);
+				//StatusCode(500);
+				return Json(data: "Не удалось установить соединение с сервером");
+			}
+			if (!rez)
+				return Json(data: "Данный телефон уже занят");
+			return Json(rez);
         }
         [HttpPost]//TODO: Объединить с методами при регистрации
         public async Task<IActionResult> CheckPwd(string pwd)

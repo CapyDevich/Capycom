@@ -183,7 +183,7 @@ namespace Capycom.Controllers
 			{
 				return StatusCode(500);
 			}
-			return Json(postsWithLikesCount);
+			return PartialView(postsWithLikesCount);
 		}
 
 		[Authorize]
@@ -948,7 +948,7 @@ namespace Capycom.Controllers
 			var result = await followerList1.OrderBy(p => p.CpcmUserId).Take(10).ToListAsync();
 			//followerList1.AddRange(followerList2);
 
-			return Json(followerList1);
+			return PartialView(followerList1);
 		}
 
 		[Authorize]
@@ -1552,7 +1552,7 @@ namespace Capycom.Controllers
 			{
 				return StatusCode(500);
 			}
-			return Json(postsWithLikesCount);
+			return PartialView(postsWithLikesCount);
 		}
 
 
@@ -1596,9 +1596,9 @@ namespace Capycom.Controllers
 			CpcmGroupNickName = CpcmGroupNickName.Trim();
 			if (CpcmGroupNickName.Contains("admin") || CpcmGroupNickName.Contains("webmaster") || CpcmGroupNickName.Contains("abuse"))
 			{
-				return Json(false);
+				return Json(data: $"{CpcmGroupNickName} зарезервировано");
 			}
-
+			
 			bool rez = false;
 			try
 			{
@@ -1606,8 +1606,10 @@ namespace Capycom.Controllers
 			}
 			catch (DbException)
 			{
-				return Json(false);
+				return Json(data: "Не удалось установить соединение с сервером");
 			}
+			if (!rez)
+				return Json(data: "Данный nickname уже занят");
 			return Json(rez);
 		}
 		public async Task<IActionResult> CheckCreateNickName(string CpcmGroupNickName, Guid GroupId)
@@ -1620,7 +1622,7 @@ namespace Capycom.Controllers
 			var authFactor = bool.Parse(User.FindFirstValue("CpcmCanEditGroups"));
 			if (CpcmGroupNickName.Contains("admin") || CpcmGroupNickName.Contains("webmaster") || CpcmGroupNickName.Contains("abuse") && !authFactor)
 			{
-				return Json(false);
+				return Json(data: $"{CpcmGroupNickName} зарезервировано");
 			}
 
 			bool rez = false;
@@ -1630,8 +1632,10 @@ namespace Capycom.Controllers
 			}
 			catch (DbException)
 			{
-				return Json(false);
+				return Json(data: "Не удалось установить соединение с сервером");
 			}
+			if (!rez)
+				return Json(data: "Данный nickname уже занят");
 			return Json(rez);
 		}
 		private async Task<CpcmPost?> GetFatherPostReccurent(CpcmPost cpcmPostFatherNavigation)

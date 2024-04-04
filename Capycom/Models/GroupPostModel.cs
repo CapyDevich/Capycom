@@ -1,4 +1,6 @@
-﻿using Capycom.Attributes;
+using System.ComponentModel.DataAnnotations;
+
+using Capycom.Attributes;
 
 namespace Capycom.Models
 {
@@ -7,7 +9,7 @@ namespace Capycom.Models
 
 		[MaxFileCount(4)]
 		public IFormFileCollection? Files { get; set; }
-
+		[MaxLength(500, ErrorMessage = "Текст поста не может состоять из более чем 500 символов")]
 		public string? Text { get; set; }
 
 		public Guid? PostFatherId { get; set; }

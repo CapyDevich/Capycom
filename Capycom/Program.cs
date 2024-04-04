@@ -41,7 +41,7 @@ namespace Capycom
 			builder.Logging.ClearProviders();
             Log.Logger = new LoggerConfiguration()
                 .MinimumLevel.Debug() //Information()
-				.MinimumLevel.Override("Microsoft", LogEventLevel.Information) //все события от Microsoft, Microsoft.AspNetCore, Microsoft.AspNetCore.Hosting и т.д., будут записываться на уровне Information и выше.
+				.MinimumLevel.Override("Microsoft", LogEventLevel.Error) //все события от Microsoft, Microsoft.AspNetCore, Microsoft.AspNetCore.Hosting и т.д., будут записываться на уровне Information и выше.
 				.Enrich.FromLogContext()
 	            .WriteTo.Console()
 	            .WriteTo.Async(a=> a.File("Logs/log-.txt", rollingInterval: RollingInterval.Day))

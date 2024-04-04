@@ -13,8 +13,7 @@ namespace Capycom.Models
         [HiddenInput]
         public Guid CpcmPostId { get; set; }
 
-        
-        
+        [MaxLength(200,ErrorMessage ="Комментарий не может состоять из более чем 200 символов")]        
         public string? CpcmCommentText { get; set; }
 
 

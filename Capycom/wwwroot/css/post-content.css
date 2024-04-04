@@ -1,0 +1,27 @@
+﻿/* Набор стилей для textarea с значком скрепки для загрузки файлов */
+.block-image {
+    padding: 1px;
+    width: 256px;
+    height: 256px;
+}
+
+textarea.comment-text {
+    resize: none;
+    overflow: hidden;
+}
+
+.paperclip-icon {
+    transform: rotate(30deg);
+    cursor: pointer;
+    animation-name: reverse-rotation;
+}
+
+.paperclip-icon:hover {
+    transform: rotate(390deg);
+    cursor: pointer;
+    transition: transform 1s ease-in-out;
+}
+
+.paperclip-label {
+    cursor: pointer;
+}
