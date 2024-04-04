@@ -695,8 +695,19 @@ namespace Capycom.Controllers
 				friendList1 = friendList1.Where(u => EF.Functions.Like(u.CpcmUserAdditionalName, $"%{filters.AdditionalName}%"));
 			}
 
-			var result = await friendList1.OrderBy(p => p.CpcmUserId).Take(10).ToListAsync();
-			return View(result);
+            try
+            {
+                var result = await friendList1.OrderBy(p => p.CpcmUserId).Take(10).ToListAsync();
+                return View(result);
+            }
+			catch (DbException)
+			{
+				Response.StatusCode = 500;
+				ViewData["ErrorCode"] = 500;
+				ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
+				return View("UserError");
+			}
+			
 
 
         }
@@ -768,8 +779,19 @@ namespace Capycom.Controllers
 				//ViewData["additionalName"] = additionalName;
 				friendList1 = friendList1.Where(u => EF.Functions.Like(u.CpcmUserAdditionalName, $"%{filters.AdditionalName}%"));
 			}
-			var result = await friendList1.OrderBy(p => p.CpcmUserId).Take(10).ToListAsync();
-			return PartialView(result);
+            try
+            {
+                var result = await friendList1.OrderBy(p => p.CpcmUserId).Take(10).ToListAsync();
+				return PartialView(result);
+			}
+			catch (DbException)
+			{
+				Response.StatusCode = 500;
+				ViewData["ErrorCode"] = 500;
+				ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
+				return View("UserError");
+			}
+			
         }
 
 
@@ -855,10 +877,20 @@ namespace Capycom.Controllers
 				followerList1 = followerList1.Where(u => EF.Functions.Like(u.CpcmUserAdditionalName, $"%{filters.AdditionalName}%"));
 			}
 
-			var result = await followerList1.OrderBy(p => p.CpcmUserId).Take(10).ToListAsync();
+            try
+            {
+                var result = await followerList1.OrderBy(p => p.CpcmUserId).Take(10).ToListAsync();
 
-			return View(followerList1);
-        }
+                return View(followerList1);
+            }
+			catch (DbException)
+			{
+				Response.StatusCode = 500;
+				ViewData["ErrorCode"] = 500;
+				ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
+				return View("UserError");
+			}
+		}
 		[HttpPost]
 		public async Task<ActionResult> GetNextFollowers(UserFilterModel filters)
         {
@@ -930,11 +962,19 @@ namespace Capycom.Controllers
 				followerList1 = followerList1.Where(u => EF.Functions.Like(u.CpcmUserAdditionalName, $"%{filters.AdditionalName}%"));
 			}
 
-			var result = await followerList1.OrderBy(p => p.CpcmUserId).Take(10).ToListAsync();
-			//followerList1.AddRange(followerList2);
-
-			return PartialView(followerList1);
-        }
+            try
+            {
+                var result = await followerList1.OrderBy(p => p.CpcmUserId).Take(10).ToListAsync();
+                return PartialView(result);
+            }
+			catch (DbException)
+			{
+				Response.StatusCode = 500;
+				ViewData["ErrorCode"] = 500;
+				ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
+				return View("UserError");
+			}
+		}
 
 		public async Task<IActionResult> Groups(GroupFilterModel filters)
 		{
@@ -997,9 +1037,19 @@ namespace Capycom.Controllers
 				groupsList = groupsList.Where(u => u.CpcmGroupSubject == filters.SubjectID);
 			}
 
+            try
+            {
 
-			var result = await groupsList.OrderBy(p => p.CpcmGroupId).Take(10).ToListAsync();
-			return View(groupsList);
+                var result = await groupsList.OrderBy(p => p.CpcmGroupId).Take(10).ToListAsync();
+                return View(groupsList);
+            }
+			catch (DbException)
+			{
+				Response.StatusCode = 500;
+				ViewData["ErrorCode"] = 500;
+				ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
+				return View("UserError");
+			}
 		}
 
 		public async Task<IActionResult> GetNextGroups(GroupFilterModel filters)
@@ -1064,8 +1114,18 @@ namespace Capycom.Controllers
 			}
 
 
-			var result = await groupsList.OrderBy(p => p.CpcmGroupId).Take(10).ToListAsync();
-			return PartialView(groupsList);
+            try
+            {
+                var result = await groupsList.OrderBy(p => p.CpcmGroupId).Take(10).ToListAsync();
+                return PartialView(groupsList);
+            }
+			catch (DbException)
+			{
+				Response.StatusCode = 500;
+				ViewData["ErrorCode"] = 500;
+				ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
+				return View("UserError");
+			}
 		}
 
 		[Authorize]
@@ -1333,7 +1393,8 @@ namespace Capycom.Controllers
 			CpcmUser user = null;
 			try
 			{
-				user = await _context.CpcmUsers.Where(c => c.CpcmUserId == filters.UserId).FirstOrDefaultAsync();
+				var stringGuid = User.FindFirstValue("CpcmUserId");
+				user = await _context.CpcmUsers.Where(c => c.CpcmUserId.ToString() == stringGuid).FirstOrDefaultAsync();
 			}
 			catch (DbException)
 			{
@@ -1392,18 +1453,29 @@ namespace Capycom.Controllers
 				friendList1 = friendList1.Where(u => EF.Functions.Like(u.CpcmUserAdditionalName, $"%{filters.AdditionalName}%"));
 			}
 
-			var result = await friendList1.OrderBy(p => p.CpcmUserId).Take(10).ToListAsync();
-			//followerList1.AddRange(followerList2);
+            try
+            {
+                var result = await friendList1.OrderBy(p => p.CpcmUserId).Take(10).ToListAsync();
+                //followerList1.AddRange(followerList2);
 
-			return View(friendList1);
+                return View(result);
+            }
+			catch (DbException)
+			{
+				Response.StatusCode = 500;
+				ViewData["ErrorCode"] = 500;
+				ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
+				return View("UserError");
+			}
 		}
-
+        [Authorize]
 		public async Task<IActionResult> GetNextFriendRequests(UserFilterModel filters)
 		{
 			CpcmUser user = null;
 			try
 			{
-				user = await _context.CpcmUsers.Where(c => c.CpcmUserId == filters.UserId).FirstOrDefaultAsync();
+				var stringGuid = User.FindFirstValue("CpcmUserId");
+				user = await _context.CpcmUsers.Where(c => c.CpcmUserId.ToString() == stringGuid).FirstOrDefaultAsync();
 			}
 			catch (DbException)
 			{
@@ -1462,10 +1534,20 @@ namespace Capycom.Controllers
 				friendList1 = friendList1.Where(u => EF.Functions.Like(u.CpcmUserAdditionalName, $"%{filters.AdditionalName}%"));
 			}
 
-			var result = await friendList1.OrderBy(p => p.CpcmUserId).Take(10).ToListAsync();
-			//followerList1.AddRange(followerList2);
+            try
+            {
+                var result = await friendList1.OrderBy(p => p.CpcmUserId).Take(10).ToListAsync();
+                //followerList1.AddRange(followerList2);
 
-			return PartialView(friendList1);
+                return PartialView(result);
+            }
+			catch (DbException)
+			{
+				Response.StatusCode = 500;
+				ViewData["ErrorCode"] = 500;
+				ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
+				return View("UserError");
+			}
 		}
 		[Authorize]
         public async Task<IActionResult> CreatePost()
