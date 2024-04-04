@@ -15,6 +15,7 @@ using System.Text.RegularExpressions;
 using Microsoft.Extensions.Hosting;
 using static NuGet.Packaging.PackagingConstants;
 using System.Security.Claims;
+using Capycom.Enums;
 
 namespace Capycom.Controllers
 {
@@ -220,8 +221,18 @@ namespace Capycom.Controllers
                     }
                     if (friend != null)
                     {
-                        user.IsFriend = friend.CpcmFriendRequestStatus;
+                        if (friend.CpcmFriendRequestStatus == true)
+                            user.IsFriend = FriendStatusEnum.Approved;
+                        else if (friend.CpcmFriendRequestStatus == false)
+                            user.IsFriend = FriendStatusEnum.Rejected;
+                        else
+                            user.IsFriend = FriendStatusEnum.NotAnswered;
+
 					}
+                    else
+                    {
+                        user.IsFriend = FriendStatusEnum.NoFriendRequest;
+                    }
 					var follower = await _context.CpcmUserfollowers.Where(f => f.CpcmFollowerId.ToString() == User.FindFirstValue("CpcmUserId") && f.CpcmUserId == user.CpcmUserId).FirstOrDefaultAsync();
 					if (follower == null)
                     {
@@ -234,7 +245,7 @@ namespace Capycom.Controllers
                 }
                 else
                 {
-                    user.IsFriend = null;
+                    user.IsFriend = FriendStatusEnum.NoFriendRequest;
                     user.IsFollowing = false;
                 }
             }
