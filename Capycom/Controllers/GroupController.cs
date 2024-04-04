@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using System.Data.Common;
 using System.Reflection;
@@ -126,6 +127,21 @@ namespace Capycom.Controllers
 					}
 
 				}
+				if (HttpContext.Request.Cookies.ContainsKey("TimeZone"))
+				{
+					string timezoneOffsetCookie = HttpContext.Request.Cookies["TimeZone"];
+					if (timezoneOffsetCookie != null)
+					{
+						if (int.TryParse(timezoneOffsetCookie, out int timezoneOffsetMinutes))
+						{
+							TimeSpan offset = TimeSpan.FromMinutes(timezoneOffsetMinutes);
+
+							postik.CpcmPostPublishedDate -= offset;
+
+						}
+					}
+				}
+
 
 				postsWithLikesCount.Add(postik);
 			}
@@ -174,6 +190,22 @@ namespace Capycom.Controllers
 						else
 							postik.IsLiked = false;
 
+					}
+
+
+					if (HttpContext.Request.Cookies.ContainsKey("TimeZone"))
+					{
+						string timezoneOffsetCookie = HttpContext.Request.Cookies["TimeZone"];
+						if (timezoneOffsetCookie != null)
+						{
+							if (int.TryParse(timezoneOffsetCookie, out int timezoneOffsetMinutes))
+							{
+								TimeSpan offset = TimeSpan.FromMinutes(timezoneOffsetMinutes);
+
+								postik.CpcmPostPublishedDate -= offset;
+
+							}
+						}
 					}
 				}
 
@@ -1104,6 +1136,20 @@ namespace Capycom.Controllers
 				else
 				{
 					post.CpcmPostPublishedDate = groupPost.Published;
+					if (HttpContext.Request.Cookies.ContainsKey("TimeZone"))
+					{
+						string timezoneOffsetCookie = HttpContext.Request.Cookies["TimeZone"];
+						if (timezoneOffsetCookie != null)
+						{
+							if (int.TryParse(timezoneOffsetCookie, out int timezoneOffsetMinutes))
+							{
+								TimeSpan offset = TimeSpan.FromMinutes(timezoneOffsetMinutes);
+
+								post.CpcmPostPublishedDate += offset;
+
+							}
+						}
+					}
 				}
 
 				//post.CpcmUserId = Guid.Parse(User.FindFirst(c => c.Type == "CpcmUserId").Value);
@@ -1368,6 +1414,20 @@ namespace Capycom.Controllers
 				else
 				{
 					post.CpcmPostPublishedDate = editPost.NewPublishDate;
+					if (HttpContext.Request.Cookies.ContainsKey("TimeZone"))
+					{
+						string timezoneOffsetCookie = HttpContext.Request.Cookies["TimeZone"];
+						if (timezoneOffsetCookie != null)
+						{
+							if (int.TryParse(timezoneOffsetCookie, out int timezoneOffsetMinutes))
+							{
+								TimeSpan offset = TimeSpan.FromMinutes(timezoneOffsetMinutes);
+
+								post.CpcmPostPublishedDate += offset;
+
+							}
+						}
+					}
 				}
 
 				//post.CpcmPostPublishedDate = DateTime.UtcNow;
@@ -1544,6 +1604,20 @@ namespace Capycom.Controllers
 							postik.IsLiked = false;
 
 					}
+					if (HttpContext.Request.Cookies.ContainsKey("TimeZone"))
+					{
+						string timezoneOffsetCookie = HttpContext.Request.Cookies["TimeZone"];
+						if (timezoneOffsetCookie != null)
+						{
+							if (int.TryParse(timezoneOffsetCookie, out int timezoneOffsetMinutes))
+							{
+								TimeSpan offset = TimeSpan.FromMinutes(timezoneOffsetMinutes);
+
+								postik.CpcmPostPublishedDate -= offset;
+
+							}
+						}
+					}
 				}
 
 
@@ -1573,6 +1647,20 @@ namespace Capycom.Controllers
 				foreach (var postik in posts)
 				{
 					postik.CpcmPostFatherNavigation = await GetFatherPostReccurent(postik);
+					if (HttpContext.Request.Cookies.ContainsKey("TimeZone"))
+					{
+						string timezoneOffsetCookie = HttpContext.Request.Cookies["TimeZone"];
+						if (timezoneOffsetCookie != null)
+						{
+							if (int.TryParse(timezoneOffsetCookie, out int timezoneOffsetMinutes))
+							{
+								TimeSpan offset = TimeSpan.FromMinutes(timezoneOffsetMinutes);
+
+								postik.CpcmPostPublishedDate -= offset;
+
+							}
+						}
+					}
 				}
 			}
 			catch (DbException)
