@@ -11,7 +11,7 @@ namespace Capycom.Attributes
                 return ValidationResult.Success;
             }
 
-            if (value is DateTime dateTime && dateTime < DateTime.Now)
+            if (value is DateTime dateTime && dateTime < DateTime.UtcNow)
             {
                 return new ValidationResult("Дата должна быть больше или равна текущей дате");
             }
