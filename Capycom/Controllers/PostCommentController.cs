@@ -273,7 +273,8 @@ namespace Capycom.Controllers
         {
             try
             {
-                var post = await _context.CpcmPosts.Where(p => p.CpcmPostId == postId && p.CpcmPostPublishedDate < DateTime.UtcNow).FirstOrDefaultAsync();
+				var date = DateTime.Now;
+				var post = await _context.CpcmPosts.Where(p => p.CpcmPostId == postId && p.CpcmPostPublishedDate < date).FirstOrDefaultAsync();
                 if (post == null)
                 {
                     return StatusCode(404);
