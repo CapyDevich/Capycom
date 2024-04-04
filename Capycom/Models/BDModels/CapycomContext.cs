@@ -425,27 +425,36 @@ public partial class CapycomContext : DbContext
 	public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default(CancellationToken))
 	{
 		var entries = ChangeTracker.Entries()
-			.Where(e => e.State == EntityState.Added || e.State == EntityState.Modified);
+				.Where(e => e.State == EntityState.Added || e.State == EntityState.Modified);
 
 		foreach (var entry in entries)
 		{
+			var currentValues = entry.CurrentValues;
+			var values = new Dictionary<string, object>();
+
+			foreach (var property in entry.Metadata.GetProperties())
+			{
+				var propertyName = property.Name;
+				var currentValue = currentValues[propertyName];
+				values[propertyName] = currentValue;
+			}
+
 			if (entry.State == EntityState.Added)
 			{
 				// Если сущность новая, логируем все текущие значения
 				Log.Information("New entity {EntityName} has the following values: {Values}",
 					entry.Entity.GetType().Name,
-					entry.CurrentValues.ToObject());
+					values);
 			}
 			else if (entry.State == EntityState.Modified)
 			{
 				// Если сущность была изменена, логируем только измененные значения
 				var originalValues = entry.OriginalValues.Clone();
-				var currentValues = entry.CurrentValues;
 				var changedValues = new Dictionary<string, object>();
 
-				foreach (var property in entry.Properties)
+				foreach (var property in entry.Metadata.GetProperties())
 				{
-					var propertyName = property.Metadata.Name;
+					var propertyName = property.Name;
 					var originalValue = originalValues[propertyName];
 					var currentValue = currentValues[propertyName];
 
