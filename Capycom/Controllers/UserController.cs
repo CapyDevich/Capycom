@@ -15,6 +15,7 @@ using System.Text.RegularExpressions;
 using Microsoft.Extensions.Hosting;
 using static NuGet.Packaging.PackagingConstants;
 using System.Security.Claims;
+using Capycom.Enums;
 
 namespace Capycom.Controllers
 {
@@ -80,78 +81,10 @@ namespace Capycom.Controllers
 
         }
 
-        //[HttpGet]
-		//[Route("User/Index/{id:guid}")]
-		//public async Task<ActionResult> Index(UserFilterModel filter)
-  //      {
-  //          CpcmUser? user;
-  //          try
-  //          {
-  //              user = await _context.CpcmUsers
-  //              .Include(c => c.CpcmUserCityNavigation)
-  //              .Include(c => c.CpcmUserRoleNavigation)
-  //              .Include(c => c.CpcmUserSchoolNavigation)
-  //              .Include(c => c.CpcmUserUniversityNavigation)
-  //              .Where(c => c.CpcmUserId == id).FirstOrDefaultAsync();
-  //          }
-  //          catch (DbException)
-  //          {
-  //              Response.StatusCode = 500;
-  //              ViewData["ErrorCode"] = 500;
-  //              ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
-  //              return View("UserError");
-  //          }
-
-  //          if (user == null)
-  //          {
-  //              Response.StatusCode = 404;
-  //              ViewData["ErrorCode"] = 404;
-  //              ViewData["Message"] = "Пользователь не найден";
-  //              return View("UserError");
-  //          }
-
-  //          if (user.CpcmUserNickName != null)
-  //          {
-  //              return RedirectToAction("Index", new { nickName = user.CpcmUserNickName });
-  //          }
-  //          List<CpcmPost> posts;
-  //          try
-  //          {
-  //              posts = await _context.CpcmPosts.Where(c => c.CpcmUserId == user.CpcmUserId && c.CpcmPostPublishedDate < DateTime.UtcNow).Include(c => c.CpcmImages).OrderByDescending(c => c.CpcmPostPublishedDate).Take(10).ToListAsync();
-  //          }
-  //          catch (DbException)
-  //          {
-  //              Response.StatusCode = 500;
-  //              ViewData["ErrorCode"] = 500;
-  //              ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
-  //              return View("UserError");
-  //          }
-  //          ICollection<PostModel> postsWithLikesCount = new List<PostModel>();
-  //          UserProfileAndPostsModel userProfile = new();
-  //          userProfile.User = user;
-  //          foreach(var postik in posts)
-  //          {
-  //              postik.User = user;
-  //              postik.CpcmPostFatherNavigation = await GetFatherPostReccurent(postik);
-  //              long likes = await _context.Database.SqlQuery<long>($@"SELECT * FROM CPCM_POSTLIKES WHERE CPCM_PostID = {postik.CpcmPostId}").CountAsync();
-  //              long reposts = await _context.Database.SqlQuery<long>($@"SELECT * FROM CPCM_POSTREPOSTS WHERE CPCM_PostID = {postik.CpcmPostId}").CountAsync();
-  //              postsWithLikesCount.Add(new PostModel() { Post = postik, UserOwner=user, LikesCount= likes, RepostsCount= reposts });
-  //          }
-  //          userProfile.Posts = postsWithLikesCount;
-  //          return View(userProfile);
-  //      }
 
         [HttpGet]
-        //[Route("User/Index/{nickName}")]
         public async Task<ActionResult> Index(UserFilterModel filter)
         {
-   //         if (string.IsNullOrWhiteSpace(filter.NickName))
-   //         {
-			//	Response.StatusCode = 400;
-			//	ViewData["ErrorCode"] = 400;
-			//	ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
-			//	return View("UserError");
-			//}
             CpcmUser? user;
             try
             {
@@ -220,8 +153,18 @@ namespace Capycom.Controllers
                     }
                     if (friend != null)
                     {
-                        user.IsFriend = friend.CpcmFriendRequestStatus;
+                        if (friend.CpcmFriendRequestStatus == true)
+                            user.IsFriend = FriendStatusEnum.Approved;
+                        else if (friend.CpcmFriendRequestStatus == false)
+                            user.IsFriend = FriendStatusEnum.Rejected;
+                        else
+                            user.IsFriend = FriendStatusEnum.NotAnswered;
+
 					}
+                    else
+                    {
+                        user.IsFriend = FriendStatusEnum.NoFriendRequest;
+                    }
 					var follower = await _context.CpcmUserfollowers.Where(f => f.CpcmFollowerId.ToString() == User.FindFirstValue("CpcmUserId") && f.CpcmUserId == user.CpcmUserId).FirstOrDefaultAsync();
 					if (follower == null)
                     {
@@ -234,7 +177,7 @@ namespace Capycom.Controllers
                 }
                 else
                 {
-                    user.IsFriend = null;
+                    user.IsFriend = FriendStatusEnum.NoFriendRequest;
                     user.IsFollowing = false;
                 }
             }
@@ -263,7 +206,21 @@ namespace Capycom.Controllers
                     else
                         postik.IsLiked =false;
                 }
-                postsWithLikesCount.Add(new PostModel() { Post = postik, UserOwner = user, LikesCount = likes, RepostsCount = reposts });
+				if (HttpContext.Request.Cookies.ContainsKey("TimeZone"))
+				{
+					string timezoneOffsetCookie = HttpContext.Request.Cookies["TimeZone"];
+					if (timezoneOffsetCookie != null)
+					{
+						if (int.TryParse(timezoneOffsetCookie, out int timezoneOffsetMinutes))
+						{
+							TimeSpan offset = TimeSpan.FromMinutes(timezoneOffsetMinutes);
+							
+							postik.CpcmPostPublishedDate -=  offset;
+
+						}
+					}
+				}
+				postsWithLikesCount.Add(new PostModel() { Post = postik, UserOwner = user, LikesCount = likes, RepostsCount = reposts });
             }
             userProfile.Posts = postsWithLikesCount;
             return View(userProfile);
@@ -812,92 +769,9 @@ namespace Capycom.Controllers
 				friendList1 = friendList1.Where(u => EF.Functions.Like(u.CpcmUserAdditionalName, $"%{filters.AdditionalName}%"));
 			}
 			var result = await friendList1.OrderBy(p => p.CpcmUserId).Take(10).ToListAsync();
-			return Json(result);
+			return PartialView(result);
         }
 
-        ////[Route("User/Friends/{nickName}")]
-        //public async Task<ActionResult> FriendsByNick(string nickName)
-        //{
-        //    CpcmUser user;
-        //    try
-        //    {
-        //        user = await _context.CpcmUsers.Where(c => c.CpcmUserNickName == nickName).FirstOrDefaultAsync();
-        //    }
-        //    catch (DbException)
-        //    {
-        //        Response.StatusCode = 500;
-        //        ViewData["ErrorCode"] = 500;
-        //        ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
-        //        return View("UserError");
-        //    }
-
-        //    if (user == null || user.CpcmIsDeleted)
-        //    {
-        //        Response.StatusCode = 404;
-        //        ViewData["ErrorCode"] = 404;
-        //        ViewData["Message"] = "Пользователь не найден";
-        //        return View("UserError");
-        //    }
-
-        //    //_context.CpcmUserfriends.Select(c => c.CmcpFriend).Where(c => c.CmcpUserId == id).Include(c => c.CmcpFriend).ToList();
-        //    List<CpcmUser> friendList1;
-        //    List<CpcmUser> friendList2;
-        //    try
-        //    {
-        //        friendList1 = await _context.CpcmUserfriends.Where(c => c.CmcpUserId == user.CpcmUserId && c.CpcmFriendRequestStatus == true).Select(c => c.CmcpFriend).OrderBy(u => u.CpcmUserId).Take(5).ToListAsync();
-        //        friendList2 = await _context.CpcmUserfriends.Where(c => c.CmcpFriendId == user.CpcmUserId && c.CpcmFriendRequestStatus == true).Select(c => c.CmcpUser).OrderBy(u => u.CpcmUserId).Take(10 - friendList1.Count).ToListAsync();
-        //    }
-        //    catch (DbException)
-        //    {
-        //        Response.StatusCode = 500;
-        //        ViewData["ErrorCode"] = 500;
-        //        ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
-        //        return View("UserError");
-        //    }
-
-        //    friendList1.AddRange(friendList2);
-
-        //    return View(friendList1);
-        //}
-        //[HttpPost]
-        ////[Route("User/GetNextFriends/{nickName}")]
-        //public async Task<ActionResult> GetNextFriendsByNick(string nickName, Guid lastId)
-        //{
-        //    CpcmUser user;
-        //    try
-        //    {
-        //        user = await _context.CpcmUsers.Where(c => c.CpcmUserNickName == nickName).FirstOrDefaultAsync();
-        //    }
-        //    catch (DbException)
-        //    {
-        //        Response.StatusCode = 500;
-        //        return StatusCode(500);
-        //    }
-
-        //    if (user == null || user.CpcmIsDeleted)
-        //    {
-        //        Response.StatusCode = 404;
-        //        return StatusCode(404);
-        //    }
-
-        //    //_context.CpcmUserfriends.Select(c => c.CmcpFriend).Where(c => c.CmcpUserId == id).Include(c => c.CmcpFriend).ToList();
-        //    List<CpcmUser> friendList1;
-        //    List<CpcmUser> friendList2;
-        //    try
-        //    {
-        //        friendList1 = await _context.CpcmUserfriends.Where(c => c.CmcpUserId == user.CpcmUserId && c.CpcmFriendRequestStatus == true && c.CmcpFriendId.CompareTo(lastId) > 0).Select(c => c.CmcpFriend).OrderBy(u => u.CpcmUserId).Take(5).ToListAsync();
-        //        friendList2 = await _context.CpcmUserfriends.Where(c => c.CmcpFriendId == user.CpcmUserId && c.CpcmFriendRequestStatus == true && c.CmcpUserId.CompareTo(lastId) > 0).Select(c => c.CmcpUser).OrderBy(u => u.CpcmUserId).Take(10 - friendList1.Count).ToListAsync();
-        //    }
-        //    catch (DbException)
-        //    {
-        //        Response.StatusCode = 500;
-        //        return StatusCode(500);
-        //    }
-
-        //    friendList1.AddRange(friendList2);
-
-        //    return Json(friendList1);
-        //}
 
 
 
@@ -1059,7 +933,7 @@ namespace Capycom.Controllers
 			var result = await followerList1.OrderBy(p => p.CpcmUserId).Take(10).ToListAsync();
 			//followerList1.AddRange(followerList2);
 
-			return Json(followerList1);
+			return PartialView(followerList1);
         }
 
 		public async Task<IActionResult> Groups(GroupFilterModel filters)
@@ -1125,7 +999,7 @@ namespace Capycom.Controllers
 
 
 			var result = await groupsList.OrderBy(p => p.CpcmGroupId).Take(10).ToListAsync();
-			return Json(groupsList);
+			return View(groupsList);
 		}
 
 		public async Task<IActionResult> GetNextGroups(GroupFilterModel filters)
@@ -1191,7 +1065,7 @@ namespace Capycom.Controllers
 
 
 			var result = await groupsList.OrderBy(p => p.CpcmGroupId).Take(10).ToListAsync();
-			return Json(groupsList);
+			return PartialView(groupsList);
 		}
 
 		[Authorize]
@@ -1424,7 +1298,9 @@ namespace Capycom.Controllers
             CpcmUserfriend? friendRequest;
             try
             {
-                friendRequest = await _context.CpcmUserfriends.Where(c => c.CmcpUserId.ToString() == HttpContext.User.FindFirst(c => c.Type == "CpcmUserId").Value
+                var guid = HttpContext.User.FindFirst(d => d.Type == "CpcmUserId").Value;
+
+				friendRequest = await _context.CpcmUserfriends.Where(c => c.CmcpUserId.ToString() == guid
                    && c.CmcpFriendId == CpcmUserId).FirstOrDefaultAsync();
             }
             catch (DbException)
@@ -1586,7 +1462,7 @@ namespace Capycom.Controllers
 			var result = await friendList1.OrderBy(p => p.CpcmUserId).Take(10).ToListAsync();
 			//followerList1.AddRange(followerList2);
 
-			return Json(friendList1);
+			return PartialView(friendList1);
 		}
 		[Authorize]
         public async Task<IActionResult> CreatePost()
@@ -1625,7 +1501,22 @@ namespace Capycom.Controllers
 				}
                 else
                 {
+
 					post.CpcmPostPublishedDate = userPost.Published;
+					if (HttpContext.Request.Cookies.ContainsKey("TimeZone"))
+					{
+						string timezoneOffsetCookie = HttpContext.Request.Cookies["TimeZone"];
+						if (timezoneOffsetCookie != null)
+						{
+							if (int.TryParse(timezoneOffsetCookie, out int timezoneOffsetMinutes))
+							{
+								TimeSpan offset = TimeSpan.FromMinutes(timezoneOffsetMinutes);
+
+								post.CpcmPostPublishedDate += offset;
+
+							}
+						}
+					}
 				}
                 
                 post.CpcmUserId = Guid.Parse(User.FindFirst(c => c.Type == "CpcmUserId").Value);
@@ -1736,6 +1627,9 @@ namespace Capycom.Controllers
             }
         }
 
+
+
+
         [Authorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -1812,7 +1706,21 @@ namespace Capycom.Controllers
             model.Text = post.CpcmPostText;
             model.CpcmImages = post.CpcmImages;
             model.NewPublishDate = post.CpcmPostPublishedDate;
-            return View(model);
+			if (HttpContext.Request.Cookies.ContainsKey("TimeZone"))
+			{
+				string timezoneOffsetCookie = HttpContext.Request.Cookies["TimeZone"];
+				if (timezoneOffsetCookie != null)
+				{
+					if (int.TryParse(timezoneOffsetCookie, out int timezoneOffsetMinutes))
+					{
+						TimeSpan offset = TimeSpan.FromMinutes(timezoneOffsetMinutes);
+
+						model.NewPublishDate -= offset;
+
+					}
+				}
+			}
+			return View(model);
         }
 
         [Authorize]
@@ -1865,6 +1773,20 @@ namespace Capycom.Controllers
 				else
 				{
 					post.CpcmPostPublishedDate = editPost.NewPublishDate;
+					if (HttpContext.Request.Cookies.ContainsKey("TimeZone"))
+					{
+						string timezoneOffsetCookie = HttpContext.Request.Cookies["TimeZone"];
+						if (timezoneOffsetCookie != null)
+						{
+							if (int.TryParse(timezoneOffsetCookie, out int timezoneOffsetMinutes))
+							{
+								TimeSpan offset = TimeSpan.FromMinutes(timezoneOffsetMinutes);
+
+								post.CpcmPostPublishedDate += offset;
+
+							}
+						}
+					}
 				}
 
 				//post.CpcmPostPublishedDate = DateTime.UtcNow;
@@ -2013,14 +1935,29 @@ namespace Capycom.Controllers
                     postik.CpcmPostFatherNavigation = await GetFatherPostReccurent(postik);
                     long likes = await _context.Database.SqlQuery<long>($@"SELECT * FROM CPCM_POSTLIKES WHERE CPCM_PostID = {postik.CpcmPostId}").CountAsync();
                     long reposts = await _context.Database.SqlQuery<long>($@"SELECT * FROM CPCM_POSTREPOSTS WHERE CPCM_PostID = {postik.CpcmPostId}").CountAsync();
-                    postModels.Add(new() { Post = postik, LikesCount = likes, RepostsCount = reposts });
+					if (HttpContext.Request.Cookies.ContainsKey("TimeZone"))
+					{
+						string timezoneOffsetCookie = HttpContext.Request.Cookies["TimeZone"];
+						if (timezoneOffsetCookie != null)
+						{
+							if (int.TryParse(timezoneOffsetCookie, out int timezoneOffsetMinutes))
+							{
+								TimeSpan offset = TimeSpan.FromMinutes(timezoneOffsetMinutes);
+
+								postik.CpcmPostPublishedDate -= offset;
+
+							}
+						}
+					}
+					postModels.Add(new() { Post = postik, LikesCount = likes, RepostsCount = reposts });
+
                 }
             }
             catch (DbException)
             {
                 return StatusCode(500);
             }
-            return Json(postModels);
+            return PartialView(postModels);
         }
 
         [HttpPost]
@@ -2047,16 +1984,30 @@ namespace Capycom.Controllers
                 foreach (var postik in posts)
                 {
                     postik.CpcmPostFatherNavigation = await GetFatherPostReccurent(postik);
-                    //long likes = await _context.Database.SqlQuery<long>($@"SELECT * FROM CPCM_POSTLIKES WHERE CPCM_PostID = '{postik.CpcmGroupId}'");
-                    //long reposts = await _context.Database.SqlQuery<long>($@"SELECT * FROM CPCM_POSTREPOSTS WHERE CPCM_PostID = '{postik.CpcmGroupId}'");
-                    postModels.Add(new() { Post = postik, LikesCount = 0, RepostsCount = 0 });
+					//long likes = await _context.Database.SqlQuery<long>($@"SELECT * FROM CPCM_POSTLIKES WHERE CPCM_PostID = '{postik.CpcmGroupId}'");
+					//long reposts = await _context.Database.SqlQuery<long>($@"SELECT * FROM CPCM_POSTREPOSTS WHERE CPCM_PostID = '{postik.CpcmGroupId}'");
+					if (HttpContext.Request.Cookies.ContainsKey("TimeZone"))
+					{
+						string timezoneOffsetCookie = HttpContext.Request.Cookies["TimeZone"];
+						if (timezoneOffsetCookie != null)
+						{
+							if (int.TryParse(timezoneOffsetCookie, out int timezoneOffsetMinutes))
+							{
+								TimeSpan offset = TimeSpan.FromMinutes(timezoneOffsetMinutes);
+
+								postik.CpcmPostPublishedDate -= offset;
+
+							}
+						}
+					}
+					postModels.Add(new() { Post = postik, LikesCount = 0, RepostsCount = 0 });
                 }
             }
             catch (DbException)
             {
                 return StatusCode(500);
             }
-            return Json(postModels);
+            return PartialView(postModels);
         }
 		[Authorize]
 		[HttpGet]
@@ -2077,7 +2028,21 @@ namespace Capycom.Controllers
                 foreach (var postik in posts)
                 {
                     postik.CpcmPostFatherNavigation = await GetFatherPostReccurent(postik);
-                    postModels.Add(new() { Post = postik, LikesCount = 0, RepostsCount = 0 });
+					if (HttpContext.Request.Cookies.ContainsKey("TimeZone"))
+					{
+						string timezoneOffsetCookie = HttpContext.Request.Cookies["TimeZone"];
+						if (timezoneOffsetCookie != null)
+						{
+							if (int.TryParse(timezoneOffsetCookie, out int timezoneOffsetMinutes))
+							{
+								TimeSpan offset = TimeSpan.FromMinutes(timezoneOffsetMinutes);
+
+								postik.CpcmPostPublishedDate -= offset;
+
+							}
+						}
+					}
+					postModels.Add(new() { Post = postik, LikesCount = 0, RepostsCount = 0 });
                 }
             }
             catch (DbException)
@@ -2274,6 +2239,20 @@ namespace Capycom.Controllers
                 father.CpcmPostFatherNavigation = await GetFatherPostReccurent(father);
                 father.User = await _context.CpcmUsers.Where(p => p.CpcmUserId==father.CpcmUserId).FirstOrDefaultAsync();
                 father.Group = await _context.CpcmGroups.Where(p => p.CpcmGroupId == father.CpcmGroupId).FirstOrDefaultAsync();
+				if (HttpContext.Request.Cookies.ContainsKey("TimeZone"))
+				{
+					string timezoneOffsetCookie = HttpContext.Request.Cookies["TimeZone"];
+					if (timezoneOffsetCookie != null)
+					{
+						if (int.TryParse(timezoneOffsetCookie, out int timezoneOffsetMinutes))
+						{
+							TimeSpan offset = TimeSpan.FromMinutes(timezoneOffsetMinutes);
+
+							father.CpcmPostPublishedDate -= offset;
+
+						}
+					}
+				}
 			}
             return father;
         }
@@ -2321,14 +2300,14 @@ namespace Capycom.Controllers
         {
             if (string.IsNullOrWhiteSpace(CpcmUserEmail))
             {
-                return Json("Email не может быть пустым или состоять из одних пробелов");
+                return Json(data: "Email не может быть пустым или состоять из одних пробелов");
             }
 
             var authFactor = HttpContext.User.FindFirst(c => c.Type == "CpcmCanEditUsers" && c.Value == "True");
             CpcmUserEmail = CpcmUserEmail.Trim();
             if (CpcmUserEmail.Contains("admin") || CpcmUserEmail.Contains("webmaster") || CpcmUserEmail.Contains("abuse") && authFactor == null)
             {
-                return Json(false);
+                return Json(data: $"{CpcmUserEmail} зарезервировано");
             }
 
             bool rez = false;
@@ -2338,10 +2317,12 @@ namespace Capycom.Controllers
             }
             catch (DbException)
             {
-                //StatusCode(500);
-                return Json(false);
-            }
-            return Json(rez);
+				//StatusCode(500);
+				return Json(data: "Не удалось установить соединение с сервером");
+			}
+			if (!rez)
+				return Json(data: "Данный Email уже занят");
+			return Json(rez);
         }
         [HttpPost]//TODO: Объединить с методами при регистрации
         public async Task<IActionResult> CheckNickName(string CpcmUserNickName, Guid CpcmUserId)
@@ -2355,7 +2336,7 @@ namespace Capycom.Controllers
             var authFactor = HttpContext.User.FindFirst(c => c.Type == "CpcmCanEditUsers" && c.Value == "True");
             if (CpcmUserNickName.Contains("admin") || CpcmUserNickName.Contains("webmaster") || CpcmUserNickName.Contains("abuse") && authFactor==null)
             {
-                return Json(false);
+                return Json(data: $"{CpcmUserNickName} зарезервировано");
             }
             bool rez = false;
             try
@@ -2364,17 +2345,19 @@ namespace Capycom.Controllers
             }
             catch (DbException)
             {
-                //StatusCode(500);
-                return Json(false);
-            }
-            return Json(rez);
+				//StatusCode(500);
+				return Json(data: "Не удалось установить соединение с сервером");
+			}
+			if (!rez)
+				return Json(data: "Данный nickname уже занят");
+			return Json(rez);
         }
         [HttpPost]//TODO: Объединить с методами при регистрации
         public async Task<IActionResult> CheckPhone(string CpcmUserTelNum, Guid CpcmUserId)
         {
             if (string.IsNullOrWhiteSpace(CpcmUserTelNum))
             {
-                return Json("Телефон не может быть пустым или состоять из одних пробелов");
+                return Json(data: "Телефон не может быть пустым или состоять из одних пробелов");
             }
             CpcmUserTelNum = CpcmUserTelNum.Trim();
             bool rez = false;
@@ -2384,10 +2367,12 @@ namespace Capycom.Controllers
             }
             catch (DbException)
             {
-                //StatusCode(500);
-                return Json(false);
-            }
-            return Json(rez);
+				//StatusCode(500);
+				return Json(data: "Не удалось установить соединение с сервером");
+			}
+			if (!rez)
+				return Json(data: "Данный телефон уже занят");
+			return Json(rez);
         }
         [HttpPost]//TODO: Объединить с методами при регистрации
         public async Task<IActionResult> CheckPwd(string pwd)
