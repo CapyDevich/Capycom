@@ -1235,7 +1235,7 @@ namespace Capycom.Controllers
 
         [Authorize]
         [HttpPost]
-        [ValidateAntiForgeryToken]
+        //[ValidateAntiForgeryToken]
         public async Task<IActionResult> CreateFriendRequest(Guid CpcmUserId)
         {
             CpcmUserfriend friendRequest = new();
@@ -1258,7 +1258,7 @@ namespace Capycom.Controllers
 
         [Authorize]
         [HttpPost]
-        [ValidateAntiForgeryToken]
+        //[ValidateAntiForgeryToken]
         public async Task<IActionResult> AnswerToFriendRequests(Guid CpcmUserId, bool status)
         {
             CpcmUserfriend? friendRequest;
@@ -1292,19 +1292,20 @@ namespace Capycom.Controllers
 
         [Authorize]
         [HttpPost]
-        [ValidateAntiForgeryToken]
+        //[ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteFriendRequests(Guid CpcmUserId)
         {
             CpcmUserfriend? friendRequest;
-            try
-            {
-                var guid = HttpContext.User.FindFirst(d => d.Type == "CpcmUserId").Value;
+			try
+			{
+				var guid = HttpContext.User.FindFirst(d => d.Type == "CpcmUserId").Value;
 
 				friendRequest = await _context.CpcmUserfriends.Where(c => c.CmcpUserId.ToString() == guid
-                   && c.CmcpFriendId == CpcmUserId).FirstOrDefaultAsync();
-            }
-            catch (DbException)
+				   && c.CmcpFriendId == CpcmUserId).FirstOrDefaultAsync();
+			}
+			catch (DbException)
             {
+                await Console.Out.WriteLineAsync("fdsfs");
                 return StatusCode(500);
             }
             if (friendRequest == null)

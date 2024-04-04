@@ -114,9 +114,7 @@ cancelButton.addEventListener('click', function () {
     textarea.value = "";
 });
 
-const friendButton = document.getElementById('friendButton');
 const subscribeButton = document.getElementById('subscribeButton');
-
 function unfollow() {
     const userID = document.getElementById('userID').innerHTML;
     let dataToSend = {
@@ -129,9 +127,10 @@ function unfollow() {
         success: function (response) {
             if (response['status']) {
                 console.log("response was successful");
-                subscribeButton.removeEventListener('click', unfollow);
                 subscribeButton.innerHTML = 'Подписаться'
-                subscribeButton.addEventListener('click', follow);
+                //subscribeButton.removeEventListener('click', unfollow);
+                //subscribeButton.addEventListener('click', follow);
+                subscribeButton.onclick = 'follow()';
             }
             else {
                 console.log("response was not successful");
@@ -156,9 +155,10 @@ function follow() {
         success: function (response) {
             if (response['status']) {
                 console.log("response was successful");
-                subscribeButton.removeEventListener('click', follow);
                 subscribeButton.innerHTML = 'Отписаться'
-                subscribeButton.addEventListener('click', unfollow);
+                //subscribeButton.removeEventListener('click', follow);
+                //subscribeButton.addEventListener('click', unfollow);
+                subscribeButton.onclick = unfollow;
             }
             else {
                 console.log("response was not successful");
@@ -170,4 +170,88 @@ function follow() {
                 window.location.replace("/UserLogIn");
         }
     });
+}
+
+const friendButton = document.getElementById('friendButton');
+function sendFriendRequest() {
+    const userID = document.getElementById('userID').innerHTML;
+    let dataToSend = {
+        CpcmUserId: userID,
+    };
+    $.ajax({
+        url: '/User/CreateFriendRequest',
+        type: 'POST',
+        data: dataToSend,
+        success: function (response) {
+            if (response['status']) {
+                console.log("response was successful");
+                friendButton.removeEventListener('click', sendFriendRequest);
+                friendButton.innerHTML = 'Заявка отправлена'
+                friendButton.addEventListener('click', deleteFriendRequest);
+            }
+            else {
+                console.log("response was not successful");
+            }
+
+        },
+        error: function (obj) {
+            if (obj.status == 401)
+                window.location.replace("/UserLogIn");
+        }
+    });
+}
+function deleteFriendRequest() {
+    const userID = document.getElementById('userID').innerHTML;
+    let dataToSend = {
+        CpcmUserId: userID,
+    };
+    $.ajax({
+        url: '/User/DeleteFriendRequests',
+        type: 'POST',
+        data: dataToSend,
+        success: function (response) {
+            if (response['status']) {
+                console.log("response was successful");
+                friendButton.removeEventListener('click', deleteFriendRequest);
+                friendButton.innerHTML = 'Добавить в друзья'
+                friendButton.addEventListener('click', sendFriendRequest);
+            }
+            else {
+                console.log("response was not successful");
+            }
+
+        },
+        error: function (obj) {
+            if (obj.status == 401)
+                window.location.replace("/UserLogIn");
+        }
+    });
+}
+function asnwerFriendRequest() {
+    const userID = document.getElementById('userID').innerHTML;
+    //let dataToSend = {
+    //    CpcmUserId: userID,
+    //    status: ...
+    //};
+    //$.ajax({
+    //    url: '/User/AnswerToFriendRequests',
+    //    type: 'POST',
+    //    data: dataToSend,
+    //    success: function (response) {
+    //        if (response['status']) {
+    //            console.log("response was successful");
+    //            friendButton.removeEventListener('click', deleteFriendRequest);
+    //            friendButton.innerHTML = 'Добавить в друзья'
+    //            friendButton.addEventListener('click', sendFriendRequest);
+    //        }
+    //        else {
+    //            console.log("response was not successful");
+    //        }
+
+    //    },
+    //    error: function (obj) {
+    //        if (obj.status == 401)
+    //            window.location.replace("/UserLogIn");
+    //    }
+    //});
 }

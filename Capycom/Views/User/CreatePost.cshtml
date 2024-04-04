@@ -5,7 +5,7 @@
 	<div class="text-center mb-md-3">
 		<h3>Создание и публикация нового поста</h3>
 	</div>
-	<form asp-action="CreatePost" enctype="multipart/form-data">
+	<form asp-action="CreatePostP" enctype="multipart/form-data" id="CreatePostP">
 			<label asp-for="Text" class="form-label">Текст поста</label>
 		<div class="input-group mb-1">
 			<textarea asp-for="Text" type="text" class="form-control comment-text" id="commentText" rows="3" required></textarea>
@@ -24,7 +24,7 @@
 			<input type="datetime-local" id="datetimePicker" class="form-control" asp-for="Published">
 		</div>
 		<div class="ps-1 pe-1">
-			<button type="submit" id="postButton" class="btn btn-primary col-12" value="CreatePost">Опубликовать</button>
+			<button type="submit" id="postButton" class="btn btn-primary col-12" value="CreatePostP">Опубликовать</button>
 		</div>
 	</form>
 </div>
