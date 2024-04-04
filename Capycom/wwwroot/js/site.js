@@ -2,3 +2,5 @@
 // for details on configuring this project to bundle and minify static web assets.
 
 // Write your JavaScript code.
+let offset = new Date().getTimezoneOffset();
+document.cookie = `TimeZone=${offset}; path=/`;
