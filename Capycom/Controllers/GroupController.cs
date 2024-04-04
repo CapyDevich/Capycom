@@ -73,7 +73,8 @@ namespace Capycom.Controllers
 			CpcmGroupfollower follower = null;
 			try
 			{
-				posts = await _context.CpcmPosts.Where(c => c.CpcmGroupId == group.CpcmGroupId && c.CpcmPostPublishedDate < DateTime.UtcNow).Include(c => c.CpcmImages).OrderByDescending(c => c.CpcmPostPublishedDate).Take(10).ToListAsync();
+				var date = DateTime.Now;
+				posts = await _context.CpcmPosts.Where(c => c.CpcmGroupId == group.CpcmGroupId && c.CpcmPostPublishedDate < date).Include(c => c.CpcmImages).OrderByDescending(c => c.CpcmPostPublishedDate).AsNoTracking().Take(10).ToListAsync();
 				if (User.Identity.IsAuthenticated)
 				{
 					follower = await _context.CpcmGroupfollowers.Where(f => f.CpcmGroupId == group.CpcmGroupId && f.CpcmUserId.ToString() == User.FindFirstValue("CpcmUserId")).FirstOrDefaultAsync(); 
@@ -147,7 +148,8 @@ namespace Capycom.Controllers
 
 
 				long liked;
-				posts = await _context.CpcmPosts.Where(c => c.CpcmGroupId == groupId).Where(c => c.CpcmPostPublishedDate < post.CpcmPostPublishedDate && c.CpcmPostPublishedDate < DateTime.UtcNow).Take(10).ToListAsync();
+				var date = DateTime.Now;
+				posts = await _context.CpcmPosts.Where(c => c.CpcmGroupId == groupId).Where(c => c.CpcmPostPublishedDate < post.CpcmPostPublishedDate && c.CpcmPostPublishedDate < date).AsNoTracking().Take(10).ToListAsync();
 
 				foreach (var postik in posts)
 				{
@@ -1263,7 +1265,8 @@ namespace Capycom.Controllers
 			}
 			try
 			{
-				var post = await _context.CpcmPosts.Where(c => c.CpcmPostId == id && c.CpcmPostPublishedDate < DateTime.UtcNow).FirstOrDefaultAsync();
+				var date = DateTime.Now;
+				var post = await _context.CpcmPosts.Where(c => c.CpcmPostId == id && c.CpcmPostPublishedDate < date).FirstOrDefaultAsync();
 				if (post == null || post.CpcmIsDeleted == true)
 				{
 					return StatusCode(404);
@@ -1513,10 +1516,11 @@ namespace Capycom.Controllers
 
 				if (!await CheckOnlyGroupPrivelege("CpcmCanMakePost", true, groupId))
 				{
-					return StatusCode(403);
+					return StatusCode(403);		
 				}
 				long liked;
-				posts = await _context.CpcmPosts.Where(c => c.CpcmGroupId == groupId).Where(c => c.CpcmPostPublishedDate < post.CpcmPostPublishedDate && c.CpcmPostPublishedDate > DateTime.UtcNow).Take(10).ToListAsync();
+				var date = DateTime.Now;
+				posts = await _context.CpcmPosts.Where(c => c.CpcmGroupId == groupId).Where(c => c.CpcmPostPublishedDate < post.CpcmPostPublishedDate && c.CpcmPostPublishedDate > date).Take(10).ToListAsync();
 
 				foreach (var postik in posts)
 				{
@@ -1569,7 +1573,8 @@ namespace Capycom.Controllers
 			//ICollection<CpcmPost> postsWithLikesCount = new List<CpcmPost>();
 			try
 			{
-				posts = await _context.CpcmPosts.Where(c => c.CpcmGroupId == groupId && c.CpcmPostPublishedDate > DateTime.UtcNow).Include(c => c.CpcmImages).OrderByDescending(c => c.CpcmPostPublishedDate).Take(10).ToListAsync();
+				var date = DateTime.Now;
+				posts = await _context.CpcmPosts.Where(c => c.CpcmGroupId == groupId && c.CpcmPostPublishedDate > date).Include(c => c.CpcmImages).OrderByDescending(c => c.CpcmPostPublishedDate).Take(10).ToListAsync();
 				foreach (var postik in posts)
 				{
 					postik.CpcmPostFatherNavigation = await GetFatherPostReccurent(postik);
