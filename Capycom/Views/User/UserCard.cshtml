@@ -63,7 +63,7 @@
 </div>
 @if (User.Identity.IsAuthenticated && User.Identity.IsAuthenticated && Model.CpcmUserId.ToString() != User.FindAll(x => x.Type == "CpcmUserId").FirstOrDefault().Value)
 {
-	<div class="row">
+	<div class="row mb-1">
 @* 	@if (Model.IsFriend == true || Model.IsFriend == false) // заявка одобрена, т.е. они друзья || заявка была отклонена
 	{ *@
 		<button class="btn btn-outline-primary mb-1" id="friendButton" onclick="sendFriendRequest()">Добавить в друзья</button>
@@ -81,8 +81,8 @@
 		<button class="btn btn-outline-primary mb-1" id="subscribeButton" onclick="unfollow()">Отписаться</button>
 	}
 	</div>
-	<div class="row">
-		<a class="btn btn-outline-primary mb-1" asp-controller="User" asp-action="ViewFriendRequests">Друзья</a>
-		<a class="btn btn-outline-primary mb-1" asp-controller="User" asp-action="">Подписчики</a>
-	</div>
 }
+	<div class="row">
+		<a class="btn btn-outline-secondary mb-1" asp-controller="User" asp-action="ViewFriendRequests">Друзья</a>
+		<a class="btn btn-outline-secondary mb-1" asp-controller="User" asp-action="">Подписчики</a>
+	</div>
