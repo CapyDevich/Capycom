@@ -210,9 +210,7 @@ namespace Capycom.Controllers
             List<CpcmPost> posts;
             try
             {
-                var date = DateTime.Now;
-
-				posts = await _context.CpcmPosts.Where(c => c.CpcmUserId == user.CpcmUserId && c.CpcmPostPublishedDate < date).Include(c => c.CpcmImages).OrderByDescending(c => c.CpcmPostPublishedDate).AsNoTracking().ToListAsync();
+                posts = await _context.CpcmPosts.Where(c => c.CpcmUserId == user.CpcmUserId && c.CpcmPostPublishedDate < DateTime.UtcNow).Include(c => c.CpcmImages).OrderByDescending(c => c.CpcmPostPublishedDate).Take(10).ToListAsync();
                 if (HttpContext.User.Identity.IsAuthenticated && user.CpcmUserId.ToString() != User.FindFirstValue("CpcmUserId"))
                 {
                     var friend = await _context.CpcmUserfriends.Where(f => f.CmcpUserId == user.CpcmUserId && f.CmcpFriendId.ToString() == User.FindFirstValue("CpcmUserId")).FirstOrDefaultAsync();
@@ -1691,7 +1689,7 @@ namespace Capycom.Controllers
                     if (userPost.PostFatherId !=null)
                     {
                         var fatherPost = await _context.CpcmPosts.Where(p => p.CpcmPostId == userPost.PostFatherId).FirstOrDefaultAsync(); 
-                        if(fatherPost==null || fatherPost.CpcmPostPublishedDate > DateTime.Now)
+                        if(fatherPost==null || fatherPost.CpcmPostPublishedDate > DateTime.UtcNow)
                         {
                             return StatusCode(200, new {status=false,message= "Нельзя репостить неопубликованный пост" });
                         }
@@ -2014,8 +2012,8 @@ namespace Capycom.Controllers
                 {
                     return StatusCode(404);
                 }
-				var date = DateTime.Now;
-				posts = await _context.CpcmPosts.Where(c => c.CpcmUserId == userId).Where(c => c.CpcmPostPublishedDate < post.CpcmPostPublishedDate && c.CpcmPostPublishedDate < date).AsNoTracking().Take(10).ToListAsync();
+
+                posts = await _context.CpcmPosts.Where(c => c.CpcmUserId == userId).Where(c => c.CpcmPostPublishedDate < post.CpcmPostPublishedDate && c.CpcmPostPublishedDate < DateTime.UtcNow).Take(10).ToListAsync();
                 foreach (var postik in posts)
                 {
                     postik.CpcmPostFatherNavigation = await GetFatherPostReccurent(postik);
@@ -2050,8 +2048,8 @@ namespace Capycom.Controllers
                 {
                     return StatusCode(404);
                 }
-				var date = DateTime.Now;
-				posts = await _context.CpcmPosts.Where(c => c.CpcmUserId == userId && c.CpcmPostId == lastPostId).Where(c => c.CpcmPostPublishedDate < lastPost.CpcmPostPublishedDate && c.CpcmPostPublishedDate > date).AsNoTracking().Take(10).ToListAsync();
+
+                posts = await _context.CpcmPosts.Where(c => c.CpcmUserId == userId && c.CpcmPostId == lastPostId).Where(c => c.CpcmPostPublishedDate < lastPost.CpcmPostPublishedDate && c.CpcmPostPublishedDate > DateTime.UtcNow).Take(10).ToListAsync();
                 foreach (var postik in posts)
                 {
                     postik.CpcmPostFatherNavigation = await GetFatherPostReccurent(postik);
@@ -2081,8 +2079,7 @@ namespace Capycom.Controllers
             List<PostModel> postModels = new List<PostModel>();
             try
             {
-				var date = DateTime.Now;
-				posts = await _context.CpcmPosts.Where(c => c.CpcmUserId == id && c.CpcmPostPublishedDate > date).Include(c => c.CpcmImages).OrderByDescending(c => c.CpcmPostPublishedDate).Take(10).ToListAsync();
+                posts = await _context.CpcmPosts.Where(c => c.CpcmUserId == id && c.CpcmPostPublishedDate > DateTime.UtcNow).Include(c => c.CpcmImages).OrderByDescending(c => c.CpcmPostPublishedDate).Take(10).ToListAsync();
                 foreach (var postik in posts)
                 {
                     postik.CpcmPostFatherNavigation = await GetFatherPostReccurent(postik);
@@ -2110,8 +2107,7 @@ namespace Capycom.Controllers
             }
             try
             {
-				var date = DateTime.Now;
-				var post = await _context.CpcmPosts.Where(c => c.CpcmPostId == id && c.CpcmPostPublishedDate < date).FirstOrDefaultAsync();
+                var post = await _context.CpcmPosts.Where(c => c.CpcmPostId == id && c.CpcmPostPublishedDate < DateTime.UtcNow).FirstOrDefaultAsync();
                 if(post == null || post.CpcmIsDeleted==true)
                 {
                     return StatusCode(404);
