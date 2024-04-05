@@ -1415,7 +1415,7 @@ namespace Capycom.Controllers
 			IQueryable<CpcmUser> friendList1;
 			try
 			{
-				friendList1 = _context.CpcmUserfriends.Where(c => c.CmcpFriendId == user.CpcmUserId && (c.CpcmFriendRequestStatus == null|| c.CpcmFriendRequestStatus == false)).Select(c => c.CmcpUser);//followerList2 = await _context.CpcmUserfollowers.Where(c => c.CpcmFollowerId == user.CpcmUserId).Select(c => c.CpcmUser).ToListAsync();
+				friendList1 = _context.CpcmUserfriends.Where(c => c.CmcpFriendId == user.CpcmUserId && (c.CpcmFriendRequestStatus == null)).Select(c => c.CmcpUser);//followerList2 = await _context.CpcmUserfollowers.Where(c => c.CpcmFollowerId == user.CpcmUserId).Select(c => c.CpcmUser).ToListAsync();
 			}
 			catch (Exception)
 			{
@@ -1496,7 +1496,7 @@ namespace Capycom.Controllers
 			IQueryable<CpcmUser> friendList1;
 			try
 			{
-				friendList1 = _context.CpcmUserfriends.Where(c => c.CmcpFriendId == user.CpcmUserId && (c.CpcmFriendRequestStatus == null || c.CpcmFriendRequestStatus == false) && c.CmcpUserId.CompareTo(filters.lastId) > 0).Select(c => c.CmcpUser);//followerList2 = await _context.CpcmUserfollowers.Where(c => c.CpcmFollowerId == user.CpcmUserId).Select(c => c.CpcmUser).ToListAsync();
+				friendList1 = _context.CpcmUserfriends.Where(c => c.CmcpFriendId == user.CpcmUserId && (c.CpcmFriendRequestStatus == null) && c.CmcpUserId.CompareTo(filters.lastId) > 0).Select(c => c.CmcpUser);//followerList2 = await _context.CpcmUserfollowers.Where(c => c.CpcmFollowerId == user.CpcmUserId).Select(c => c.CpcmUser).ToListAsync();
 			}
 			catch (Exception)
 			{
