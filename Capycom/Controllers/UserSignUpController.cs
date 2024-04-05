@@ -73,7 +73,7 @@ namespace Capycom.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(UserSignUpModel cpcmSignUser)
         {            
-
+            Log.Debug("Попытка регистрации нового пользователя: {CpcmSignUser}", cpcmSignUser);
             if (ModelState.IsValid)
             {
                 CpcmUser cpcmUser = new();
@@ -231,6 +231,7 @@ namespace Capycom.Controllers
         [HttpPost]
         public async Task<IActionResult> CheckEmail(string CpcmUserEmail)
         {
+            Log.Debug("Попытка проверки email: {CpcmUserEmail}", CpcmUserEmail);
             if(string.IsNullOrWhiteSpace(CpcmUserEmail))
             {
                 return Json("Email не может быть пустым или состоять из одних пробелов");
@@ -258,6 +259,7 @@ namespace Capycom.Controllers
         [HttpPost]
         public async Task<IActionResult> CheckNickName(string CpcmUserNickName)
          {
+            Log.Debug("Попытка проверки nickname: {CpcmUserNickName}", CpcmUserNickName);
             if (CpcmUserNickName == null || CpcmUserNickName.All(char.IsWhiteSpace) || CpcmUserNickName==string.Empty)
             {
                 return Json(true);
@@ -272,8 +274,9 @@ namespace Capycom.Controllers
             {
                 rez = !await _context.CpcmUsers.AnyAsync(e => e.CpcmUserNickName == CpcmUserNickName);
             }
-            catch (DbException)
+            catch (DbException ex)
             {
+				Log.Error(ex, "Не удалось установить соединение с сервером при проверки регистрируемоего nickname", CpcmUserNickName);
 				return Json(data: "Не удалось установить соединение с сервером");
 			}
 			if (!rez)
@@ -284,6 +287,7 @@ namespace Capycom.Controllers
         [HttpPost]
         public async Task<IActionResult> CheckPhone(string CpcmUserTelNum)
         {
+            Log.Debug("Попытка проверки телефона: {CpcmUserTelNum}", CpcmUserTelNum);
             if (string.IsNullOrWhiteSpace(CpcmUserTelNum))
             {
                 return Json(data:"Телефон не может быть пустым или состоять из одних пробелов");
@@ -294,8 +298,9 @@ namespace Capycom.Controllers
             {
                 rez = !await _context.CpcmUsers.AnyAsync(e => e.CpcmUserTelNum == CpcmUserTelNum);
             }
-            catch (DbException)
+            catch (DbException ex)
             {
+                Log.Error(ex,"Не удалось установить соединение с сервером при проверки регистрируемоего телефона", CpcmUserTelNum);
 				return Json(data: "Не удалось установить соединение с сервером");
 			}
 			if (!rez)
@@ -306,6 +311,7 @@ namespace Capycom.Controllers
         [HttpPost]
         public async Task<IActionResult> AddCity(string newCity)
         {
+            Log.Debug("Попытка добавления города: {newCity}", newCity);
             if(string.IsNullOrWhiteSpace(newCity))
             {
                 return Json(new { success = false, message = "Некорректное значение." });
@@ -322,8 +328,9 @@ namespace Capycom.Controllers
                 {
                     await _context.SaveChangesAsync();
                 }
-                catch (DbException)
+                catch (DbException ex)
                 {
+                    Log.Error(ex, "Ошибка при попытке добавить город: {newCity}", newCity);
                     return new StatusCodeResult(500);
                 }
                 return Json(new { success = true, id = city.CpcmCityId });
@@ -338,6 +345,7 @@ namespace Capycom.Controllers
         [HttpPost]
         public async Task<IActionResult> AddSchool(string newSchool)
         {
+            Log.Debug("Попытка добавления школы: {newSchool}", newSchool);
             if (string.IsNullOrWhiteSpace(newSchool))
             {
                 return Json(new { success = false, message = "Некорректное значение." });
@@ -366,6 +374,7 @@ namespace Capycom.Controllers
         [HttpPost]
         public async Task<IActionResult> AddUniversities(string newUni)
         {
+            Log.Debug("Попытка добавления университета: {newUni}", newUni);
             if (string.IsNullOrWhiteSpace(newUni))
             {
                 return Json(new { success = false, message = "Некорректное значение." });

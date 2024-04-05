@@ -1,4 +1,4 @@
-﻿#define AdminAutoAuth
+﻿//#define AdminAutoAuth
 using Microsoft.AspNetCore.Mvc;
 using Capycom.Models;
 using Microsoft.Extensions.Options;
@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Authentication;
 using System.Reflection;
 using Microsoft.EntityFrameworkCore;
 using System.Data.Common;
+using Serilog;
 namespace Capycom.Controllers
 {
     public class UserLogInController : Controller
@@ -46,24 +47,29 @@ if (ModelState.IsValid)
             {
 #if AdminAutoAuth
                  potentialUser = await _context.CpcmUsers.Include(c => c.CpcmUserRoleNavigation).Where(e => e.CpcmUserEmail == "mafioznik@mail.ru").FirstAsync();
+                 Log.Information("Попытка входа в аккаунт {potentialUser}", potentialUser);
 #else
-                try
-                {
+				try
+				{
                     potentialUser = await _context.CpcmUsers.Where(e => e.CpcmUserEmail == user.CpcmUserEmail.Trim()).Include(p => p.CpcmUserRoleNavigation).FirstOrDefaultAsync();
+
                     if(potentialUser == null)
                     {
-                        ViewData["Message"] = "Неверный логин или пароль";
+						Log.Information("Попытка входа в аккаунт, который null. Введенные данные {user}", user);
+						ViewData["Message"] = "Неверный логин или пароль";
                         return View();
                     }
 
                 }
-                catch (DbException)
+                catch (DbException ex)
                 {
+                    Log.Error(ex, "Не удалось выполнить запрос к БД на выборку пользователя по email");
                     Response.StatusCode = 500;
                     ViewData["ErrorCode"] = 500;
                     ViewData["Message"] = "Ошибка связи с сервером";
                     return View("UserError");
                 }
+                Log.Information("Попытка входа в аккаунт {potentialUser}", potentialUser);
                 string potentialUserSalt = potentialUser.CpcmUserSalt;
 #endif
 #if AdminAutoAuth
@@ -76,6 +82,7 @@ if (ModelState.IsValid)
 					{
                     if(potentialUser.CpcmUserBanned == true)
                     {
+                        Log.Information("Попытка входа в забаненный аккаунт {user}", potentialUser);
                         Response.StatusCode = 403;
                         ViewData["ErrorCode"] = 403;
                         ViewData["Message"] = "Вы забанены за нарушение условия пользования Capycom. Если вы считаете, что банхаммер прилетел неправомерно - обратитесь в администрацию";
@@ -83,6 +90,7 @@ if (ModelState.IsValid)
                     }
                     if (potentialUser.CpcmIsDeleted == true)
                     {
+                        Log.Information("Попытка входа в удалённый аккаунт {user}", potentialUser);
                         //Response.StatusCode = 404;
                         //ViewData["ErrorCode"] = 404;
                         //ViewData["Message"] = "Аккаунт был удалён";
@@ -97,10 +105,12 @@ if (ModelState.IsValid)
                     await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(claimsIdentity));
                     //var kek = HttpContext.User.FindFirst(c => c.Type == "CpcmUserId" && c.Value == "1");
                     //kek.Value;
-                    return RedirectToAction("Test"); // TODO махнкть на юзер индекс
+                    Log.Information("Успешный вход в аккаунт {user}", potentialUser);
+                    return RedirectToAction("Index","User");
                 }
                 else
                 {
+                    Log.Information("Попытка входа в аккаунт {user} - непройдена проверка пароля", potentialUser);
                     ViewData["Message"] = "Неверный логин или пароль";
                     return View();
                 }
@@ -108,12 +118,12 @@ if (ModelState.IsValid)
             return View("Index");
         }
 
-        [Authorize]
-        public async Task<IActionResult> Test()
-        {
-            IEnumerable<Claim> a = HttpContext.User.Claims;
-            return View("Error418");
-        }
+        //[Authorize]
+        //public async Task<IActionResult> Test()
+        //{
+        //    IEnumerable<Claim> a = HttpContext.User.Claims;
+        //    return View("Error418");
+        //}
 
         [Authorize]
         public async Task<IActionResult> LogOut()
