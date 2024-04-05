@@ -5,6 +5,8 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
+using Serilog;
+using System;
 using System.Data.Common;
 using System.Reflection;
 using System.Security.Claims;
@@ -44,8 +46,9 @@ namespace Capycom.Controllers
 				}
 
 			}
-			catch (DbException)
+			catch (DbException ex)
 			{
+				Log.Error(ex,"Ошибка при получении группы из базы данных", filter);
 				Response.StatusCode = 500;
 				ViewData["ErrorCode"] = 500;
 				ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
@@ -53,6 +56,7 @@ namespace Capycom.Controllers
 			}
 			if (group == null)
 			{
+				Log.Warning("Группа не найдена", filter);
 				Response.StatusCode = 404;
 				ViewData["ErrorCode"] = 404;
 				ViewData["Message"] = "Группа не найдена";
@@ -60,12 +64,20 @@ namespace Capycom.Controllers
 			}
 			if (group.CpcmIsDeleted)
 			{
+				Log.Information("Попытка обратиться к удалённой группе ", filter);
 				Response.StatusCode = 404;
 				ViewData["ErrorCode"] = 404;
 				ViewData["Message"] = "Группа не найдена";
 				return View("UserError");
 			}
-
+			if (group.CpcmGroupBanned)
+			{
+				Log.Information("Попытка обратиться к заблокированной группе", filter);
+				Response.StatusCode = 403;
+				ViewData["ErrorCode"] = 403;
+				ViewData["Message"] = "Группа заблокирована";
+				return View("UserError");
+			}
 
 
 
@@ -74,14 +86,15 @@ namespace Capycom.Controllers
 			CpcmGroupfollower follower = null;
 			try
 			{
-				posts = await _context.CpcmPosts.Where(c => c.CpcmGroupId == group.CpcmGroupId && c.CpcmPostPublishedDate < DateTime.UtcNow).Include(c => c.CpcmImages).OrderByDescending(c => c.CpcmPostPublishedDate).Take(10).ToListAsync();
+				posts = await _context.CpcmPosts.Where(c => c.CpcmGroupId == group.CpcmGroupId && c.CpcmPostPublishedDate < DateTime.UtcNow).Include(c => c.CpcmImages).OrderByDescending(c => c.CpcmPostPublishedDate).AsNoTracking().Take(10).ToListAsync();
 				if (User.Identity.IsAuthenticated)
 				{
 					follower = await _context.CpcmGroupfollowers.Where(f => f.CpcmGroupId == group.CpcmGroupId && f.CpcmUserId.ToString() == User.FindFirstValue("CpcmUserId")).FirstOrDefaultAsync(); 
 				}
 			}
-			catch (DbException)
+			catch (DbException ex)
 			{
+				Log.Error(ex, "Ошибка при получении постов или подписчиков группы из базы данных", filter);
 				Response.StatusCode = 500;
 				ViewData["ErrorCode"] = 500;
 				ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
@@ -93,20 +106,32 @@ namespace Capycom.Controllers
 			foreach (var postik in posts)
 			{
 				postik.Group = group;
-				postik.CpcmPostFatherNavigation = await GetFatherPostReccurent(postik);
-				long likes = await _context.Database.SqlQuery<long>($@"SELECT * FROM CPCM_POSTLIKES WHERE CPCM_PostID = {postik.CpcmPostId}").CountAsync();
-				long reposts = await _context.Database.SqlQuery<long>($@"SELECT * FROM CPCM_POSTREPOSTS WHERE CPCM_PostID = {postik.CpcmPostId}").CountAsync();
-				postik.LikesCount = likes;
-				postik.RepostsCount = reposts;
+				
+				try
+				{
+					postik.CpcmPostFatherNavigation = await GetFatherPostReccurent(postik);
+					long likes = await _context.Database.SqlQuery<long>($@"SELECT * FROM CPCM_POSTLIKES WHERE CPCM_PostID = {postik.CpcmPostId}").CountAsync();
+					long reposts = await _context.Database.SqlQuery<long>($@"SELECT * FROM CPCM_POSTREPOSTS WHERE CPCM_PostID = {postik.CpcmPostId}").CountAsync();
+					postik.LikesCount = likes;
+					postik.RepostsCount = reposts;
+				}
+				catch (DbException ex)
+				{
+					Log.Error(ex, "Ошибка при получении лайков и репостов поста из базы данных", filter);
+				}
+				
 
 				if (User.Identity.IsAuthenticated)
 				{
+					var guid = Guid.Parse(User.FindFirstValue("CpcmUserId"));
 					try
 					{
-						liked = await _context.Database.SqlQuery<long>($@"SELECT * FROM CPCM_POSTLIKES WHERE CPCM_PostID = {postik.CpcmPostId} && CPCM_UserID = {postik.CpcmUserId}").CountAsync();
+						
+						liked = await _context.Database.SqlQuery<long>($@"SELECT * FROM CPCM_POSTLIKES WHERE CPCM_PostID = {postik.CpcmPostId} && CPCM_UserID = {guid}").CountAsync();
 					}
-					catch (DbException)
+					catch (DbException ex)
 					{
+						Log.Error(ex, "Ошибка при получении информации о лайке поста пользователем {user} из базы данных", guid, filter);
 						Response.StatusCode = 500;
 						ViewData["ErrorCode"] = 500;
 						ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
@@ -163,15 +188,23 @@ namespace Capycom.Controllers
 
 
 				long liked;
-				posts = await _context.CpcmPosts.Where(c => c.CpcmGroupId == groupId).Where(c => c.CpcmPostPublishedDate < post.CpcmPostPublishedDate && c.CpcmPostPublishedDate < DateTime.UtcNow).Take(10).ToListAsync();
+				posts = await _context.CpcmPosts.Where(c => c.CpcmGroupId == groupId).Where(c => c.CpcmPostPublishedDate < post.CpcmPostPublishedDate && c.CpcmPostPublishedDate < DateTime.UtcNow).AsNoTracking().Take(10).ToListAsync();
 
 				foreach (var postik in posts)
 				{
-					postik.CpcmPostFatherNavigation = await GetFatherPostReccurent(postik);
-					long likes = await _context.Database.SqlQuery<long>($@"SELECT * FROM CPCM_POSTLIKES WHERE CPCM_PostID = {postik.CpcmPostId}").CountAsync();
-					long reposts = await _context.Database.SqlQuery<long>($@"SELECT * FROM CPCM_POSTREPOSTS WHERE CPCM_PostID = {postik.CpcmPostId}").CountAsync();
-					postik.LikesCount = likes;
-					postik.RepostsCount = reposts;
+					try
+					{
+						postik.CpcmPostFatherNavigation = await GetFatherPostReccurent(postik);
+						long likes = await _context.Database.SqlQuery<long>($@"SELECT * FROM CPCM_POSTLIKES WHERE CPCM_PostID = {postik.CpcmPostId}").CountAsync();
+						long reposts = await _context.Database.SqlQuery<long>($@"SELECT * FROM CPCM_POSTREPOSTS WHERE CPCM_PostID = {postik.CpcmPostId}").CountAsync();
+						postik.LikesCount = likes;
+						postik.RepostsCount = reposts;
+					}
+					catch (DbException ex)
+					{
+						Log.Error(ex, "Не удалось выгрузить родительские посты, лайки и репосты для следующий постов за {lastPostId}", lastPostId);
+						throw;
+					}
 
 
 
@@ -211,8 +244,9 @@ namespace Capycom.Controllers
 
 				
 			}
-			catch (DbException)
+			catch (DbException ex)
 			{
+				Log.Fatal(ex, "Ошибка при получении постов из базы данных", groupId, lastPostId);
 				return StatusCode(500);
 			}
 			return PartialView(postsWithLikesCount);
@@ -224,10 +258,11 @@ namespace Capycom.Controllers
 			try
 			{
 				ViewData["CpcmGroupCity"] = new SelectList(await _context.CpcmCities.ToListAsync(), "CpcmCityId", "CpcmCityName");
-				ViewData["CpcmUserSchool"] = new SelectList(await _context.CpcmGroupsubjects.ToListAsync(), "CpcmSubjectId", "CpcmSubjectName");
+				ViewData["CpcmGroupSubject"] = new SelectList(await _context.CpcmGroupsubjects.ToListAsync(), "CpcmSubjectId", "CpcmSubjectName");
 			}
-			catch (DbException)
+			catch (DbException ex)
 			{
+				Log.Error(ex, "Ошибка при получении списка городов и тем из базы данных");
 				Response.StatusCode = 500;
 				ViewData["ErrorCode"] = 500;
 				ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
@@ -268,8 +303,9 @@ namespace Capycom.Controllers
 							}
 							group.CpcmGroupImage = filePathGroupImage.Replace("wwwroot", "");
 						}
-						catch (Exception)
+						catch (Exception ex)
 						{
+							Log.Error(ex, "Ошибка при загрузке изображения группы", filePathGroupImage);
 							group.CpcmGroupImage = null;
 						}
 					}
@@ -291,8 +327,9 @@ namespace Capycom.Controllers
 							}
 							group.CpcmGroupCovet = filePathGroupCovet.Replace("wwwroot", "");
 						}
-						catch (Exception)
+						catch (Exception ex)
 						{
+							Log.Error(ex, "Ошибка при загрузке фона группы", filePathGroupCovet);
 							group.CpcmGroupCovet = null;
 						}
 					}
@@ -303,12 +340,13 @@ namespace Capycom.Controllers
 					try
 					{
 						ViewData["CpcmGroupCity"] = new SelectList(await _context.CpcmCities.ToListAsync(), "CpcmCityId", "CpcmCityName", createModel.CpcmGroupCity);
-						ViewData["CpcmUserSchool"] = new SelectList(await _context.CpcmGroupsubjects.ToListAsync(), "CpcmSubjectId", "CpcmSubjectName", createModel.CpcmGroupSubject);
+						ViewData["CpcmGroupSubject"] = new SelectList(await _context.CpcmGroupsubjects.ToListAsync(), "CpcmSubjectId", "CpcmSubjectName", createModel.CpcmGroupSubject);
 
 						return View(createModel);
 					}
-					catch (DbException)
-					{
+					catch (DbException ex)
+					{	
+						Log.Error(ex, "Ошибка при получении списка городов и тем из базы данных");
 						Response.StatusCode = 500;
 						ViewData["ErrorCode"] = 500;
 						ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
@@ -333,19 +371,27 @@ namespace Capycom.Controllers
 
 					await _context.SaveChangesAsync();
 				}
-				catch (DbException)
+				catch (DbException ex)
 				{
+					Log.Error(ex, "Ошибка при добавлении группы в базу данных", group, HttpContext.User.FindFirstValue("CpcmUserId"));
 					Response.StatusCode = 500;
 					ViewData["ErrorCode"] = 500;
 					ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
 
-					if (System.IO.File.Exists(filePathGroupImage))
+					try
 					{
-						System.IO.File.Delete(filePathGroupImage);
+						if (System.IO.File.Exists(filePathGroupImage))
+						{
+							System.IO.File.Delete(filePathGroupImage);
+						}
+						if (System.IO.File.Exists(filePathGroupCovet))
+						{
+							System.IO.File.Delete(filePathGroupCovet);
+						}
 					}
-					if (System.IO.File.Exists(filePathGroupCovet))
+					catch (IOException exx)
 					{
-						System.IO.File.Delete(filePathGroupCovet);
+						Log.Error(exx, "Ошибка при удалении изображения группы", filePathGroupImage, filePathGroupCovet);
 					}
 					return View("UserError");
 				}
@@ -353,13 +399,15 @@ namespace Capycom.Controllers
 			}
 			else
 			{
+				Log.Information("Невалидная модель при создании группы", createModel, HttpContext.User.FindFirstValue("CpcmUserId"));
 				try
 				{
 					ViewData["CpcmGroupCity"] = new SelectList(await _context.CpcmCities.ToListAsync(), "CpcmCityId", "CpcmCityName", createModel.CpcmGroupCity);
-					ViewData["CpcmUserSchool"] = new SelectList(await _context.CpcmGroupsubjects.ToListAsync(), "CpcmSubjectId", "CpcmSubjectName", createModel.CpcmGroupSubject);
+					ViewData["CpcmGroupSubject"] = new SelectList(await _context.CpcmGroupsubjects.ToListAsync(), "CpcmSubjectId", "CpcmSubjectName", createModel.CpcmGroupSubject);
 				}
-				catch (DbException)
+				catch (DbException ex)
 				{
+					Log.Error(ex, "Ошибка при получении списка городов и тем из базы данных");
 					Response.StatusCode = 500;
 					ViewData["ErrorCode"] = 500;
 					ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
@@ -433,7 +481,7 @@ namespace Capycom.Controllers
 			try
 			{
 				ViewData["CpcmGroupCity"] = new SelectList(await _context.CpcmCities.ToListAsync(), "CpcmCityId", "CpcmCityName", group.CpcmGroupCity);
-				ViewData["CpcmUserSchool"] = new SelectList(await _context.CpcmGroupsubjects.ToListAsync(), "CpcmSubjectId", "CpcmSubjectName", group.CpcmGroupSubject);
+				ViewData["CpcmGroupSubject"] = new SelectList(await _context.CpcmGroupsubjects.ToListAsync(), "CpcmSubjectId", "CpcmSubjectName", group.CpcmGroupSubject);
 			}
 			catch (DbException)
 			{
@@ -562,7 +610,7 @@ namespace Capycom.Controllers
 					try
 					{
 						ViewData["CpcmGroupCity"] = new SelectList(await _context.CpcmCities.ToListAsync(), "CpcmCityId", "CpcmCityName", model.CpcmGroupCity);
-						ViewData["CpcmUserSchool"] = new SelectList(await _context.CpcmGroupsubjects.ToListAsync(), "CpcmSubjectId", "CpcmSubjectName", model.CpcmGroupSubject);
+						ViewData["CpcmGroupSubject"] = new SelectList(await _context.CpcmGroupsubjects.ToListAsync(), "CpcmSubjectId", "CpcmSubjectName", model.CpcmGroupSubject);
 
 						return View(model);
 					}
@@ -1887,30 +1935,7 @@ namespace Capycom.Controllers
 			return rezFollower || rezUser;
 
 		}
-		//[Obsolete("Не использовать. Поведение некорректное",true)]
-		//private async Task<bool> CheckUserPrivilege(string propertyName, object propertyValue)
-		//{
-		//	CpcmUser? user;
-		//	try
-		//	{
-		//		user = await _context.CpcmUsers.Where(f => f.CpcmUserId.ToString() == HttpContext.User.FindFirst(c => c.Type == "CpcmUserId").Value).Include(f => f.CpcmUserRoleNavigation).FirstOrDefaultAsync();
 
-		//	}
-		//	catch (DbException)
-		//	{
-		//		return (false);
-		//	}
-		//	if (user == null)
-		//	{
-		//		return false;
-		//	}
-
-		//	Type type = user.CpcmUserRoleNavigation.GetType();
-		//	PropertyInfo propertyInfo = type.GetProperty(propertyName);
-		//	var value = propertyInfo.GetValue(user.CpcmUserRoleNavigation);
-
-		//	return propertyValue != null && propertyValue.Equals(value);
-		//}
 		private async Task<bool> CheckUserPrivilegeClaim(string claimType, string claimValue)
 		{
 			var authFactor = HttpContext.User.FindFirst(c => c.Type == claimType && c.Value == claimValue);
