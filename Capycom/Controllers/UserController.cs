@@ -146,25 +146,40 @@ namespace Capycom.Controllers
                 posts = await _context.CpcmPosts.Where(c => c.CpcmUserId == user.CpcmUserId && c.CpcmPostPublishedDate < DateTime.UtcNow).Include(c => c.CpcmImages).OrderByDescending(c => c.CpcmPostPublishedDate).Take(10).ToListAsync();
                 if (HttpContext.User.Identity.IsAuthenticated && user.CpcmUserId.ToString() != User.FindFirstValue("CpcmUserId"))
                 {
-                    var friend = await _context.CpcmUserfriends.Where(f => f.CmcpUserId == user.CpcmUserId && f.CmcpFriendId.ToString() == User.FindFirstValue("CpcmUserId")).FirstOrDefaultAsync();
-                    if (friend == null)
-                    {
-                        await _context.CpcmUserfriends.Where(f => f.CmcpUserId.ToString() == User.FindFirstValue("CpcmUserId") && f.CmcpFriendId == user.CpcmUserId).FirstOrDefaultAsync();
-                    }
+                    var friend = await _context.CpcmUserfriends.Where(f => f.CmcpUserId == user.CpcmUserId && f.CmcpFriendId.ToString() == User.FindFirstValue("CpcmUserId")).FirstOrDefaultAsync(); // Тут мы смотрим подал ли ОН запрос в друзья НАМ.                    
                     if (friend != null)
                     {
                         if (friend.CpcmFriendRequestStatus == true)
-                            user.IsFriend = FriendStatusEnum.Approved;
-                        else if (friend.CpcmFriendRequestStatus == false)
-                            user.IsFriend = FriendStatusEnum.Rejected;
+                            user.IsFriend = FriendStatusEnum.HisApproved; // Будет кнопка удалить из друзей (удалить friendRequest)
+						else if (friend.CpcmFriendRequestStatus == false)
+                            user.IsFriend = FriendStatusEnum.HisRejected; // будет кнопка подтвердить запрос в друзья
                         else
-                            user.IsFriend = FriendStatusEnum.NotAnswered;
+                            user.IsFriend = FriendStatusEnum.HisNotAnswered; // будет кнопка подтвердить запрос в друзья
 
 					}
-                    else
-                    {
-                        user.IsFriend = FriendStatusEnum.NoFriendRequest;
-                    }
+					else if (friend == null)
+					{
+						await _context.CpcmUserfriends.Where(f => f.CmcpUserId.ToString() == User.FindFirstValue("CpcmUserId") && f.CmcpFriendId == user.CpcmUserId).FirstOrDefaultAsync();// Теперь мы смотрим подали ли МЫ запрос в друзья ЕМУ.
+                        if (friend != null)
+                        {
+                            if(friend.CpcmFriendRequestStatus == true)
+								user.IsFriend = FriendStatusEnum.OurApproved; // будет кнопка удалить из друзей
+							else if (friend.CpcmFriendRequestStatus == false)
+								user.IsFriend = FriendStatusEnum.OurRejected; // будет кнопка отозвать запрос (удалить friendRequest)
+							else
+								user.IsFriend = FriendStatusEnum.OurNotAnswered; // будет кнопка отозвать запрос (удалить friendRequest)
+                        }
+                        else
+                        {
+                            user.IsFriend = FriendStatusEnum.NoFriendRequest; // Будет кнопка добавить в друзья
+                        }
+					}
+
+
+
+
+
+
 					var follower = await _context.CpcmUserfollowers.Where(f => f.CpcmFollowerId.ToString() == User.FindFirstValue("CpcmUserId") && f.CpcmUserId == user.CpcmUserId).FirstOrDefaultAsync();
 					if (follower == null)
                     {
@@ -1301,15 +1316,22 @@ namespace Capycom.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> CreateFriendRequest(Guid CpcmUserId)
         {
-            CpcmUserfriend friendRequest = new();
-            friendRequest.CmcpUserId = Guid.Parse(HttpContext.User.FindFirst(c => c.Type == "CpcmUserId").Value);
-            friendRequest.CmcpFriendId = CpcmUserId;
-
-            _context.CpcmUserfriends.Add(friendRequest);
+            //CpcmUserfriend friendRequest = new();
+            //friendRequest.CmcpUserId = Guid.Parse(HttpContext.User.FindFirst(c => c.Type == "CpcmUserId").Value);
+            //friendRequest.CmcpFriendId = CpcmUserId;
+            var userGuid= Guid.Parse(HttpContext.User.FindFirst(c => c.Type == "CpcmUserId").Value);
+            //_context.CpcmUserfriends.Add(friendRequest);
 
             try
             {
-                await _context.SaveChangesAsync();
+                var friendreq = _context.CpcmUserfriends.Where( f => f.CmcpUserId==userGuid && f.CmcpFriendId==CpcmUserId || f.CmcpUserId == CpcmUserId && f.CmcpFriendId == userGuid).FirstOrDefault();
+                if(friendreq != null)
+                {
+                    return StatusCode(200, new {status=false, message="У вас уже есть запрос на дружбу от этого человека"});
+                }
+                CpcmUserfriend friendRequest = new() { CmcpUserId=userGuid, CmcpFriendId=CpcmUserId};
+				_context.CpcmUserfriends.Add(friendRequest);
+				await _context.SaveChangesAsync();
             }
             catch (DbException)
             {
@@ -1327,8 +1349,9 @@ namespace Capycom.Controllers
             CpcmUserfriend? friendRequest;
             try
             {
-                friendRequest = await _context.CpcmUserfriends.Where(c => c.CmcpUserId.ToString() == HttpContext.User.FindFirst(c => c.Type == "CpcmUserId").Value
-                    && c.CmcpFriendId == CpcmUserId).FirstOrDefaultAsync();
+                var guidString = HttpContext.User.FindFirst(c => c.Type == "CpcmUserId").Value;
+                friendRequest = await _context.CpcmUserfriends.Where(c => c.CmcpUserId == CpcmUserId
+                    && c.CmcpFriendId.ToString() == guidString).FirstOrDefaultAsync(); //Тут мы смотрим только те реквесты, которые адресованы нам. 
             }
             catch (DbException)
             {
@@ -1363,8 +1386,8 @@ namespace Capycom.Controllers
             {
                 var guid = HttpContext.User.FindFirst(d => d.Type == "CpcmUserId").Value;
 
-				friendRequest = await _context.CpcmUserfriends.Where(c => c.CmcpUserId.ToString() == guid
-                   && c.CmcpFriendId == CpcmUserId).FirstOrDefaultAsync();
+				friendRequest = await _context.CpcmUserfriends.Where(c => c.CmcpUserId.ToString() == guid && c.CmcpFriendId == CpcmUserId
+                || c.CmcpUserId == CpcmUserId && c.CmcpFriendId.ToString() == guid).FirstOrDefaultAsync();
             }
             catch (DbException)
             {

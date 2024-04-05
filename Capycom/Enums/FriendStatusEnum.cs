@@ -3,8 +3,11 @@
 	public enum FriendStatusEnum
 	{
 		NoFriendRequest = 0,
-		NotAnswered = 1,
-		Rejected = 2,
-		Approved = 3,
+		OurNotAnswered = 1,
+		OurRejected = 2,
+		OurApproved = 3,
+		HisNotAnswered = 4,
+		HisRejected = 5,
+		HisApproved = 6
 	}
 }
