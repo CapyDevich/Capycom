@@ -154,8 +154,6 @@ function follow() {
             if (response['status']) {
                 console.log("response was successful");
                 subscribeButton.innerHTML = 'Отписаться'
-                //subscribeButton.removeEventListener('click', follow);
-                //subscribeButton.addEventListener('click', unfollow);
                 subscribeButton.onclick = unfollow;
             }
             else {

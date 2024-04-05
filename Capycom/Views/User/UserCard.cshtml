@@ -82,7 +82,7 @@
 		}
 	</div>
 }
-@if (Model.CpcmUserId.ToString() == User.FindAll(x => x.Type == "CpcmUserId").FirstOrDefault().Value)
+@if (User.Identity.IsAuthenticated && Model.CpcmUserId.ToString() == User.FindAll(x => x.Type == "CpcmUserId").FirstOrDefault().Value)
 {
 	<div class="row">
 		<a class="btn btn-secondary mb-1" asp-controller="User" asp-action="ViewFriendRequests">Заявки в друзья</a>
