@@ -193,12 +193,12 @@ namespace Capycom.Controllers
                 {
                     if (!CpcmRoleExists(cpcmRole.CpcmRoleId))
                     {
-                        Log.Error(ex,"Пользователь {HttpContext.User.Identity.Name} попытался изменить роль с id {id}, сохранение не удалось произвести. Данные по соединеню {HttpContext.Connection}", HttpContext.User.Identity.Name, id, HttpContext.Connection);
+                        Log.Error(ex,"Пользователь {HttpContext.User.Identity.Name} попытался изменить роль с id {id}, сохранение не удалось произвести, поскольку запись была удалена. Данные по соединеню {HttpContext.Connection}", HttpContext.User.Identity.Name, id, HttpContext.Connection);
                         return NotFound();
                     }
                     else
                     {
-                        Log.Error(ex,"Не удалось выполнить запрос к базе данных на изменение роли {cpcmRole}. Данные по соединеню {HttpContext.Connection}", cpcmRole, HttpContext.Connection);
+                        Log.Error(ex,"Не удалось выполнить запрос к базе данных на изменение роли {cpcmRole}, поскольку кто-то до вас попытался изменить запись. Данные по соединеню {HttpContext.Connection}", cpcmRole, HttpContext.Connection);
 						Response.StatusCode = 500;
 						ViewData["ErrorCode"] = 500;
 						ViewData["Message"] = "Ошибка связи с сервером";
