@@ -61,8 +61,8 @@
 		</div>
 		<span asp-validation-for="CpcmUserImage" class="text-danger"></span>
 		<div class="col mb-3">
-			<label for="userAbout" class="form-label">О себе</label>
-			<textarea type="text" class="form-control" id="userAbout" rows="3"></textarea>
+			<label asp-for="CpcmUserAbout" userAbout" class="form-label">О себе</label>
+			<textarea asp-for="CpcmUserAbout" type="text" class="form-control" id="userAbout" rows="3"></textarea>
 		</div>
 
 		<label asp-for="CpcmUserCity" class="form-label">Город</label>
