@@ -4,7 +4,6 @@ $(document).ready(function () {
         e.preventDefault();
 
         let formData = new FormData(this);
-        console.log(formData);
         $.ajax({
             type: 'POST',
             url: '/PostComment/AddComment',

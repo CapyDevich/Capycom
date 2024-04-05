@@ -3,51 +3,39 @@
 	<h4 class="text-center">Фильтры поиска</h4>
 	<div class="row mb-3">
 		<div class="col">
-			<label for="CpcmUserFirstName" class="form-label">Имя</label>
-			<input type="text" class="form-control" id="firstName" required for="CpcmUserFirstName">
+			<label for="FirstName" class="form-label">Имя</label>
+			<input name="FirstName" type="text" class="form-control">
 		</div>
 		<div class="col">
-			<label for="CpcmUserSecondName" class="form-label">Фамилия</label>
-			<input type="text" class="form-control" id="lastName" required for="CpcmUserSecondName">
+			<label for="SecondName" class="form-label">Фамилия</label>
+			<input name="SecondName" type="text" class="form-control">
 		</div>
 		<div class="col">
-			<label for="CpcmUserAdditionalName" class="form-label">Отчество</label>
-			<input type="text" class="form-control" id="middleName" for="CpcmUserAdditionalName">
+			<label for="AdditionalName" class="form-label">Отчество</label>
+			<input name="AdditionalName" type="text" class="form-control">
 		</div>
 		<span validation-for="CpcmUserFirstName" class="text-danger"></span>
 		<span validation-for="CpcmUserSecondName" class="text-danger"></span>
 	</div>
-	<label for="CpcmUserNickName" class="form-label">Псевдоним</label>
-	<div class="input-group">
-		<span class="input-group-text" id="inputGroupPrepend">@@</span>
-		<input for="CpcmUserNickName" type="text" class="form-control" id="validationCustomUsername">
-	</div>
-	<span validation-for="CpcmUserNickName" class="text-danger"></span>
 
 	<label for="CpcmUserCity" class="form-label">Город</label>
 	<div class="flex-grow-1 input-group d-flex justify-content-between mb-3">
-		<select data-live-search="true" for="CpcmUserCity" class="selectpicker flex-grow-1" id="city" data-live-search="true">
+		<select data-live-search="true" name="CityId" class="selectpicker flex-grow-1" id="city" data-live-search="true">
 			<option value="" selected disabled>Выберите город...</option>
-			<option value="">testC1...</option>
-			<option value="">testC2...</option>
 		</select>
 	</div>
 
 	<label for="CpcmUserUniversity" class="form-label">Университет</label>
 	<div class="flex-grow-1 input-group d-flex justify-content-between mb-3">
-		<select data-live-search="true" for="CpcmUserUniversity" class="selectpicker flex-grow-1" id="university">
+		<select data-live-search="true" name="UniversityId" class="selectpicker flex-grow-1" id="university">
 			<option value="" selected disabled>Выберите университет...</option>
-			<option value="">testU1...</option>
-			<option value="">testU2...</option>
 		</select>
 	</div>
 
 	<label for="CpcmUserSchool" class="form-label">Школа</label>
 	<div class="flex-grow-1 input-group d-flex justify-content-between mb-3">
-		<select data-live-search="true" for="CpcmUserSchool" class="selectpicker flex-grow-1" id="school">
+		<select data-live-search="true" name="SchoolId" class="selectpicker flex-grow-1" id="school">
 			<option value="" selected disabled>Выберите школу...</option>
-			<option value="">testS1...</option>
-			<option value="">testS2...</option>
 		</select>
 	</div>
 	<div class="row">

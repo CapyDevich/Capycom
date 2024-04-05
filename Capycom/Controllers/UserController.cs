@@ -902,7 +902,7 @@ namespace Capycom.Controllers
             {
                 var result = await followerList1.OrderBy(p => p.CpcmUserId).Take(10).ToListAsync();
 
-                return View(followerList1);
+                return View(result);
             }
 			catch (DbException)
 			{
