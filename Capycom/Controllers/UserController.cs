@@ -668,7 +668,10 @@ namespace Capycom.Controllers
             {
                 friendList1 =  _context.CpcmUserfriends.Where(c => c.CmcpUserId == user.CpcmUserId && c.CpcmFriendRequestStatus == true).Select(c => c.CmcpFriend);
                 friendList2 =  _context.CpcmUserfriends.Where(c => c.CmcpFriendId == user.CpcmUserId && c.CpcmFriendRequestStatus == true).Select(c => c.CmcpUser);
-            }
+				ViewData["CpcmUserCity"] = new SelectList(await _context.CpcmCities.ToListAsync(), "CpcmCityId", "CpcmCityName");
+				ViewData["CpcmUserSchool"] = new SelectList(await _context.CpcmSchools.ToListAsync(), "CpcmSchooldId", "CpcmSchoolName");
+				ViewData["CpcmUserUniversity"] = new SelectList(await _context.CpcmUniversities.ToListAsync(), "CpcmUniversityId", "CpcmUniversityName");
+			}
             catch (DbException)
             {
                 Response.StatusCode = 500;
@@ -849,8 +852,11 @@ namespace Capycom.Controllers
             try
             {
                 followerList1 = _context.CpcmUserfollowers.Where(c => c.CpcmUserId == user.CpcmUserId).Select(c => c.CpcmFollower);
-                //followerList2 = await _context.CpcmUserfollowers.Where(c => c.CpcmFollowerId == user.CpcmUserId).Select(c => c.CpcmUser).ToListAsync();
-            }
+				//followerList2 = await _context.CpcmUserfollowers.Where(c => c.CpcmFollowerId == user.CpcmUserId).Select(c => c.CpcmUser).ToListAsync();
+				ViewData["CpcmUserCity"] = new SelectList(await _context.CpcmCities.ToListAsync(), "CpcmCityId", "CpcmCityName");
+				ViewData["CpcmUserSchool"] = new SelectList(await _context.CpcmSchools.ToListAsync(), "CpcmSchooldId", "CpcmSchoolName");
+				ViewData["CpcmUserUniversity"] = new SelectList(await _context.CpcmUniversities.ToListAsync(), "CpcmUniversityId", "CpcmUniversityName");
+			}
             catch (Exception)
             {
                 Response.StatusCode = 500;
@@ -1028,6 +1034,7 @@ namespace Capycom.Controllers
 			{
 				groupsList = _context.CpcmGroupfollowers.Where(c => c.CpcmUserId == user.CpcmUserId).Select(c => c.CpcmGroup);
 				//followerList2 = await _context.CpcmUserfollowers.Where(c => c.CpcmFollowerId == user.CpcmUserId).Select(c => c.CpcmUser).ToListAsync();
+				ViewData["CpcmGroupCity"] = new SelectList(await _context.CpcmCities.ToListAsync(), "CpcmCityId", "CpcmCityName");
 			}
 			catch (Exception)
 			{
@@ -2242,7 +2249,10 @@ namespace Capycom.Controllers
 
             try
             {
-                var rez = await query.OrderBy(u => u.CpcmUserId).Take(10).ToListAsync();
+				ViewData["CpcmUserCity"] = new SelectList(await _context.CpcmCities.ToListAsync(), "CpcmCityId", "CpcmCityName");
+				ViewData["CpcmUserSchool"] = new SelectList(await _context.CpcmSchools.ToListAsync(), "CpcmSchooldId", "CpcmSchoolName");
+				ViewData["CpcmUserUniversity"] = new SelectList(await _context.CpcmUniversities.ToListAsync(), "CpcmUniversityId", "CpcmUniversityName");
+				var rez = await query.OrderBy(u => u.CpcmUserId).Take(10).ToListAsync();
                 return View(rez);
             }
             catch (DbException)

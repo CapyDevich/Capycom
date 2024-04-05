@@ -860,6 +860,9 @@ namespace Capycom.Controllers
 			{
 				followerList1 = _context.CpcmGroupfollowers.Where(c => c.CpcmGroupId == group.CpcmGroupId).Select(c => c.CpcmUser);
 				//followerList2 = await _context.CpcmUserfollowers.Where(c => c.CpcmFollowerId == user.CpcmUserId).Select(c => c.CpcmUser).ToListAsync();
+				ViewData["CpcmUserCity"] = new SelectList(await _context.CpcmCities.ToListAsync(), "CpcmCityId", "CpcmCityName");
+				ViewData["CpcmUserSchool"] = new SelectList(await _context.CpcmSchools.ToListAsync(), "CpcmSchooldId", "CpcmSchoolName");
+				ViewData["CpcmUserUniversity"] = new SelectList(await _context.CpcmUniversities.ToListAsync(), "CpcmUniversityId", "CpcmUniversityName");
 			}
 			catch (Exception)
 			{
@@ -1067,6 +1070,7 @@ namespace Capycom.Controllers
 
 			try
 			{
+				ViewData["CpcmGroupCity"] = new SelectList(await _context.CpcmCities.ToListAsync(), "CpcmCityId", "CpcmCityName");
 				var rez = await query.OrderBy(u => u.CpcmGroupId).Take(10).ToListAsync();
 				return View(rez);
 			}
