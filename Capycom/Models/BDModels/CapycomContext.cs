@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
+using Serilog;
 
 namespace Capycom;
 
@@ -420,4 +421,57 @@ public partial class CapycomContext : DbContext
     }
 
     partial void OnModelCreatingPartial(ModelBuilder modelBuilder);
+
+	public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default(CancellationToken))
+	{
+		var entries = ChangeTracker.Entries()
+				.Where(e => e.State == EntityState.Added || e.State == EntityState.Modified);
+
+        var result = await base.SaveChangesAsync(cancellationToken);
+
+		foreach (var entry in entries)
+		{
+			var currentValues = entry.CurrentValues;
+			var values = new Dictionary<string, object>();
+
+			foreach (var property in entry.Metadata.GetProperties())
+			{
+				var propertyName = property.Name;
+				var currentValue = currentValues[propertyName];
+				values[propertyName] = currentValue;
+			}
+
+			if (entry.State == EntityState.Added)
+			{
+				// Если сущность новая, логируем все текущие значения
+				Log.Information("Создана новая сущнсоть {EntityName} со значениями: {Values}",
+					entry.Entity.GetType().Name,
+					values);
+			}
+			else if (entry.State == EntityState.Modified)
+			{
+				// Если сущность была изменена, логируем только измененные значения
+				var originalValues = entry.OriginalValues.Clone();
+				var changedValues = new Dictionary<string, object>();
+
+				foreach (var property in entry.Metadata.GetProperties())
+				{
+					var propertyName = property.Name;
+					var originalValue = originalValues[propertyName];
+					var currentValue = currentValues[propertyName];
+
+					if (!object.Equals(originalValue, currentValue))
+					{
+						changedValues[propertyName] = new { Original = originalValue, Current = currentValue };
+					}
+				}
+
+				Log.Information("Сущность {EntityName} изменила значения: {Values}",
+					entry.Entity.GetType().Name,
+					changedValues);
+			}
+		}
+
+        return result;
+	}
 }

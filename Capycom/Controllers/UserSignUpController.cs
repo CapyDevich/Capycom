@@ -1,14 +1,14 @@
+using Capycom.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-
 using Microsoft.Extensions.Options;
-using Capycom.Models;
+using Serilog;
 using System.Data.Common;
 
 namespace Capycom.Controllers
 {
-    public class UserSignUpController : Controller
+	public class UserSignUpController : Controller
     {
         private readonly CapycomContext _context;
         private readonly ILogger<UserSignUpController> _logger;
@@ -35,7 +35,7 @@ namespace Capycom.Controllers
                 Response.StatusCode = 500;
                 ViewData["ErrorCode"] = 500;
                 ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
-                return View("UserError");
+				return View("UserError");
             }
             if(capycomContext == null)
             {
@@ -58,12 +58,14 @@ namespace Capycom.Controllers
                 ViewData["CpcmUserUniversity"] = new SelectList(await _context.CpcmUniversities.ToListAsync(), "CpcmUniversityId", "CpcmUniversityName");
                 return View();
             }
-            catch (DbException)
+            catch (DbException ex)
             {
                 Response.StatusCode = 500;
                 ViewData["ErrorCode"] = 500;
                 ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
-                return View("UserError");
+				Log.Error(ex,"Ошибка при попытке извлечь из БД словари и составить из них SelectList при обработке гет запроса на страницу регистрацию");
+
+				return View("UserError");
             }
             
         }
@@ -72,7 +74,7 @@ namespace Capycom.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(UserSignUpModel cpcmSignUser)
         {            
-
+            Log.Debug("Попытка регистрации нового пользователя: {CpcmSignUser}", cpcmSignUser);
             if (ModelState.IsValid)
             {
                 CpcmUser cpcmUser = new();
@@ -167,12 +169,13 @@ namespace Capycom.Controllers
                         ViewData["CpcmUserUniversity"] = new SelectList(await _context.CpcmUniversities.ToListAsync(), "CpcmUniversityId", "CpcmUniversityName", cpcmSignUser.CpcmUserUniversity);
                         return View(cpcmSignUser);
                     }
-                    catch (DbException)
+                    catch (DbException ex)
                     {
                         Response.StatusCode = 500;
                         ViewData["ErrorCode"] = 500;
                         ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
-                        return View("UserError");
+						Log.Error(ex,"Ошибка при попытке извлечь из БД словари и составить из них SelectList при обработке пост запроса на регистрацию при валидной модели");
+						return View("UserError");
                     }
                 }
 
@@ -183,16 +186,24 @@ namespace Capycom.Controllers
                 {
                     await _context.SaveChangesAsync();
                 }
-                catch (Exception)
+                catch (DbException ex)
                 {
-                    if (System.IO.File.Exists(filePathUserImage)) // TODO Возможно это стоит обернуть в try catch
+					Log.Error(ex,"Ошибка при попытке сохранить нового пользователя",cpcmUser,cpcmSignUser);
+                    try
                     {
-                        System.IO.File.Delete(filePathUserImage);
+                        if (System.IO.File.Exists(filePathUserImage)) // TODO Возможно это стоит обернуть в try catch
+                        {
+                            System.IO.File.Delete(filePathUserImage);
+                        }
+                        if (System.IO.File.Exists(filePathUserCoverImage))
+                        {
+                            System.IO.File.Delete(filePathUserCoverImage);
+                        }
                     }
-                    if (System.IO.File.Exists(filePathUserCoverImage))
+                    catch (IOException exx)
                     {
-                        System.IO.File.Delete(filePathUserCoverImage);
-                    }
+						Log.Error(exx, "Не удалось удалить фотографии пользователя при неудачной попытке регистрации: {UserImage}, {UserCover}", filePathUserImage,filePathUserCoverImage);
+					}
                     Response.StatusCode = 500;
                     ViewData["ErrorCode"] = 500;
                     ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
@@ -207,9 +218,10 @@ namespace Capycom.Controllers
                 ViewData["CpcmUserUniversity"] = new SelectList(await _context.CpcmUniversities.ToListAsync(), "CpcmUniversityId", "CpcmUniversityName", cpcmSignUser.CpcmUserUniversity);
                 return View(cpcmSignUser);
             }
-            catch (DbException)
+            catch (DbException ex)
             {
-                Response.StatusCode = 500;
+				Log.Error(ex, "Ошибка при попытке извлечь из БД словари и составить из них SelectList при обработке пост запроса на регистрацию при невалидной модели");
+				Response.StatusCode = 500;
                 ViewData["ErrorCode"] = 500;
                 ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
                 return View("UserError");
@@ -220,6 +232,7 @@ namespace Capycom.Controllers
         [HttpPost]
         public async Task<IActionResult> CheckEmail(string CpcmUserEmail)
         {
+            Log.Debug("Попытка проверки email: {CpcmUserEmail}", CpcmUserEmail);
             if(string.IsNullOrWhiteSpace(CpcmUserEmail))
             {
                 return Json("Email не может быть пустым или состоять из одних пробелов");
@@ -234,8 +247,9 @@ namespace Capycom.Controllers
             {
                 rez = !await _context.CpcmUsers.AnyAsync(e => e.CpcmUserEmail == CpcmUserEmail);
             }
-            catch (DbException)
+            catch (DbException ex)
             {
+				Log.Error(ex, "Не удалось установить соединение с сервером при проверки регистрируемоего email",CpcmUserEmail);
 				return Json(data: "Не удалось установить соединение с сервером");
 			}
             if (!rez)
@@ -246,6 +260,7 @@ namespace Capycom.Controllers
         [HttpPost]
         public async Task<IActionResult> CheckNickName(string CpcmUserNickName)
          {
+            Log.Debug("Попытка проверки nickname: {CpcmUserNickName}", CpcmUserNickName);
             if (CpcmUserNickName == null || CpcmUserNickName.All(char.IsWhiteSpace) || CpcmUserNickName==string.Empty)
             {
                 return Json(true);
@@ -260,8 +275,9 @@ namespace Capycom.Controllers
             {
                 rez = !await _context.CpcmUsers.AnyAsync(e => e.CpcmUserNickName == CpcmUserNickName);
             }
-            catch (DbException)
+            catch (DbException ex)
             {
+				Log.Error(ex, "Не удалось установить соединение с сервером при проверки регистрируемоего nickname", CpcmUserNickName);
 				return Json(data: "Не удалось установить соединение с сервером");
 			}
 			if (!rez)
@@ -272,6 +288,7 @@ namespace Capycom.Controllers
         [HttpPost]
         public async Task<IActionResult> CheckPhone(string CpcmUserTelNum)
         {
+            Log.Debug("Попытка проверки телефона: {CpcmUserTelNum}", CpcmUserTelNum);
             if (string.IsNullOrWhiteSpace(CpcmUserTelNum))
             {
                 return Json(data:"Телефон не может быть пустым или состоять из одних пробелов");
@@ -282,8 +299,9 @@ namespace Capycom.Controllers
             {
                 rez = !await _context.CpcmUsers.AnyAsync(e => e.CpcmUserTelNum == CpcmUserTelNum);
             }
-            catch (DbException)
+            catch (DbException ex)
             {
+                Log.Error(ex,"Не удалось установить соединение с сервером при проверки регистрируемоего телефона", CpcmUserTelNum);
 				return Json(data: "Не удалось установить соединение с сервером");
 			}
 			if (!rez)
@@ -294,6 +312,7 @@ namespace Capycom.Controllers
         [HttpPost]
         public async Task<IActionResult> AddCity(string newCity)
         {
+            Log.Debug("Попытка добавления города: {newCity}", newCity);
             if(string.IsNullOrWhiteSpace(newCity))
             {
                 return Json(new { success = false, message = "Некорректное значение." });
@@ -310,8 +329,9 @@ namespace Capycom.Controllers
                 {
                     await _context.SaveChangesAsync();
                 }
-                catch (DbException)
+                catch (DbException ex)
                 {
+                    Log.Error(ex, "Ошибка при попытке добавить город: {newCity}", newCity);
                     return new StatusCodeResult(500);
                 }
                 return Json(new { success = true, id = city.CpcmCityId });
@@ -326,6 +346,7 @@ namespace Capycom.Controllers
         [HttpPost]
         public async Task<IActionResult> AddSchool(string newSchool)
         {
+            Log.Debug("Попытка добавления школы: {newSchool}", newSchool);
             if (string.IsNullOrWhiteSpace(newSchool))
             {
                 return Json(new { success = false, message = "Некорректное значение." });
@@ -354,6 +375,7 @@ namespace Capycom.Controllers
         [HttpPost]
         public async Task<IActionResult> AddUniversities(string newUni)
         {
+            Log.Debug("Попытка добавления университета: {newUni}", newUni);
             if (string.IsNullOrWhiteSpace(newUni))
             {
                 return Json(new { success = false, message = "Некорректное значение." });

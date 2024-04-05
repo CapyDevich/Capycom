@@ -1,4 +1,6 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
+
+using Capycom.Attributes;
 
 namespace Capycom.Models
 {
