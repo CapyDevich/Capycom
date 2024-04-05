@@ -427,6 +427,8 @@ public partial class CapycomContext : DbContext
 		var entries = ChangeTracker.Entries()
 				.Where(e => e.State == EntityState.Added || e.State == EntityState.Modified);
 
+        var result = await base.SaveChangesAsync(cancellationToken);
+
 		foreach (var entry in entries)
 		{
 			var currentValues = entry.CurrentValues;
@@ -470,6 +472,6 @@ public partial class CapycomContext : DbContext
 			}
 		}
 
-		return await base.SaveChangesAsync(cancellationToken);
+        return result;
 	}
 }
