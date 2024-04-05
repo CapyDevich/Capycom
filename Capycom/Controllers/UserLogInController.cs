@@ -1,4 +1,4 @@
-﻿#define AdminAutoAuth
+﻿//#define AdminAutoAuth
 using Microsoft.AspNetCore.Mvc;
 using Capycom.Models;
 using Microsoft.Extensions.Options;

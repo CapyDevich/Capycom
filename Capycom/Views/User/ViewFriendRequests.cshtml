@@ -1,127 +1,22 @@
 ﻿@model List<CpcmUser>?
-
-@* <form class="col-md-6 mx-auto" asp-action="Create" enctype="multipart/form-data">
-	@Html.AntiForgeryToken()
-	<div asp-validation-summary="ModelOnly" class="text-danger"></div>
-	<div class="row mb-3">
-		<div class="col">
-			<label asp-for="CpcmUserFirstName" class="form-label">Имя</label>
-			<input type="text" class="form-control" id="firstName" required asp-for="CpcmUserFirstName">
-		</div>
-		<div class="col">
-			<label asp-for="CpcmUserSecondName" class="form-label">Фамилия</label>
-			<input type="text" class="form-control" id="lastName" required asp-for="CpcmUserSecondName">
-		</div>
-		<div class="col">
-			<label asp-for="CpcmUserAdditionalName" class="form-label">Отчество</label>
-			<input type="text" class="form-control" id="middleName" asp-for="CpcmUserAdditionalName">
-		</div>
-		<span asp-validation-for="CpcmUserFirstName" class="text-danger"></span>
-		<span asp-validation-for="CpcmUserSecondName" class="text-danger"></span>
-	</div>
-	<label asp-for="CpcmUserNickName" class="form-label">Псевдоним</label>
-	<div class="input-group">
-		<span class="input-group-text" id="inputGroupPrepend">@@</span>
-		<input asp-for="CpcmUserNickName" type="text" class="form-control" id="validationCustomUsername">
-	</div>
-	<span asp-validation-for="CpcmUserNickName" class="text-danger"></span>
-	<div class="mb-3">
-		<label asp-for="CpcmUserEmail" class="form-label">Электронная почта</label>
-		<input asp-for="CpcmUserEmail" type="email" class="form-control" id="email" required>
-	</div>
-	<span asp-validation-for="CpcmUserEmail" class="text-danger"></span>
-	<div class="mb-3">
-		<label asp-for="CpcmUserTelNum" class="form-label">Номер телефона</label>
-		<input asp-for="CpcmUserTelNum" type="tel" class="form-control" id="phone" title="Номер телефона должен содержать только цифры и специальные символы" required>
-	</div>
-	<span asp-validation-for="CpcmUserTelNum" class="text-danger"></span>
-	<div class="mb-3">
-		<label asp-for="CpcmUserPwd" class="form-label">Пароль</label>
-		<input asp-for="CpcmUserPwd" type="password" class="form-control" id="password" required>
-	</div>
-	<span asp-validation-for="CpcmUserPwd" class="text-danger"></span>
-	<div class="mb-3">
-		<label asp-for="CpcmUserPwdConfirm" class="form-label">Подтвердите пароль</label>
-		<input asp-for="CpcmUserPwdConfirm" type="password" class="form-control" id="confirmPassword" required>
-	</div>
-	<span asp-validation-for="CpcmUserPwdConfirm" class="text-danger"></span>
-	<h4 class="mb-2">Дополнительные сведения</h4>
-	<div class="mb-3">
-		<label asp-for="CpcmUserImage" class="form-label">Иконка профиля</label>
-		<input asp-for="CpcmUserImage" class="form-control" type="file" id="formFile">
-	</div>
-	<span asp-validation-for="CpcmUserImage" class="text-danger"></span>
-	<div class="col mb-3">
-		<label for="userAbout" class="form-label">О себе</label>
-		<textarea type="text" class="form-control" id="userAbout" rows="3"></textarea>
-	</div>
-
-	<label asp-for="CpcmUserCity" class="form-label">Город</label>
-	<div class="flex-grow-1 input-group d-flex justify-content-between mb-3">
-		<select data-live-search="true" asp-for="CpcmUserCity" asp-items="ViewBag.CpcmUserCity" class="selectpicker flex-grow-1" id="city" data-live-search="true">
-			<option value="" selected disabled>Выберите город...</option>
-			<option value="">testC1...</option>
-			<option value="">testC2...</option>
-		</select>
-		<button type="button" class="btn btn-light addOptionButton" data-bs-toggle="modal" data-bs-target="#addingCityModal">+</button>
-	</div>
-
-	<label asp-for="CpcmUserUniversity" class="form-label">Университет</label>
-	<div class="flex-grow-1 input-group d-flex justify-content-between mb-3">
-		<select data-live-search="true" asp-for="CpcmUserUniversity" asp-items="ViewBag.CpcmUserUniversity" class="selectpicker flex-grow-1" id="university">
-			<option value="" selected disabled>Выберите университет...</option>
-			<option value="">testU1...</option>
-			<option value="">testU2...</option>
-		</select>
-		<button type="button" class="btn btn-light addOptionButton" data-bs-toggle="modal" data-bs-target="#addingUniversityModal">+</button>
-	</div>
-
-	<label asp-for="CpcmUserSchool" class="form-label">Школа</label>
-	<div class="flex-grow-1 input-group d-flex justify-content-between mb-3">
-		<select data-live-search="true" asp-for="CpcmUserSchool" asp-items="ViewBag.CpcmUserSchool" class="selectpicker flex-grow-1" id="school">
-			<option value="" selected disabled>Выберите школу...</option>
-			<option value="">testS1...</option>
-			<option value="">testS2...</option>
-		</select>
-		<button type="button" class="btn btn-light addOptionButton" data-bs-toggle="modal" data-bs-target="#addingSchoolModal">+</button>
-	</div>
-	<div class="col mb-3">
-		<label asp-for="CpcmUserSite" class="form-label">Сайт</label>
-		<input asp-for="CpcmUserSite" type="text" class="form-control" id="site">
-	</div>
-	<span asp-validation-for="CpcmUserSite" class="text-danger"></span>
-	<div class="col mb-3">
-		<label asp-for="CpcmUserBooks" class="form-label">Книги</label>
-		<input asp-for="CpcmUserBooks" type="text" class="form-control" id="books">
-	</div>
-	<span asp-validation-for="CpcmUserBooks" class="text-danger"></span>
-	<div class="col mb-3">
-		<label asp-for="CpcmUserFilms" class="form-label">Фильмы</label>
-		<input asp-for="CpcmUserFilms" type="text" class="form-control" id="films">
-	</div>
-	<span asp-validation-for="CpcmUserFilms" class="text-danger"></span>
-	<div class="col mb-3">
-		<label asp-for="CpcmUserMusics" class="form-label">Музыка</label>
-		<input asp-for="CpcmUserMusics" type="text" class="form-control" id="music">
-	</div>
-	<span asp-validation-for="CpcmUserMusics" class="text-danger"></span>
-	<button type="submit" class="btn btn-primary" value="Create">Зарегистрироваться</button>
-</form> *@
 <div class="container mt-3">
     <div class="row">
-		@foreach (var user in Model)
+		@foreach (CpcmUser user in Model)
 		{
-			<div class="col-md-4">
+			<div class="col-md-4" id="@user.CpcmUserId">
 				<div class="card mb-4 shadow-sm">
-					<svg class="bd-placeholder-img card-img-top" width="100%" height="225" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Placeholder: Thumbnail" preserveAspectRatio="xMidYMid slice" focusable="false"><title>Иконка пользователя</title><rect width="100%" height="100%" fill="#55595c" /></svg>
+					<img src="@Url.Content(@user.CpcmUserImagePath)" class="bd-placeholder-img card-img-top" width="100%" height="225" alt="Иконка пользователя" style="object-fit: none; object-position: center;">
 					<div class="card-body">
 						<p class="card-text">@user.CpcmUserFirstName @user.CpcmUserSecondName @user.CpcmUserAdditionalName</p>
 					</div>
+					<button class="btn btn-outline-success" onclick="asnwerFriendRequest('@user.CpcmUserId', true)">✓</button>
+					<button class="btn btn-outline-danger" onclick="asnwerFriendRequest('@user.CpcmUserId', false)">✕</button>
 				</div>
 			</div>
 		}
 		<div class="col-12 text-center">
-			<button class="btn btn-primary" type="button">Загрузить ещё друзей</button>
+			<button class="btn btn-primary" type="button">Загрузить ещё</button>
 		</div>
     </div>
 </div>
+<script src="~/css/friends.js"></script>

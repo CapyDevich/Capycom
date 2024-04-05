@@ -7,9 +7,9 @@
 <div class="row">
 	<div class="pt-2 pb-2 profile-block card mb-2">
 		<div class="mx-auto" style="width: 256px; height: 256px;">
-			<img src="~/uploads/@Model.CpcmUserImagePath" class="img-fluid rounded object-fit-cover h-100 w-100" alt="Иконка пользователя">
+			<img src="@Url.Content(@Model.CpcmUserImagePath)" class="img-fluid rounded object-fit-cover h-100 w-100" alt="Иконка пользователя">
 		</div>
-		
+
 		<div class="text-center">
 			<h4 class="mb-0">@Model.CpcmUserFirstName @Model.CpcmUserSecondName @Model.CpcmUserAdditionalName</h4>
 			<div id="userID" hidden>@Model.CpcmUserId</div>
@@ -61,28 +61,34 @@
 		</div>
 	</div>
 </div>
-@if (User.Identity.IsAuthenticated && User.Identity.IsAuthenticated && Model.CpcmUserId.ToString() != User.FindAll(x => x.Type == "CpcmUserId").FirstOrDefault().Value)
+@if (User.Identity.IsAuthenticated && Model.CpcmUserId.ToString() != User.FindAll(x => x.Type == "CpcmUserId").FirstOrDefault().Value)
 {
 	<div class="row mb-1">
-@* 	@if (Model.IsFriend == true || Model.IsFriend == false) // заявка одобрена, т.е. они друзья || заявка была отклонена
+		@* 	@if (Model.IsFriend == true || Model.IsFriend == false) // заявка одобрена, т.е. они друзья || заявка была отклонена
 	{ *@
 		<button class="btn btn-outline-primary mb-1" id="friendButton" onclick="sendFriendRequest()">Добавить в друзья</button>
-@* 	}
+		@* 	}
 	else // Model.IsFriend == null, значит заявка отправлена, но ещё не принята/отклонена
 	{
-		<button class="btn btn-outline-primary mb-1" id="friendButton" onclick="removeFriendRequest">Отозвать заявку в друзья</button>
+	<button class="btn btn-outline-primary mb-1" id="friendButton" onclick="removeFriendRequest">Отозвать заявку в друзья</button>
 	} *@
-	@if (!Model.IsFollowing)
-	{
-		<button class="btn btn-outline-primary mb-1" id="subscribeButton" onclick="follow()">Подписаться</button>
-	}
-	else
-	{
-		<button class="btn btn-outline-primary mb-1" id="subscribeButton" onclick="unfollow()">Отписаться</button>
-	}
+		@if (!Model.IsFollowing)
+		{
+			<button class="btn btn-outline-primary mb-1" id="subscribeButton" onclick="follow()">Подписаться</button>
+		}
+		else
+		{
+			<button class="btn btn-outline-primary mb-1" id="subscribeButton" onclick="unfollow()">Отписаться</button>
+		}
 	</div>
 }
+@if (Model.CpcmUserId.ToString() == User.FindAll(x => x.Type == "CpcmUserId").FirstOrDefault().Value)
+{
 	<div class="row">
-		<a class="btn btn-outline-secondary mb-1" asp-controller="User" asp-action="ViewFriendRequests">Друзья</a>
-		<a class="btn btn-outline-secondary mb-1" asp-controller="User" asp-action="">Подписчики</a>
+		<a class="btn btn-secondary mb-1" asp-controller="User" asp-action="ViewFriendRequests">Заявки в друзья</a>
 	</div>
+}
+<div class="row">
+	<a class="btn btn-outline-secondary mb-1" asp-controller="User" asp-action="">Друзья</a>
+	<a class="btn btn-outline-secondary mb-1" asp-controller="User" asp-action="">Подписчики</a>
+</div>
