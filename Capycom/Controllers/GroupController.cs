@@ -860,6 +860,9 @@ namespace Capycom.Controllers
 			{
 				followerList1 = _context.CpcmGroupfollowers.Where(c => c.CpcmGroupId == group.CpcmGroupId).Select(c => c.CpcmUser);
 				//followerList2 = await _context.CpcmUserfollowers.Where(c => c.CpcmFollowerId == user.CpcmUserId).Select(c => c.CpcmUser).ToListAsync();
+				ViewData["CpcmUserCity"] = new SelectList(await _context.CpcmCities.ToListAsync(), "CpcmCityId", "CpcmCityName");
+				ViewData["CpcmUserSchool"] = new SelectList(await _context.CpcmSchools.ToListAsync(), "CpcmSchooldId", "CpcmSchoolName");
+				ViewData["CpcmUserUniversity"] = new SelectList(await _context.CpcmUniversities.ToListAsync(), "CpcmUniversityId", "CpcmUniversityName");
 			}
 			catch (Exception)
 			{
@@ -902,9 +905,19 @@ namespace Capycom.Controllers
 				followerList1 = followerList1.Where(u => EF.Functions.Like(u.CpcmUserAdditionalName, $"%{filters.AdditionalName}%"));
 			}
 
-			var result = await followerList1.OrderBy(p => p.CpcmUserId).Take(10).ToListAsync();
+			try
+			{
+				var result = await followerList1.OrderBy(p => p.CpcmUserId).Take(10).ToListAsync();
 
-			return View(followerList1);
+				return View(followerList1);
+			}
+			catch (DbException)
+			{
+				Response.StatusCode = 500;
+				ViewData["ErrorCode"] = 500;
+				ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
+				return View("UserError");
+			}
 		}
 		[HttpPost]
 		public async Task<IActionResult> GetNextFollowers(UserFilterModel filters)
@@ -977,10 +990,20 @@ namespace Capycom.Controllers
 				followerList1 = followerList1.Where(u => EF.Functions.Like(u.CpcmUserAdditionalName, $"%{filters.AdditionalName}%"));
 			}
 
-			var result = await followerList1.OrderBy(p => p.CpcmUserId).Take(10).ToListAsync();
-			//followerList1.AddRange(followerList2);
+			try
+			{
+				var result = await followerList1.OrderBy(p => p.CpcmUserId).Take(10).ToListAsync();
+				//followerList1.AddRange(followerList2);
 
-			return PartialView(followerList1);
+				return PartialView(followerList1);
+			}
+			catch (DbException)
+			{
+				Response.StatusCode = 500;
+				ViewData["ErrorCode"] = 500;
+				ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
+				return View("UserError");
+			}
 		}
 
 		[Authorize]
@@ -1047,6 +1070,7 @@ namespace Capycom.Controllers
 
 			try
 			{
+				ViewData["CpcmGroupCity"] = new SelectList(await _context.CpcmCities.ToListAsync(), "CpcmCityId", "CpcmCityName");
 				var rez = await query.OrderBy(u => u.CpcmGroupId).Take(10).ToListAsync();
 				return View(rez);
 			}

@@ -146,25 +146,40 @@ namespace Capycom.Controllers
                 posts = await _context.CpcmPosts.Where(c => c.CpcmUserId == user.CpcmUserId && c.CpcmPostPublishedDate < DateTime.UtcNow).Include(c => c.CpcmImages).OrderByDescending(c => c.CpcmPostPublishedDate).Take(10).ToListAsync();
                 if (HttpContext.User.Identity.IsAuthenticated && user.CpcmUserId.ToString() != User.FindFirstValue("CpcmUserId"))
                 {
-                    var friend = await _context.CpcmUserfriends.Where(f => f.CmcpUserId == user.CpcmUserId && f.CmcpFriendId.ToString() == User.FindFirstValue("CpcmUserId")).FirstOrDefaultAsync();
-                    if (friend == null)
-                    {
-                        await _context.CpcmUserfriends.Where(f => f.CmcpUserId.ToString() == User.FindFirstValue("CpcmUserId") && f.CmcpFriendId == user.CpcmUserId).FirstOrDefaultAsync();
-                    }
+                    var friend = await _context.CpcmUserfriends.Where(f => f.CmcpUserId == user.CpcmUserId && f.CmcpFriendId.ToString() == User.FindFirstValue("CpcmUserId")).FirstOrDefaultAsync(); // Тут мы смотрим подал ли ОН запрос в друзья НАМ.                    
                     if (friend != null)
                     {
                         if (friend.CpcmFriendRequestStatus == true)
-                            user.IsFriend = FriendStatusEnum.Approved;
-                        else if (friend.CpcmFriendRequestStatus == false)
-                            user.IsFriend = FriendStatusEnum.Rejected;
+                            user.IsFriend = FriendStatusEnum.HisApproved; // Будет кнопка удалить из друзей (удалить friendRequest)
+						else if (friend.CpcmFriendRequestStatus == false)
+                            user.IsFriend = FriendStatusEnum.HisRejected; // будет кнопка подтвердить запрос в друзья
                         else
-                            user.IsFriend = FriendStatusEnum.NotAnswered;
+                            user.IsFriend = FriendStatusEnum.HisNotAnswered; // будет кнопка подтвердить запрос в друзья
 
 					}
-                    else
-                    {
-                        user.IsFriend = FriendStatusEnum.NoFriendRequest;
-                    }
+					else if (friend == null)
+					{
+						await _context.CpcmUserfriends.Where(f => f.CmcpUserId.ToString() == User.FindFirstValue("CpcmUserId") && f.CmcpFriendId == user.CpcmUserId).FirstOrDefaultAsync();// Теперь мы смотрим подали ли МЫ запрос в друзья ЕМУ.
+                        if (friend != null)
+                        {
+                            if(friend.CpcmFriendRequestStatus == true)
+								user.IsFriend = FriendStatusEnum.OurApproved; // будет кнопка удалить из друзей
+							else if (friend.CpcmFriendRequestStatus == false)
+								user.IsFriend = FriendStatusEnum.OurRejected; // будет кнопка отозвать запрос (удалить friendRequest)
+							else
+								user.IsFriend = FriendStatusEnum.OurNotAnswered; // будет кнопка отозвать запрос (удалить friendRequest)
+                        }
+                        else
+                        {
+                            user.IsFriend = FriendStatusEnum.NoFriendRequest; // Будет кнопка добавить в друзья
+                        }
+					}
+
+
+
+
+
+
 					var follower = await _context.CpcmUserfollowers.Where(f => f.CpcmFollowerId.ToString() == User.FindFirstValue("CpcmUserId") && f.CpcmUserId == user.CpcmUserId).FirstOrDefaultAsync();
 					if (follower == null)
                     {
@@ -653,7 +668,10 @@ namespace Capycom.Controllers
             {
                 friendList1 =  _context.CpcmUserfriends.Where(c => c.CmcpUserId == user.CpcmUserId && c.CpcmFriendRequestStatus == true).Select(c => c.CmcpFriend);
                 friendList2 =  _context.CpcmUserfriends.Where(c => c.CmcpFriendId == user.CpcmUserId && c.CpcmFriendRequestStatus == true).Select(c => c.CmcpUser);
-            }
+				ViewData["CpcmUserCity"] = new SelectList(await _context.CpcmCities.ToListAsync(), "CpcmCityId", "CpcmCityName");
+				ViewData["CpcmUserSchool"] = new SelectList(await _context.CpcmSchools.ToListAsync(), "CpcmSchooldId", "CpcmSchoolName");
+				ViewData["CpcmUserUniversity"] = new SelectList(await _context.CpcmUniversities.ToListAsync(), "CpcmUniversityId", "CpcmUniversityName");
+			}
             catch (DbException)
             {
                 Response.StatusCode = 500;
@@ -695,8 +713,19 @@ namespace Capycom.Controllers
 				friendList1 = friendList1.Where(u => EF.Functions.Like(u.CpcmUserAdditionalName, $"%{filters.AdditionalName}%"));
 			}
 
-			var result = await friendList1.OrderBy(p => p.CpcmUserId).Take(10).ToListAsync();
-			return View(result);
+            try
+            {
+                var result = await friendList1.OrderBy(p => p.CpcmUserId).Take(10).ToListAsync();
+                return View(result);
+            }
+			catch (DbException)
+			{
+				Response.StatusCode = 500;
+				ViewData["ErrorCode"] = 500;
+				ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
+				return View("UserError");
+			}
+			
 
 
         }
@@ -768,8 +797,19 @@ namespace Capycom.Controllers
 				//ViewData["additionalName"] = additionalName;
 				friendList1 = friendList1.Where(u => EF.Functions.Like(u.CpcmUserAdditionalName, $"%{filters.AdditionalName}%"));
 			}
-			var result = await friendList1.OrderBy(p => p.CpcmUserId).Take(10).ToListAsync();
-			return PartialView(result);
+            try
+            {
+                var result = await friendList1.OrderBy(p => p.CpcmUserId).Take(10).ToListAsync();
+				return PartialView(result);
+			}
+			catch (DbException)
+			{
+				Response.StatusCode = 500;
+				ViewData["ErrorCode"] = 500;
+				ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
+				return View("UserError");
+			}
+			
         }
 
 
@@ -812,8 +852,11 @@ namespace Capycom.Controllers
             try
             {
                 followerList1 = _context.CpcmUserfollowers.Where(c => c.CpcmUserId == user.CpcmUserId).Select(c => c.CpcmFollower);
-                //followerList2 = await _context.CpcmUserfollowers.Where(c => c.CpcmFollowerId == user.CpcmUserId).Select(c => c.CpcmUser).ToListAsync();
-            }
+				//followerList2 = await _context.CpcmUserfollowers.Where(c => c.CpcmFollowerId == user.CpcmUserId).Select(c => c.CpcmUser).ToListAsync();
+				ViewData["CpcmUserCity"] = new SelectList(await _context.CpcmCities.ToListAsync(), "CpcmCityId", "CpcmCityName");
+				ViewData["CpcmUserSchool"] = new SelectList(await _context.CpcmSchools.ToListAsync(), "CpcmSchooldId", "CpcmSchoolName");
+				ViewData["CpcmUserUniversity"] = new SelectList(await _context.CpcmUniversities.ToListAsync(), "CpcmUniversityId", "CpcmUniversityName");
+			}
             catch (Exception)
             {
                 Response.StatusCode = 500;
@@ -855,10 +898,20 @@ namespace Capycom.Controllers
 				followerList1 = followerList1.Where(u => EF.Functions.Like(u.CpcmUserAdditionalName, $"%{filters.AdditionalName}%"));
 			}
 
-			var result = await followerList1.OrderBy(p => p.CpcmUserId).Take(10).ToListAsync();
+            try
+            {
+                var result = await followerList1.OrderBy(p => p.CpcmUserId).Take(10).ToListAsync();
 
-			return View(result);
-        }
+                return View(followerList1);
+            }
+			catch (DbException)
+			{
+				Response.StatusCode = 500;
+				ViewData["ErrorCode"] = 500;
+				ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
+				return View("UserError");
+			}
+		}
 		[HttpPost]
 		public async Task<ActionResult> GetNextFollowers(UserFilterModel filters)
         {
@@ -930,11 +983,19 @@ namespace Capycom.Controllers
 				followerList1 = followerList1.Where(u => EF.Functions.Like(u.CpcmUserAdditionalName, $"%{filters.AdditionalName}%"));
 			}
 
-			var result = await followerList1.OrderBy(p => p.CpcmUserId).Take(10).ToListAsync();
-			//followerList1.AddRange(followerList2);
-
-			return PartialView(followerList1);
-        }
+            try
+            {
+                var result = await followerList1.OrderBy(p => p.CpcmUserId).Take(10).ToListAsync();
+                return PartialView(result);
+            }
+			catch (DbException)
+			{
+				Response.StatusCode = 500;
+				ViewData["ErrorCode"] = 500;
+				ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
+				return View("UserError");
+			}
+		}
 
 		public async Task<IActionResult> Groups(GroupFilterModel filters)
 		{
@@ -973,6 +1034,7 @@ namespace Capycom.Controllers
 			{
 				groupsList = _context.CpcmGroupfollowers.Where(c => c.CpcmUserId == user.CpcmUserId).Select(c => c.CpcmGroup);
 				//followerList2 = await _context.CpcmUserfollowers.Where(c => c.CpcmFollowerId == user.CpcmUserId).Select(c => c.CpcmUser).ToListAsync();
+				ViewData["CpcmGroupCity"] = new SelectList(await _context.CpcmCities.ToListAsync(), "CpcmCityId", "CpcmCityName");
 			}
 			catch (Exception)
 			{
@@ -997,9 +1059,19 @@ namespace Capycom.Controllers
 				groupsList = groupsList.Where(u => u.CpcmGroupSubject == filters.SubjectID);
 			}
 
+            try
+            {
 
-			var result = await groupsList.OrderBy(p => p.CpcmGroupId).Take(10).ToListAsync();
-			return View(groupsList);
+                var result = await groupsList.OrderBy(p => p.CpcmGroupId).Take(10).ToListAsync();
+                return View(groupsList);
+            }
+			catch (DbException)
+			{
+				Response.StatusCode = 500;
+				ViewData["ErrorCode"] = 500;
+				ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
+				return View("UserError");
+			}
 		}
 
 		public async Task<IActionResult> GetNextGroups(GroupFilterModel filters)
@@ -1064,8 +1136,18 @@ namespace Capycom.Controllers
 			}
 
 
-			var result = await groupsList.OrderBy(p => p.CpcmGroupId).Take(10).ToListAsync();
-			return PartialView(groupsList);
+            try
+            {
+                var result = await groupsList.OrderBy(p => p.CpcmGroupId).Take(10).ToListAsync();
+                return PartialView(groupsList);
+            }
+			catch (DbException)
+			{
+				Response.StatusCode = 500;
+				ViewData["ErrorCode"] = 500;
+				ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
+				return View("UserError");
+			}
 		}
 
 		[Authorize]
@@ -1238,15 +1320,22 @@ namespace Capycom.Controllers
         //[ValidateAntiForgeryToken]
         public async Task<IActionResult> CreateFriendRequest(Guid CpcmUserId)
         {
-            CpcmUserfriend friendRequest = new();
-            friendRequest.CmcpUserId = Guid.Parse(HttpContext.User.FindFirst(c => c.Type == "CpcmUserId").Value);
-            friendRequest.CmcpFriendId = CpcmUserId;
-
-            _context.CpcmUserfriends.Add(friendRequest);
+            //CpcmUserfriend friendRequest = new();
+            //friendRequest.CmcpUserId = Guid.Parse(HttpContext.User.FindFirst(c => c.Type == "CpcmUserId").Value);
+            //friendRequest.CmcpFriendId = CpcmUserId;
+            var userGuid= Guid.Parse(HttpContext.User.FindFirst(c => c.Type == "CpcmUserId").Value);
+            //_context.CpcmUserfriends.Add(friendRequest);
 
             try
             {
-                await _context.SaveChangesAsync();
+                var friendreq = _context.CpcmUserfriends.Where( f => f.CmcpUserId==userGuid && f.CmcpFriendId==CpcmUserId || f.CmcpUserId == CpcmUserId && f.CmcpFriendId == userGuid).FirstOrDefault();
+                if(friendreq != null)
+                {
+                    return StatusCode(200, new {status=false, message="У вас уже есть запрос на дружбу от этого человека"});
+                }
+                CpcmUserfriend friendRequest = new() { CmcpUserId=userGuid, CmcpFriendId=CpcmUserId};
+				_context.CpcmUserfriends.Add(friendRequest);
+				await _context.SaveChangesAsync();
             }
             catch (DbException)
             {
@@ -1264,8 +1353,9 @@ namespace Capycom.Controllers
             CpcmUserfriend? friendRequest;
             try
             {
-                friendRequest = await _context.CpcmUserfriends.Where(c => c.CmcpUserId.ToString() == HttpContext.User.FindFirst(c => c.Type == "CpcmUserId").Value
-                    && c.CmcpFriendId == CpcmUserId).FirstOrDefaultAsync();
+                var guidString = HttpContext.User.FindFirst(c => c.Type == "CpcmUserId").Value;
+                friendRequest = await _context.CpcmUserfriends.Where(c => c.CmcpUserId == CpcmUserId
+                    && c.CmcpFriendId.ToString() == guidString).FirstOrDefaultAsync(); //Тут мы смотрим только те реквесты, которые адресованы нам. 
             }
             catch (DbException)
             {
@@ -1300,10 +1390,10 @@ namespace Capycom.Controllers
 			{
 				var guid = HttpContext.User.FindFirst(d => d.Type == "CpcmUserId").Value;
 
-				friendRequest = await _context.CpcmUserfriends.Where(c => c.CmcpUserId.ToString() == guid
-				   && c.CmcpFriendId == CpcmUserId).FirstOrDefaultAsync();
-			}
-			catch (DbException)
+				friendRequest = await _context.CpcmUserfriends.Where(c => c.CmcpUserId.ToString() == guid && c.CmcpFriendId == CpcmUserId
+                || c.CmcpUserId == CpcmUserId && c.CmcpFriendId.ToString() == guid).FirstOrDefaultAsync();
+            }
+            catch (DbException)
             {
                 await Console.Out.WriteLineAsync("fdsfs");
                 return StatusCode(500);
@@ -1353,7 +1443,7 @@ namespace Capycom.Controllers
 			IQueryable<CpcmUser> friendList1;
 			try
 			{
-				friendList1 = _context.CpcmUserfriends.Where(c => c.CmcpFriendId == user.CpcmUserId && (c.CpcmFriendRequestStatus == null|| c.CpcmFriendRequestStatus == false)).Select(c => c.CmcpUser);//followerList2 = await _context.CpcmUserfollowers.Where(c => c.CpcmFollowerId == user.CpcmUserId).Select(c => c.CpcmUser).ToListAsync();
+				friendList1 = _context.CpcmUserfriends.Where(c => c.CmcpFriendId == user.CpcmUserId && (c.CpcmFriendRequestStatus == null)).Select(c => c.CmcpUser);//followerList2 = await _context.CpcmUserfollowers.Where(c => c.CpcmFollowerId == user.CpcmUserId).Select(c => c.CpcmUser).ToListAsync();
 			}
 			catch (Exception)
 			{
@@ -1391,10 +1481,20 @@ namespace Capycom.Controllers
 				friendList1 = friendList1.Where(u => EF.Functions.Like(u.CpcmUserAdditionalName, $"%{filters.AdditionalName}%"));
 			}
 
-			var result = await friendList1.OrderBy(p => p.CpcmUserId).Take(10).ToListAsync();
-			//followerList1.AddRange(followerList2);
+            try
+            {
+                var result = await friendList1.OrderBy(p => p.CpcmUserId).Take(10).ToListAsync();
+                //followerList1.AddRange(followerList2);
 
-			return View(result);
+                return View(result);
+            }
+			catch (DbException)
+			{
+				Response.StatusCode = 500;
+				ViewData["ErrorCode"] = 500;
+				ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
+				return View("UserError");
+			}
 		}
         [Authorize]
 		public async Task<IActionResult> GetNextFriendRequests(UserFilterModel filters)
@@ -1424,7 +1524,7 @@ namespace Capycom.Controllers
 			IQueryable<CpcmUser> friendList1;
 			try
 			{
-				friendList1 = _context.CpcmUserfriends.Where(c => c.CmcpFriendId == user.CpcmUserId && (c.CpcmFriendRequestStatus == null || c.CpcmFriendRequestStatus == false) && c.CmcpUserId.CompareTo(filters.lastId) > 0).Select(c => c.CmcpUser);//followerList2 = await _context.CpcmUserfollowers.Where(c => c.CpcmFollowerId == user.CpcmUserId).Select(c => c.CpcmUser).ToListAsync();
+				friendList1 = _context.CpcmUserfriends.Where(c => c.CmcpFriendId == user.CpcmUserId && (c.CpcmFriendRequestStatus == null) && c.CmcpUserId.CompareTo(filters.lastId) > 0).Select(c => c.CmcpUser);//followerList2 = await _context.CpcmUserfollowers.Where(c => c.CpcmFollowerId == user.CpcmUserId).Select(c => c.CpcmUser).ToListAsync();
 			}
 			catch (Exception)
 			{
@@ -1462,10 +1562,20 @@ namespace Capycom.Controllers
 				friendList1 = friendList1.Where(u => EF.Functions.Like(u.CpcmUserAdditionalName, $"%{filters.AdditionalName}%"));
 			}
 
-			var result = await friendList1.OrderBy(p => p.CpcmUserId).Take(10).ToListAsync();
-			//followerList1.AddRange(followerList2);
+            try
+            {
+                var result = await friendList1.OrderBy(p => p.CpcmUserId).Take(10).ToListAsync();
+                //followerList1.AddRange(followerList2);
 
-			return PartialView(friendList1);
+                return PartialView(result);
+            }
+			catch (DbException)
+			{
+				Response.StatusCode = 500;
+				ViewData["ErrorCode"] = 500;
+				ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
+				return View("UserError");
+			}
 		}
 		[Authorize]
         public async Task<IActionResult> CreatePost()
@@ -2137,7 +2247,10 @@ namespace Capycom.Controllers
 
             try
             {
-                var rez = await query.OrderBy(u => u.CpcmUserId).Take(10).ToListAsync();
+				ViewData["CpcmUserCity"] = new SelectList(await _context.CpcmCities.ToListAsync(), "CpcmCityId", "CpcmCityName");
+				ViewData["CpcmUserSchool"] = new SelectList(await _context.CpcmSchools.ToListAsync(), "CpcmSchooldId", "CpcmSchoolName");
+				ViewData["CpcmUserUniversity"] = new SelectList(await _context.CpcmUniversities.ToListAsync(), "CpcmUniversityId", "CpcmUniversityName");
+				var rez = await query.OrderBy(u => u.CpcmUserId).Take(10).ToListAsync();
                 return View(rez);
             }
             catch (DbException)
