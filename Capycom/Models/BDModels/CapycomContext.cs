@@ -444,7 +444,7 @@ public partial class CapycomContext : DbContext
 			if (entry.State == EntityState.Added)
 			{
 				// Если сущность новая, логируем все текущие значения
-				Log.Information("New entity {EntityName} has the following values: {Values}",
+				Log.Information("Создана новая сущнсоть {EntityName} со значениями: {Values}",
 					entry.Entity.GetType().Name,
 					values);
 			}
@@ -466,7 +466,7 @@ public partial class CapycomContext : DbContext
 					}
 				}
 
-				Log.Information("Entity {EntityName} has the following changed values: {Values}",
+				Log.Information("Сущность {EntityName} изменила значения: {Values}",
 					entry.Entity.GetType().Name,
 					changedValues);
 			}
