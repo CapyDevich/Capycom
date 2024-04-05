@@ -179,12 +179,34 @@ namespace Capycom.Controllers
 
 		private async Task<CpcmPost?> GetFatherPostReccurent(CpcmPost cpcmPostFatherNavigation)
 		{
-			var father = await _context.CpcmPosts.Where(p => p.CpcmPostId == cpcmPostFatherNavigation.CpcmPostFather).Include(p => p.CpcmImages).FirstOrDefaultAsync();
-			if (father != null)
+			try
 			{
-				father.CpcmPostFatherNavigation = await GetFatherPostReccurent(father);
+				var father = await _context.CpcmPosts.Where(p => p.CpcmPostId == cpcmPostFatherNavigation.CpcmPostFather).Include(p => p.CpcmImages).FirstOrDefaultAsync();
+				if (father != null)
+				{
+					father.CpcmPostFatherNavigation = await GetFatherPostReccurent(father);
+					if (HttpContext.Request.Cookies.ContainsKey("TimeZone"))
+					{
+						string timezoneOffsetCookie = HttpContext.Request.Cookies["TimeZone"];
+						if (timezoneOffsetCookie != null)
+						{
+							if (int.TryParse(timezoneOffsetCookie, out int timezoneOffsetMinutes))
+							{
+								TimeSpan offset = TimeSpan.FromMinutes(timezoneOffsetMinutes);
+
+								father.CpcmPostPublishedDate -= offset;
+
+							}
+						}
+					}
+				}
+				return father;
 			}
-			return father;
+			catch (DbException ex)
+			{
+				Log.Error(ex, "Не удалось выгрузить родительские посты {fathrepostnavigation}", cpcmPostFatherNavigation);
+				throw;
+			}
 		}
 	}
 }
