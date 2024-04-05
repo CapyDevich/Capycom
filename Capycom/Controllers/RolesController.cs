@@ -194,14 +194,17 @@ namespace Capycom.Controllers
                     if (!CpcmRoleExists(cpcmRole.CpcmRoleId))
                     {
                         Log.Error(ex,"Пользователь {HttpContext.User.Identity.Name} попытался изменить роль с id {id}, сохранение не удалось произвести, поскольку запись была удалена. Данные по соединеню {HttpContext.Connection}", HttpContext.User.Identity.Name, id, HttpContext.Connection);
-                        return NotFound();
+						Response.StatusCode = 404;
+						ViewData["ErrorCode"] = 404;
+						ViewData["Message"] = "Запись была ранее удалена";
+						return NotFound();
                     }
                     else
                     {
                         Log.Error(ex,"Не удалось выполнить запрос к базе данных на изменение роли {cpcmRole}, поскольку кто-то до вас попытался изменить запись. Данные по соединеню {HttpContext.Connection}", cpcmRole, HttpContext.Connection);
 						Response.StatusCode = 500;
 						ViewData["ErrorCode"] = 500;
-						ViewData["Message"] = "Ошибка связи с сервером";
+						ViewData["Message"] = "Не удалось изменить запись, т.к. она была кем-то изменена. Повторите попытку, после того, как убедитесь в необходимости изменений.";
 						return View("UserError");
 					}
                 }
@@ -293,7 +296,19 @@ namespace Capycom.Controllers
                 return StatusCode(200, new { status = true });
 
 			}
-            catch (DbException ex)
+			catch (DbUpdateConcurrencyException ex)
+			{
+                Log.Error(ex, "Не удалось изменить запись пользователя {userId}. Возможно он был кем-то изменён или удалён.",userId);
+				ViewData["Message"] = "Не удалось изменить запись пользователя. Возможно он была кем-то изменён или удалён.";
+				return View("Index");
+			}
+			catch (DbUpdateException ex)
+			{
+				Log.Fatal(ex, "Не удалось изменить запись пользователя {userId}.", userId);
+                ViewData["Message"] = "Не удалось изменить запись пользователя.";
+                return View("Index");
+			}
+			catch (DbException ex)
             {
                 Log.Error(ex, "Не удалось выполнить запрос к базе данных на изменение роли пользователя {userId} на {roleId}", userId, roleId);
 				Response.StatusCode = 500;

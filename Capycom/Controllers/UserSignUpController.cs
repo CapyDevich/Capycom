@@ -127,8 +127,9 @@ namespace Capycom.Controllers
                             }
                             cpcmUser.CpcmUserImagePath = filePathUserImage.Replace("wwwroot", "");
                         }
-                        catch (Exception)
+                        catch (Exception ex)
                         {
+                            Log.Error(ex, "Ошибка при попытке сохранить фотографию пользователя: {filePathUserImage}", filePathUserImage);
                             cpcmUser.CpcmUserImagePath = null;
                         }
                     }
@@ -153,9 +154,10 @@ namespace Capycom.Controllers
                             }
                             cpcmUser.CpcmUserCoverPath = filePathUserCoverImage.Replace("wwwroot", "");
                         }
-                        catch (Exception)
+                        catch (Exception ex)
                         {
-                            cpcmUser.CpcmUserCoverPath = null;
+							Log.Error(ex, "Ошибка при попытке сохранить фотографию пользователя: {filePathUserImage}", filePathUserCoverImage);
+							cpcmUser.CpcmUserCoverPath = null;
                         }
                     }
                 }
