@@ -198,7 +198,7 @@ namespace Capycom.Controllers
                     ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
                     return View("UserError");
                 }
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction(nameof(Index),"UserLogIn");
             }
             try
             {
