@@ -201,7 +201,7 @@ namespace Capycom.Controllers
                 }
                 catch (DbException ex)
                 {
-                    Log.Error(ex, "Пользователь {User} пытается добавить комментарий к посту {Post}. Произошла ошибка с доступом к серверу - не удалось выполнить запрос", HttpContext.User.FindFirstValue("CpcmUserId"), userComment.CpcmPostId);
+                    Log.Error(ex, "Пользователь {User} пытается добавить комментарий к посту {Post}. Произошла ошибка с доступом к серверу - не удалось выполнить запрос", HttpContext.User.FindFirstValue("CpcmUserId"), comment);
                     foreach (var file in filePaths)
                     {
                         try
