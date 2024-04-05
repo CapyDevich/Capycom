@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using Serilog;
 using System.Data.Common;
 using System.Security.Claims;
 
@@ -24,6 +25,7 @@ namespace Capycom.Controllers
 		[Authorize]
 		public async Task<IActionResult> Index()
 		{
+			Log.Information("Пользователь {UserId} открыл ленту новостей", HttpContext.User.FindFirstValue("CpcmUserId"));
 			try
 			{
 				Guid userId = Guid.Parse(HttpContext.User.FindFirstValue("CpcmUserId"));
@@ -73,8 +75,9 @@ namespace Capycom.Controllers
 
 				return View(postsModel);
 			}
-			catch (DbException)
+			catch (DbException ex)
 			{
+				Log.Error(ex, "Произошла ошибка при обращении к бд. Не удалось выполнить запрос.", HttpContext.User.FindFirstValue("CpcmUserId"));
 				Response.StatusCode = 500;
 				ViewData["ErrorCode"] = 500;
 				ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
@@ -84,6 +87,7 @@ namespace Capycom.Controllers
 		[Authorize]
 		public async Task<IActionResult> GetNextPosts(Guid lastPostId)
 		{
+			Log.Information("Пользователь {UserId} запросил следующие посты", HttpContext.User.FindFirstValue("CpcmUserId"));	
 			try
 			{
 				Guid userId = Guid.Parse(HttpContext.User.FindFirstValue("CpcmUserId"));
@@ -138,8 +142,9 @@ namespace Capycom.Controllers
 
 				return PartialView(postsModel);
 			}
-			catch (DbException)
+			catch (DbException ex)
 			{
+				Log.Error(ex,"Произошла ошибка при обращении к бд. Не удалось выполнить запрос.", HttpContext.User.FindFirstValue("CpcmUserId"));
 				return StatusCode(500);
 			}
 		}
