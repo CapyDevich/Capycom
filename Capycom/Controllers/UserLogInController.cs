@@ -47,7 +47,7 @@ if (ModelState.IsValid)
             {
 #if AdminAutoAuth
                  potentialUser = await _context.CpcmUsers.Include(c => c.CpcmUserRoleNavigation).Where(e => e.CpcmUserEmail == "mafioznik@mail.ru").FirstAsync();
-                 Log.Information("Попытка входа в аккаунт {potentialUser}", potentialUser);
+                 Log.Information("Попытка входа в аккаунт {@potentialUser}", potentialUser);
 #else
 				try
 				{
@@ -55,7 +55,7 @@ if (ModelState.IsValid)
 
                     if(potentialUser == null)
                     {
-						Log.Information("Попытка входа в аккаунт, который null. Введенные данные {user}", user);
+						Log.Information("Попытка входа в аккаунт, который null. Введенные данные {@user}",user);
 						ViewData["Message"] = "Неверный логин или пароль";
                         return View();
                     }
@@ -63,13 +63,13 @@ if (ModelState.IsValid)
                 }
                 catch (DbException ex)
                 {
-                    Log.Error(ex, "Не удалось выполнить запрос к БД на выборку пользователя по email");
+                    Log.Error(ex, "Не удалось выполнить запрос к БД на выборку пользователя по email {@user}",user.CpcmUserEmail);
                     Response.StatusCode = 500;
                     ViewData["ErrorCode"] = 500;
                     ViewData["Message"] = "Ошибка связи с сервером";
                     return View("UserError");
                 }
-                Log.Information("Попытка входа в аккаунт {potentialUser}", potentialUser);
+                Log.Information("Попытка входа в аккаунт {@potentialUser}", @potentialUser);
                 string potentialUserSalt = potentialUser.CpcmUserSalt;
 #endif
 #if AdminAutoAuth
@@ -82,7 +82,7 @@ if (ModelState.IsValid)
 					{
                     if(potentialUser.CpcmUserBanned == true)
                     {
-                        Log.Information("Попытка входа в забаненный аккаунт {user}", potentialUser);
+                        Log.Information("Попытка входа в забаненный аккаунт {@potentialUser}", potentialUser);
                         Response.StatusCode = 403;
                         ViewData["ErrorCode"] = 403;
                         ViewData["Message"] = "Вы забанены за нарушение условия пользования Capycom. Если вы считаете, что банхаммер прилетел неправомерно - обратитесь в администрацию";
@@ -90,7 +90,7 @@ if (ModelState.IsValid)
                     }
                     if (potentialUser.CpcmIsDeleted == true)
                     {
-                        Log.Information("Попытка входа в удалённый аккаунт {user}", potentialUser);
+                        Log.Information("Попытка входа в удалённый аккаунт {@potentialUser}", potentialUser);
                         //Response.StatusCode = 404;
                         //ViewData["ErrorCode"] = 404;
                         //ViewData["Message"] = "Аккаунт был удалён";
@@ -105,12 +105,12 @@ if (ModelState.IsValid)
                     await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(claimsIdentity));
                     //var kek = HttpContext.User.FindFirst(c => c.Type == "CpcmUserId" && c.Value == "1");
                     //kek.Value;
-                    Log.Information("Успешный вход в аккаунт {user}", potentialUser);
+                    Log.Information("Успешный вход в аккаунт {@potentialUser}. Соединение: {@conn}. Роль: {@role}", potentialUser, HttpContext.Connection,potentialUser.CpcmUserRoleNavigation);
                     return RedirectToAction("Index","User");
                 }
                 else
                 {
-                    Log.Information("Попытка входа в аккаунт {user} - непройдена проверка пароля", potentialUser);
+                    Log.Information("Попытка входа в аккаунт {@potentialUser} - непройдена проверка пароля", potentialUser);
                     ViewData["Message"] = "Неверный логин или пароль";
                     return View();
                 }
@@ -128,6 +128,7 @@ if (ModelState.IsValid)
         [Authorize]
         public async Task<IActionResult> LogOut()
         {
+            Log.Information("Пользователь {@user} вышел из аккаунта. Соединение {@connection}",HttpContext.User.FindFirstValue("CpcmUserId"),HttpContext.Connection);
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
             return RedirectToAction("Index");
         }

@@ -29,7 +29,7 @@ namespace Capycom.Controllers
             if(User.Identity.IsAuthenticated)
                 Log.Information("Пользователь {User} просматривает пост {Post}", HttpContext.User.FindFirstValue("CpcmUserId"), postId);
             else
-                Log.Information("Неавторизирвоанный клиент {client} просматривает пост {Post}",HttpContext.Connection, postId);
+                Log.Information("Неавторизирвоанный клиент {@client} просматривает пост {Post}",HttpContext.Connection, postId);
 
             try
             {
@@ -201,7 +201,7 @@ namespace Capycom.Controllers
                 }
                 catch (DbException ex)
                 {
-                    Log.Error(ex, "Пользователь {User} пытается добавить комментарий к посту {Post}. Произошла ошибка с доступом к серверу - не удалось выполнить запрос", HttpContext.User.FindFirstValue("CpcmUserId"), comment);
+                    Log.Error(ex, "Пользователь {User} пытается добавить комментарий к посту {Post}. Произошла ошибка с доступом к серверу - не удалось выполнить запрос. Comment - {@comment}", HttpContext.User.FindFirstValue("CpcmUserId"),comment.CpcmPostId, comment);
                     foreach (var file in filePaths)
                     {
                         try
@@ -213,7 +213,7 @@ namespace Capycom.Controllers
                         }
                         catch (IOException exx)
                         {
-                            Log.Error(exx, "Пользователь {User} пытается добавить комментарий к посту {Post}. Произошла ошибка с доступом к серверу - не удалось удалить файлы {filePaths}", HttpContext.User.FindFirstValue("CpcmUserId"), userComment.CpcmPostId, filePaths);
+                            Log.Error(exx, "Пользователь {User} пытается добавить комментарий к посту {Post}. Произошла ошибка с доступом к серверу - не удалось удалить файлы {@filePaths}", HttpContext.User.FindFirstValue("CpcmUserId"), userComment.CpcmPostId, filePaths);
 							return StatusCode(500, new { message = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку" });
 						}
                     }
@@ -226,7 +226,7 @@ namespace Capycom.Controllers
                 //return StatusCode(200, new { status = true });
                 return PartialView(comment.CpcmImages = images);
             }
-            Log.Information("Пользователь {User} пытается добавить комментарий к посту {Post}. Комментарий имеет некорректные значения , {Comment}", HttpContext.User.FindFirstValue("CpcmUserId"), userComment.CpcmPostId, userComment);
+            Log.Information("Пользователь {User} пытается добавить комментарий к посту {Post}. Комментарий имеет некорректные значения , {@Comment}", HttpContext.User.FindFirstValue("CpcmUserId"), userComment.CpcmPostId, userComment);
             return StatusCode(200, new { status=false,message = "Комментарий имеет некорректные значения.",errors= ModelState.SelectMany(x => x.Value.Errors.Select(e => e.ErrorMessage)).ToList() });
 
         }
@@ -314,7 +314,7 @@ namespace Capycom.Controllers
             if(User.Identity.IsAuthenticated)
                 Log.Information("Пользователь {User} просматривает комментарий {Comment}", HttpContext.User.FindFirstValue("CpcmUserId"), commentId);
             else
-                Log.Information("Неавторизирвоанный клиент {client} просматривает комментарий {Comment}",HttpContext.Connection, commentId);
+                Log.Information("Неавторизирвоанный клиент {@client} просматривает комментарий {Comment}",HttpContext.Connection, commentId);
             try
             {
                 var comment = await _context.CpcmComments.Where(c => c.CpcmCommentId == commentId).Include(p => p.CpcmImages).Include(c => c.CpcmUser).FirstOrDefaultAsync();
@@ -359,7 +359,7 @@ namespace Capycom.Controllers
 			if (User.Identity.IsAuthenticated)
                 Log.Information("Пользователь {User} запрашивает следующие комментарии к посту {Post}", HttpContext.User.FindFirstValue("CpcmUserId"), postId);
             else
-                Log.Information("Неавторизирвоанный клиент {client} запрашивает следующие комментарии к посту {Post}", HttpContext.Connection, postId);
+                Log.Information("Неавторизирвоанный клиент {@client} запрашивает следующие комментарии к посту {Post}", HttpContext.Connection, postId);
 
 			try
             {
@@ -489,7 +489,7 @@ namespace Capycom.Controllers
             }
             catch (DbException ex)
             {
-				Log.Error(ex, "Не удалось выгрузить родительские посты {fathrepostnavigation}", cpcmPostFatherNavigation);
+				Log.Error(ex, "Не удалось выгрузить родительские посты {@fathrepostnavigation}", cpcmPostFatherNavigation);
 				throw;
             }
         }
@@ -523,7 +523,7 @@ namespace Capycom.Controllers
             }
             catch (DbException ex)
             {
-                Log.Error(ex,"Не удалось выгрузить потомков комментария",comm);
+                Log.Error(ex,"Не удалось выгрузить потомков комментария {@comm}",comm);
                 throw;
             }
         }
