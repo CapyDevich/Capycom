@@ -86,7 +86,7 @@ function repost(button, postId) {
 }
 
 function renderPostButtons() {
-    let classesNames = ['likes-count', 'comments-count', 'repost-count'];
+    let classesNames = ['likes-count', 'repost-count'];
     for (let i = 0; i < classesNames.length; i++) {
         let elements = document.getElementsByClassName(classesNames[i]);
         let toShowElements = document.getElementsByClassName(classesNames[i] + "-show");
