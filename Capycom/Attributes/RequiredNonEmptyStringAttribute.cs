@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace Capycom
+namespace Capycom.Attributes
 {
     public class RequiredNonEmptyStringAttribute : ValidationAttribute
     {

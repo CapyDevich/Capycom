@@ -1702,9 +1702,22 @@ namespace Capycom.Controllers
                         {
                             return StatusCode(404, new { message = "Не найден родительский пост" });
                         }
-                    }
+						
+					}
                     await _context.SaveChangesAsync();
-                }
+                    if (userPost.PostFatherId != null)
+                    {
+						var querry = await _context.Database.ExecuteSqlInterpolatedAsync($@"INSERT INTO CPCM_POSTREPOSTS VALUES ({post.CpcmPostId},{post.CpcmUserId})");
+						if (querry == 1)
+                        {
+                            return StatusCode(200, new { status = true });
+                        }
+                        else
+                        {
+                            return StatusCode(500, new { message = "Не удалось установить соединение с сервером" });
+                        } 
+                    }
+				}
                 catch (DbException)
                 {
                     foreach (var item in filePaths)

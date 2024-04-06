@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using Serilog;
 using System.Data.Common;
 using System.Security.Claims;
 
@@ -24,6 +25,7 @@ namespace Capycom.Controllers
 		[Authorize]
 		public async Task<IActionResult> Index()
 		{
+			Log.Information("Пользователь {UserId} открыл ленту новостей", HttpContext.User.FindFirstValue("CpcmUserId"));
 			try
 			{
 				Guid userId = Guid.Parse(HttpContext.User.FindFirstValue("CpcmUserId"));
@@ -88,8 +90,9 @@ namespace Capycom.Controllers
 
 				return View(postsModel);
 			}
-			catch (DbException)
+			catch (DbException ex)
 			{
+				Log.Error(ex, "Произошла ошибка при обращении к бд. Не удалось выполнить запрос.", HttpContext.User.FindFirstValue("CpcmUserId"));
 				Response.StatusCode = 500;
 				ViewData["ErrorCode"] = 500;
 				ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
@@ -99,6 +102,7 @@ namespace Capycom.Controllers
 		[Authorize]
 		public async Task<IActionResult> GetNextPosts(Guid lastPostId)
 		{
+			Log.Information("Пользователь {UserId} запросил следующие посты", HttpContext.User.FindFirstValue("CpcmUserId"));	
 			try
 			{
 				Guid userId = Guid.Parse(HttpContext.User.FindFirstValue("CpcmUserId"));
@@ -166,20 +170,43 @@ namespace Capycom.Controllers
 
 				return PartialView(postsModel);
 			}
-			catch (DbException)
+			catch (DbException ex)
 			{
+				Log.Error(ex,"Произошла ошибка при обращении к бд. Не удалось выполнить запрос.", HttpContext.User.FindFirstValue("CpcmUserId"));
 				return StatusCode(500);
 			}
 		}
 
 		private async Task<CpcmPost?> GetFatherPostReccurent(CpcmPost cpcmPostFatherNavigation)
 		{
-			var father = await _context.CpcmPosts.Where(p => p.CpcmPostId == cpcmPostFatherNavigation.CpcmPostFather).Include(p => p.CpcmImages).FirstOrDefaultAsync();
-			if (father != null)
+			try
 			{
-				father.CpcmPostFatherNavigation = await GetFatherPostReccurent(father);
+				var father = await _context.CpcmPosts.Where(p => p.CpcmPostId == cpcmPostFatherNavigation.CpcmPostFather).Include(p => p.CpcmImages).FirstOrDefaultAsync();
+				if (father != null)
+				{
+					father.CpcmPostFatherNavigation = await GetFatherPostReccurent(father);
+					if (HttpContext.Request.Cookies.ContainsKey("TimeZone"))
+					{
+						string timezoneOffsetCookie = HttpContext.Request.Cookies["TimeZone"];
+						if (timezoneOffsetCookie != null)
+						{
+							if (int.TryParse(timezoneOffsetCookie, out int timezoneOffsetMinutes))
+							{
+								TimeSpan offset = TimeSpan.FromMinutes(timezoneOffsetMinutes);
+
+								father.CpcmPostPublishedDate -= offset;
+
+							}
+						}
+					}
+				}
+				return father;
 			}
-			return father;
+			catch (DbException ex)
+			{
+				Log.Error(ex, "Не удалось выгрузить родительские посты {fathrepostnavigation}", cpcmPostFatherNavigation);
+				throw;
+			}
 		}
 	}
 }

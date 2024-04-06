@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace Capycom
+namespace Capycom.Attributes
 {
     public class WordCountAttribute : ValidationAttribute
     {
@@ -9,7 +9,7 @@ namespace Capycom
         public WordCountAttribute(int maxWords)
         {
             _maxWords = maxWords;
-            
+
         }
 
         protected override ValidationResult IsValid(object value, ValidationContext validationContext)
