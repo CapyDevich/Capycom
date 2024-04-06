@@ -159,7 +159,7 @@ namespace Capycom.Controllers
 					}
 					else if (friend == null)
 					{
-						await _context.CpcmUserfriends.Where(f => f.CmcpUserId.ToString() == User.FindFirstValue("CpcmUserId") && f.CmcpFriendId == user.CpcmUserId).FirstOrDefaultAsync();// Теперь мы смотрим подали ли МЫ запрос в друзья ЕМУ.
+						friend = await _context.CpcmUserfriends.Where(f => f.CmcpUserId.ToString() == User.FindFirstValue("CpcmUserId") && f.CmcpFriendId == user.CpcmUserId).FirstOrDefaultAsync();// Теперь мы смотрим подали ли МЫ запрос в друзья ЕМУ.
                         if (friend != null)
                         {
                             if(friend.CpcmFriendRequestStatus == true)
@@ -1707,7 +1707,7 @@ namespace Capycom.Controllers
                     await _context.SaveChangesAsync();
                     if (userPost.PostFatherId != null)
                     {
-						var querry = await _context.Database.ExecuteSqlInterpolatedAsync($@"INSERT INTO CPCM_POSTREPOSTS VALUES ({post.CpcmPostId},{post.CpcmUserId})");
+						var querry = await _context.Database.ExecuteSqlInterpolatedAsync($@"INSERT INTO CPCM_POSTREPOSTS VALUES ({post.CpcmPostFather},{post.CpcmUserId})");
 						if (querry == 1)
                         {
                             return StatusCode(200, new { status = true });
