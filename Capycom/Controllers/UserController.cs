@@ -1709,7 +1709,7 @@ namespace Capycom.Controllers
                     await _context.SaveChangesAsync();
                     if (userPost.PostFatherId != null)
                     {
-						var querry = await _context.Database.ExecuteSqlInterpolatedAsync($@"INSERT INTO CPCM_POSTREPOSTS VALUES ({post.CpcmPostId},{post.CpcmUserId})");
+						var querry = await _context.Database.ExecuteSqlInterpolatedAsync($@"INSERT INTO CPCM_POSTREPOSTS VALUES ({post.CpcmPostFather},{post.CpcmUserId})");
 						if (querry == 1)
                         {
                             return StatusCode(200, new { status = true });

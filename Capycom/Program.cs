@@ -44,14 +44,14 @@ namespace Capycom
 				.MinimumLevel.Override("Microsoft", LogEventLevel.Error) //все события от Microsoft, Microsoft.AspNetCore, Microsoft.AspNetCore.Hosting и т.д., будут записываться на уровне Information и выше.
 				.Enrich.FromLogContext()
 	            .WriteTo.Console()
-	            .WriteTo.Async(a=> a.File("Logs/log-.txt", rollingInterval: RollingInterval.Day))
+	            .WriteTo.Async(a=> a.File("Logs/log-.txt", rollingInterval: RollingInterval.Day, retainedFileTimeLimit: TimeSpan.FromDays(30)))
 	            .WriteTo.Async(a=> a.MSSqlServer(
 		            connectionString: builder.Configuration.GetSection("Test1")["OurDB"],
-		            sinkOptions: new MSSqlServerSinkOptions { TableName = "LogEvents", AutoCreateSqlTable = true }))
+		            sinkOptions: new MSSqlServerSinkOptions { TableName = "CPCM_LogEvents", AutoCreateSqlTable = true,  }))
 	            .CreateLogger();
 
 			builder.Host.UseSerilog();
-
+			Serilog.Debugging.SelfLog.Enable(msg => Console.WriteLine(msg));
 
 
 			// Add services to the container.
