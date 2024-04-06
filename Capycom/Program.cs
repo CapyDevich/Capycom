@@ -6,11 +6,10 @@ using Serilog;
 using System.Configuration;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 using Serilog.Formatting.Json;
-using Serilog.Core;
 
 namespace Capycom
 {
-    public class Program
+	public class Program
     {
         public static void Main(string[] args)
         {
@@ -88,51 +87,4 @@ namespace Capycom
             app.Run();
         }
     }
-	class SerializationPolicy : IDestructuringPolicy
-	{
-		public bool TryDestructure(object value, ILogEventPropertyValueFactory propertyValueFactory, out LogEventPropertyValue result)
-		{
-			var type = value.GetType();
-			if (type.Namespace.Contains("Capycom"))
-			{
-				// —оздаем новый экземпл€р анонимного типа с теми же свойствами, что и исходный объект,
-				// но исключаем свойства, которые также принадлежат пространству имен Capycom
-				var properties = type.GetProperties()
-					.Where(p => !IsFromCapycomNamespace(p.PropertyType))
-					.ToDictionary(p => p.Name, p => p.GetValue(value));
-
-				result = propertyValueFactory.CreatePropertyValue(properties, false);
-				return true;
-			}
-
-			// ƒл€ всех остальных типов объектов использовать стандартную сериализацию
-			result = propertyValueFactory.CreatePropertyValue(value, true);
-			return true;
-		}
-		private bool IsFromCapycomNamespace(Type type)
-		{
-			while (type != null)
-			{
-				if (type.Namespace != null && type.Namespace.Contains("Capycom"))
-				{
-					return true;
-				}
-
-				if (type.IsGenericType)
-				{
-					foreach (var argument in type.GetGenericArguments())
-					{
-						if (IsFromCapycomNamespace(argument))
-						{
-							return true;
-						}
-					}
-				}
-
-				type = type.BaseType;
-			}
-
-			return false;
-		}
-	}
 }
