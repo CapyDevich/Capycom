@@ -1375,6 +1375,7 @@ namespace Capycom.Controllers
 		[ValidateAntiForgeryToken]
 		public async Task<IActionResult> CreatePost(GroupPostModel groupPost)
 		{
+			Log.Information("Попытка создания поста в группе {groupId} пользователем {user}", groupPost.GroupId, HttpContext.User.FindFirstValue("CpcmUserId"));
 			if (!await CheckOnlyGroupPrivelege("CpcmCanMakePost", true, groupPost.GroupId))
 			{
 				Log.Warning("Недостаточно прав для создания поста", groupPost.GroupId);
@@ -1454,8 +1455,9 @@ namespace Capycom.Controllers
 
 								images.Add(image);
 							}
-							catch (Exception ex)
+							catch (IOException ex)
 							{
+								Log.Error(ex, "Ошибка при сохранении файла", groupPost);
 								Response.StatusCode = 500;
 								ViewData["ErrorCode"] = 500;
 								ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
@@ -1488,14 +1490,21 @@ namespace Capycom.Controllers
 					}
 					await _context.SaveChangesAsync();
 				}
-				catch (DbException)
+				catch (DbException ex)
 				{
-					foreach (var item in filePaths)
+					try
 					{
-						if (System.IO.File.Exists(item))
+						foreach (var item in filePaths)
 						{
-							System.IO.File.Delete(item);
+							if (System.IO.File.Exists(item))
+							{
+								System.IO.File.Delete(item);
+							}
 						}
+					}
+					catch (IOException)
+					{
+						Log.Error("Ошибка при удалении файла", groupPost);
 					}
 					Response.StatusCode = 500;
 					ViewData["ErrorCode"] = 500;
@@ -1528,27 +1537,31 @@ namespace Capycom.Controllers
 		[HttpPost]
 		public async Task<IActionResult> DeletePost(Guid postGuid, Guid groupId)
 		{
-
+			Log.Information("Попытка удаления поста {postGuid} пользователем {user}", postGuid, HttpContext.User.FindFirstValue("CpcmUserId"));
 			CpcmPost? post = null;
 			try
 			{
 				post = await _context.CpcmPosts.Where(c => c.CpcmPostId == postGuid).FirstOrDefaultAsync();
 			}
-			catch (DbException)
+			catch (DbException ex)
 			{
+				Log.Error(ex, "Ошибка при получении поста из базы данных", postGuid);
 				return StatusCode(500);
 			}
 			if (post == null||!post.CpcmIsDeleted)
 			{
+				Log.Warning("Пост не найден или уже удалён", postGuid, post.CpcmIsDeleted);
 				return StatusCode(404);
 			}
 			if (post.CpcmPostBanned)
 			{
+				Log.Warning("Попытка удаления заблокированного поста", postGuid);
 				return StatusCode(403);
 			}
 
 			if (!await CheckOnlyGroupPrivelege("CpcmCanDelPost", true, groupId))
 			{
+				Log.Warning("Недостаточно прав для удаления поста", postGuid);
 				return StatusCode(403);
 			}
 
@@ -1558,8 +1571,18 @@ namespace Capycom.Controllers
 			{
 				await _context.SaveChangesAsync();
 			}
-			catch (DbException)
+			catch (DbUpdateConcurrencyException ex)
 			{
+				Log.Error(ex, "Ошибка при удалении поста - конкурентность", postGuid);
+				return StatusCode(500, new { message ="Обнаружена опытка удалить пост, который кто-то редактировал"});
+			}
+			catch (DbUpdateException ex)
+			{
+				Log.Fatal(ex, "Ошибка при удалении поста", postGuid);
+			}
+			catch (DbException ex)
+			{
+				Log.Error(ex, "Ошибка при удалении поста", postGuid);
 				return StatusCode(500);
 			}
 			return StatusCode(200, new { status = true });
@@ -1568,8 +1591,10 @@ namespace Capycom.Controllers
 		[HttpPost]
 		public async Task<IActionResult> BanUnbanPost(Guid id)
 		{
+			Log.Information("Попытка забанить/разбанить пост {postGuid} пользователем {user}", id, HttpContext.User.FindFirstValue("CpcmUserId"));
 			if (!await CheckUserPrivilegeClaim("CpcmCanDelUsersPosts", "True"))
 			{
+				Log.Warning("Недостаточно прав для забана/разбана поста", id);
 				return StatusCode(403);
 			}
 			try
@@ -1577,14 +1602,26 @@ namespace Capycom.Controllers
 				var post = await _context.CpcmPosts.Where(c => c.CpcmPostId == id && c.CpcmPostPublishedDate < DateTime.UtcNow).FirstOrDefaultAsync();
 				if (post == null || post.CpcmIsDeleted == true)
 				{
+					Log.Warning("Пост не найден или уже удалён", id, post.CpcmIsDeleted);
 					return StatusCode(404);
 				}
 				post.CpcmPostBanned = !post.CpcmPostBanned;
 				await _context.SaveChangesAsync();
 				return StatusCode(200, new { status = true });
 			}
-			catch (DbException)
+			catch (DbUpdateConcurrencyException ex)
 			{
+				Log.Error(ex, "Ошибка при забане/разбане поста - конкурентность", id);
+				return StatusCode(500, new { message = "Обнаружена опытка забанить/разбанить пост, который кто-то редактировал" });
+			}
+			catch (DbUpdateException ex)
+			{
+				Log.Fatal(ex, "Ошибка при забане/разбане поста", id);
+				return StatusCode(500);
+			}
+			catch (DbException ex)
+			{
+				Log.Error(ex, "Ошибка при забане/разбане поста", id);
 				return StatusCode(500);
 			}
 		}
@@ -1593,26 +1630,31 @@ namespace Capycom.Controllers
 		[Authorize]
 		public async Task<IActionResult> EditPost(Guid postGuid, Guid groupId)
 		{
+			Log.Information("Попытка редактирования поста {postGuid} пользователем {user}", postGuid, HttpContext.User.FindFirstValue("CpcmUserId"));
 			CpcmPost? post = null;
 			try
 			{
 				post = await _context.CpcmPosts.Where(c => c.CpcmPostId == postGuid && c.CpcmGroupId==groupId).FirstOrDefaultAsync();
 			}
-			catch (DbException)
+			catch (DbException ex)
 			{
+				Log.Error(ex, "Ошибка при получении поста из базы данных", postGuid);
 				return StatusCode(500);
 			}
 
 			if (post == null)
 			{
+				Log.Warning("Пост не найден", postGuid);
 				return StatusCode(404);
 			}
 			if (post.CpcmIsDeleted)
 			{
+				Log.Warning("Пост удалён", postGuid);
 				return StatusCode(404);
 			}
 			if (!await CheckOnlyGroupPrivelege("CpcmCanEditPost", true, groupId) || post.CpcmPostBanned)
 			{
+				Log.Warning("Недостаточно прав для редактирования поста", postGuid, HttpContext.User.FindFirstValue("CpcmUserId"));
 				Response.StatusCode = 403;
 				ViewData["ErrorCode"] = 403;
 				ViewData["Message"] = "Недостаточно прав";
@@ -1632,14 +1674,14 @@ namespace Capycom.Controllers
 		[Authorize]
 		[HttpPost]
 		[ValidateAntiForgeryToken]
-		public async Task<IActionResult> EditPost(GroupPostEditModel editPost)
+		public async Task<IActionResult> EditPost(GroupPostEditModel editPost) 
 		{
 			//if (editPost.Text == null && editPost.FilesToDelete.Count == 0 && editPost.NewFiles.Count == 0)
 			//{
 			//    return View(editPost);
 			//}
 
-
+			Log.Information("Попытка редактирования поста {postGuid} пользователем {user}", editPost.Id, HttpContext.User.FindFirstValue("CpcmUserId"));
 			if (ModelState.IsValid)
 			{
 				CpcmPost? post = null;
@@ -1648,24 +1690,29 @@ namespace Capycom.Controllers
 					post = await _context.CpcmPosts.Include(c => c.CpcmImages).Where(c => c.CpcmPostId == editPost.Id && c.CpcmGroupId==editPost.GroupId).FirstOrDefaultAsync();
 
 				}
-				catch (DbException)
+				catch (DbException ex)
 				{
+					Log.Error(ex, "Ошибка при получении поста из базы данных", editPost.Id);
 					return StatusCode(500);
 				}
 				if (post == null)
 				{
+					Log.Warning("Пост не найден", editPost.Id);
 					return StatusCode(404);
 				}
 				if (post.CpcmIsDeleted)
 				{
+					Log.Warning("Пост удалён", editPost.Id);
 					return StatusCode(404);
 				}
 				if (!await CheckOnlyGroupPrivelege("CpcmCanEditPost", true, editPost.GroupId) || post.CpcmPostBanned)
 				{
+					Log.Warning("Недостаточно прав для редактирования поста", editPost.Id, HttpContext.User.FindFirstValue("CpcmUserId"));
 					return StatusCode(403);
 				}
 				if (post.CpcmImages.Count - editPost.FilesToDelete.Count + editPost.NewFiles.Count > 4)
 				{
+					Log.Warning("Превышено количество фотографий в посте", editPost.Id);
 					ModelState.AddModelError("NewFiles", "В посте не может быть больше 4 фотографий");
 					return View(editPost);
 				}
@@ -1737,14 +1784,22 @@ namespace Capycom.Controllers
 
 						post.CpcmImages.Add(image);
 					}
-					catch (Exception ex)
+					catch (IOException ex)
 					{
-						foreach (var uploadedfile in filePaths)
+						Log.Error("Ошибка при сохранении файла", editPost);
+						try
 						{
-							if (System.IO.File.Exists(uploadedfile))
+							foreach (var uploadedfile in filePaths)
 							{
-								System.IO.File.Delete(uploadedfile);
+								if (System.IO.File.Exists(uploadedfile))
+								{
+									System.IO.File.Delete(uploadedfile);
+								}
 							}
+						}
+						catch (IOException exx)
+						{
+							Log.Error(exx, "Ошибка при удалении файла", editPost);
 						}
 						Response.StatusCode = 500;
 						ViewData["ErrorCode"] = 500;
@@ -1777,26 +1832,40 @@ namespace Capycom.Controllers
 						i = imagesAfterDeletion.Last().CpcmImageOrder;
 
 
-						foreach (var image in images)
+						try
 						{
-							if (System.IO.File.Exists(image.CpcmImagePath))
+							foreach (var image in images)
 							{
-								System.IO.File.Delete(image.CpcmImagePath);
+								if (System.IO.File.Exists(image.CpcmImagePath))
+								{
+									System.IO.File.Delete(image.CpcmImagePath);
+								}
 							}
+						}
+						catch (IOException ex)
+						{
+							Log.Error(ex, "Ошибка при удалении файла", editPost);
 						}
 
 					}
-					catch (DbException)
+					catch (DbException ex)
 					{
 
-						foreach (var path in filePaths)
+						try
 						{
-							if (System.IO.File.Exists(path))
+							foreach (var path in filePaths)
 							{
-								System.IO.File.Delete(path);
+								if (System.IO.File.Exists(path))
+								{
+									System.IO.File.Delete(path);
+								}
 							}
 						}
-
+						catch (IOException exx)
+						{
+							Log.Error(exx, "Ошибка при удалении файла", editPost);
+						}
+						Log.Error(ex, "Ошибка при сохранении изменений поста", editPost);
 						return StatusCode(500);
 					}
 				}
@@ -1811,8 +1880,23 @@ namespace Capycom.Controllers
 					}
 					await _context.SaveChangesAsync();
 				}
-				catch (DbException)
+				catch (DbUpdateConcurrencyException ex)
 				{
+					Log.Error(ex, "Ошибка при сохранении изменений поста - конкурентность", editPost);
+					ViewData["Message"] = "Обнаружена опытка редактировать пост, который кто-то редактировал";
+					return View(editPost);
+				}
+				catch (DbUpdateException ex)
+				{
+					Log.Error(ex, "Ошибка при сохранении изменений поста", editPost);
+					Response.StatusCode = 500;
+					ViewData["ErrorCode"] = 500;
+					ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
+
+				}
+				catch (DbException ex)
+				{
+					Log.Error(ex, "Ошибка при сохранении изменений поста", editPost);
 					Response.StatusCode = 418;
 					ViewData["Message"] = "Не удалось сохранить пост. Пожалуйста, повторите запрос позднее или обратитесь к Администратору.";
 					return View(editPost); // TODO Продумать место для сохранения еррора
@@ -1826,6 +1910,7 @@ namespace Capycom.Controllers
 		[Authorize]
 		public async Task<IActionResult> GetNextNotPublishedPosts(Guid groupId, Guid lastPostId)
 		{
+			Log.Information("Попытка получения следующих неопубликованных постов группы {groupId} пользователем {user}", groupId, HttpContext.User.FindFirstValue("CpcmUserId"));
 			List<CpcmPost> posts;
 			ICollection<CpcmPost> postsWithLikesCount = new List<CpcmPost>();
 			try
@@ -1833,11 +1918,13 @@ namespace Capycom.Controllers
 				var post = await _context.CpcmPosts.Where(c => c.CpcmPostId == lastPostId).FirstOrDefaultAsync();
 				if (post == null)
 				{
+					Log.Warning("Пост не найден", lastPostId);
 					return StatusCode(404);
 				}
 
 				if (!await CheckOnlyGroupPrivelege("CpcmCanMakePost", true, groupId))
 				{
+					Log.Warning("Недостаточно прав для получения постов", groupId,HttpContext.User.FindFirstValue("CpcmUserId"));
 					return StatusCode(403);
 				}
 				long liked;
@@ -1887,8 +1974,9 @@ namespace Capycom.Controllers
 
 
 			}
-			catch (DbException)
+			catch (DbException ex)
 			{
+				Log.Error(ex, "Ошибка при получении постов из базы данных", groupId);
 				return StatusCode(500);
 			}
 			return PartialView(postsWithLikesCount);
@@ -1899,8 +1987,10 @@ namespace Capycom.Controllers
 		[HttpGet]
 		public async Task<IActionResult> NotPublishedPosts(Guid groupId)
 		{
+			Log.Information("Попытка получения неопубликованных постов группы {groupId} пользователем {user}", groupId, HttpContext.User.FindFirstValue("CpcmUserId"));
 			if (!await CheckOnlyGroupPrivelege("CpcmCanMakePost", true, groupId))
 			{
+				Log.Warning("Недостаточно прав для получения неопубликованных постов", groupId, HttpContext.User.FindFirstValue("CpcmUserId"));
 				return StatusCode(403);
 			}
 
@@ -1928,8 +2018,9 @@ namespace Capycom.Controllers
 					}
 				}
 			}
-			catch (DbException)
+			catch (DbException ex)
 			{
+				Log.Error(ex, "Ошибка при получении постов из неопубликованных базы данных", groupId);
 				Response.StatusCode = 500;
 				ViewData["ErrorCode"] = 500;
 				ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
@@ -1942,6 +2033,7 @@ namespace Capycom.Controllers
 
 		public async Task<IActionResult> CheckCreateNickName(string CpcmGroupNickName)
 		{
+			Log.Information("Попытка проверки nickname {CpcmGroupNickName}", CpcmGroupNickName);
 			if (CpcmGroupNickName == null || CpcmGroupNickName.All(char.IsWhiteSpace) || CpcmGroupNickName == string.Empty)
 			{
 				return Json(true);
@@ -1949,6 +2041,7 @@ namespace Capycom.Controllers
 			CpcmGroupNickName = CpcmGroupNickName.Trim();
 			if (CpcmGroupNickName.Contains("admin") || CpcmGroupNickName.Contains("webmaster") || CpcmGroupNickName.Contains("abuse"))
 			{
+				Log.Warning("Попытка зарегистрировать зарезервированный nickname", CpcmGroupNickName);
 				return Json(data: $"{CpcmGroupNickName} зарезервировано");
 			}
 			
@@ -1957,8 +2050,9 @@ namespace Capycom.Controllers
 			{
 				rez = !await _context.CpcmGroups.AnyAsync(e => e.CpcmGroupNickName == CpcmGroupNickName);
 			}
-			catch (DbException)
+			catch (DbException ex)
 			{
+				Log.Error(ex, "Ошибка при проверке nickname", CpcmGroupNickName);
 				return Json(data: "Не удалось установить соединение с сервером");
 			}
 			if (!rez)
@@ -1967,6 +2061,7 @@ namespace Capycom.Controllers
 		}
 		public async Task<IActionResult> CheckCreateNickName(string CpcmGroupNickName, Guid GroupId)
 		{
+			Log.Information("Попытка проверки nickname {CpcmGroupNickName}", CpcmGroupNickName);
 			if (CpcmGroupNickName == null || CpcmGroupNickName.All(char.IsWhiteSpace) || CpcmGroupNickName == string.Empty)
 			{
 				return Json(true);
@@ -1975,6 +2070,7 @@ namespace Capycom.Controllers
 			var authFactor = bool.Parse(User.FindFirstValue("CpcmCanEditGroups"));
 			if (CpcmGroupNickName.Contains("admin") || CpcmGroupNickName.Contains("webmaster") || CpcmGroupNickName.Contains("abuse") && !authFactor)
 			{
+				Log.Warning("Попытка зарегистрировать зарезервированный nickname", CpcmGroupNickName);
 				return Json(data: $"{CpcmGroupNickName} зарезервировано");
 			}
 
@@ -1983,8 +2079,9 @@ namespace Capycom.Controllers
 			{
 				rez = !await _context.CpcmGroups.AnyAsync(e => e.CpcmGroupNickName == CpcmGroupNickName && e.CpcmGroupId!=GroupId);
 			}
-			catch (DbException)
+			catch (DbException ex)
 			{
+				Log.Error(ex, "Ошибка при проверке nickname", CpcmGroupNickName);
 				return Json(data: "Не удалось установить соединение с сервером");
 			}
 			if (!rez)
@@ -1993,14 +2090,36 @@ namespace Capycom.Controllers
 		}
 		private async Task<CpcmPost?> GetFatherPostReccurent(CpcmPost cpcmPostFatherNavigation)
 		{
-			var father = await _context.CpcmPosts.Where(p => p.CpcmPostId == cpcmPostFatherNavigation.CpcmPostFather).Include(p => p.CpcmImages).FirstOrDefaultAsync();
-			if (father != null)
+			try
 			{
-				father.CpcmPostFatherNavigation = await GetFatherPostReccurent(father);
-				father.User = await _context.CpcmUsers.Where(p => p.CpcmUserId == father.CpcmUserId).FirstOrDefaultAsync();
-				father.Group = await _context.CpcmGroups.Where(p => p.CpcmGroupId == father.CpcmGroupId).FirstOrDefaultAsync();
+				var father = await _context.CpcmPosts.Where(p => p.CpcmPostId == cpcmPostFatherNavigation.CpcmPostFather).Include(p => p.CpcmImages).FirstOrDefaultAsync();
+				if (father != null)
+				{
+					father.CpcmPostFatherNavigation = await GetFatherPostReccurent(father);
+					father.User = await _context.CpcmUsers.Where(p => p.CpcmUserId == father.CpcmUserId).FirstOrDefaultAsync();
+					father.Group = await _context.CpcmGroups.Where(p => p.CpcmGroupId == father.CpcmGroupId).FirstOrDefaultAsync();
+					if (HttpContext.Request.Cookies.ContainsKey("TimeZone"))
+					{
+						string timezoneOffsetCookie = HttpContext.Request.Cookies["TimeZone"];
+						if (timezoneOffsetCookie != null)
+						{
+							if (int.TryParse(timezoneOffsetCookie, out int timezoneOffsetMinutes))
+							{
+								TimeSpan offset = TimeSpan.FromMinutes(timezoneOffsetMinutes);
+
+								father.CpcmPostPublishedDate -= offset;
+
+							}
+						}
+					}
+				}
+				return father;
 			}
-			return father;
+			catch (DbException ex)
+			{
+				Log.Error(ex, "Не удалось выгрузить родительские посты {fathrepostnavigation}", cpcmPostFatherNavigation);
+				throw;
+			}
 		}
 		private bool CheckIFormFileContent(IFormFile cpcmUserImage, string[] permittedTypes)
 		{
@@ -2050,8 +2169,9 @@ namespace Capycom.Controllers
 				follower = await _context.CpcmGroupfollowers.Where(f => f.CpcmUserId.ToString() == User.FindFirstValue("CpcmUserId") && f.CpcmGroupId == groupId).Include(f => f.CpcmUserRoleNavigation).FirstOrDefaultAsync();
 				
 			}
-			catch (DbException)
+			catch (DbException ex)
 			{
+				Log.Error(ex, "Ошибка при получении роли пользователя", groupId);
 				return (false);
 			}
 			if (follower == null)
@@ -2073,8 +2193,9 @@ namespace Capycom.Controllers
 				follower = await _context.CpcmGroupfollowers.Where(f => f.CpcmUserId == id).Include(f => f.CpcmUserRoleNavigation).FirstOrDefaultAsync();
 				user = await _context.CpcmUsers.Where(f => f.CpcmUserId.ToString() == HttpContext.User.FindFirst(c => c.Type == "CpcmUserId").Value).Include(f => f.CpcmUserRoleNavigation).FirstOrDefaultAsync();
 			}
-			catch (DbException)
+			catch (DbException ex)
 			{
+				Log.Error(ex, "Ошибка при получении роли пользователя", id);
 				return(false);
 			}
 			if (follower == null)
@@ -2106,8 +2227,9 @@ namespace Capycom.Controllers
 				follower = await _context.CpcmGroupfollowers.Where(f => f.CpcmUserId == id && f.CpcmGroupId==groupId).Include(f => f.CpcmUserRoleNavigation).FirstOrDefaultAsync();
 				user = await _context.CpcmUsers.Where(f => f.CpcmUserId.ToString() == HttpContext.User.FindFirst(c => c.Type == "CpcmUserId").Value).Include(f => f.CpcmUserRoleNavigation).FirstOrDefaultAsync();
 			}
-			catch (DbException)
+			catch (DbException ex)
 			{
+				Log.Error(ex, "Ошибка при получении роли пользователя", groupId);
 				return (false);
 			}
 			if (follower == null)
