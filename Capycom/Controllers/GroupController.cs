@@ -27,6 +27,10 @@ namespace Capycom.Controllers
 		}
 		public async Task<IActionResult> Index(GroupFilterModel filter)
 		{
+			if (User.Identity.IsAuthenticated)
+				Log.Information("Пользовать {user} просматривает группу {filter}", User.FindFirstValue("CpcmUserId"), filter);
+			else
+				Log.Information("Неавторизирвоанный клиент {client} просматривает группу {filter}", HttpContext.Connection, filter);
 			CpcmGroup? group;
 			try
 			{
@@ -275,6 +279,7 @@ namespace Capycom.Controllers
 		[ValidateAntiForgeryToken]
 		public async Task<IActionResult> CreateGroup(CreateGroupModel createModel)
 		{
+			Log.Information("Попытка создания группы {createModel} пользователем {user}", createModel, HttpContext.User.FindFirstValue("CpcmUserId"));
 			if (ModelState.IsValid)
 			{
 				CpcmGroup group = new();
@@ -425,6 +430,7 @@ namespace Capycom.Controllers
 		[HttpPost]
 		public async Task<IActionResult> EditGroup(Guid id)
 		{
+			Log.Information("Попытка редактирования группы {id} пользователем {user}", id, HttpContext.User.FindFirstValue("CpcmUserId"));
 			CpcmGroup? group;
 			try
 			{
@@ -433,8 +439,9 @@ namespace Capycom.Controllers
 					.Include(g => g.CpcmGroupCityNavigation)
 					.FirstOrDefaultAsync();
 			}
-			catch (DbException)
+			catch (DbException ex)
 			{
+				Log.Error(ex, "Ошибка при получении группы из базы данных", id);
 				Response.StatusCode = 500;
 				ViewData["ErrorCode"] = 500;
 				ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
@@ -442,6 +449,7 @@ namespace Capycom.Controllers
 			}
 			if (group == null)
 			{
+				Log.Error("Группа не найдена", id);
 				Response.StatusCode = 404;
 				ViewData["ErrorCode"] = 404;
 				ViewData["Message"] = "Группа не найдена";
@@ -449,6 +457,7 @@ namespace Capycom.Controllers
 			}
 			if (group.CpcmGroupBanned)
 			{
+				Log.Information("Попытка обратиться к заблокированной группе", id);
 				Response.StatusCode = 403;
 				ViewData["ErrorCode"] = 403;
 				ViewData["Message"] = "Группа заблокирована";
@@ -456,13 +465,15 @@ namespace Capycom.Controllers
 			}
 			if (group.CpcmIsDeleted)
 			{
+				Log.Information("Попытка обратиться к удалённой группе", id);
 				Response.StatusCode = 404;
 				ViewData["ErrorCode"] = 404;
 				ViewData["Message"] = "Группа не найдена";
 				return View("UserError");
 			}
-			if (!await CheckUserPrivilege("CpcmCanEditGroup", true, "CpcmCanEditGroups", true))
+			if (!await CheckUserPrivilege("CpcmCanEditGroup", true, "CpcmCanEditGroups", true,id))
 			{
+				Log.Warning("Недостаточно прав для редактирования группы", id);
 				Response.StatusCode = 403;
 				ViewData["ErrorCode"] = 403;
 				ViewData["Message"] = "Недостаточно прав";
@@ -483,8 +494,9 @@ namespace Capycom.Controllers
 				ViewData["CpcmGroupCity"] = new SelectList(await _context.CpcmCities.ToListAsync(), "CpcmCityId", "CpcmCityName", group.CpcmGroupCity);
 				ViewData["CpcmGroupSubject"] = new SelectList(await _context.CpcmGroupsubjects.ToListAsync(), "CpcmSubjectId", "CpcmSubjectName", group.CpcmGroupSubject);
 			}
-			catch (DbException)
+			catch (DbException ex)
 			{
+				Log.Error(ex, "Ошибка при получении списка городов и тем из базы данных");
 				Response.StatusCode = 500;
 				ViewData["ErrorCode"] = 500;
 				ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
@@ -501,6 +513,7 @@ namespace Capycom.Controllers
 		{
 			if (model.GroupId == null)
 			{
+				Log.Warning("Попытка редактирования группы без указания идентификатора", model);
 				return StatusCode(403);
 			}
 			if (ModelState.IsValid)
@@ -513,8 +526,9 @@ namespace Capycom.Controllers
 						.Include(g => g.CpcmGroupCityNavigation)
 						.FirstOrDefaultAsync();
 				}
-				catch (DbException)
+				catch (DbException ex)
 				{
+					Log.Error(ex, "Ошибка при получении группы из базы данных", model);
 					Response.StatusCode = 500;
 					ViewData["ErrorCode"] = 500;
 					ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
@@ -522,6 +536,7 @@ namespace Capycom.Controllers
 				}
 				if (group == null)
 				{
+					Log.Warning("Группа не найдена", model);
 					Response.StatusCode = 404;
 					ViewData["ErrorCode"] = 404;
 					ViewData["Message"] = "Группа не найдена";
@@ -529,6 +544,7 @@ namespace Capycom.Controllers
 				}
 				if (group.CpcmGroupBanned)
 				{
+					Log.Information("Попытка обратиться к заблокированной группе", model);
 					Response.StatusCode = 403;
 					ViewData["ErrorCode"] = 403;
 					ViewData["Message"] = "Группа заблокирована";
@@ -536,13 +552,15 @@ namespace Capycom.Controllers
 				}
 				if (group.CpcmIsDeleted)
 				{
+					Log.Information("Попытка обратиться к удалённой группе", model);
 					Response.StatusCode = 404;
 					ViewData["ErrorCode"] = 404;
 					ViewData["Message"] = "Группа не найдена";
 					return View("UserError");
 				}
-				if (!await CheckUserPrivilege("CpcmCanEditGroup", true, "CpcmCanEditGroups", true))
+				if (!await CheckUserPrivilege("CpcmCanEditGroup", true, "CpcmCanEditGroups", true,model.GroupId))
 				{
+					Log.Warning("Недостаточно прав для редактирования группы", model);
 					Response.StatusCode = 403;
 					ViewData["ErrorCode"] = 403;
 					ViewData["Message"] = "Недостаточно прав";
@@ -575,9 +593,9 @@ namespace Capycom.Controllers
 							}
 							group.CpcmGroupImage = filePathGroupImage.Replace("wwwroot", "");
 						}
-						catch (Exception)
+						catch (Exception ex)
 						{
-							//group.CpcmGroupImage = null;
+							Log.Error(ex,"Ошибка при загрузке изображения группы", filePathGroupImage, model.CpcmGroupImage);
 						}
 					}
 				}
@@ -598,9 +616,10 @@ namespace Capycom.Controllers
 							}
 							group.CpcmGroupCovet = filePathGroupCovet.Replace("wwwroot", "");
 						}
-						catch (Exception)
+						catch (Exception ex)
 						{
 							//group.CpcmGroupCovet = null;
+							Log.Error(ex, "Ошибка при загрузке фона группы", filePathGroupCovet, model.CpcmGroupCovet);
 						}
 					}
 				}
@@ -614,8 +633,9 @@ namespace Capycom.Controllers
 
 						return View(model);
 					}
-					catch (DbException)
+					catch (DbException ex)
 					{
+						Log.Error(ex, "Ошибка при получении списка городов и тем из базы данных");
 						Response.StatusCode = 500;
 						ViewData["ErrorCode"] = 500;
 						ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
@@ -640,19 +660,74 @@ namespace Capycom.Controllers
 
 					await _context.SaveChangesAsync();
 				}
-				catch (DbException)
+				catch (DbUpdateConcurrencyException ex)
 				{
+
+					Log.Error(ex, "Ошибка при обновлении группы в базе данных - конкуренция", group, HttpContext.User.FindFirstValue("CpcmUserId"));
+					try
+					{
+						if (System.IO.File.Exists(filePathGroupImage))
+						{
+							System.IO.File.Delete(filePathGroupImage);
+						}
+						if (System.IO.File.Exists(filePathGroupCovet))
+						{
+							System.IO.File.Delete(filePathGroupCovet);
+						}
+					}
+					catch (IOException exx)
+					{
+						Log.Error(exx, "Ошибка при удалении изображения группы", filePathGroupImage, filePathGroupCovet);
+					}
+					Response.StatusCode = 500;
+					ViewData["ErrorCode"] = 500;
+					ViewData["Message"] = "Не удалось сохранить изменения. Возможно кто-то попытался внести изменение до вас.";
+					return View("UserError");
+				}
+				catch (DbUpdateException ex)
+				{
+					Log.Fatal(ex, "Ошибка при обновлении группы в базе данных", group, HttpContext.User.FindFirstValue("CpcmUserId"));
+					try
+					{
+						if (System.IO.File.Exists(filePathGroupImage))
+						{
+							System.IO.File.Delete(filePathGroupImage);
+						}
+						if (System.IO.File.Exists(filePathGroupCovet))
+						{
+							System.IO.File.Delete(filePathGroupCovet);
+						}
+					}
+					catch (IOException exx)
+					{
+						Log.Error(exx, "Ошибка при удалении изображения группы", filePathGroupImage, filePathGroupCovet);
+					}
+					Response.StatusCode = 500;
+					ViewData["ErrorCode"] = 500;
+					ViewData["Message"] = "Не удалось сохранить изменения. Пожалуйста, обратитесь в слежбу поддержки если это повторится вновь";
+					return View("UserError");
+				}
+				catch (DbException ex)
+				{
+					Log.Error(ex, "Ошибка при добавлении группы в базу данных", group, HttpContext.User.FindFirstValue("CpcmUserId"));
 					Response.StatusCode = 500;
 					ViewData["ErrorCode"] = 500;
 					ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
 
-					if (System.IO.File.Exists(filePathGroupImage))
+					try
 					{
-						System.IO.File.Delete(filePathGroupImage);
+						if (System.IO.File.Exists(filePathGroupImage))
+						{
+							System.IO.File.Delete(filePathGroupImage);
+						}
+						if (System.IO.File.Exists(filePathGroupCovet))
+						{
+							System.IO.File.Delete(filePathGroupCovet);
+						}
 					}
-					if (System.IO.File.Exists(filePathGroupCovet))
+					catch (IOException exx)
 					{
-						System.IO.File.Delete(filePathGroupCovet);
+						Log.Error(exx, "Ошибка при удалении изображения группы", filePathGroupImage, filePathGroupCovet);
 					}
 					return View("UserError");
 				}
@@ -660,13 +735,15 @@ namespace Capycom.Controllers
 			}
 			else
 			{
+				Log.Information("Невалидная модель при редактировании группы", model);
 				try
 				{
 					ViewData["CpcmGroupCity"] = new SelectList(await _context.CpcmCities.ToListAsync(), "CpcmCityId", "CpcmCityName", model.CpcmGroupCity);
 					ViewData["CpcmUserSchool"] = new SelectList(await _context.CpcmGroupsubjects.ToListAsync(), "CpcmSubjectId", "CpcmSubjectName", model.CpcmGroupSubject);
 				}
-				catch (DbException)
+				catch (DbException ex)
 				{
+					Log.Error(ex, "Ошибка при получении списка городов и тем из базы данных");
 					Response.StatusCode = 500;
 					ViewData["ErrorCode"] = 500;
 					ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
@@ -679,14 +756,16 @@ namespace Capycom.Controllers
 		[Authorize]
 		public async Task<IActionResult> EditUserGroupRole(Guid id)
 		{
+			Log.Information("Попытка редактирования роли пользователя в группе {id} пользователем {user}", id, HttpContext.User.FindFirstValue("CpcmUserId"));
 			CpcmGroup? group;
 			try
 			{
 				group = await _context.CpcmGroups.Where(g => g.CpcmGroupId == id)
 					.FirstOrDefaultAsync();
 			}
-			catch (DbException)
+			catch (DbException ex)
 			{
+				Log.Error(ex, "Ошибка при получении группы из базы данных", id);
 				Response.StatusCode = 500;
 				ViewData["ErrorCode"] = 500;
 				ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
@@ -694,6 +773,7 @@ namespace Capycom.Controllers
 			}
 			if (group == null)
 			{
+				Log.Warning("Группа не найдена", id);
 				Response.StatusCode = 404;
 				ViewData["ErrorCode"] = 404;
 				ViewData["Message"] = "Группа не найдена";
@@ -701,6 +781,7 @@ namespace Capycom.Controllers
 			}
 			if (group.CpcmGroupBanned)
 			{
+				Log.Information("Попытка обратиться к заблокированной группе", id);
 				Response.StatusCode = 403;
 				ViewData["ErrorCode"] = 403;
 				ViewData["Message"] = "Группа заблокирована";
@@ -708,14 +789,16 @@ namespace Capycom.Controllers
 			}
 			if (group.CpcmIsDeleted)
 			{
+				Log.Information("Попытка обратиться к удалённой группе", id);
 				Response.StatusCode = 404;
 				ViewData["ErrorCode"] = 404;
 				ViewData["Message"] = "Группа не найдена";
 				return View("UserError");
 			}
 
-			if (!await CheckUserPrivilege("CpcmCanEditGroup", true, "CpcmCanEditGroups", true))
+			if (!await CheckUserPrivilege("CpcmCanEditGroup", true, "CpcmCanEditGroups", true, id))
 			{
+				Log.Warning("Недостаточно прав для редактирования группы", id);
 				Response.StatusCode = 403;
 				ViewData["ErrorCode"] = 403;
 				ViewData["Message"] = "Недостаточно прав";
@@ -723,7 +806,15 @@ namespace Capycom.Controllers
 			}
 
 			ViewData["GroupId"] = id;
-			ViewData["CpcmUserRoles"] = new SelectList(await _context.CpcmGroupRoles.Where(r => r.CpcmRoleId != CpcmGroupfollower.AuthorRole).ToListAsync(), "CpcmRoleId", "CpcmRoleName");
+			try
+			{
+				ViewData["CpcmUserRoles"] = new SelectList(await _context.CpcmGroupRoles.Where(r => r.CpcmRoleId != CpcmGroupfollower.AuthorRole).ToListAsync(), "CpcmRoleId", "CpcmRoleName");
+
+			}
+			catch (DbException ex)
+			{		
+				Log.Error(ex, "Ошибка при получении списка ролей из базы данных");
+			}
 			return View();
 
 		}
@@ -732,30 +823,36 @@ namespace Capycom.Controllers
 		[ValidateAntiForgeryToken]
 		public async Task<IActionResult> EdtiUserGroupRole(Guid userId, Guid groupId, int roleID)
 		{
+			Log.Information("Попытка редактирования роли пользователя {userId} в группе {groupId} пользователем {user}", userId, groupId, HttpContext.User.FindFirstValue("CpcmUserId"));
 			CpcmGroup? group;
 			try
 			{
 				group = await _context.CpcmGroups.Where(g => g.CpcmGroupId == groupId)
 					.FirstOrDefaultAsync();
 			}
-			catch (DbException)
+			catch (DbException ex)
 			{
+				Log.Error(ex, "Ошибка при получении группы из базы данных", groupId);
 				return StatusCode(500, new { status = false, message = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку" });
 			}
 			if (group == null)
 			{
+				Log.Warning("Группа не найдена", groupId);
 				return StatusCode(404, new { status = false, message = "Группа не найдена" });
 			}
 			if (group.CpcmGroupBanned)
 			{
+				Log.Warning("Попытка обратиться к заблокированной группе", groupId);
 				return StatusCode(403, new { status = false, message = "Группа заблокирована" });
 			}
 			if (group.CpcmIsDeleted)
 			{
+				Log.Warning("Попытка обратиться к удалённой группе", groupId);
 				return StatusCode(404, new { status = false, message = "Группа не найдена" });
 			}
-			if (!await CheckUserPrivilege("CpcmCanEditGroup", true, "CpcmCanEditGroups", true))
+			if (!await CheckUserPrivilege("CpcmCanEditGroup", true, "CpcmCanEditGroups", true, groupId))
 			{
+				Log.Warning("Недостаточно прав для редактирования группы", groupId);
 				return StatusCode(403, new { status = false, message = "Недостаточно прав" });
 			}
 
@@ -765,15 +862,32 @@ namespace Capycom.Controllers
 				var follower = await _context.CpcmGroupfollowers.Where(f => f.CpcmUserId == userId && f.CpcmGroupId == groupId).FirstOrDefaultAsync();
 				if (follower == null)
 				{
+					Log.Warning("Пользователь не найден", userId);
 					return StatusCode(404, new { status = false, message = "Пользователь не найден" });
 				}
-				if (roleID == 0) return StatusCode(403, new { status = false, message = "Нельзя выдать статус \"Автор\" " });
+				if (roleID == 0)
+				{
+					Log.Warning("Попытка выдать статус \"Автор\"", userId);
+					return StatusCode(403, new { status = false, message = "Нельзя выдать статус \"Автор\" " });
+				}
+					
 				follower.CpcmUserRole = roleID;
 				await _context.SaveChangesAsync();
 				return StatusCode(200);
 			}
-			catch (DbException)
+			catch(DbUpdateConcurrencyException ex)
 			{
+				Log.Error(ex, "Ошибка при обновлении роли пользователя в группе", userId, groupId);
+				return StatusCode(500, new { status = false, message = "Не удалось сохранить изменения. Возможно кто-то попытался внести изменение до вас." });
+			}
+			catch (DbUpdateException ex)
+			{
+				Log.Fatal(ex, "Ошибка при обновлении роли пользователя в группе", userId, groupId);
+				return StatusCode(500, new { status = false, message = "Не удалось сохранить изменения. Пожалуйста, обратитесь в службу поддержки если это повторится вновь" });
+			}	
+			catch (DbException ex)
+			{
+				Log.Error(ex, "Ошибка при обновлении роли пользователя в группе", userId, groupId);
 				return StatusCode(500, new { status = false, message = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку" });
 			}
 
@@ -783,27 +897,41 @@ namespace Capycom.Controllers
 		[HttpPost]
 		public async Task<IActionResult> BanUnbanGroup(Guid userId, Guid groupId)
 		{
-
+			Log.Information("Попытка заблокировать/разблокировать группу {groupId} пользователем {user}", groupId, HttpContext.User.FindFirstValue("CpcmUserId"));
 			try
 			{
 				var group = await _context.CpcmGroups.Where(g => g.CpcmGroupId == groupId).FirstOrDefaultAsync();
 				if (group == null)
 				{
+					Log.Warning("Группа не найдена", groupId);
 					return StatusCode(404);
 				}
 				if (await CheckUserPrivilegeClaim("CpcmCanEditGroups", "True"))
 				{
 					group.CpcmGroupBanned = !group.CpcmGroupBanned;
 					await _context.SaveChangesAsync();
+					Log.Information("Группа {groupId} заблокирована/разблокирована пользователем {user}", groupId, HttpContext.User.FindFirstValue("CpcmUserId"));
 					return StatusCode(200, new { status = true });
 				}
 				else
 				{
+					Log.Warning("Недостаточно прав для редактирования группы", groupId);
 					return StatusCode(403);
 				}
 			}
-			catch (DbException)
+			catch(DbUpdateConcurrencyException ex)
 			{
+				Log.Error(ex, "Ошибка при обновлении статуса группы", groupId);
+				return StatusCode(500);
+			}
+			catch (DbUpdateException ex)
+			{
+				Log.Fatal(ex, "Ошибка при обновлении статуса группы", groupId);
+				return StatusCode(500);
+			}
+			catch (DbException ex)
+			{
+				Log.Error(ex, "Ошибка при обновлении статуса группы", groupId);
 				return StatusCode(500);
 			}
 		}
@@ -811,31 +939,49 @@ namespace Capycom.Controllers
 		[HttpGet]
 		public async Task<IActionResult> DelGroup(Guid groupId)
 		{
-
+			Log.Information("Попытка удаления группы {groupId} пользователем {user}", groupId, HttpContext.User.FindFirstValue("CpcmUserId"));
 			try
 			{
 				var group = await _context.CpcmGroups.Where(g => g.CpcmGroupId == groupId).FirstOrDefaultAsync();
 				if (group == null || group.CpcmIsDeleted)
 				{
+					Log.Warning("Группа для удаления не найдена", groupId);
 					Response.StatusCode = 404;
 					ViewData["ErrorCode"] = 404;
 					ViewData["Message"] = "Группа не найдена";
 					return View("UserError");
 				}
-				if (await CheckUserPrivilege("CpcmCanEditGroup", true, "CpcmCanEditGroups", true))
+				if (await CheckUserPrivilege("CpcmCanEditGroup", true, "CpcmCanEditGroups", true, groupId))
 				{
 					return View();
 				}
 				else
 				{
+					Log.Warning("Недостаточно прав для удаления группы", groupId);
 					Response.StatusCode = 403;
 					ViewData["ErrorCode"] = 403;
 					ViewData["Message"] = "Недостаточно прав";
 					return View("UserError");
 				}
 			}
-			catch (DbException)
+			catch (DbUpdateConcurrencyException ex)
 			{
+				Log.Error(ex, "Ошибка при удалении группы - конкурентность", groupId);
+				Response.StatusCode = 500;
+				ViewData["ErrorCode"] = 500;
+				ViewData["Message"] = "Ошибка при удалении группы. Возможно кто-то уже попытался удалить группу.";
+				return View("UserError");
+			}
+			catch (DbUpdateException ex)
+			{
+				Log.Fatal(ex, "Ошибка при удалении группы", groupId);
+				ViewData["ErrorCode"] = 500;
+				ViewData["Message"] = "Ошибка соединения с сервером, повторите попытку позже";
+				return View("UserError");
+			}
+			catch (DbException ex)
+			{
+				Log.Error(ex, "Ошибка при удалении группы", groupId);
 				Response.StatusCode = 403;
 				ViewData["ErrorCode"] = 500;
 				ViewData["Message"] = "Ошибка связи с сервером";
@@ -846,33 +992,53 @@ namespace Capycom.Controllers
 		[HttpPost]
 		public async Task<IActionResult> DelGroup(Guid groupId, bool del)
 		{
-
+			Log.Information("Попытка удаления группы {groupId} пользователем {user}", groupId, HttpContext.User.FindFirstValue("CpcmUserId"));
 			try
 			{
 				var group = await _context.CpcmGroups.Where(g => g.CpcmGroupId == groupId).FirstOrDefaultAsync();
 				if (group == null || group.CpcmIsDeleted)
 				{
+					Log.Warning("Группа для удаления не найдена", groupId);
 					return StatusCode(404);
 				}
-				if (await CheckUserPrivilege("CpcmCanEditGroup", true, "CpcmCanEditGroups", true))
+				if (await CheckUserPrivilege("CpcmCanEditGroup", true, "CpcmCanEditGroups", true, groupId))
 				{
+
 					group.CpcmIsDeleted = !group.CpcmIsDeleted;
 					await _context.SaveChangesAsync();
+					Log.Information("Группа {groupId} удалена пользователем {user}", groupId, HttpContext.User.FindFirstValue("CpcmUserId"));
 					return StatusCode(200, new { status = true });
 				}
 				else
 				{
+					Log.Warning("Недостаточно прав для удаления группы", groupId);
 					return StatusCode(403);
 				}
 			}
-			catch (DbException)
+			catch (DbUpdateConcurrencyException ex)
 			{
-				return StatusCode(500);
+				Log.Error(ex, "Ошибка при удалении группы - конкурентность", groupId);
+				Response.StatusCode = 500;
+				ViewData["ErrorCode"] = 500;
+				ViewData["Message"] = "Ошибка при удалении группы. Возможно кто-то уже попытался удалить группу.";
+				return View("UserError");
 			}
+			catch (DbUpdateException ex)
+			{
+				Log.Fatal(ex, "Ошибка при удалении группы", groupId);
+				ViewData["ErrorCode"] = 500;
+				ViewData["Message"] = "Ошибка соединения с сервером, повторите попытку позже";
+				return View("UserError");
+			}
+			catch (DbException ex)
+			{
+				Log.Error(ex, "Ошибка при удалении группы", groupId);
+				return StatusCode(500);
+			}	
 		}
 
 		public async Task<IActionResult> Followers(UserFilterModel filters)
-		{
+		{			
 			CpcmGroup group;
 			try
 			{
@@ -885,8 +1051,9 @@ namespace Capycom.Controllers
 					group = await _context.CpcmGroups.Where(c => c.CpcmGroupNickName == filters.NickName).FirstOrDefaultAsync();
 				}
 			}
-			catch (Exception)
+			catch (DbException ex)
 			{
+				Log.Error(ex, "Ошибка при получении группы из базы данных", filters);
 				Response.StatusCode = 500;
 				ViewData["ErrorCode"] = 500;
 				ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
@@ -895,6 +1062,7 @@ namespace Capycom.Controllers
 
 			if (group == null || group.CpcmIsDeleted)
 			{
+				Log.Warning("Группа не найдена", filters);
 				Response.StatusCode = 404;
 				ViewData["ErrorCode"] = 404;
 				ViewData["Message"] = "Группа не найден";
@@ -912,8 +1080,9 @@ namespace Capycom.Controllers
 				ViewData["CpcmUserSchool"] = new SelectList(await _context.CpcmSchools.ToListAsync(), "CpcmSchooldId", "CpcmSchoolName");
 				ViewData["CpcmUserUniversity"] = new SelectList(await _context.CpcmUniversities.ToListAsync(), "CpcmUniversityId", "CpcmUniversityName");
 			}
-			catch (Exception)
+			catch (DbException ex)
 			{
+				Log.Error(ex, "Ошибка при получении списка городов, школ и университетов из базы данных", filters);
 				Response.StatusCode = 500;
 				ViewData["ErrorCode"] = 500;
 				ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
@@ -959,8 +1128,9 @@ namespace Capycom.Controllers
 
 				return View(followerList1);
 			}
-			catch (DbException)
+			catch (DbException ex)
 			{
+				Log.Error(ex, "Ошибка при получении списка подписчиков группы из базы данных", filters);
 				Response.StatusCode = 500;
 				ViewData["ErrorCode"] = 500;
 				ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
@@ -982,14 +1152,16 @@ namespace Capycom.Controllers
 					group = await _context.CpcmGroups.Where(c => c.CpcmGroupNickName == filters.NickName).FirstOrDefaultAsync();
 				}
 			}
-			catch (Exception)
+			catch (DbException ex)
 			{
+				Log.Error(ex, "Ошибка при получении группы из базы данных", filters);
 				Response.StatusCode = 500;
 				return StatusCode(500);
 			}
 
 			if (group == null || group.CpcmIsDeleted)
 			{
+				Log.Warning("Группа не найдена", filters);
 				Response.StatusCode = 404;
 				return StatusCode(404);
 			}
@@ -1002,8 +1174,9 @@ namespace Capycom.Controllers
 				followerList1 = _context.CpcmGroupfollowers.Where(c => c.CpcmGroupId == group.CpcmGroupId && c.CpcmUserId.CompareTo(filters.lastId) > 0).Select(c => c.CpcmUser);
 				//followerList2 = await _context.CpcmUserfollowers.Where(c => c.CpcmFollowerId == user.CpcmUserId).Select(c => c.CpcmUser).ToListAsync();
 			}
-			catch (Exception)
+			catch (DbException ex)
 			{
+				Log.Error(ex, "Ошибка при получении списка подписчиков группы из базы данных", filters);
 				Response.StatusCode = 500;
 				return StatusCode(500);
 			}
@@ -1045,8 +1218,9 @@ namespace Capycom.Controllers
 
 				return PartialView(followerList1);
 			}
-			catch (DbException)
+			catch (DbException ex)
 			{
+				Log.Error(ex, "Ошибка при получении списка подписчиков группы из базы данных", filters);
 				Response.StatusCode = 500;
 				ViewData["ErrorCode"] = 500;
 				ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
@@ -1063,12 +1237,14 @@ namespace Capycom.Controllers
 			{
 				group = await _context.CpcmGroups.Where(g => g.CpcmGroupId == id).FirstOrDefaultAsync();
 			}
-			catch (DbException)
+			catch (DbException ex)
 			{
+				Log.Error(ex, "Ошибка при получении группы из базы данных", id);
 				return StatusCode(500);
 			}
 			if (group == null || group.CpcmIsDeleted)
 			{
+				Log.Warning("Группа не найдена", id);
 				Response.StatusCode = 404;
 				return StatusCode(404);
 			}
@@ -1088,10 +1264,21 @@ namespace Capycom.Controllers
 				await _context.SaveChangesAsync();
 				return StatusCode(200, new { status = true });
 			}
-			catch (DbException)
+			catch (DbUpdateConcurrencyException ex)
 			{
+				Log.Error(ex, "Ошибка при обновлении подписки на группу", id);
+				return StatusCode(500 , new {message = "не удалось отписаться/подписаться. Возможно вы уже сделали это действие с другого устройства"});
+			}
+			catch (DbUpdateException ex)
+			{
+				Log.Fatal(ex, "Ошибка при обновлении подписки на группу", id);
 				return StatusCode(500);
 			}
+			catch (DbException ex)
+			{
+				Log.Error(ex, "Ошибка при обновлении подписки на группу", id);
+				return StatusCode(500);
+			}	
 		}
 
 		[HttpGet]
@@ -1122,8 +1309,9 @@ namespace Capycom.Controllers
 				var rez = await query.OrderBy(u => u.CpcmGroupId).Take(10).ToListAsync();
 				return View(rez);
 			}
-			catch (DbException)
+			catch (DbException ex)
 			{
+				Log.Error(ex, "Ошибка при получении списка групп из базы данных", filters);
 				Response.StatusCode = 500;
 				ViewData["ErrorCode"] = 500;
 				ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
@@ -1158,8 +1346,9 @@ namespace Capycom.Controllers
 				var rez = await query.OrderBy(u => u.CpcmGroupId).Where(g=>g.CpcmGroupId.CompareTo(filters.lastId)>0).Take(10).ToListAsync();
 				return View(rez);
 			}
-			catch (DbException)
+			catch (DbException ex)
 			{
+				Log.Error(ex, "Ошибка при получении списка групп из базы данных", filters);
 				Response.StatusCode = 500;
 				ViewData["ErrorCode"] = 500;
 				ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
@@ -1172,6 +1361,7 @@ namespace Capycom.Controllers
 		{
 			if (!await CheckOnlyGroupPrivelege("CpcmCanMakePost", true, groupId))
 			{
+				Log.Warning("Недостаточно прав для создания поста", groupId);
 				Response.StatusCode = 403;
 				ViewData["ErrorCode"] = 403;
 				ViewData["Message"] = "Недостаточно прав";
@@ -1187,6 +1377,7 @@ namespace Capycom.Controllers
 		{
 			if (!await CheckOnlyGroupPrivelege("CpcmCanMakePost", true, groupPost.GroupId))
 			{
+				Log.Warning("Недостаточно прав для создания поста", groupPost.GroupId);
 				Response.StatusCode = 403;
 				ViewData["ErrorCode"] = 403;
 				ViewData["Message"] = "Недостаточно прав";
@@ -1322,12 +1513,14 @@ namespace Capycom.Controllers
 				}
 
 			}
+			Log.Warning("Ошибка валидации модели", groupPost);
 			if (groupPost.PostFatherId == null)
 			{
 				return View(groupPost);
 			}
 			else
 			{
+				Log.Warning("Попытка репоста с неккоректной моделью", groupPost);
 				return StatusCode(200, new { status = false, message = "Репост имел неккоректный вид. Возможно вы попытались прикрепить файлы. Однако этого нельзя делать для репостов." });
 			}
 		}
@@ -1903,14 +2096,14 @@ namespace Capycom.Controllers
 			
 		}
 
-		private async Task<bool> CheckUserPrivilege(string propertyName, object propertyValue, string userPropName, object userPropVal)
+		private async Task<bool> CheckUserPrivilege(string propertyName, object propertyValue, string userPropName, object userPropVal, Guid? groupId)
 		{
 			CpcmGroupfollower? follower;
 			CpcmUser? user;
 			Guid id = Guid.Parse(HttpContext.User.FindFirst(c => c.Type == "CpcmUserId").Value);
 			try
 			{
-				follower = await _context.CpcmGroupfollowers.Where(f => f.CpcmUserId == id).Include(f => f.CpcmUserRoleNavigation).FirstOrDefaultAsync();
+				follower = await _context.CpcmGroupfollowers.Where(f => f.CpcmUserId == id && f.CpcmGroupId==groupId).Include(f => f.CpcmUserRoleNavigation).FirstOrDefaultAsync();
 				user = await _context.CpcmUsers.Where(f => f.CpcmUserId.ToString() == HttpContext.User.FindFirst(c => c.Type == "CpcmUserId").Value).Include(f => f.CpcmUserRoleNavigation).FirstOrDefaultAsync();
 			}
 			catch (DbException)
