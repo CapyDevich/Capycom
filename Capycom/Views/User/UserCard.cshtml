@@ -71,11 +71,11 @@
 				break;
 			case Capycom.Enums.FriendStatusEnum.OurNotAnswered:
 			case Capycom.Enums.FriendStatusEnum.OurRejected:
-				<button class="btn btn-primary mb-1" onclick="removeFriendRequest()">Отозвать заявку в друзья</button>
+				<button class="btn btn-primary mb-1" onclick="deleteFriendRequest()">Отозвать заявку в друзья</button>
 				break;
 			case Capycom.Enums.FriendStatusEnum.HisApproved:
 			case Capycom.Enums.FriendStatusEnum.OurApproved:
-				<button class="btn btn-primary mb-1" onclick="asnwerFriendRequest(false)">Удалить из друзей</button>
+				<button class="btn btn-primary mb-1" onclick="deleteFriendRequest(false)">Удалить из друзей</button>
 				break;
 			case Capycom.Enums.FriendStatusEnum.HisNotAnswered:
 			case Capycom.Enums.FriendStatusEnum.HisRejected:
