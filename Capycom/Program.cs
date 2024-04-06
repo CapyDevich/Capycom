@@ -5,6 +5,7 @@ using Serilog.Sinks.MSSqlServer;
 using Serilog;
 using System.Configuration;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
+using Serilog.Formatting.Json;
 
 namespace Capycom
 {
@@ -39,15 +40,18 @@ namespace Capycom
 
 
 			builder.Logging.ClearProviders();
-            Log.Logger = new LoggerConfiguration()
+			var columnOptions = new ColumnOptions();
+			columnOptions.Store.Add(StandardColumn.LogEvent);
+			Log.Logger = new LoggerConfiguration()
                 .MinimumLevel.Debug() //Information()
 				.MinimumLevel.Override("Microsoft", LogEventLevel.Error) //все события от Microsoft, Microsoft.AspNetCore, Microsoft.AspNetCore.Hosting и т.д., будут записываться на уровне Information и выше.
 				.Enrich.FromLogContext()
 	            .WriteTo.Console()
-	            .WriteTo.Async(a=> a.File("Logs/log-.txt", rollingInterval: RollingInterval.Day, retainedFileTimeLimit: TimeSpan.FromDays(30)))
-	            .WriteTo.Async(a=> a.MSSqlServer(
+	            .WriteTo.Async(a=> a.File(path:"Logs/log-.txt", rollingInterval: RollingInterval.Day, retainedFileTimeLimit: TimeSpan.FromDays(30))) //formatter: new JsonFormatter()
+				.WriteTo.Async(a=> a.MSSqlServer(
 		            connectionString: builder.Configuration.GetSection("Test1")["OurDB"],
-		            sinkOptions: new MSSqlServerSinkOptions { TableName = "CPCM_LogEvents", AutoCreateSqlTable = true,  }))
+					columnOptions: columnOptions,
+					sinkOptions: new MSSqlServerSinkOptions { TableName = "CPCM_LogEvents", AutoCreateSqlTable = true, }))
 	            .CreateLogger();
 
 			builder.Host.UseSerilog();
