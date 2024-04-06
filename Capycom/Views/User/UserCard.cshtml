@@ -64,14 +64,27 @@
 @if (User.Identity.IsAuthenticated && Model.CpcmUserId.ToString() != User.FindAll(x => x.Type == "CpcmUserId").FirstOrDefault().Value)
 {
 	<div class="row mb-1">
-		@* 	@if (Model.IsFriend == true || Model.IsFriend == false) // заявка одобрена, т.е. они друзья || заявка была отклонена
-	{ *@
-		<button class="btn btn-outline-primary mb-1" id="friendButton" onclick="sendFriendRequest()">Добавить в друзья</button>
-		@* 	}
-	else // Model.IsFriend == null, значит заявка отправлена, но ещё не принята/отклонена
-	{
-	<button class="btn btn-outline-primary mb-1" id="friendButton" onclick="removeFriendRequest">Отозвать заявку в друзья</button>
-	} *@
+		@switch (Model.IsFriend)
+		{
+			case Capycom.Enums.FriendStatusEnum.NoFriendRequest:
+				<button class="btn btn-outline-primary mb-1" onclick="sendFriendRequest()">Добавить в друзья</button>
+				break;
+			case Capycom.Enums.FriendStatusEnum.OurNotAnswered:
+			case Capycom.Enums.FriendStatusEnum.OurRejected:
+				<button class="btn btn-primary mb-1" onclick="removeFriendRequest()">Отозвать заявку в друзья</button>
+				break;
+			case Capycom.Enums.FriendStatusEnum.HisApproved:
+			case Capycom.Enums.FriendStatusEnum.OurApproved:
+				<button class="btn btn-primary mb-1" onclick="asnwerFriendRequest(false)">Удалить из друзей</button>
+				break;
+			case Capycom.Enums.FriendStatusEnum.HisNotAnswered:
+			case Capycom.Enums.FriendStatusEnum.HisRejected:
+				<button class="btn btn-primary mb-1" onclick="asnwerFriendRequest(true)">Принять заявку в друзья</button>
+				break;
+			default:
+				<p class="text-danger text-center border">На сервере произошла ошибка, функция добавления в друзья временно недоступна.</p>
+				break;
+		}
 		@if (!Model.IsFollowing)
 		{
 			<button class="btn btn-outline-primary mb-1" id="subscribeButton" onclick="follow()">Подписаться</button>
