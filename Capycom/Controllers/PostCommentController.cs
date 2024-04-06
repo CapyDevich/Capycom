@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 using System.Reflection.Metadata;
 using System.Security.Claims;
+using Serilog;
 
 namespace Capycom.Controllers
 {
@@ -25,11 +26,17 @@ namespace Capycom.Controllers
         }
         public async Task<IActionResult> ViewPost(Guid postId)
         {
+            if(User.Identity.IsAuthenticated)
+                Log.Information("Пользователь {User} просматривает пост {Post}", HttpContext.User.FindFirstValue("CpcmUserId"), postId);
+            else
+                Log.Information("Неавторизирвоанный клиент {client} просматривает пост {Post}",HttpContext.Connection, postId);
+
             try
             {
                 CpcmPost? post = await _context.CpcmPosts.Where(p => p.CpcmPostId == postId).Include(p => p.CpcmImages).Include(p => p.CpcmPostFatherNavigation).ThenInclude(p => p.CpcmImages).FirstOrDefaultAsync();
                 if(post == null || post.CpcmIsDeleted)
                 {
+                    Log.Information("Попытка просмотра несуществующего поста {Post}", postId);
                     Response.StatusCode = 404;
                     ViewData["ErrorCode"] = 404;
                     ViewData["Message"] = "Пост не найден";
@@ -37,6 +44,7 @@ namespace Capycom.Controllers
                 }
                 if (post.CpcmPostBanned)
                 {
+                    Log.Information("Попытка просмотра заблокированного поста {Post}", postId);
                     Response.StatusCode = 403;
                     ViewData["ErrorCode"] = 403;
                     ViewData["Message"] = "Пост заблокирован";
@@ -100,6 +108,7 @@ namespace Capycom.Controllers
             }
             catch (DbException)
             {
+                Log.Error("Не удалось выполнить запрос к БД на выборку поста {Post}", postId);
                 Response.StatusCode = 500;
                 ViewData["ErrorCode"] = 500;
                 ViewData["Message"] = "Ошибка связи с сервером";
@@ -110,10 +119,12 @@ namespace Capycom.Controllers
         [Authorize]
         public async Task<IActionResult> AddComment(CommentAddModel userComment)
         {
+            Log.Information("Пользователь {User} пытается добавить комментарий к посту {Post}", HttpContext.User.FindFirstValue("CpcmUserId"), userComment.CpcmPostId);
             if (ModelState.IsValid)
             {
                 if ((string.IsNullOrEmpty(userComment.CpcmCommentText) || string.IsNullOrWhiteSpace(userComment.CpcmCommentText)) && userComment.Files==null)
                 {
+                    Log.Warning("Пользователь {User} пытается добавить комментарий к посту {Post}. Коммент не может быть пустым", HttpContext.User.FindFirstValue("CpcmUserId"), userComment.CpcmPostId);
                     return StatusCode(200, new { status = false, message = "Коммент не может быть пустым" });
                 }
                 CpcmComment comment = new CpcmComment();
@@ -188,14 +199,23 @@ namespace Capycom.Controllers
                     }
                     await _context.SaveChangesAsync();
                 }
-                catch (DbException)
+                catch (DbException ex)
                 {
+                    Log.Error(ex, "Пользователь {User} пытается добавить комментарий к посту {Post}. Произошла ошибка с доступом к серверу - не удалось выполнить запрос", HttpContext.User.FindFirstValue("CpcmUserId"), comment);
                     foreach (var file in filePaths)
                     {
-                        if (System.IO.File.Exists(file))
+                        try
                         {
-                            System.IO.File.Delete(file);
+                            if (System.IO.File.Exists(file))
+                            {
+                                System.IO.File.Delete(file);
+                            }
                         }
+                        catch (IOException exx)
+                        {
+                            Log.Error(exx, "Пользователь {User} пытается добавить комментарий к посту {Post}. Произошла ошибка с доступом к серверу - не удалось удалить файлы {filePaths}", HttpContext.User.FindFirstValue("CpcmUserId"), userComment.CpcmPostId, filePaths);
+							return StatusCode(500, new { message = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку" });
+						}
                     }
                     return StatusCode(500, new { message = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку" });
                 }
@@ -206,6 +226,7 @@ namespace Capycom.Controllers
                 //return StatusCode(200, new { status = true });
                 return PartialView(comment.CpcmImages = images);
             }
+            Log.Information("Пользователь {User} пытается добавить комментарий к посту {Post}. Комментарий имеет некорректные значения , {Comment}", HttpContext.User.FindFirstValue("CpcmUserId"), userComment.CpcmPostId, userComment);
             return StatusCode(200, new { status=false,message = "Комментарий имеет некорректные значения.",errors= ModelState.SelectMany(x => x.Value.Errors.Select(e => e.ErrorMessage)).ToList() });
 
         }
@@ -213,10 +234,10 @@ namespace Capycom.Controllers
         [Authorize]
         public async Task<IActionResult> DeleteComment(Guid commentId)
         {
-
+            Log.Information("Пользователь {User} пытается удалить комментарий {Comment}", HttpContext.User.FindFirstValue("CpcmUserId"), commentId);
             try
             {
-                var comment = await _context.CpcmComments.Where(c => c.CpcmCommentId == commentId).FirstOrDefaultAsync();
+                var comment = await _context.CpcmComments.Where(c => c.CpcmCommentId == commentId && c.CpcmIsDeleted==false).FirstOrDefaultAsync();
                 if (comment == null)
                 {
                     return StatusCode(404);
@@ -226,6 +247,7 @@ namespace Capycom.Controllers
                 {
                     comment.CpcmIsDeleted = true;
                     await _context.SaveChangesAsync();
+                    Log.Information("Пользователь {User} удалил комментарий {Comment}", HttpContext.User.FindFirstValue("CpcmUserId"), commentId);
                     return StatusCode(200, new { status = true });
                 }
                 else
@@ -233,7 +255,18 @@ namespace Capycom.Controllers
                     return StatusCode(403);
                 }
             }
-            catch (DbException)
+			catch (DbUpdateConcurrencyException ex)
+			{
+				// Обработка исключений DbUpdateConcurrencyException
+                Log.Error(ex, "Пользователь {User} пытается удалить комментарий {Comment}. Произошла ошибка с доступом к серверу - не кто-то уже работал с этим комментарием", HttpContext.User.FindFirstValue("CpcmUserId"), commentId);
+                return StatusCode(500, new { message = "Произошла ошибка с доступом к серверу. Пороверьте действительно ли существует комментарий, возможно вы ранее его уже удалили." });
+			}
+			catch (DbUpdateException ex)
+			{
+				Log.Fatal(ex, "Пользователь {User} пытается удалить комментарий {Comment}. Произошла ошибка с доступом к серверу - не удалось выполнить запрос", HttpContext.User.FindFirstValue("CpcmUserId"), commentId);
+                return StatusCode(500, new { message = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку" });
+			}
+			catch (DbException)
             {
                 return StatusCode(500, new { message = "Не удалось установить соединение с сервером" });
             }
@@ -242,7 +275,9 @@ namespace Capycom.Controllers
         [Authorize]
         public async Task<IActionResult> BanUnbanComment(Guid commentId)
         {
+            Log.Information("Пользователь {User} пытается заблокировать/разблокировать комментарий {Comment}", HttpContext.User.FindFirstValue("CpcmUserId"), commentId);
             if(!CheckUserPrivilege("CpcmCanDelUsersComments","True")){
+                Log.Warning("Пользователь {User} пытается заблокировать/разблокировать комментарий {Comment}. У пользователя недостаточно прав", HttpContext.User.FindFirstValue("CpcmUserId"), commentId);
                 return StatusCode(403);
             }
             try
@@ -250,6 +285,7 @@ namespace Capycom.Controllers
                 var comment = await _context.CpcmComments.Where(c => c.CpcmCommentId == commentId).FirstOrDefaultAsync();
                 if(comment == null)
                 {
+                    Log.Warning("Пользователь {User} пытается заблокировать/разблокировать комментарий {Comment}. Коммент не найден или удалён", HttpContext.User.FindFirstValue("CpcmUserId"), commentId);
                     return StatusCode(404);
                 }
                 comment.CpcmCommentBanned = !comment.CpcmCommentBanned;
@@ -257,20 +293,34 @@ namespace Capycom.Controllers
                 return StatusCode(200, new {status=true});
 
             }
-            catch (DbException)
+			catch (DbUpdateConcurrencyException ex)
+			{
+				Log.Error(ex, "Пользователь {User} пытается заблокировать/разблокировать комментарий {Comment}. Произошла ошибка с доступом к серверу - кто-то уже работал с этим комментарием", HttpContext.User.FindFirstValue("CpcmUserId"), commentId);
+                return StatusCode(500, new { message = "Произошла ошибка с доступом к серверу. Пороверьте действительно ли существует комментарий, возможно вы ранее его уже заблокировали/разблокировали." });
+			}
+			catch (DbUpdateException ex)
+			{
+				Log.Fatal(ex, "Пользователь {User} пытается заблокировать/разблокировать комментарий {Comment}. Произошла ошибка с доступом к серверу - не удалось выполнить запрос", HttpContext.User.FindFirstValue("CpcmUserId"), commentId);
+				return StatusCode(500, new { message = "Не удалось отредактировать комментарий. Перезагрузите страницу и повторите" });
+			}
+			catch (DbException ex)
             {
-
+                Log.Error(ex, "Пользователь {User} пытается заблокировать/разблокировать комментарий {Comment}. Произошла ошибка с доступом к серверу. Произошла общая ошибка", HttpContext.User.FindFirstValue("CpcmUserId"), commentId);
                 return StatusCode(500 , new {message = "Не удалось устиановить соединение с сервером"});
             }
         }
         public async Task<IActionResult> ViewComment(Guid commentId)
         {
-            
+            if(User.Identity.IsAuthenticated)
+                Log.Information("Пользователь {User} просматривает комментарий {Comment}", HttpContext.User.FindFirstValue("CpcmUserId"), commentId);
+            else
+                Log.Information("Неавторизирвоанный клиент {client} просматривает комментарий {Comment}",HttpContext.Connection, commentId);
             try
             {
                 var comment = await _context.CpcmComments.Where(c => c.CpcmCommentId == commentId).Include(p => p.CpcmImages).Include(c => c.CpcmUser).FirstOrDefaultAsync();
                 if (comment == null)
                 {
+                    Log.Warning("Попытка просмотра несуществующего комментария {Comment}", commentId);
                     Response.StatusCode = 404;
                     ViewData["ErrorCode"] = 404;
                     ViewData["Message"] = "Коммент не найден";
@@ -295,8 +345,9 @@ namespace Capycom.Controllers
                 return View(comment);
 
             }
-            catch (DbException)
+            catch (DbException ex)
             {
+                Log.Warning(ex, "Не удалось выполнить запрос к БД на выборку комментария {Comment}. Произошла общая ошибка.", commentId);
                 Response.StatusCode = 500;
                 ViewData["ErrorCode"] = 500;
                 ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
@@ -305,7 +356,12 @@ namespace Capycom.Controllers
         }
         public async Task<IActionResult> GetNextComments(Guid postId, Guid lastCommentId)
         {
-            try
+			if (User.Identity.IsAuthenticated)
+                Log.Information("Пользователь {User} запрашивает следующие комментарии к посту {Post}", HttpContext.User.FindFirstValue("CpcmUserId"), postId);
+            else
+                Log.Information("Неавторизирвоанный клиент {client} запрашивает следующие комментарии к посту {Post}", HttpContext.Connection, postId);
+
+			try
             {
                 var lastComment = await _context.CpcmComments.Where(c => c.CpcmCommentId == lastCommentId).FirstOrDefaultAsync();
                 if(lastComment == null) { return StatusCode(404); }
@@ -331,10 +387,11 @@ namespace Capycom.Controllers
 					}
 				}
                 
-                return Json(rez);
+                return PartialView(rez);
             }
-            catch (DbException)
+            catch (DbException ex)
             {
+                Log.Error(ex, "Не удалось выполнить запрос к БД на выборку комментариев к посту {Post}. Произошла общая ошибка", postId);
                 return StatusCode(500, new { message = "Не удалось установить соединение с сервером" });
             }
         }
@@ -342,11 +399,13 @@ namespace Capycom.Controllers
         [Authorize]
         public async Task<IActionResult> AddRemoveLike(Guid postId)
         {
+            Log.Information("Пользователь {User} пытается поставить/убрать лайк к посту {Post}", HttpContext.User.FindFirstValue("CpcmUserId"), postId);
             try
             {
                 var post = await _context.CpcmPosts.Where(p => p.CpcmPostId == postId && p.CpcmPostPublishedDate < DateTime.UtcNow).FirstOrDefaultAsync();
                 if (post == null)
                 {
+                    Log.Warning("Пользователь {User} пытается поставить/убрать лайк к посту {Post}. Пост не найден", HttpContext.User.FindFirstValue("CpcmUserId"), postId);
                     return StatusCode(404);
                 }
                 string? userId = HttpContext.User.FindFirstValue("CpcmUserId");
@@ -380,8 +439,19 @@ namespace Capycom.Controllers
                 }
 
             }
-            catch (DbException)
+			catch (DbUpdateConcurrencyException ex)
+			{
+				Log.Error(ex, "Пользователь {User} пытается поставить/убрать лайк к посту {Post}. Произошла ошибка с доступом к серверу - кто-то уже работал с этим постом", HttpContext.User.FindFirstValue("CpcmUserId"), postId);
+                return StatusCode(500, new { message = "Произошла ошибка с доступом к серверу. Пороверьте действительно ли существует пост, возможно вы ранее его уже лайкнули/дизлайкнули с другого утройства одновременно с этим устройством." });
+			}
+			catch (DbUpdateException ex)
+			{
+				Log.Fatal(ex, "Пользователь {User} пытается поставить/убрать лайк к посту {Post}. Произошла ошибка с доступом к серверу - не удалось выполнить запрос", HttpContext.User.FindFirstValue("CpcmUserId"), postId);
+				return StatusCode(500, new { message = "Не удалось установить соединение с сервером" });
+			}
+			catch (DbException ex)
             {
+                Log.Error(ex, "Пользователь {User} пытается поставить/убрать лайк к посту {Post}. Произошла общая ошибка с доступом к серверу", HttpContext.User.FindFirstValue("CpcmUserId"), postId);
                 return StatusCode(500, new {message = "Не удалось установить соединение с сервером"});
             }
         }
@@ -392,107 +462,70 @@ namespace Capycom.Controllers
 
         private async Task<CpcmPost?> GetFatherPostReccurent(CpcmPost cpcmPostFatherNavigation)
         {
-            var father = await _context.CpcmPosts.Where(p => p.CpcmPostId == cpcmPostFatherNavigation.CpcmPostFather).Include(p => p.CpcmImages).FirstOrDefaultAsync();
-            if (father != null)
+            try
             {
-                father.CpcmPostFatherNavigation = await GetFatherPostReccurent(father);
-				father.User = await _context.CpcmUsers.Where(p => p.CpcmUserId == father.CpcmUserId).FirstOrDefaultAsync();
-				father.Group = await _context.CpcmGroups.Where(p => p.CpcmGroupId == father.CpcmGroupId).FirstOrDefaultAsync();
-				if (HttpContext.Request.Cookies.ContainsKey("TimeZone"))
-				{
-					string timezoneOffsetCookie = HttpContext.Request.Cookies["TimeZone"];
-					if (timezoneOffsetCookie != null)
-					{
-						if (int.TryParse(timezoneOffsetCookie, out int timezoneOffsetMinutes))
-						{
-							TimeSpan offset = TimeSpan.FromMinutes(timezoneOffsetMinutes);
+                var father = await _context.CpcmPosts.Where(p => p.CpcmPostId == cpcmPostFatherNavigation.CpcmPostFather).Include(p => p.CpcmImages).FirstOrDefaultAsync();
+                if (father != null)
+                {
+                    father.CpcmPostFatherNavigation = await GetFatherPostReccurent(father);
+                    father.User = await _context.CpcmUsers.Where(p => p.CpcmUserId == father.CpcmUserId).FirstOrDefaultAsync();
+                    father.Group = await _context.CpcmGroups.Where(p => p.CpcmGroupId == father.CpcmGroupId).FirstOrDefaultAsync();
+                    if (HttpContext.Request.Cookies.ContainsKey("TimeZone"))
+                    {
+                        string timezoneOffsetCookie = HttpContext.Request.Cookies["TimeZone"];
+                        if (timezoneOffsetCookie != null)
+                        {
+                            if (int.TryParse(timezoneOffsetCookie, out int timezoneOffsetMinutes))
+                            {
+                                TimeSpan offset = TimeSpan.FromMinutes(timezoneOffsetMinutes);
 
-							father.CpcmPostPublishedDate -= offset;
+                                father.CpcmPostPublishedDate -= offset;
 
-						}
-					}
-				}
-			}
-            return father;
+                            }
+                        }
+                    }
+                }
+                return father;
+            }
+            catch (DbException ex)
+            {
+				Log.Error(ex, "Не удалось выгрузить родительские посты {fathrepostnavigation}", cpcmPostFatherNavigation);
+				throw;
+            }
         }
         private async Task<ICollection<CpcmComment>> GetCommentChildrenReccurent(CpcmComment? comm)
         {
-            var children = await _context.CpcmComments.Where(c => c.CpcmCommentFather == comm.CpcmCommentId).Include(c => c.CpcmImages).Include(c=>c.CpcmUser).ToListAsync();
-            if (children.Count != 0)
+            try
             {
-                foreach (var childComm in children)
+                var children = await _context.CpcmComments.Where(c => c.CpcmCommentFather == comm.CpcmCommentId).Include(c => c.CpcmImages).Include(c => c.CpcmUser).ToListAsync();
+                if (children.Count != 0)
                 {
-                    childComm.InverseCpcmCommentFatherNavigation = await GetCommentChildrenReccurent(childComm);
-					if (HttpContext.Request.Cookies.ContainsKey("TimeZone"))
-					{
-						string timezoneOffsetCookie = HttpContext.Request.Cookies["TimeZone"];
-						if (timezoneOffsetCookie != null)
-						{
-							if (int.TryParse(timezoneOffsetCookie, out int timezoneOffsetMinutes))
-							{
-								TimeSpan offset = TimeSpan.FromMinutes(timezoneOffsetMinutes);
+                    foreach (var childComm in children)
+                    {
+                        childComm.InverseCpcmCommentFatherNavigation = await GetCommentChildrenReccurent(childComm);
+                        if (HttpContext.Request.Cookies.ContainsKey("TimeZone"))
+                        {
+                            string timezoneOffsetCookie = HttpContext.Request.Cookies["TimeZone"];
+                            if (timezoneOffsetCookie != null)
+                            {
+                                if (int.TryParse(timezoneOffsetCookie, out int timezoneOffsetMinutes))
+                                {
+                                    TimeSpan offset = TimeSpan.FromMinutes(timezoneOffsetMinutes);
 
-								childComm.CpcmCommentCreationDate -= offset;
+                                    childComm.CpcmCommentCreationDate -= offset;
 
-							}
-						}
-					}
-				}
+                                }
+                            }
+                        }
+                    }
+                }
+                return children;
             }
-            return children;
-        }
-
-        public async Task<IActionResult> Test()
-        {
-
-            CpcmPost post = new CpcmPost();
-            post.CpcmPostId = Guid.NewGuid();
-            post.CpcmPostText = "sasd2";
-            post.CpcmPostPublishedDate = DateTime.UtcNow;
-            post.CpcmPostCreationDate = DateTime.UtcNow;
-            post.CpcmUserId = Guid.Parse("EF3E530D-3CB2-4921-AB78-2F4DBD91A8C7");
-            post.CpcmPostFather = Guid.Parse("1C689FCA-41CA-4AA4-B3B2-0E9A52B20042");
-            _context.CpcmPosts.Add(post);
-            _context.SaveChanges();
-
-            //// CpcmComment com1 = new CpcmComment();
-            //// com1.CpcmPostId = post.CpcmPostId;
-            //// com1.CpcmCommentText = "1";
-            //// com1.CpcmUserId = (Guid)post.CpcmUserId;
-            //// com1.CpcmCommentId = Guid.NewGuid();
-            //// com1.CpcmCommentCreationDate = DateTime.UtcNow;
-
-
-            //// _context.CpcmComments.Add(com1);
-            //// _context.CpcmComments.Add(com2);
-            //// _context.SaveChanges();
-            //// return Ok();
-
-            //var post = _context.CpcmPosts.Find(Guid.Parse("1C689FCA-41CA-4AA4-B3B2-0E9A52B20042"));
-            //CpcmComment com2 = new CpcmComment();
-            //com2.CpcmPostId = post.CpcmPostId;
-            //com2.CpcmCommentText = "2";
-            //com2.CpcmUserId = Guid.Parse("EF3E530D-3CB2-4921-AB78-2F4DBD91A8C7");
-            //com2.CpcmCommentFather = Guid.Parse("F52A5189-3708-41B0-8FB3-8BD5414DEBBC");
-            //com2.CpcmCommentId = Guid.NewGuid();
-            //com2.CpcmCommentCreationDate = DateTime.UtcNow;
-            //_context.CpcmComments.Add(com2);
-            //_context.SaveChanges();
-
-            ////if (post?.CpcmComments != null)
-            ////{
-            ////    _context.Entry(post).Collection(p => p.CpcmComments).Load();
-            ////}
-            ////Console.Out.WriteLineAsync("123");
-
-            //var com1 = _context.CpcmComments.Find(Guid.Parse("327372EF-0743-464B-B615-38FFFD3FB74F"));
-            //_context.Entry(com1).Collection(p => p.InverseCpcmCommentFatherNavigation).Load();
-            //Console.Out.WriteLineAsync("123");
-
-            return StatusCode(200);
-
-
-
+            catch (DbException ex)
+            {
+                Log.Error(ex,"Не удалось выгрузить потомков комментария",comm);
+                throw;
+            }
         }
 
         private bool CheckUserPrivilege(string claimType, string claimValue)

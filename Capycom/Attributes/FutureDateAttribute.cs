@@ -1,12 +1,12 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace Capycom
+namespace Capycom.Attributes
 {
     public class FutureDateAttribute : ValidationAttribute
     {
         protected override ValidationResult IsValid(object value, ValidationContext validationContext)
         {
-            if(value == null)
+            if (value == null)
             {
                 return ValidationResult.Success;
             }
