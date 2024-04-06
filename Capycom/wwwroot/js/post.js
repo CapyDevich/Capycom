@@ -181,8 +181,6 @@ function sendFriendRequest() {
         success: function (response) {
             if (response['status']) {
                 console.log("response was successful");
-                friendButton.innerHTML = 'Заявка отправлена'
-                friendButton.onclick = deleteFriendRequest;
             }
             else {
                 console.log("response was not successful");
@@ -207,8 +205,6 @@ function deleteFriendRequest() {
         success: function (response) {
             if (response['status']) {
                 console.log("response was successful");
-                friendButton.innerHTML = 'Добавить в друзья'
-                friendButton.onclick = sendFriendRequest;
             }
             else {
                 console.log("response was not successful");
