@@ -28,11 +28,6 @@ $(document).ready(function () {
 	$('#searchUser').submit(function (event) {
 		event.preventDefault();
 
-		let dataToSend = new FormData(this);
-		for (let pair of dataToSend.entries()) {
-			console.log(pair[0] + ', ' + pair[1]);
-		}
-
 		$.urlParam = function (name) {
 			var results = new RegExp('[\?&]' + name + '=([^&#]*)').exec(window.location.href);
 			if (results == null) {
@@ -42,26 +37,10 @@ $(document).ready(function () {
 		}
 
 		if ($.urlParam('NickName'))
-			dataToSend.append('NickName', $.urlParam('NickName'));
+			$(this).append(`<input type="hidden" name="NickName" value="${$.urlParam('NickName')}">`);
 		else if ($.urlParam('UserId'))
-			dataToSend.append('UserId', $.urlParam('UserId'));
+			$(this).append(`<input type="hidden" name="UserId" value="${$.urlParam('UserId')}">`);
 			
-		dataToSend.append('hello', 'привет');
-
-		$.ajax({
-			url: '/User/Followers',
-			type: 'POST',
-			data: dataToSend,
-			processData: false,
-			contentType: false,
-			success: function (response) {
-				console.log(response);
-
-			},
-			error: function (obj) {
-				if (obj.status == 401)
-					window.location.replace("/UserLogIn");
-			}
-		});
+		this.submit();
 	});
 });

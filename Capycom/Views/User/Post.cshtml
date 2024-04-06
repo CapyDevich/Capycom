@@ -42,8 +42,6 @@
 				</button>
 				<a asp-area="" asp-controller="PostComment" asp-action="ViewPost" asp-route-postId="@Model.Post.CpcmPostId" class="btn btn-outline-primary me-2 button-bottom">
 					<img src="~/images/comments.svg" />
-					<span class="comments-count-show"></span>
-					<span class="comments-count" style="display: none">@Model.Post.CpcmComments.Count</span>
 				</a>
 				<button class="btn btn-outline-primary me-2 button-bottom" data-bs-toggle="modal" data-bs-target="#repostModal" onclick="repost(this, '@Model.Post.CpcmPostId');">
 					<img src="~/images/repost.svg" />
