@@ -74,7 +74,7 @@ namespace Capycom.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(UserSignUpModel cpcmSignUser)
         {            
-            Log.Debug("Попытка регистрации нового пользователя: {CpcmSignUser}", cpcmSignUser);
+            Log.Debug("Попытка регистрации нового пользователя: {@CpcmSignUser}", cpcmSignUser);
             if (ModelState.IsValid)
             {
                 CpcmUser cpcmUser = new();
@@ -129,7 +129,7 @@ namespace Capycom.Controllers
                         }
                         catch (Exception ex)
                         {
-                            Log.Error(ex, "Ошибка при попытке сохранить фотографию пользователя: {filePathUserImage}", filePathUserImage);
+                            Log.Error(ex, "Ошибка при попытке сохранить фотографию пользователя: {@filePathUserImage}", filePathUserImage);
                             cpcmUser.CpcmUserImagePath = null;
                         }
                     }
@@ -156,7 +156,7 @@ namespace Capycom.Controllers
                         }
                         catch (Exception ex)
                         {
-							Log.Error(ex, "Ошибка при попытке сохранить фотографию пользователя: {filePathUserImage}", filePathUserCoverImage);
+							Log.Error(ex, "Ошибка при попытке сохранить фотографию пользователя: {@filePathUserImage}", filePathUserCoverImage);
 							cpcmUser.CpcmUserCoverPath = null;
                         }
                     }
@@ -190,7 +190,7 @@ namespace Capycom.Controllers
                 }
                 catch (DbException ex)
                 {
-					Log.Error(ex,"Ошибка при попытке сохранить нового пользователя",cpcmUser,cpcmSignUser);
+					Log.Error(ex,"Ошибка при попытке сохранить нового пользователя {@cpcmUser},{@cpcmSignUser}",cpcmUser,cpcmSignUser);
                     try
                     {
                         if (System.IO.File.Exists(filePathUserImage)) // TODO Возможно это стоит обернуть в try catch
@@ -204,7 +204,7 @@ namespace Capycom.Controllers
                     }
                     catch (IOException exx)
                     {
-						Log.Error(exx, "Не удалось удалить фотографии пользователя при неудачной попытке регистрации: {UserImage}, {UserCover}", filePathUserImage,filePathUserCoverImage);
+						Log.Error(exx, "Не удалось удалить фотографии пользователя при неудачной попытке регистрации: {@filePathUserImage}, {@filePathUserCoverImage}", filePathUserImage,filePathUserCoverImage);
 					}
                     Response.StatusCode = 500;
                     ViewData["ErrorCode"] = 500;
@@ -234,7 +234,7 @@ namespace Capycom.Controllers
         [HttpPost]
         public async Task<IActionResult> CheckEmail(string CpcmUserEmail)
         {
-            Log.Debug("Попытка проверки email: {CpcmUserEmail}", CpcmUserEmail);
+            Log.Debug("Попытка проверки email: {@CpcmUserEmail}", CpcmUserEmail);
             if(string.IsNullOrWhiteSpace(CpcmUserEmail))
             {
                 return Json("Email не может быть пустым или состоять из одних пробелов");
@@ -251,7 +251,7 @@ namespace Capycom.Controllers
             }
             catch (DbException ex)
             {
-				Log.Error(ex, "Не удалось установить соединение с сервером при проверки регистрируемоего email",CpcmUserEmail);
+				Log.Error(ex, "Не удалось установить соединение с сервером при проверки регистрируемоего email {@CpcmUserEmail}", CpcmUserEmail);
 				return Json(data: "Не удалось установить соединение с сервером");
 			}
             if (!rez)
@@ -262,7 +262,7 @@ namespace Capycom.Controllers
         [HttpPost]
         public async Task<IActionResult> CheckNickName(string CpcmUserNickName)
          {
-            Log.Debug("Попытка проверки nickname: {CpcmUserNickName}", CpcmUserNickName);
+            Log.Debug("Попытка проверки nickname: {@CpcmUserNickName}", CpcmUserNickName);
             if (CpcmUserNickName == null || CpcmUserNickName.All(char.IsWhiteSpace) || CpcmUserNickName==string.Empty)
             {
                 return Json(true);
@@ -279,7 +279,7 @@ namespace Capycom.Controllers
             }
             catch (DbException ex)
             {
-				Log.Error(ex, "Не удалось установить соединение с сервером при проверки регистрируемоего nickname", CpcmUserNickName);
+				Log.Error(ex, "Не удалось установить соединение с сервером при проверки регистрируемоего nickname {@CpcmUserNickName}", CpcmUserNickName);
 				return Json(data: "Не удалось установить соединение с сервером");
 			}
 			if (!rez)
@@ -290,7 +290,7 @@ namespace Capycom.Controllers
         [HttpPost]
         public async Task<IActionResult> CheckPhone(string CpcmUserTelNum)
         {
-            Log.Debug("Попытка проверки телефона: {CpcmUserTelNum}", CpcmUserTelNum);
+            Log.Debug("Попытка проверки телефона: {@CpcmUserTelNum}", CpcmUserTelNum);
             if (string.IsNullOrWhiteSpace(CpcmUserTelNum))
             {
                 return Json(data:"Телефон не может быть пустым или состоять из одних пробелов");
@@ -303,7 +303,7 @@ namespace Capycom.Controllers
             }
             catch (DbException ex)
             {
-                Log.Error(ex,"Не удалось установить соединение с сервером при проверки регистрируемоего телефона", CpcmUserTelNum);
+                Log.Error(ex, "Не удалось установить соединение с сервером при проверки регистрируемоего телефона {@CpcmUserTelNum}", CpcmUserTelNum);
 				return Json(data: "Не удалось установить соединение с сервером");
 			}
 			if (!rez)
@@ -314,7 +314,7 @@ namespace Capycom.Controllers
         [HttpPost]
         public async Task<IActionResult> AddCity(string newCity)
         {
-            Log.Debug("Попытка добавления города: {newCity}", newCity);
+            Log.Debug("Попытка добавления города: {@newCity}", newCity);
             if(string.IsNullOrWhiteSpace(newCity))
             {
                 return Json(new { success = false, message = "Некорректное значение." });
@@ -333,7 +333,7 @@ namespace Capycom.Controllers
                 }
                 catch (DbException ex)
                 {
-                    Log.Error(ex, "Ошибка при попытке добавить город: {newCity}", newCity);
+                    Log.Error(ex, "Ошибка при попытке добавить город: {@newCity}", newCity);
                     return new StatusCodeResult(500);
                 }
                 return Json(new { success = true, id = city.CpcmCityId });
@@ -348,7 +348,7 @@ namespace Capycom.Controllers
         [HttpPost]
         public async Task<IActionResult> AddSchool(string newSchool)
         {
-            Log.Debug("Попытка добавления школы: {newSchool}", newSchool);
+            Log.Debug("Попытка добавления школы: {@newSchool}", newSchool);
             if (string.IsNullOrWhiteSpace(newSchool))
             {
                 return Json(new { success = false, message = "Некорректное значение." });
@@ -377,7 +377,7 @@ namespace Capycom.Controllers
         [HttpPost]
         public async Task<IActionResult> AddUniversities(string newUni)
         {
-            Log.Debug("Попытка добавления университета: {newUni}", newUni);
+            Log.Debug("Попытка добавления университета: {@newUni}", newUni);
             if (string.IsNullOrWhiteSpace(newUni))
             {
                 return Json(new { success = false, message = "Некорректное значение." });

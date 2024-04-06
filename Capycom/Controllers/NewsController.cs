@@ -92,7 +92,7 @@ namespace Capycom.Controllers
 			}
 			catch (DbException ex)
 			{
-				Log.Error(ex, "Произошла ошибка при обращении к бд. Не удалось выполнить запрос.", HttpContext.User.FindFirstValue("CpcmUserId"));
+				Log.Error(ex, "Произошла ошибка при обращении к бд. Не удалось выполнить запрос. {user}", HttpContext.User.FindFirstValue("CpcmUserId"));
 				Response.StatusCode = 500;
 				ViewData["ErrorCode"] = 500;
 				ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
@@ -172,7 +172,7 @@ namespace Capycom.Controllers
 			}
 			catch (DbException ex)
 			{
-				Log.Error(ex,"Произошла ошибка при обращении к бд. Не удалось выполнить запрос.", HttpContext.User.FindFirstValue("CpcmUserId"));
+				Log.Error(ex,"Произошла ошибка при обращении к бд. Не удалось выполнить запрос. {user}", HttpContext.User.FindFirstValue("CpcmUserId"));
 				return StatusCode(500);
 			}
 		}
@@ -204,7 +204,7 @@ namespace Capycom.Controllers
 			}
 			catch (DbException ex)
 			{
-				Log.Error(ex, "Не удалось выгрузить родительские посты {fathrepostnavigation}", cpcmPostFatherNavigation);
+				Log.Error(ex, "Не удалось выгрузить родительские посты {@fathrepostnavigation}", cpcmPostFatherNavigation);
 				throw;
 			}
 		}
