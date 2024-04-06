@@ -171,6 +171,7 @@ function follow() {
 const friendButton = document.getElementById('friendButton');
 function sendFriendRequest() {
     const userID = document.getElementById('userID').innerHTML;
+    const button = document.getElementById("friendButton");
     let dataToSend = {
         CpcmUserId: userID,
     };
@@ -180,7 +181,10 @@ function sendFriendRequest() {
         data: dataToSend,
         success: function (response) {
             if (response['status']) {
-                console.log("response was successful");
+                button.innerHTML = 'Отозвать заявку в друзья';
+                button.onclick = deleteFriendRequest;
+                button.classList.remove('btn-outline-primary');
+                button.classList.add('btn-primary');
             }
             else {
                 console.log("response was not successful");
@@ -195,6 +199,7 @@ function sendFriendRequest() {
 }
 function deleteFriendRequest() {
     const userID = document.getElementById('userID').innerHTML;
+    const button = document.getElementById("friendButton");
     let dataToSend = {
         CpcmUserId: userID,
     };
@@ -204,7 +209,10 @@ function deleteFriendRequest() {
         data: dataToSend,
         success: function (response) {
             if (response['status']) {
-                console.log("response was successful");
+                button.innerHTML = 'Добавить в друзья';
+                button.onclick = sendFriendRequest;
+                button.classList.remove('btn-primary');
+                button.classList.add('btn-outline-primary');
             }
             else {
                 console.log("response was not successful");
@@ -217,11 +225,12 @@ function deleteFriendRequest() {
         }
     });
 }
-function asnwerFriendRequest(accepted) {
+function asnwerFriendRequest() {
     const userID = document.getElementById('userID').innerHTML;
+    const button = document.getElementById("friendButton");
     let dataToSend = {
         CpcmUserId: userID,
-        status: accepted
+        status: true
     };
     $.ajax({
         url: '/User/AnswerToFriendRequests',
@@ -229,11 +238,12 @@ function asnwerFriendRequest(accepted) {
         data: dataToSend,
         success: function (response) {
             if (response['status']) {
+                button.innerHTML = 'Удалить из друзей';
+                button.onclick = deleteFriendRequest;
             }
             else {
                 console.log("response was not successful");
             }
-
         },
         error: function (obj) {
             if (obj.status == 401)
