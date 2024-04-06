@@ -67,19 +67,19 @@
 		@switch (Model.IsFriend)
 		{
 			case Capycom.Enums.FriendStatusEnum.NoFriendRequest:
-				<button class="btn btn-outline-primary mb-1" onclick="sendFriendRequest()">Добавить в друзья</button>
+				<button class="btn btn-outline-primary mb-1" id="friendButton" onclick="sendFriendRequest()">Добавить в друзья</button>
 				break;
 			case Capycom.Enums.FriendStatusEnum.OurNotAnswered:
 			case Capycom.Enums.FriendStatusEnum.OurRejected:
-				<button class="btn btn-primary mb-1" onclick="deleteFriendRequest()">Отозвать заявку в друзья</button>
+				<button class="btn btn-primary mb-1" id="friendButton" onclick="deleteFriendRequest()">Отозвать заявку в друзья</button>
 				break;
 			case Capycom.Enums.FriendStatusEnum.HisApproved:
 			case Capycom.Enums.FriendStatusEnum.OurApproved:
-				<button class="btn btn-primary mb-1" onclick="deleteFriendRequest(false)">Удалить из друзей</button>
+				<button class="btn btn-primary mb-1" id="friendButton" onclick="deleteFriendRequest()">Удалить из друзей</button>
 				break;
 			case Capycom.Enums.FriendStatusEnum.HisNotAnswered:
 			case Capycom.Enums.FriendStatusEnum.HisRejected:
-				<button class="btn btn-primary mb-1" onclick="asnwerFriendRequest(true)">Принять заявку в друзья</button>
+				<button class="btn btn-primary mb-1" id="friendButton" onclick="asnwerFriendRequest()">Принять заявку в друзья</button>
 				break;
 			default:
 				<p class="text-danger text-center border">На сервере произошла ошибка, функция добавления в друзья временно недоступна.</p>
