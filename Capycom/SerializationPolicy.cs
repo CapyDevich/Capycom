@@ -56,6 +56,41 @@ namespace Capycom
 				result = propertyValueFactory.CreatePropertyValue(value, true);
 				return true;
 			}
+			else if (value is IFormFile formFile)
+			{
+				// Для IFormFile сериализуем только тип данных, имя файла и размер файла
+				var fileProperties = new Dictionary<string, object>
+				{
+					{ "FileName", formFile.FileName },
+					{ "ContentType", formFile.ContentType },
+					{ "Length", formFile.Length } // Добавлен размер файла
+				};
+
+				result = propertyValueFactory.CreatePropertyValue(fileProperties, true);
+				return true;
+			}
+
+			else if (value is IFormFileCollection formFileCollection)
+			{
+				// Для IFormFileCollection сериализуем только тип данных, имя файла и размер файла для каждого файла
+				var fileCollectionProperties = formFileCollection
+					.Select(f => new { f.FileName, f.ContentType, f.Length }) // Добавлен размер файла
+					.ToList();
+
+				result = propertyValueFactory.CreatePropertyValue(fileCollectionProperties, true);
+				return true;
+			}
+
+			else if (value is List<IFormFile> formFileList)
+			{
+				// Для List<IFormFile> сериализуем только тип данных, имя файла и размер файла для каждого файла
+				var fileListProperties = formFileList
+					.Select(f => new { f.FileName, f.ContentType, f.Length }) // Добавлен размер файла
+					.ToList();
+
+				result = propertyValueFactory.CreatePropertyValue(fileListProperties, true);
+				return true;
+			}
 
 			// Для всех остальных типов объектов запретить сериализацию
 			result = null;
