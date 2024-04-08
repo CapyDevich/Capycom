@@ -74,35 +74,38 @@ namespace Capycom.Controllers
 				ViewData["Message"] = "Группа не найдена";
 				return View("UserError");
 			}
-			if (group.CpcmGroupBanned)
-			{
-				Log.Information("Попытка обратиться к заблокированной группе. Model {@filters}", filter);
-				Response.StatusCode = 403;
-				ViewData["ErrorCode"] = 403;
-				ViewData["Message"] = "Группа заблокирована";
-				return View("UserError");
-			}
+			//if (group.CpcmGroupBanned)
+			//{
+			//	Log.Information("Попытка обратиться к заблокированной группе. Model {@filters}", filter);
+			//	Response.StatusCode = 403;
+			//	ViewData["ErrorCode"] = 403;
+			//	ViewData["Message"] = "Группа заблокирована";
+			//	return View("UserError");
+			//}
 
 
 
-			List<CpcmPost> posts;
+			List<CpcmPost> posts = new();
 			long liked;
 			CpcmGroupfollower follower = null;
-			try
+			if (group!=null && !group.CpcmGroupBanned)
 			{
-				posts = await _context.CpcmPosts.Where(c => c.CpcmGroupId == group.CpcmGroupId && c.CpcmPostPublishedDate < DateTime.UtcNow).Include(c => c.CpcmImages).OrderByDescending(c => c.CpcmPostPublishedDate).AsNoTracking().Take(10).ToListAsync();
-				if (User.Identity.IsAuthenticated)
+				try
 				{
-					follower = await _context.CpcmGroupfollowers.Where(f => f.CpcmGroupId == group.CpcmGroupId && f.CpcmUserId.ToString() == User.FindFirstValue("CpcmUserId")).FirstOrDefaultAsync(); 
+					posts = await _context.CpcmPosts.Where(c => c.CpcmGroupId == group.CpcmGroupId && c.CpcmPostPublishedDate < DateTime.UtcNow).Include(c => c.CpcmImages).OrderByDescending(c => c.CpcmPostPublishedDate).AsNoTracking().Take(10).ToListAsync();
+					if (User.Identity.IsAuthenticated)
+					{
+						follower = await _context.CpcmGroupfollowers.Where(f => f.CpcmGroupId == group.CpcmGroupId && f.CpcmUserId.ToString() == User.FindFirstValue("CpcmUserId")).FirstOrDefaultAsync();
+					}
 				}
-			}
-			catch (DbException ex)
-			{
-				Log.Error(ex, "Ошибка при получении постов или подписчиков группы из базы данных. Model {@filters}", filter);
-				Response.StatusCode = 500;
-				ViewData["ErrorCode"] = 500;
-				ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
-				return View("UserError");
+				catch (DbException ex)
+				{
+					Log.Error(ex, "Ошибка при получении постов или подписчиков группы из базы данных. Model {@filters}", filter);
+					Response.StatusCode = 500;
+					ViewData["ErrorCode"] = 500;
+					ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
+					return View("UserError");
+				} 
 			}
 			ICollection<CpcmPost> postsWithLikesCount = new List<CpcmPost>();
 			GroupProfileAndPostsModel groupProfile = new();
@@ -189,7 +192,15 @@ namespace Capycom.Controllers
 				{
 					return StatusCode(404);
 				}
-
+				var group = await _context.CpcmGroups.Where(g => g.CpcmGroupId == groupId).FirstOrDefaultAsync();
+				if (group != null && group.CpcmIsDeleted)
+				{
+					return StatusCode(404);
+				}
+				if (group != null && group.CpcmGroupBanned)
+				{
+					return StatusCode(403);
+				}
 
 				long liked;
 				posts = await _context.CpcmPosts.Where(c => c.CpcmGroupId == groupId).Where(c => c.CpcmPostPublishedDate < post.CpcmPostPublishedDate && c.CpcmPostPublishedDate < DateTime.UtcNow).AsNoTracking().Take(10).ToListAsync();
@@ -1921,7 +1932,15 @@ namespace Capycom.Controllers
 					Log.Warning("Пост не найден {id}", lastPostId);
 					return StatusCode(404);
 				}
-
+				var group = await _context.CpcmGroups.Where(g => g.CpcmGroupId == groupId).FirstOrDefaultAsync();
+				if (group != null && group.CpcmIsDeleted)
+				{
+					return StatusCode(404);
+				}
+				if (group != null && group.CpcmGroupBanned)
+				{
+					return StatusCode(403);
+				}
 				if (!await CheckOnlyGroupPrivelege("CpcmCanMakePost", true, groupId))
 				{
 					Log.Warning("Недостаточно прав для получения постов {id}, {user}", groupId,HttpContext.User.FindFirstValue("CpcmUserId"));
@@ -1993,7 +2012,15 @@ namespace Capycom.Controllers
 				Log.Warning("Недостаточно прав для получения неопубликованных постов {id}. User {user}", groupId, HttpContext.User.FindFirstValue("CpcmUserId"));
 				return StatusCode(403);
 			}
-
+			var group = await _context.CpcmGroups.Where(g => g.CpcmGroupId == groupId).FirstOrDefaultAsync();
+			if (group != null && group.CpcmIsDeleted)
+			{
+				return StatusCode(404);
+			}
+			if (group != null && group.CpcmGroupBanned)
+			{
+				return StatusCode(403);
+			}
 			List<CpcmPost> posts;
 			//ICollection<CpcmPost> postsWithLikesCount = new List<CpcmPost>();
 			try
