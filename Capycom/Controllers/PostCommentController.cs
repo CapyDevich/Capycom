@@ -33,7 +33,7 @@ namespace Capycom.Controllers
 
             try
             {
-                CpcmPost? post = await _context.CpcmPosts.Where(p => p.CpcmPostId == postId).Include(p => p.CpcmImages).Include(p => p.CpcmPostFatherNavigation).ThenInclude(p => p.CpcmImages).FirstOrDefaultAsync();
+                CpcmPost? post = await _context.CpcmPosts.Where(p => p.CpcmPostId == postId).Include(p => p.CpcmImages).Include(p => p.Group).Include(p => p.User).Include(p => p.CpcmPostFatherNavigation).ThenInclude(p => p.CpcmImages).FirstOrDefaultAsync();
                 if(post == null || post.CpcmIsDeleted)
                 {
                     Log.Information("Попытка просмотра несуществующего поста {Post}", postId);
@@ -50,7 +50,39 @@ namespace Capycom.Controllers
                     ViewData["Message"] = "Пост заблокирован";
                     return View("UserError");
                 }
-                var topComments = await _context.CpcmComments.Where(p => p.CpcmPostId == post.CpcmPostId && p.CpcmCommentFather == null).Include(c => c.CpcmImages).Include(c => c.CpcmUser).Take(10).OrderBy(u => u.CpcmCommentCreationDate).ToListAsync(); // впринципе эту итерацию можно пихнуть сразу в тот метод
+                if (post.User!=null && post.User.CpcmIsDeleted)
+                {
+					Log.Information("Попытка просмотра поста удалённого Юзера {Post}", postId);
+					Response.StatusCode = 404;
+					ViewData["ErrorCode"] = 404;
+					ViewData["Message"] = "Пост не найден";
+					return View("UserError");
+				}
+                if (post.User != null && post.User.CpcmUserBanned)
+                {
+					Log.Information("Попытка просмотра поста заблокированного Юзера {Post}", postId);
+					Response.StatusCode = 403;
+					ViewData["ErrorCode"] = 403;
+					ViewData["Message"] = "Автор поста заблокирован";
+					return View("UserError");
+				}
+				if (post.Group != null && post.Group.CpcmIsDeleted )
+				{
+					Log.Information("Попытка просмотра поста удалённой Группы {Post}", postId);
+					Response.StatusCode = 404;
+					ViewData["ErrorCode"] = 404;
+					ViewData["Message"] = "Пост не найден";
+					return View("UserError");
+				}
+                if ((post.Group != null && post.Group.CpcmGroupBanned))
+                {
+					Log.Information("Попытка просмотра поста заблокированной Группы{Post}", postId);
+					Response.StatusCode = 403;
+					ViewData["ErrorCode"] = 403;
+					ViewData["Message"] = "Группа поста заблокирован";
+					return View("UserError");
+				}
+				var topComments = await _context.CpcmComments.Where(p => p.CpcmPostId == post.CpcmPostId && p.CpcmCommentFather == null).Include(c => c.CpcmImages).Include(c => c.CpcmUser).Take(10).OrderBy(u => u.CpcmCommentCreationDate).ToListAsync(); // впринципе эту итерацию можно пихнуть сразу в тот метод
                 foreach (var TopComment in topComments)
                 {
                     TopComment.InverseCpcmCommentFatherNavigation = await GetCommentChildrenReccurent(TopComment);
@@ -317,7 +349,8 @@ namespace Capycom.Controllers
                 Log.Information("Неавторизирвоанный клиент {@client} просматривает комментарий {Comment}",HttpContext.Connection, commentId);
             try
             {
-                var comment = await _context.CpcmComments.Where(c => c.CpcmCommentId == commentId).Include(p => p.CpcmImages).Include(c => c.CpcmUser).FirstOrDefaultAsync();
+                var comment = await _context.CpcmComments.Where(c => c.CpcmCommentId == commentId).Include(p => p.CpcmImages).Include(c => c.CpcmUser).Include(c => c.CpcmPost).ThenInclude(p => p.Group).
+					Include(c => c.CpcmPost).ThenInclude(p => p.User).FirstOrDefaultAsync();
                 if (comment == null)
                 {
                     Log.Warning("Попытка просмотра несуществующего комментария {Comment}", commentId);
@@ -326,7 +359,55 @@ namespace Capycom.Controllers
                     ViewData["Message"] = "Коммент не найден";
                     return View("UserError");
                 }
-                comment.CpcmCommentBanned = !comment.CpcmCommentBanned;
+                if (comment.CpcmUser.CpcmIsDeleted)
+                {
+					Log.Warning("Попытка просмотра комментария удалённого пользователя{Comment}", commentId);
+					Response.StatusCode = 404;
+					ViewData["ErrorCode"] = 404;
+					ViewData["Message"] = "Коммент не найден";
+					return View("UserError");
+				}
+				if (comment.CpcmUser.CpcmUserBanned)
+				{
+					Log.Warning("Попытка просмотра комментария забаненного пользователя{Comment}", commentId);
+					Response.StatusCode = 404;
+					ViewData["ErrorCode"] = 404;
+					ViewData["Message"] = "Коммент не найден";
+					return View("UserError");
+				}
+                if(comment.CpcmPost.User!=null && comment.CpcmPost.User.CpcmIsDeleted)
+                {
+                    Log.Warning("Попытка просмотра комментария к посту удалённого пользователя{Comment}", commentId);
+                    Response.StatusCode = 404;
+                    ViewData["ErrorCode"] = 404;
+                    ViewData["Message"] = "Коммент не найден";
+                    return View("UserError");
+                }
+                if(comment.CpcmPost.User != null && comment.CpcmPost.User.CpcmUserBanned)
+                {
+					Log.Warning("Попытка просмотра комментария к посту забаненного пользователя{Comment}", commentId);
+					Response.StatusCode = 403;
+                    ViewData["ErrorCode"] = 403;
+                    ViewData["Message"] = "Пост комментария принадлежит заблокированному пользователю";
+					return View("UserError");
+				}
+                if (comment.CpcmPost.Group != null && comment.CpcmPost.Group.CpcmIsDeleted)
+                {
+					Log.Warning("Попытка просмотра комментария к посту удалённой группы{Comment}", commentId);
+					Response.StatusCode = 404;
+                    ViewData["ErrorCode"] = 404;
+                    ViewData["Message"] = "Коммент не найден";
+					return View("UserError");
+				}
+                if (comment.CpcmPost.Group != null && comment.CpcmPost.Group.CpcmGroupBanned)
+                {
+					Log.Warning("Попытка просмотра комментария к посту забаненной группы{Comment}", commentId);
+					Response.StatusCode = 403;
+                    ViewData["ErrorCode"] = 403;
+                    ViewData["Message"] = "Пост комментария принадлежит заблокированной группе";
+					return View("UserError");
+				}
+				comment.CpcmCommentBanned = !comment.CpcmCommentBanned;
 				if (HttpContext.Request.Cookies.ContainsKey("TimeZone"))
 				{
 					string timezoneOffsetCookie = HttpContext.Request.Cookies["TimeZone"];
