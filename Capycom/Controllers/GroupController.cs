@@ -191,15 +191,18 @@ namespace Capycom.Controllers
 				var post = await _context.CpcmPosts.Where(c => c.CpcmPostId == lastPostId).FirstOrDefaultAsync();
 				if (post == null)
 				{
+					Log.Warning("Попытка получить следующие посты для несуществующего поста {lastPostId}", lastPostId);
 					return StatusCode(404);
 				}
 				var group = await _context.CpcmGroups.Where(g => g.CpcmGroupId == groupId).FirstOrDefaultAsync();
 				if (group != null && group.CpcmIsDeleted)
 				{
+					Log.Warning("Попытка получить следующие посты для удалённой группы {groupId}", groupId);
 					return StatusCode(404);
 				}
 				if (group != null && group.CpcmGroupBanned)
 				{
+					Log.Warning("Попытка получить следующие посты для заблокированной группы {groupId}", groupId);
 					return StatusCode(403);
 				}
 
@@ -871,7 +874,7 @@ namespace Capycom.Controllers
 
 			try
 			{
-				var follower = await _context.CpcmGroupfollowers.Where(f => f.CpcmUserId == userId && f.CpcmGroupId == groupId).FirstOrDefaultAsync();
+				var follower = await _context.CpcmGroupfollowers.Where(f => f.CpcmUserId == userId && f.CpcmGroupId == groupId).Include(p => p.CpcmUser).FirstOrDefaultAsync();
 				if (follower == null)
 				{
 					Log.Warning("Пользователь не найден {userId}", userId);
@@ -882,7 +885,16 @@ namespace Capycom.Controllers
 					Log.Warning("Попытка выдать статус \"Автор\" {user}", HttpContext.User.FindFirstValue("CpcmUserId"));
 					return StatusCode(403, new { status = false, message = "Нельзя выдать статус \"Автор\" " });
 				}
-					
+				if (follower.CpcmUser.CpcmIsDeleted) 
+				{ 
+					Log.Warning("Пользователь удалён {userId}", userId);
+					return StatusCode(403, new { status = false, message = "Пользователь не найден" }); 
+				}
+				if (follower.CpcmUser.CpcmUserBanned)
+				{
+					Log.Warning("Пользователь заблокирован {userId}", userId);
+					return StatusCode(403, new { status = false, message = "Пользователь заблокирован" });
+				}
 				follower.CpcmUserRole = roleID;
 				await _context.SaveChangesAsync();
 				return StatusCode(200);
@@ -1742,7 +1754,7 @@ namespace Capycom.Controllers
 			Log.Information("Попытка забанить/разбанить пост {postGuid} пользователем {user}", id, HttpContext.User.FindFirstValue("CpcmUserId"));
 			if (!await CheckUserPrivilegeClaim("CpcmCanDelUsersPosts", "True"))
 			{
-				Log.Warning("Недостаточно прав для забана/разбана поста }id{", id);
+				Log.Warning("Недостаточно прав для забана/разбана поста {id}", id);
 				return StatusCode(403);
 			}
 			try
@@ -2129,10 +2141,12 @@ namespace Capycom.Controllers
 				var group = await _context.CpcmGroups.Where(g => g.CpcmGroupId == groupId).FirstOrDefaultAsync();
 				if (group != null && group.CpcmIsDeleted)
 				{
+					Log.Warning("Группа не найдена {groupId}", groupId);
 					return StatusCode(404);
 				}
 				if (group != null && group.CpcmGroupBanned)
 				{
+					Log.Warning("Группа заблокирована {groupId}", groupId);
 					return StatusCode(403);
 				}
 				if (!await CheckOnlyGroupPrivelege("CpcmCanMakePost", true, groupId))
@@ -2209,11 +2223,19 @@ namespace Capycom.Controllers
 			var group = await _context.CpcmGroups.Where(g => g.CpcmGroupId == groupId).FirstOrDefaultAsync();
 			if (group != null && group.CpcmIsDeleted)
 			{
-				return StatusCode(404);
+				Log.Warning("Группа не найдена {groupId}", groupId);
+				Response.StatusCode = 404;
+				ViewData["ErrorCode"] = 404;
+				ViewData["Message"] = "Группа не найдена";
+				return View("UserError");
 			}
 			if (group != null && group.CpcmGroupBanned)
 			{
-				return StatusCode(403);
+				Log.Warning("Группа заблокирована {groupId}", groupId);
+				Response.StatusCode = 403;
+				ViewData["ErrorCode"] = 403;
+				ViewData["Message"] = "Группа заблокирована";
+				return View("UserError");
 			}
 			List<CpcmPost> posts;
 			//ICollection<CpcmPost> postsWithLikesCount = new List<CpcmPost>();
