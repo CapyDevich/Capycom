@@ -80,7 +80,9 @@ namespace Capycom
             app.UseAuthentication();
             app.UseAuthorization();
 
-            app.MapControllerRoute(
+			app.UseMiddleware<UserAuthMiddleware>();
+
+			app.MapControllerRoute(
                 name: "default",
                 pattern: "{controller=Home}/{action=Index}/{id?}");
 
