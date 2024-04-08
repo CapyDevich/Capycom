@@ -49,6 +49,10 @@ namespace Capycom.Controllers
 
         public async Task<IActionResult> Create()
         {
+            if (User.Identity.IsAuthenticated)
+            {
+                RedirectToAction("Index","User");
+            }
             try
             {
                 
@@ -73,8 +77,12 @@ namespace Capycom.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(UserSignUpModel cpcmSignUser)
-        {            
-            Log.Debug("Попытка регистрации нового пользователя: {@CpcmSignUser}", cpcmSignUser);
+		{
+			if (User.Identity.IsAuthenticated)
+			{
+				RedirectToAction("Index", "User");
+			}
+			Log.Debug("Попытка регистрации нового пользователя: {@CpcmSignUser}", cpcmSignUser);
             if (ModelState.IsValid)
             {
                 CpcmUser cpcmUser = new();
