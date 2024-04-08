@@ -1116,6 +1116,8 @@ namespace Capycom.Controllers
 				ViewData["CpcmUserCity"] = new SelectList(await _context.CpcmCities.ToListAsync(), "CpcmCityId", "CpcmCityName");
 				ViewData["CpcmUserSchool"] = new SelectList(await _context.CpcmSchools.ToListAsync(), "CpcmSchooldId", "CpcmSchoolName");
 				ViewData["CpcmUserUniversity"] = new SelectList(await _context.CpcmUniversities.ToListAsync(), "CpcmUniversityId", "CpcmUniversityName");
+				ViewData["GroupRoles"] = new SelectList(await _context.CpcmGroupRoles.ToListAsync(), "CpcmRoleId", "CpcmRoleName");
+				ViewData["UserRole"] = new SelectList(await _context.CpcmRoles.ToListAsync(), "CpcmRoleId", "CpcmRoleName");
 			}
 			catch (DbException ex)
 			{
@@ -1158,7 +1160,15 @@ namespace Capycom.Controllers
 				//ViewData["additionalName"] = additionalName;
 				followerList1 = followerList1.Where(u => EF.Functions.Like(u.CpcmUserAdditionalName, $"%{filters.AdditionalName}%"));
 			}
-
+			if(true) //filters.GroupRole.HasValue && (await CheckUserPrivilegeClaim("CpcmCanEditGroups", "True") || await CheckOnlyGroupPrivelege("CpcmCanEditGroup",true, filters.GroupId))
+			{
+				followerList1 = followerList1.Where(u => _context.CpcmGroupfollowers.Any( gf => gf.CpcmUserId==u.CpcmUserId && gf.CpcmGroupId==filters.GroupId && gf.CpcmUserRole==filters.GroupRole)
+				);
+			}
+			if(filters.UserRole.HasValue && await CheckUserPrivilegeClaim("CpcmCanEditGroups", "True"))
+			{
+				followerList1 = followerList1.Where(u => u.CpcmUserRole == filters.UserRole);
+			}
 			try
 			{
 				var result = await followerList1.OrderBy(p => p.CpcmUserId).Take(10).ToListAsync();
@@ -1247,7 +1257,15 @@ namespace Capycom.Controllers
 				//ViewData["additionalName"] = additionalName;
 				followerList1 = followerList1.Where(u => EF.Functions.Like(u.CpcmUserAdditionalName, $"%{filters.AdditionalName}%"));
 			}
-
+			if (true) //filters.GroupRole.HasValue && (await CheckUserPrivilegeClaim("CpcmCanEditGroups", "True") || await CheckOnlyGroupPrivelege("CpcmCanEditGroup", true, filters.GroupId))
+			{
+				followerList1 = followerList1.Where(u => _context.CpcmGroupfollowers.Any(gf => gf.CpcmUserId == u.CpcmUserId && gf.CpcmGroupId == filters.GroupId && gf.CpcmUserRole == filters.GroupRole)
+				);
+			}
+			if (filters.UserRole.HasValue && await CheckUserPrivilegeClaim("CpcmCanEditGroups", "True"))
+			{
+				followerList1 = followerList1.Where(u => u.CpcmUserRole == filters.UserRole);
+			}
 			try
 			{
 				var result = await followerList1.OrderBy(p => p.CpcmUserId).Take(10).ToListAsync();

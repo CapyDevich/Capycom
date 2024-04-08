@@ -26,5 +26,9 @@ namespace Capycom.Models
 		public string? AdditionalName { get; set; }
 		public Guid? lastId { get; set; }
 
+
+		public int? GroupRole { get; set; }
+		public int? UserRole { get; set; }
+
 	}
 }
