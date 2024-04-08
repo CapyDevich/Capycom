@@ -151,6 +151,41 @@ namespace Capycom.Controllers
         [Authorize]
         public async Task<IActionResult> AddComment(CommentAddModel userComment)
         {
+            try
+            {
+                var post = await _context.CpcmPosts.Where(p => p.CpcmPostId == userComment.CpcmPostId).Include(u=> u.User).Include(g => g.Group).FirstOrDefaultAsync();
+                if(post == null || post.CpcmIsDeleted)
+                {
+					return StatusCode(404);
+				}
+                if (post.CpcmPostBanned)
+                {
+                    return StatusCode(403, new {message = "Пост заблокирован"});
+                }
+                if(post.User!=null && post.User.CpcmIsDeleted)
+                {
+					return StatusCode(404);
+				}
+                if (post.User != null && post.User.CpcmUserBanned)
+                {
+                    return StatusCode(403, new { message = "Автор поста заблокирован" });
+				
+                }
+                if (post.Group != null && post.Group.CpcmIsDeleted)
+                {
+					return StatusCode(404);
+				}
+                if (post.Group != null && post.Group.CpcmGroupBanned)
+                {
+					return StatusCode(403, new { message = "Группа поста заблокирована" });
+				}
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Не удалось выполнить запрос к БД на выборку поста {Post}", userComment.CpcmPostId);
+                return StatusCode(500, new { message = "Ошибка связи с сервером" });
+
+            }
             Log.Information("Пользователь {User} пытается добавить комментарий к посту {Post}", HttpContext.User.FindFirstValue("CpcmUserId"), userComment.CpcmPostId);
             if (ModelState.IsValid)
             {
@@ -266,7 +301,7 @@ namespace Capycom.Controllers
         [Authorize]
         public async Task<IActionResult> DeleteComment(Guid commentId)
         {
-            Log.Information("Пользователь {User} пытается удалить комментарий {Comment}", HttpContext.User.FindFirstValue("CpcmUserId"), commentId);
+			Log.Information("Пользователь {User} пытается удалить комментарий {Comment}", HttpContext.User.FindFirstValue("CpcmUserId"), commentId);
             try
             {
                 var comment = await _context.CpcmComments.Where(c => c.CpcmCommentId == commentId && c.CpcmIsDeleted==false).FirstOrDefaultAsync();
@@ -274,7 +309,39 @@ namespace Capycom.Controllers
                 {
                     return StatusCode(404);
                 }
-                string? authUserId = HttpContext.User.FindFirst(c => c.Type == "CpcmUserId").Value;
+
+
+
+				var post = await _context.CpcmPosts.Where(p => p.CpcmPostId == comment.CpcmPostId).Include(u => u.User).Include(g => g.Group).FirstOrDefaultAsync();
+				if (post == null || post.CpcmIsDeleted)
+				{
+					return StatusCode(404);
+				}
+				if (post.CpcmPostBanned)
+				{
+					return StatusCode(403, new { message = "Пост заблокирован" });
+				}
+				if (post.User != null && post.User.CpcmIsDeleted)
+				{
+					return StatusCode(404);
+				}
+				if (post.User != null && post.User.CpcmUserBanned)
+				{
+					return StatusCode(403, new { message = "Автор поста заблокирован" });
+
+				}
+				if (post.Group != null && post.Group.CpcmIsDeleted)
+				{
+					return StatusCode(404);
+				}
+				if (post.Group != null && post.Group.CpcmGroupBanned)
+				{
+					return StatusCode(403, new { message = "Группа поста заблокирована" });
+				}
+
+
+
+				string? authUserId = HttpContext.User.FindFirst(c => c.Type == "CpcmUserId").Value;
                 if (authUserId == comment.CpcmUserId.ToString())
                 {
                     comment.CpcmIsDeleted = true;
@@ -446,7 +513,40 @@ namespace Capycom.Controllers
             {
                 var lastComment = await _context.CpcmComments.Where(c => c.CpcmCommentId == lastCommentId).FirstOrDefaultAsync();
                 if(lastComment == null) { return StatusCode(404); }
-                var rez = await _context.CpcmComments.Where(c => c.CpcmCommentCreationDate.CompareTo(lastComment.CpcmCommentCreationDate) > 0 && c.CpcmPostId == postId && c.InverseCpcmCommentFatherNavigation == null).Include( c=>c.CpcmUser).OrderBy(u => u.CpcmCommentCreationDate).Take(10).ToListAsync();
+
+
+				var post = await _context.CpcmPosts.Where(p => p.CpcmPostId == lastComment.CpcmPostId).Include(u => u.User).Include(g => g.Group).FirstOrDefaultAsync();
+				if (post == null || post.CpcmIsDeleted)
+				{
+					return StatusCode(404);
+				}
+				if (post.CpcmPostBanned)
+				{
+					return StatusCode(403, new { message = "Пост заблокирован" });
+				}
+				if (post.User != null && post.User.CpcmIsDeleted)
+				{
+					return StatusCode(404);
+				}
+				if (post.User != null && post.User.CpcmUserBanned)
+				{
+					return StatusCode(403, new { message = "Автор поста заблокирован" });
+
+				}
+				if (post.Group != null && post.Group.CpcmIsDeleted)
+				{
+					return StatusCode(404);
+				}
+				if (post.Group != null && post.Group.CpcmGroupBanned)
+				{
+					return StatusCode(403, new { message = "Группа поста заблокирована" });
+				}
+
+
+
+
+
+				var rez = await _context.CpcmComments.Where(c => c.CpcmCommentCreationDate.CompareTo(lastComment.CpcmCommentCreationDate) > 0 && c.CpcmPostId == postId && c.InverseCpcmCommentFatherNavigation == null).Include( c=>c.CpcmUser).OrderBy(u => u.CpcmCommentCreationDate).Take(10).ToListAsync();
                 foreach (var comment in rez)
                 {
                     //await _context.Entry(comment).Collection(p => p.InverseCpcmCommentFatherNavigation).LoadAsync();
@@ -483,13 +583,45 @@ namespace Capycom.Controllers
             Log.Information("Пользователь {User} пытается поставить/убрать лайк к посту {Post}", HttpContext.User.FindFirstValue("CpcmUserId"), postId);
             try
             {
-                var post = await _context.CpcmPosts.Where(p => p.CpcmPostId == postId && p.CpcmPostPublishedDate < DateTime.UtcNow).FirstOrDefaultAsync();
+                var post = await _context.CpcmPosts.Where(p => p.CpcmPostId == postId && p.CpcmPostPublishedDate < DateTime.UtcNow).Include(u => u.User).Include(g => g.Group).FirstOrDefaultAsync();
                 if (post == null)
                 {
                     Log.Warning("Пользователь {User} пытается поставить/убрать лайк к посту {Post}. Пост не найден", HttpContext.User.FindFirstValue("CpcmUserId"), postId);
                     return StatusCode(404);
                 }
-                string? userId = HttpContext.User.FindFirstValue("CpcmUserId");
+
+				if (post == null || post.CpcmIsDeleted)
+				{
+					return StatusCode(404);
+				}
+				if (post.CpcmPostBanned)
+				{
+					return StatusCode(403, new { message = "Пост заблокирован" });
+				}
+				if (post.User != null && post.User.CpcmIsDeleted)
+				{
+					return StatusCode(404);
+				}
+				if (post.User != null && post.User.CpcmUserBanned)
+				{
+					return StatusCode(403, new { message = "Автор поста заблокирован" });
+
+				}
+				if (post.Group != null && post.Group.CpcmIsDeleted)
+				{
+					return StatusCode(404);
+				}
+				if (post.Group != null && post.Group.CpcmGroupBanned)
+				{
+					return StatusCode(403, new { message = "Группа поста заблокирована" });
+				}
+
+
+
+
+
+
+				string? userId = HttpContext.User.FindFirstValue("CpcmUserId");
                 var answer = await _context.Database.SqlQuery<long>($@"SELECT * FROM CPCM_POSTLIKES WHERE CPCM_PostID = {post.CpcmPostId} AND CPCM_UserId = {userId} ").CountAsync();
                 
                 if(answer == 0)
