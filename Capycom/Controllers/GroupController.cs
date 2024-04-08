@@ -10,6 +10,7 @@ using System;
 using System.Data.Common;
 using System.Reflection;
 using System.Security.Claims;
+using System.Text.RegularExpressions;
 
 namespace Capycom.Controllers
 {
@@ -911,7 +912,7 @@ namespace Capycom.Controllers
 			Log.Information("Попытка заблокировать/разблокировать группу {groupId} пользователем {user}", groupId, HttpContext.User.FindFirstValue("CpcmUserId"));
 			try
 			{
-				var group = await _context.CpcmGroups.Where(g => g.CpcmGroupId == groupId).FirstOrDefaultAsync();
+				var group = await _context.CpcmGroups.Where(g => g.CpcmGroupId == groupId && g.CpcmIsDeleted==false).FirstOrDefaultAsync();
 				if (group == null)
 				{
 					Log.Warning("Группа не найдена {group}", groupId);
@@ -962,6 +963,14 @@ namespace Capycom.Controllers
 					ViewData["Message"] = "Группа не найдена";
 					return View("UserError");
 				}
+				if(group !=null && group.CpcmGroupBanned)
+				{
+					Log.Warning("Группа для удаления заблокирована {gr}", groupId);
+					Response.StatusCode = 404;
+					ViewData["ErrorCode"] = 404;
+					ViewData["Message"] = "Группа для удаления заблокирована";
+					return View("UserError");
+				}
 				if (await CheckUserPrivilege("CpcmCanEditGroup", true, "CpcmCanEditGroups", true, groupId))
 				{
 					return View();
@@ -1010,7 +1019,18 @@ namespace Capycom.Controllers
 				if (group == null || group.CpcmIsDeleted)
 				{
 					Log.Warning("Группа для удаления не найдена {gr}", groupId);
-					return StatusCode(404);
+					Response.StatusCode = 404;
+					ViewData["ErrorCode"] = 404;
+					ViewData["Message"] = "Группа для удаления не найдена";
+					return View("UserError");
+				}
+				if (group != null && group.CpcmGroupBanned)
+				{
+					Log.Warning("Группа для удаления заблокирована {gr}", groupId);
+					Response.StatusCode = 403;
+					ViewData["ErrorCode"] = 403;
+					ViewData["Message"] = "Группа для удаления заблокирована";
+					return View("UserError");
 				}
 				if (await CheckUserPrivilege("CpcmCanEditGroup", true, "CpcmCanEditGroups", true, groupId))
 				{
@@ -1018,12 +1038,15 @@ namespace Capycom.Controllers
 					group.CpcmIsDeleted = !group.CpcmIsDeleted;
 					await _context.SaveChangesAsync();
 					Log.Information("Группа {groupId} удалена пользователем {user}", groupId, HttpContext.User.FindFirstValue("CpcmUserId"));
-					return StatusCode(200, new { status = true });
+					return RedirectToAction("Index","User");
 				}
 				else
 				{
 					Log.Warning("Недостаточно прав для удаления группы {gr}", groupId);
-					return StatusCode(403);
+					Response.StatusCode = 403;
+					ViewData["ErrorCode"] = 403;
+					ViewData["Message"] = "Недостаточно прав";
+					return View("UserError");
 				}
 			}
 			catch (DbUpdateConcurrencyException ex)
@@ -1044,7 +1067,10 @@ namespace Capycom.Controllers
 			catch (DbException ex)
 			{
 				Log.Error(ex, "Ошибка при удалении группы {gr}", groupId);
-				return StatusCode(500);
+				Response.StatusCode = 500;
+				ViewData["ErrorCode"] = 500;
+				ViewData["Message"] = "Ошибка при удалении группы. Повторите позже";
+				return View("UserError");
 			}	
 		}
 
@@ -1253,7 +1279,7 @@ namespace Capycom.Controllers
 				Log.Error(ex, "Ошибка при получении группы из базы данных {id}", id);
 				return StatusCode(500);
 			}
-			if (group == null || group.CpcmIsDeleted)
+			if (group == null)
 			{
 				Log.Warning("Группа не найдена {id}", id);
 				Response.StatusCode = 404;
@@ -1265,6 +1291,10 @@ namespace Capycom.Controllers
 				var follow = await _context.CpcmGroupfollowers.Where(f => f.CpcmGroupId == group.CpcmGroupId && f.CpcmUserId.ToString() == User.FindFirstValue("CpcmUserId")).Include(f=>f.CpcmUserRoleNavigation).FirstOrDefaultAsync();
 				if(follow == null)
 				{
+					if(group.CpcmIsDeleted || group.CpcmGroupBanned)
+					{
+						return StatusCode(403);
+					}
 					CpcmGroupfollower ff = new() { CpcmGroupId = group.CpcmGroupId, CpcmUserId = Guid.Parse(User.FindFirstValue("CpcmUserId")), CpcmUserRole = CpcmGroupfollower.FollowerRole };
 					_context.CpcmGroupfollowers.Add(ff);
 				}
@@ -1313,7 +1343,7 @@ namespace Capycom.Controllers
 				//ViewData["universityId"] = universityId;
 				query = query.Where(u => u.CpcmGroupSubject == filters.SubjectID);
 			}
-
+			query.Where( u => u.CpcmIsDeleted == false && u.CpcmGroupBanned == false);
 			try
 			{
 				ViewData["CpcmGroupCity"] = new SelectList(await _context.CpcmCities.ToListAsync(), "CpcmCityId", "CpcmCityName");
@@ -1351,7 +1381,7 @@ namespace Capycom.Controllers
 				//ViewData["universityId"] = universityId;
 				query = query.Where(u => u.CpcmGroupSubject == filters.SubjectID);
 			}
-
+			query.Where(u => u.CpcmIsDeleted == false && u.CpcmGroupBanned == false);
 			try
 			{
 				var rez = await query.OrderBy(u => u.CpcmGroupId).Where(g=>g.CpcmGroupId.CompareTo(filters.lastId)>0).Take(10).ToListAsync();
@@ -1370,6 +1400,37 @@ namespace Capycom.Controllers
 		[Authorize]
 		public async Task<IActionResult> CreatePost(Guid groupId)
 		{
+			try
+			{
+				var group = await _context.CpcmGroups.Where(g => g.CpcmGroupId == groupId).FirstOrDefaultAsync();
+				if(group == null || group.CpcmIsDeleted)
+				{
+					Log.Warning("Группа не найдена {groupId}", groupId);
+					Response.StatusCode = 404;
+					ViewData["ErrorCode"] = 404;
+					ViewData["Message"] = "Группа не найдена";
+					return View("UserError");
+				}
+				if (group.CpcmGroupBanned)
+				{
+					Log.Warning("Группа заблокирована {groupId}", groupId);
+					Response.StatusCode = 403;
+					ViewData["ErrorCode"] = 403;
+					ViewData["Message"] = "Группа заблокирована";
+					return View("UserError");
+				}
+			}
+			catch(DbException ex)
+			{
+				Log.Error(ex, "Ошибка при получении группы из базы данных {groupId}", groupId);
+				Response.StatusCode = 500;
+				ViewData["ErrorCode"] = 500;
+				ViewData["Message"] = "Ошибка связи с сервером. Повторите позже.";
+				return View("UserError");
+
+			}
+
+
 			if (!await CheckOnlyGroupPrivelege("CpcmCanMakePost", true, groupId))
 			{
 				Log.Warning("Недостаточно прав для создания поста {Groupid}", groupId);
@@ -1386,6 +1447,35 @@ namespace Capycom.Controllers
 		[ValidateAntiForgeryToken]
 		public async Task<IActionResult> CreatePost(GroupPostModel groupPost)
 		{
+			try
+			{
+				var group = await _context.CpcmGroups.Where(g => g.CpcmGroupId == groupPost.GroupId).FirstOrDefaultAsync();
+				if (group == null || group.CpcmIsDeleted)
+				{
+					Log.Warning("Группа не найдена {groupId}", groupPost.GroupId);
+					Response.StatusCode = 404;
+					ViewData["ErrorCode"] = 404;
+					ViewData["Message"] = "Группа не найдена";
+					return View("UserError");
+				}
+				if (group.CpcmGroupBanned)
+				{
+					Log.Warning("Группа заблокирована {groupId}", groupPost.GroupId);
+					Response.StatusCode = 403;
+					ViewData["ErrorCode"] = 403;
+					ViewData["Message"] = "Группа заблокирована";
+					return View("UserError");
+				}
+			}
+			catch (DbException ex)
+			{
+				Log.Error(ex, "Ошибка при получении группы из базы данных {groupId}", groupPost.GroupId);
+				Response.StatusCode = 500;
+				ViewData["ErrorCode"] = 500;
+				ViewData["Message"] = "Ошибка связи с сервером. Повторите позже.";
+				return View("UserError");
+
+			}
 			Log.Information("Попытка создания поста в группе {groupId} пользователем {user}", groupPost.GroupId, HttpContext.User.FindFirstValue("CpcmUserId"));
 			if (!await CheckOnlyGroupPrivelege("CpcmCanMakePost", true, groupPost.GroupId))
 			{
@@ -1548,6 +1638,35 @@ namespace Capycom.Controllers
 		[HttpPost]
 		public async Task<IActionResult> DeletePost(Guid postGuid, Guid groupId)
 		{
+			try
+			{
+				var group = await _context.CpcmGroups.Where(g => g.CpcmGroupId == groupId).FirstOrDefaultAsync();
+				if (group == null || group.CpcmIsDeleted)
+				{
+					Log.Warning("Группа не найдена {groupId}", groupId);
+					Response.StatusCode = 404;
+					ViewData["ErrorCode"] = 404;
+					ViewData["Message"] = "Группа не найдена";
+					return View("UserError");
+				}
+				if (group.CpcmGroupBanned)
+				{
+					Log.Warning("Группа заблокирована {groupId}", groupId);
+					Response.StatusCode = 403;
+					ViewData["ErrorCode"] = 403;
+					ViewData["Message"] = "Группа заблокирована";
+					return View("UserError");
+				}
+			}
+			catch (DbException ex)
+			{
+				Log.Error(ex, "Ошибка при получении группы из базы данных {groupId}", groupId);
+				Response.StatusCode = 500;
+				ViewData["ErrorCode"] = 500;
+				ViewData["Message"] = "Ошибка связи с сервером. Повторите позже.";
+				return View("UserError");
+
+			}
 			Log.Information("Попытка удаления поста {postGuid} пользователем {user}", postGuid, HttpContext.User.FindFirstValue("CpcmUserId"));
 			CpcmPost? post = null;
 			try
@@ -1641,6 +1760,35 @@ namespace Capycom.Controllers
 		[Authorize]
 		public async Task<IActionResult> EditPost(Guid postGuid, Guid groupId)
 		{
+			try
+			{
+				var group = await _context.CpcmGroups.Where(g => g.CpcmGroupId == groupId).FirstOrDefaultAsync();
+				if (group == null || group.CpcmIsDeleted)
+				{
+					Log.Warning("Группа не найдена {groupId}", groupId);
+					Response.StatusCode = 404;
+					ViewData["ErrorCode"] = 404;
+					ViewData["Message"] = "Группа не найдена";
+					return View("UserError");
+				}
+				if (group.CpcmGroupBanned)
+				{
+					Log.Warning("Группа заблокирована {groupId}", groupId);
+					Response.StatusCode = 403;
+					ViewData["ErrorCode"] = 403;
+					ViewData["Message"] = "Группа заблокирована";
+					return View("UserError");
+				}
+			}
+			catch (DbException ex)
+			{
+				Log.Error(ex, "Ошибка при получении группы из базы данных {groupId}", groupId);
+				Response.StatusCode = 500;
+				ViewData["ErrorCode"] = 500;
+				ViewData["Message"] = "Ошибка связи с сервером. Повторите позже.";
+				return View("UserError");
+
+			}
 			Log.Information("Попытка редактирования поста {postGuid} пользователем {user}", postGuid, HttpContext.User.FindFirstValue("CpcmUserId"));
 			CpcmPost? post = null;
 			try
@@ -1691,7 +1839,35 @@ namespace Capycom.Controllers
 			//{
 			//    return View(editPost);
 			//}
+			try
+			{
+				var group = await _context.CpcmGroups.Where(g => g.CpcmGroupId == editPost.GroupId).FirstOrDefaultAsync();
+				if (group == null || group.CpcmIsDeleted)
+				{
+					Log.Warning("Группа не найдена {groupId}", editPost.GroupId);
+					Response.StatusCode = 404;
+					ViewData["ErrorCode"] = 404;
+					ViewData["Message"] = "Группа не найдена";
+					return View("UserError");
+				}
+				if (group.CpcmGroupBanned)
+				{
+					Log.Warning("Группа заблокирована {groupId}", editPost.GroupId);
+					Response.StatusCode = 403;
+					ViewData["ErrorCode"] = 403;
+					ViewData["Message"] = "Группа заблокирована";
+					return View("UserError");
+				}
+			}
+			catch (DbException ex)
+			{
+				Log.Error(ex, "Ошибка при получении группы из базы данных {groupId}", editPost.GroupId);
+				Response.StatusCode = 500;
+				ViewData["ErrorCode"] = 500;
+				ViewData["Message"] = "Ошибка связи с сервером. Повторите позже.";
+				return View("UserError");
 
+			}
 			Log.Information("Попытка редактирования поста {postGuid} пользователем {user}", editPost.Id, HttpContext.User.FindFirstValue("CpcmUserId"));
 			if (ModelState.IsValid)
 			{
