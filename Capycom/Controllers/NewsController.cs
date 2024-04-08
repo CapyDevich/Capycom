@@ -55,7 +55,7 @@ namespace Capycom.Controllers
 								(p.CpcmUserId.HasValue && allUserIds.Contains(p.CpcmUserId.Value)))
 					.Include(p => p.CpcmImages)
 					//.Include(p => p.CpcmPostFatherNavigation)
-					.OrderByDescending(c => c.CpcmPostPublishedDate)
+					.OrderByDescending(c => c.CpcmPostPublishedDate).Where(p => p.CpcmIsDeleted == false)
 					.Take(10)
 					.ToListAsync();
 				foreach (var post in posts)
@@ -137,7 +137,7 @@ namespace Capycom.Controllers
 								p.CpcmPostPublishedDate < lastPost.CpcmPostPublishedDate)
 					.Include(p => p.CpcmImages)
 					//.Include(p => p.CpcmPostFatherNavigation)
-					.OrderByDescending(c => c.CpcmPostPublishedDate)
+					.OrderByDescending(c => c.CpcmPostPublishedDate).Where(p => p.CpcmIsDeleted == false)
 					.Take(10)
 					.ToListAsync();
 				foreach (var post in posts)
