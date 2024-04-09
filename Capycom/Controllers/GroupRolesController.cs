@@ -187,11 +187,11 @@ namespace Capycom.Controllers
                     await _context.SaveChangesAsync();
                     Log.Information("Пользователь {User} изменил роль {cpcmGroupRole.CpcmRoleName}. Данные по соединененю {@HttpContext.Connection}", HttpContext.User.FindFirstValue("CpcmUserId"), cpcmGroupRole.CpcmRoleName, HttpContext.Connection);
                 }
-                catch (DbUpdateConcurrencyException)
+                catch (DbUpdateConcurrencyException ex)
                 {
                     if (!CpcmGroupRoleExists(cpcmGroupRole.CpcmRoleId))
                     {
-                        Log.Error("Пользователь {User} попытался изменить роль Но данные не удалось сохранить. Данные по соединеню {@HttpContext.Connection}", HttpContext.User.FindFirstValue("CpcmUserId"), HttpContext.Connection);
+                        Log.Error(ex, "Пользователь {User} попытался изменить роль Но данные не удалось сохранить. Данные по соединеню {@HttpContext.Connection}", HttpContext.User.FindFirstValue("CpcmUserId"), HttpContext.Connection);
 						Response.StatusCode = 404;
 						ViewData["ErrorCode"] = 404;
 						ViewData["Message"] = "Кто-то до вас удалил данную запись";
@@ -199,9 +199,9 @@ namespace Capycom.Controllers
 					}
                     else
                     {
-                        Log.Error("Не удалось выполнить запрос к базе данных на изменение роли {cpcmGroupRole.CpcmRoleName} поскольку её отредактировали до того, как вы начали отправили форму", cpcmGroupRole.CpcmRoleName);
-						Response.StatusCode = 500;
-						ViewData["ErrorCode"] = 500;
+                        Log.Error(ex, "Не удалось выполнить запрос к базе данных на изменение роли {cpcmGroupRole.CpcmRoleName} поскольку её отредактировали до того, как вы начали отправили форму", cpcmGroupRole.CpcmRoleName);
+						Response.StatusCode = 409;
+						ViewData["ErrorCode"] = 409;
 						ViewData["Message"] = "Ошибка связи с сервером";
 						return View("UserError");
 					}
