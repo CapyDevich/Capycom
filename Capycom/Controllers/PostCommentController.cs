@@ -371,7 +371,7 @@ namespace Capycom.Controllers
 			{
 				// Обработка исключений DbUpdateConcurrencyException
                 Log.Error(ex, "Пользователь {User} пытается удалить комментарий {Comment}. Произошла ошибка с доступом к серверу - не кто-то уже работал с этим комментарием", HttpContext.User.FindFirstValue("CpcmUserId"), commentId);
-                return StatusCode(500, new { message = "Произошла ошибка с доступом к серверу. Пороверьте действительно ли существует комментарий, возможно вы ранее его уже удалили." });
+                return StatusCode(409, new { message = "Произошла ошибка с доступом к серверу. Пороверьте действительно ли существует комментарий, возможно вы ранее его уже удалили." });
 			}
 			catch (DbUpdateException ex)
 			{
@@ -408,7 +408,7 @@ namespace Capycom.Controllers
 			catch (DbUpdateConcurrencyException ex)
 			{
 				Log.Error(ex, "Пользователь {User} пытается заблокировать/разблокировать комментарий {Comment}. Произошла ошибка с доступом к серверу - кто-то уже работал с этим комментарием", HttpContext.User.FindFirstValue("CpcmUserId"), commentId);
-                return StatusCode(500, new { message = "Произошла ошибка с доступом к серверу. Пороверьте действительно ли существует комментарий, возможно вы ранее его уже заблокировали/разблокировали." });
+                return StatusCode(409, new { message = "Произошла ошибка с доступом к серверу. Пороверьте действительно ли существует комментарий, возможно вы ранее его уже заблокировали/разблокировали." });
 			}
 			catch (DbUpdateException ex)
 			{
@@ -684,7 +684,7 @@ namespace Capycom.Controllers
 			catch (DbUpdateConcurrencyException ex)
 			{
 				Log.Error(ex, "Пользователь {User} пытается поставить/убрать лайк к посту {Post}. Произошла ошибка с доступом к серверу - кто-то уже работал с этим постом", HttpContext.User.FindFirstValue("CpcmUserId"), postId);
-                return StatusCode(500, new { message = "Произошла ошибка с доступом к серверу. Пороверьте действительно ли существует пост, возможно вы ранее его уже лайкнули/дизлайкнули с другого утройства одновременно с этим устройством." });
+                return StatusCode(409, new { message = "Произошла ошибка с доступом к серверу. Пороверьте действительно ли существует пост, возможно вы ранее его уже лайкнули/дизлайкнули с другого утройства одновременно с этим устройством." });
 			}
 			catch (DbUpdateException ex)
 			{

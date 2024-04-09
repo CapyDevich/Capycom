@@ -694,8 +694,8 @@ namespace Capycom.Controllers
 					{
 						Log.Error(exx, "Ошибка при удалении изображений группы {@file1}, {@file2}", filePathGroupImage, filePathGroupCovet);
 					}
-					Response.StatusCode = 500;
-					ViewData["ErrorCode"] = 500;
+					Response.StatusCode = 409;
+					ViewData["ErrorCode"] = 409;
 					ViewData["Message"] = "Не удалось сохранить изменения. Возможно кто-то попытался внести изменение до вас.";
 					return View("UserError");
 				}
@@ -902,7 +902,7 @@ namespace Capycom.Controllers
 			catch(DbUpdateConcurrencyException ex)
 			{
 				Log.Error(ex, "Ошибка при обновлении роли пользователя в группе {user}, {group}", userId, groupId);
-				return StatusCode(500, new { status = false, message = "Не удалось сохранить изменения. Возможно кто-то попытался внести изменение до вас." });
+				return StatusCode(409, new { status = false, message = "Не удалось сохранить изменения. Возможно кто-то попытался внести изменение до вас." });
 			}
 			catch (DbUpdateException ex)
 			{
@@ -946,7 +946,7 @@ namespace Capycom.Controllers
 			catch(DbUpdateConcurrencyException ex)
 			{
 				Log.Error(ex, "Ошибка при обновлении статуса группы {gr}", groupId);
-				return StatusCode(500);
+				return StatusCode(409);
 			}
 			catch (DbUpdateException ex)
 			{
@@ -999,8 +999,8 @@ namespace Capycom.Controllers
 			catch (DbUpdateConcurrencyException ex)
 			{
 				Log.Error(ex, "Ошибка при удалении группы - конкурентность {gr}", groupId);
-				Response.StatusCode = 500;
-				ViewData["ErrorCode"] = 500;
+				Response.StatusCode = 409;
+				ViewData["ErrorCode"] = 409;
 				ViewData["Message"] = "Ошибка при удалении группы. Возможно кто-то уже попытался удалить группу.";
 				return View("UserError");
 			}
@@ -1064,8 +1064,8 @@ namespace Capycom.Controllers
 			catch (DbUpdateConcurrencyException ex)
 			{
 				Log.Error(ex, "Ошибка при удалении группы - конкурентность {gr}", groupId);
-				Response.StatusCode = 500;
-				ViewData["ErrorCode"] = 500;
+				Response.StatusCode = 409;
+				ViewData["ErrorCode"] = 409;
 				ViewData["Message"] = "Ошибка при удалении группы. Возможно кто-то уже попытался удалить группу.";
 				return View("UserError");
 			}
@@ -1338,7 +1338,7 @@ namespace Capycom.Controllers
 			catch (DbUpdateConcurrencyException ex)
 			{
 				Log.Error(ex, "Ошибка при обновлении подписки на группу {id}", id);
-				return StatusCode(500 , new {message = "не удалось отписаться/подписаться. Возможно вы уже сделали это действие с другого устройства"});
+				return StatusCode(409, new {message = "не удалось отписаться/подписаться. Возможно вы уже сделали это действие с другого устройства"});
 			}
 			catch (DbUpdateException ex)
 			{
@@ -1734,7 +1734,7 @@ namespace Capycom.Controllers
 			catch (DbUpdateConcurrencyException ex)
 			{
 				Log.Error(ex, "Ошибка при удалении поста - конкурентность {post}", postGuid);
-				return StatusCode(500, new { message ="Обнаружена опытка удалить пост, который кто-то редактировал"});
+				return StatusCode(409, new { message ="Обнаружена опытка удалить пост, который кто-то редактировал"});
 			}
 			catch (DbUpdateException ex)
 			{
@@ -1772,7 +1772,7 @@ namespace Capycom.Controllers
 			catch (DbUpdateConcurrencyException ex)
 			{
 				Log.Error(ex, "Ошибка при забане/разбане поста - конкурентность {id}", id);
-				return StatusCode(500, new { message = "Обнаружена опытка забанить/разбанить пост, который кто-то редактировал" });
+				return StatusCode(409, new { message = "Обнаружена опытка забанить/разбанить пост, который кто-то редактировал" });
 			}
 			catch (DbUpdateException ex)
 			{
@@ -2064,6 +2064,25 @@ namespace Capycom.Controllers
 							Log.Error(ex, "Ошибка при удалении файла {@model}", editPost);
 						}
 
+					}
+					catch (DbUpdateException ex)
+					{
+						try
+						{
+							foreach (var path in filePaths)
+							{
+								if (System.IO.File.Exists(path))
+								{
+									System.IO.File.Delete(path);
+								}
+							}
+						}
+						catch (IOException exx)
+						{
+							Log.Error(exx, "Ошибка при удалении файла {@model}", editPost);
+						}
+						Log.Error(ex, "Ошибка при сохранении изменений поста {@model}", editPost);
+						return StatusCode(500);
 					}
 					catch (DbException ex)
 					{

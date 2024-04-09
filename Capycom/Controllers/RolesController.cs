@@ -203,8 +203,8 @@ namespace Capycom.Controllers
                     else
                     {
                         Log.Error(ex,"Не удалось выполнить запрос к базе данных на изменение роли {@cpcmRole}, поскольку кто-то до вас попытался изменить запись. Данные по соединеню {@HttpContext.Connection}", cpcmRole, HttpContext.Connection);
-						Response.StatusCode = 500;
-						ViewData["ErrorCode"] = 500;
+						Response.StatusCode = 409;
+						ViewData["ErrorCode"] = 409;
 						ViewData["Message"] = "Не удалось изменить запись, т.к. она была кем-то изменена. Повторите попытку, после того, как убедитесь в необходимости изменений.";
 						return View("UserError");
 					}
