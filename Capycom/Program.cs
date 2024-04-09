@@ -6,6 +6,8 @@ using Serilog;
 using System.Configuration;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 using Serilog.Formatting.Json;
+using Microsoft.AspNetCore.RateLimiting;
+using System.Threading.RateLimiting;
 
 namespace Capycom
 {
@@ -23,7 +25,6 @@ namespace Capycom
             }
 
 
-            //ƒобавл€ем DB как встривание зависимости. 
             builder.Services.AddDbContext<CapycomContext>(options => options.UseSqlServer(connection));
 
             builder.Services.Configure<MyConfig>((options => builder.Configuration.GetSection("MyConfig").Bind(options)));
@@ -32,12 +33,10 @@ namespace Capycom
 
             builder.Services.AddAuthorization();
 
-
 			builder.Services.AddAuthorization(options =>
 			{
 				options.AddPolicy("CpcmCanEditRoles", policy => policy.RequireClaim("CpcmCanEditRoles", "True"));
 			});
-
 
 			builder.Logging.ClearProviders();
 			var columnOptions = new ColumnOptions();
@@ -58,11 +57,18 @@ namespace Capycom
 			builder.Host.UseSerilog();
 			Serilog.Debugging.SelfLog.Enable(msg => Console.WriteLine(msg));
 
-
-			// Add services to the container.
 			builder.Services.AddControllersWithViews();
 
-            var app = builder.Build();
+			//builder.Services.AddRateLimiter(_ => _
+			//.AddFixedWindowLimiter(policyName: "fixed", options =>
+			//{
+			//	options.PermitLimit = 4;
+			//	options.Window = TimeSpan.FromSeconds(12);
+			//	options.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+			//	options.QueueLimit = 2;
+			//}));
+
+			var app = builder.Build();
 
             // Configure the HTTP request pipeline.
             if (!app.Environment.IsDevelopment())
@@ -79,6 +85,8 @@ namespace Capycom
 
             app.UseAuthentication();
             app.UseAuthorization();
+
+			//app.UseRateLimiter();
 
 			app.UseMiddleware<UserAuthMiddleware>();
 
