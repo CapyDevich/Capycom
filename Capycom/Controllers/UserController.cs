@@ -17,6 +17,8 @@ using static NuGet.Packaging.PackagingConstants;
 using System.Security.Claims;
 using Capycom.Enums;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Serilog;
+using System.Diagnostics.Eventing.Reader;
 
 namespace Capycom.Controllers
 {
@@ -41,22 +43,14 @@ namespace Capycom.Controllers
         {
             string userId = HttpContext.User.FindFirst(c => c.Type == "CpcmUserId").Value;
 
-            //CpcmUser user = _context.CpcmUsers
-            //    .Include(c => c.CpcmUserCityNavigation)
-            //    .Include(c => c.CpcmUserRoleNavigation)
-            //    .Include(c => c.CpcmUserSchoolNavigation)
-            //    .Include(c => c.CpcmUserUniversityNavigation)
-            //    .Where(c => c.CpcmUserId == Guid.Parse(userId)).First();
-
-            //return View(user);
-
             CpcmUser? user;
             try
             {
                 user = await _context.CpcmUsers.Where(c => c.CpcmUserId == Guid.Parse(userId)).FirstOrDefaultAsync();
             }
-            catch (DbException)
+            catch (DbException ex)
             {
+                Log.Error(ex, "Ошибка при попытке получить пользователя из базы данных");
                 Response.StatusCode = 500;
                 ViewData["ErrorCode"] = 500;
                 ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
@@ -65,11 +59,20 @@ namespace Capycom.Controllers
 
             if (user == null)
             {
+                Log.Warning("Пользователь не найден");
                 Response.StatusCode = 404;
                 ViewData["ErrorCode"] = 404;
                 ViewData["Message"] = "Пользователь не найден";
                 return View("UserError");
             }
+            if (user.CpcmIsDeleted)
+            {
+                Log.Warning("Пользователь удалён");
+				Response.StatusCode = 404;
+				ViewData["ErrorCode"] = 404;
+				ViewData["Message"] = "Пользователь не найден";
+				return View("UserError");
+			}
 
             if (user.CpcmUserNickName != null)
             {
@@ -99,9 +102,11 @@ namespace Capycom.Controllers
 							.Include(c => c.CpcmUserSchoolNavigation)
 							.Include(c => c.CpcmUserUniversityNavigation)
                             .FirstOrDefaultAsync();
+                    Log.Information("Пользователь авторизован {u} и просматривает свою страницу", user.CpcmUserNickName);
 				}
                 else if(!User.Identity.IsAuthenticated && (filter.NickName == null && filter.UserId == null))
 				{
+                    Log.Information("Пользователь не авторизован и пытается просмотреть страницу пользователя без указания его данных");
                     return RedirectToAction("Index", "UserLogIn");
                 }
                 else
@@ -126,8 +131,9 @@ namespace Capycom.Controllers
                     } 
                 }
             }
-            catch (DbException)
+            catch (DbException ex)
             {
+                Log.Warning(ex, "Ошибка при попытке получить пользователя из базы данных");
                 Response.StatusCode = 500;
                 ViewData["ErrorCode"] = 500;
                 ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
@@ -136,6 +142,7 @@ namespace Capycom.Controllers
 
             if (user == null||user.CpcmIsDeleted)
             {
+                Log.Warning("Пользователь не найден или удалён {u}",user.CpcmIsDeleted);
                 Response.StatusCode = 404;
                 ViewData["ErrorCode"] = 404;
                 ViewData["Message"] = "Пользователь не найден";
@@ -200,8 +207,9 @@ namespace Capycom.Controllers
                         user.IsFollowing = false;
                     }
                 }
-                catch (DbException)
+                catch (DbException ex)
                 {
+                    Log.Error(ex, "Ошибка при попытке получить посты пользователя из базы данных, а также статура дружбы и подписоты");
                     Response.StatusCode = 500;
                     ViewData["ErrorCode"] = 500;
                     ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
@@ -214,18 +222,28 @@ namespace Capycom.Controllers
             foreach (var postik in posts)
             {
 				postik.User = user;
-				postik.CpcmPostFatherNavigation = await GetFatherPostReccurent(postik);
-                long likes = await _context.Database.SqlQuery<long>($@"SELECT * FROM CPCM_POSTLIKES WHERE CPCM_PostID = {postik.CpcmPostId}").CountAsync();
-                long reposts = await _context.Database.SqlQuery<long>($@"SELECT * FROM CPCM_POSTREPOSTS WHERE CPCM_PostID = {postik.CpcmPostId}").CountAsync();
-
-                if(User.Identity.IsAuthenticated)
+                long likes = 0;
+                long reposts = 0; 
+                long liked = 0;
+                try
                 {
-					long liked = await _context.Database.SqlQuery<long>($@"SELECT * FROM CPCM_POSTLIKES WHERE CPCM_PostID = {postik.CpcmPostId} AND CPCM_UserID = {User.FindFirstValue("CpcmUserId")}").CountAsync();
-                    if(liked >0)
-					    postik.IsLiked =true;
-                    else
-                        postik.IsLiked =false;
+                    postik.CpcmPostFatherNavigation = await GetFatherPostReccurent(postik);
+                    likes = await _context.Database.SqlQuery<long>($@"SELECT * FROM CPCM_POSTLIKES WHERE CPCM_PostID = {postik.CpcmPostId}").CountAsync();
+                    reposts = await _context.Database.SqlQuery<long>($@"SELECT * FROM CPCM_POSTREPOSTS WHERE CPCM_PostID = {postik.CpcmPostId}").CountAsync();
+                    if (User.Identity.IsAuthenticated)
+                    {
+                        liked = await _context.Database.SqlQuery<long>($@"SELECT * FROM CPCM_POSTLIKES WHERE CPCM_PostID = {postik.CpcmPostId} AND CPCM_UserID = {User.FindFirstValue("CpcmUserId")} AND CPCM_IsDeleted=0").CountAsync();
+
+                    }
                 }
+                catch (DbException ex)
+                {
+                    Log.Error(ex, "Ошибка при попытке получить лайки и репосты поста из базы данных");
+                }
+				if (liked > 0)
+					postik.IsLiked = true;
+				else
+					postik.IsLiked = false;
 				if (HttpContext.Request.Cookies.ContainsKey("TimeZone"))
 				{
 					string timezoneOffsetCookie = HttpContext.Request.Cookies["TimeZone"];
@@ -255,6 +273,7 @@ namespace Capycom.Controllers
         {
             if (!CheckUserPrivilege("CpcmCanEditUsers", "True", id))
             {
+                Log.Warning("Пользователь {user} не имеет прав на редактирование пользователей", User.FindFirstValue("CpcmUserId"));
                 Response.StatusCode = 403;
                 ViewData["ErrorCode"] = 403;
                 ViewData["Message"] = "Доступ запрещён";
@@ -266,8 +285,9 @@ namespace Capycom.Controllers
             {
                 user = await _context.CpcmUsers.Where(c => c.CpcmUserId == Guid.Parse(id)).FirstOrDefaultAsync();
             }
-            catch (DbException)
+            catch (DbException ex)
             {
+                Log.Error(ex, "Ошибка при попытке получить пользователя {user} из базы данных ", User.FindFirstValue("CpcmUserId"));
                 Response.StatusCode = 500;
                 ViewData["ErrorCode"] = 500;
                 ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
@@ -276,6 +296,7 @@ namespace Capycom.Controllers
 
             if (user == null)
             {
+                Log.Warning("Пользователь не найден {user}", User.FindFirstValue("CpcmUserId"));
                 Response.StatusCode = 404;
                 ViewData["ErrorCode"] = 404;
                 ViewData["Message"] = "Пользователь не найден";
@@ -283,6 +304,7 @@ namespace Capycom.Controllers
             }
             if (user.CpcmUserBanned)
             {
+                Log.Warning("Пользователь заблокирован {user}", User.FindFirstValue("CpcmUserId"));
                 Response.StatusCode = 403;
                 ViewData["ErrorCode"] = 403;
                 ViewData["Message"] = "Пользователь был заблокирован";
@@ -290,15 +312,27 @@ namespace Capycom.Controllers
             }
             if (user.CpcmIsDeleted)
             {
+                Log.Warning("Пользователь удалён {user}", User.FindFirstValue("CpcmUserId"));
                 Response.StatusCode = 404;
                 ViewData["ErrorCode"] = 404;
                 ViewData["Message"] = "Пользователь не найден";
                 return View("UserError");
             }
 
-            ViewData["CpcmUserCity"] = new SelectList(await _context.CpcmCities.ToListAsync(), "CpcmCityId", "CpcmCityName", user.CpcmUserCity);
-            ViewData["CpcmUserSchool"] = new SelectList(await _context.CpcmSchools.ToListAsync(), "CpcmSchooldId", "CpcmSchoolName", user.CpcmUserSchool);
-            ViewData["CpcmUserUniversity"] = new SelectList(await _context.CpcmUniversities.ToListAsync(), "CpcmUniversityId", "CpcmUniversityName", user.CpcmUserUniversity);
+            try
+            {
+                ViewData["CpcmUserCity"] = new SelectList(await _context.CpcmCities.ToListAsync(), "CpcmCityId", "CpcmCityName", user.CpcmUserCity);
+                ViewData["CpcmUserSchool"] = new SelectList(await _context.CpcmSchools.ToListAsync(), "CpcmSchooldId", "CpcmSchoolName", user.CpcmUserSchool);
+                ViewData["CpcmUserUniversity"] = new SelectList(await _context.CpcmUniversities.ToListAsync(), "CpcmUniversityId", "CpcmUniversityName", user.CpcmUserUniversity);
+            }
+            catch (DbException ex)
+            {
+                Log.Error(ex, "Ошибка при попытке получить данные для формы редактирования пользователя {user} из базы данных", User.FindFirstValue("CpcmUserId"));
+				Response.StatusCode = 500;
+				ViewData["ErrorCode"] = 500;
+				ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
+				return View("UserError");
+			}
             UserEditAboutDataModel userModel = new();
             userModel.CpcmUserId = user.CpcmUserId;
             userModel.CpcmUserAbout = user.CpcmUserAbout;
@@ -324,6 +358,7 @@ namespace Capycom.Controllers
         {
             if (!CheckUserPrivilege("CpcmCanEditUsers", "True", user.CpcmUserId))
             {
+                Log.Warning("Пользователь {user} не имеет прав на редактирование пользователей", User.FindFirstValue("CpcmUserId"));
                 Response.StatusCode = 403;
                 return StatusCode(403);
             }
@@ -335,8 +370,9 @@ namespace Capycom.Controllers
                 {
                     cpcmUser = await _context.CpcmUsers.Where(c => c.CpcmUserId == Guid.Parse(user.CpcmUserId.ToString())).FirstOrDefaultAsync();
                 }
-                catch (DbException)
+                catch (DbException ex)
                 {
+                    Log.Error(ex, "Ошибка при попытке получить пользователя {user} из базы данных ", User.FindFirstValue("CpcmUserId"));
                     Response.StatusCode = 500;
                     ViewData["ErrorCode"] = 500;
                     ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
@@ -345,6 +381,7 @@ namespace Capycom.Controllers
 
                 if (cpcmUser == null)
                 {
+                    Log.Warning("Пользователь не найден {user}", User.FindFirstValue("CpcmUserId"));
                     Response.StatusCode = 404;
                     ViewData["ErrorCode"] = 404;
                     ViewData["Message"] = "Пользователь не найден";
@@ -352,6 +389,7 @@ namespace Capycom.Controllers
                 }
                 if (cpcmUser.CpcmUserBanned)
                 {
+                    Log.Warning("Пользователь заблокирован {user}", User.FindFirstValue("CpcmUserId"));
                     Response.StatusCode = 403;
                     ViewData["ErrorCode"] = 403;
                     ViewData["Message"] = "Пользователь был заблокирован";
@@ -359,6 +397,7 @@ namespace Capycom.Controllers
                 }
                 if (cpcmUser.CpcmIsDeleted)
                 {
+                    Log.Warning("Пользователь удалён {user}", User.FindFirstValue("CpcmUserId"));
                     Response.StatusCode = 404;
                     ViewData["ErrorCode"] = 404;
                     ViewData["Message"] = "Пользователь не найден";
@@ -399,6 +438,7 @@ namespace Capycom.Controllers
                         }
                         catch (Exception ex)
                         {
+                            Log.Error(ex, "Ошибка при попытке сохранить изображение {@image} пользователя {user} на сервере", user.CpcmUserImage, User.FindFirstValue("CpcmUserId"));
                             cpcmUser.CpcmUserImagePath = null;
                         }
                     }
@@ -425,6 +465,7 @@ namespace Capycom.Controllers
                         }
                         catch (Exception ex)
                         {
+                            Log.Error(ex, "Ошибка при попытке сохранить изображение {@image} пользователя {user} на сервере", user.CpcmUserCoverImage, User.FindFirstValue("CpcmUserId"));
                             cpcmUser.CpcmUserCoverPath = null;
                         }
                     }
@@ -432,9 +473,20 @@ namespace Capycom.Controllers
 
                 if (!ModelState.IsValid)
                 {
-                    ViewData["CpcmUserCity"] = new SelectList(await _context.CpcmCities.ToListAsync(), "CpcmCityId", "CpcmCityName", user.CpcmUserCity);
-                    ViewData["CpcmUserSchool"] = new SelectList(await _context.CpcmSchools.ToListAsync(), "CpcmSchooldId", "CpcmSchoolName", user.CpcmUserSchool);
-                    ViewData["CpcmUserUniversity"] = new SelectList(await _context.CpcmUniversities.ToListAsync(), "CpcmUniversityId", "CpcmUniversityName", user.CpcmUserUniversity);
+                    try
+                    {
+                        ViewData["CpcmUserCity"] = new SelectList(await _context.CpcmCities.ToListAsync(), "CpcmCityId", "CpcmCityName", user.CpcmUserCity);
+                        ViewData["CpcmUserSchool"] = new SelectList(await _context.CpcmSchools.ToListAsync(), "CpcmSchooldId", "CpcmSchoolName", user.CpcmUserSchool);
+                        ViewData["CpcmUserUniversity"] = new SelectList(await _context.CpcmUniversities.ToListAsync(), "CpcmUniversityId", "CpcmUniversityName", user.CpcmUserUniversity);
+                    }
+                    catch (DbException ex)
+                    {
+                        Log.Error(ex, "Ошибка получения списков select для формы редактирования пользователя {user}", User.FindFirstValue("CpcmUserId"));
+                        Response.StatusCode = 500;
+                        ViewData["ErrorCode"] = 500;
+                        ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
+                        return View("UserError");
+                    }
                     return View(user);
                 }
 
@@ -443,15 +495,31 @@ namespace Capycom.Controllers
                 {
                     await _context.SaveChangesAsync();
                 }
-                catch (DbException)
+                catch (DbUpdateConcurrencyException ex)
                 {
-                    if (System.IO.File.Exists(filePathUserImage))
+                    Log.Warning(ex,"Пользователь {user} был изменён другим пользователем", User.FindFirstValue("CpcmUserId"));
+                    Response.StatusCode = 409;
+                    ViewData["ErrorCode"] = 409;
+                    ViewData["Message"] = "Пользователь был изменён ранее. Пожалуйста, обновите страницу и попробуйте снова";
+                    return View("UserError");
+                }
+                catch (DbException ex)
+                {
+                    Log.Error(ex, "Ошибка при попытке сохранить изменения пользователя {user} в базе данных", User.FindFirstValue("CpcmUserId"));
+                    try
                     {
-                        System.IO.File.Delete(filePathUserImage);
+                        if (System.IO.File.Exists(filePathUserImage))
+                        {
+                            System.IO.File.Delete(filePathUserImage);
+                        }
+                        if (System.IO.File.Exists(filePathUserCoverImage))
+                        {
+                            System.IO.File.Delete(filePathUserCoverImage);
+                        }
                     }
-                    if (System.IO.File.Exists(filePathUserCoverImage))
+                    catch (IOException exx)
                     {
-                        System.IO.File.Delete(filePathUserCoverImage);
+                        Log.Error(exx, "Ошибка при попытке удалить изображения пользователя {user} с сервера", User.FindFirstValue("CpcmUserId"));
                     }
                     Response.StatusCode = 500;
                     ViewData["ErrorCode"] = 500;
@@ -469,9 +537,20 @@ namespace Capycom.Controllers
                 }
             }
 
-            ViewData["CpcmUserCity"] = new SelectList(await _context.CpcmCities.ToListAsync(), "CpcmCityId", "CpcmCityName", user.CpcmUserCity);
-            ViewData["CpcmUserSchool"] = new SelectList(await _context.CpcmSchools.ToListAsync(), "CpcmSchooldId", "CpcmSchoolName", user.CpcmUserSchool);
-            ViewData["CpcmUserUniversity"] = new SelectList(await _context.CpcmUniversities.ToListAsync(), "CpcmUniversityId", "CpcmUniversityName", user.CpcmUserUniversity);
+            try
+            {
+                ViewData["CpcmUserCity"] = new SelectList(await _context.CpcmCities.ToListAsync(), "CpcmCityId", "CpcmCityName", user.CpcmUserCity);
+                ViewData["CpcmUserSchool"] = new SelectList(await _context.CpcmSchools.ToListAsync(), "CpcmSchooldId", "CpcmSchoolName", user.CpcmUserSchool);
+                ViewData["CpcmUserUniversity"] = new SelectList(await _context.CpcmUniversities.ToListAsync(), "CpcmUniversityId", "CpcmUniversityName", user.CpcmUserUniversity);
+            }
+            catch (DbException ex)
+            {
+                Log.Error(ex, "Ошибка получения списков select для формы редактирования пользователя {user}", User.FindFirstValue("CpcmUserId"));
+                Response.StatusCode = 500;
+                ViewData["ErrorCode"] = 500;
+                ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
+                return View("UserError");
+            }
             return View(user);
         }
 
@@ -484,6 +563,7 @@ namespace Capycom.Controllers
         {
             if (!CheckUserPrivilege("CpcmCanEditUsers", "True", id))
             {
+                Log.Warning("Пользователь {user} не имеет прав на редактирование пользователей", User.FindFirstValue("CpcmUserId"));
                 Response.StatusCode = 403;
                 ViewData["ErrorCode"] = 403;
                 ViewData["Message"] = "Доступ запрещён";
@@ -494,8 +574,9 @@ namespace Capycom.Controllers
             {
                 user = await _context.CpcmUsers.Where(c => c.CpcmUserId == Guid.Parse(id)).FirstOrDefaultAsync();
             }
-            catch (DbException)
+            catch (DbException ex)
             {
+                Log.Error(ex, "Ошибка при попытке получить пользователя {user} из базы данных ", User.FindFirstValue("CpcmUserId"));
                 Response.StatusCode = 500;
                 ViewData["ErrorCode"] = 500;
                 ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
@@ -503,6 +584,7 @@ namespace Capycom.Controllers
             }
             if (user == null || user.CpcmIsDeleted)
             {
+                Log.Warning("Пользователь не найден {user}", User.FindFirstValue("CpcmUserId"));
                 Response.StatusCode = 404;
                 ViewData["ErrorCode"] = 404;
                 ViewData["Message"] = "Пользователь не найден";
@@ -510,6 +592,7 @@ namespace Capycom.Controllers
             }
             if (user.CpcmUserBanned)
             {
+                Log.Warning("Пользователь заблокирован {user}", User.FindFirstValue("CpcmUserId"));
                 Response.StatusCode = 404;
                 ViewData["ErrorCode"] = 404;
                 ViewData["Message"] = "Доступ запрещён";
@@ -533,6 +616,7 @@ namespace Capycom.Controllers
             {
                 if (!CheckUserPrivilege("CpcmCanEditUsers", "True", user.CpcmUserId))
                 {
+                    Log.Warning("Пользователь {user} не имеет прав на редактирование пользователей", User.FindFirstValue("CpcmUserId"));
                     return StatusCode(403);
                 }
 
@@ -542,8 +626,9 @@ namespace Capycom.Controllers
                 {
                     cpcmUser = await _context.CpcmUsers.Where(c => c.CpcmUserId == Guid.Parse(user.CpcmUserId.ToString())).FirstOrDefaultAsync();
                 }
-                catch (DbException)
+                catch (DbException ex)
                 {
+                    Log.Error(ex, "Ошибка при попытке получить пользователя {user} из базы данных ", User.FindFirstValue("CpcmUserId"));
                     Response.StatusCode = 500;
                     ViewData["ErrorCode"] = 500;
                     ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
@@ -552,6 +637,7 @@ namespace Capycom.Controllers
 
                 if (cpcmUser == null)
                 {
+                    Log.Warning("Пользователь не найден {user}", User.FindFirstValue("CpcmUserId"));
                     Response.StatusCode = 404;
                     ViewData["ErrorCode"] = 404;
                     ViewData["Message"] = "Пользователь не найден";
@@ -559,6 +645,7 @@ namespace Capycom.Controllers
                 }
                 if (cpcmUser.CpcmUserBanned)
                 {
+                    Log.Warning("Пользователь заблокирован {user}", User.FindFirstValue("CpcmUserId"));
                     Response.StatusCode = 403;
                     ViewData["ErrorCode"] = 403;
                     ViewData["Message"] = "Пользователь был заблокирован";
@@ -566,6 +653,7 @@ namespace Capycom.Controllers
                 }
                 if (cpcmUser.CpcmIsDeleted)
                 {
+                    Log.Warning("Пользователь удалён {user}", User.FindFirstValue("CpcmUserId"));
                     Response.StatusCode = 404;
                     ViewData["ErrorCode"] = 404;
                     ViewData["Message"] = "Пользователь не найден";
@@ -593,6 +681,22 @@ namespace Capycom.Controllers
                 {
                     await _context.SaveChangesAsync();
                 }
+                catch (DbUpdateConcurrencyException ex)
+                {
+                    Log.Error(ex, "Пользователь {user} был изменён другим пользователем", User.FindFirstValue("CpcmUserId"));
+                    Response.StatusCode = 409;
+                    ViewData["ErrorCode"] = 409;
+                    ViewData["Message"] = "Пользователь был изменён ранее. Пожалуйста, обновите страницу и попробуйте снова";
+                    return View("UserError");
+                }
+                catch(DbUpdateException ex)
+                {
+                    Log.Fatal(ex, "Ошибка при попытке сохранить изменения пользователя {user} в базе данных", User.FindFirstValue("CpcmUserId"));
+					Response.StatusCode = 500;
+					ViewData["ErrorCode"] = 500;
+					ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
+					return View("UserError");
+				}
                 catch (DbException)
                 {
                     Response.StatusCode = 500;
@@ -604,7 +708,7 @@ namespace Capycom.Controllers
 
                 return RedirectToAction($"Index\\{user.CpcmUserId}");
             }
-
+            Log.Warning("Ошибка валидации формы редактирования пользователя {user}", User.FindFirstValue("CpcmUserId"));
             return View(user);
         }
 
@@ -625,10 +729,22 @@ namespace Capycom.Controllers
                 }
                 user.CpcmUserBanned = !user.CpcmUserBanned;
                 await _context.SaveChangesAsync();
+                Log.Information("Пользователь {user} заблокирован/разблокирован", User.FindFirstValue("CpcmUserId"));
                 return StatusCode(200 , new {status=true});
             }
-            catch (DbException)
+            catch (DbUpdateConcurrencyException ex)
             {
+                Log.Error(ex,"Пользователь {user} был изменён другим пользователем", User.FindFirstValue("CpcmUserId"));
+                return StatusCode(409, new {message = "Пользователь был изменён другим пользователем" });
+            }
+            catch(DbUpdateException ex)
+            {
+				Log.Fatal(ex, "Ошибка при попытке заблокировать/разблокировать пользователя {user}", User.FindFirstValue("CpcmUserId"));
+				return StatusCode(500);
+			}
+            catch (DbException ex)
+            {
+                Log.Error(ex, "Ошибка при попытке заблокировать/разблокировать пользователя {user}", User.FindFirstValue("CpcmUserId"));
                 return StatusCode(500);
             }
         }
@@ -650,8 +766,9 @@ namespace Capycom.Controllers
                     user = await _context.CpcmUsers.Where(c => c.CpcmUserNickName == filters.NickName).FirstOrDefaultAsync();
 				}
             }
-            catch (DbException)
+            catch (DbException ex)
             {
+                Log.Error(ex, "Ошибка при попытке получить пользователя из базы данных");
                 Response.StatusCode = 500;
                 ViewData["ErrorCode"] = 500;
                 ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
@@ -660,6 +777,7 @@ namespace Capycom.Controllers
 
             if (user == null || user.CpcmIsDeleted)
             {
+                Log.Warning("Пользователь не найден или удалён {u}",user.CpcmIsDeleted);
                 Response.StatusCode = 404;
                 ViewData["ErrorCode"] = 404;
                 ViewData["Message"] = "Пользователь не найден";
@@ -677,8 +795,9 @@ namespace Capycom.Controllers
 				ViewData["CpcmUserSchool"] = new SelectList(await _context.CpcmSchools.ToListAsync(), "CpcmSchooldId", "CpcmSchoolName");
 				ViewData["CpcmUserUniversity"] = new SelectList(await _context.CpcmUniversities.ToListAsync(), "CpcmUniversityId", "CpcmUniversityName");
 			}
-            catch (DbException)
+            catch (DbException ex)
             {
+                Log.Error(ex, "Ошибка при попытке получить список друзей пользователя из базы данных");
                 Response.StatusCode = 500;
                 ViewData["ErrorCode"] = 500;
                 ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
@@ -717,14 +836,18 @@ namespace Capycom.Controllers
 				//ViewData["additionalName"] = additionalName;
 				friendList1 = friendList1.Where(u => EF.Functions.Like(u.CpcmUserAdditionalName, $"%{filters.AdditionalName}%"));
 			}
-
+            if(CheckUserPrivilege("CpcmCanEditUsers", "True"))
+            {
+				friendList1 = friendList1.Where(u => u.CpcmUserRole==filters.UserRole);
+			}
             try
             {
                 var result = await friendList1.OrderBy(p => p.CpcmUserId).Take(10).ToListAsync();
                 return View(result);
             }
-			catch (DbException)
+			catch (DbException ex)
 			{
+                Log.Error(ex, "Ошибка при попытке получить список друзей пользователя из базы данных");
 				Response.StatusCode = 500;
 				ViewData["ErrorCode"] = 500;
 				ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
@@ -742,8 +865,9 @@ namespace Capycom.Controllers
             {
                 user = await _context.CpcmUsers.Where(c => c.CpcmUserId == filters.UserId).FirstOrDefaultAsync(); 
             }
-            catch (DbException)
+            catch (DbException ex)
             {
+                Log.Error(ex, "Ошибка при попытке получить пользователя из базы данных");
                 Response.StatusCode = 500;
                 return StatusCode(500);
             }
@@ -802,13 +926,18 @@ namespace Capycom.Controllers
 				//ViewData["additionalName"] = additionalName;
 				friendList1 = friendList1.Where(u => EF.Functions.Like(u.CpcmUserAdditionalName, $"%{filters.AdditionalName}%"));
 			}
+            if(CheckUserPrivilege("CpcmCanEditUsers", "True"))
+            {
+                friendList1 = friendList1.Where(u => u.CpcmUserRole==filters.UserRole);
+            }
             try
             {
                 var result = await friendList1.OrderBy(p => p.CpcmUserId).Take(10).ToListAsync();
 				return PartialView(result);
 			}
-			catch (DbException)
+			catch (DbException ex)
 			{
+                Log.Error(ex, "Ошибка при попытке получить список друзей пользователя из базы данных");
 				Response.StatusCode = 500;
 				ViewData["ErrorCode"] = 500;
 				ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
@@ -835,8 +964,9 @@ namespace Capycom.Controllers
 					user = await _context.CpcmUsers.Where(c => c.CpcmUserNickName == filters.NickName).FirstOrDefaultAsync();
 				}
             }
-            catch (Exception)
+            catch (DbException ex)
             {
+                Log.Error("Ошибка при попытке получить пользователя из базы данных {u}", filters.UserId);
                 Response.StatusCode = 500;
                 ViewData["ErrorCode"] = 500;
                 ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
@@ -845,6 +975,7 @@ namespace Capycom.Controllers
 
             if (user == null || user.CpcmIsDeleted)
             {
+                Log.Warning("Пользователь не найден или удалён {u}",user.CpcmIsDeleted);
                 Response.StatusCode = 404;
                 ViewData["ErrorCode"] = 404;
                 ViewData["Message"] = "Пользователь не найден";
@@ -862,8 +993,9 @@ namespace Capycom.Controllers
 				ViewData["CpcmUserSchool"] = new SelectList(await _context.CpcmSchools.ToListAsync(), "CpcmSchooldId", "CpcmSchoolName");
 				ViewData["CpcmUserUniversity"] = new SelectList(await _context.CpcmUniversities.ToListAsync(), "CpcmUniversityId", "CpcmUniversityName");
 			}
-            catch (Exception)
+            catch (DbException ex)
             {
+                Log.Error(ex,"Ошибка при попытке получить список подписчиков пользователя из базы данных {u}", user.CpcmIsDeleted);
                 Response.StatusCode = 500;
                 ViewData["ErrorCode"] = 500;
                 ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
@@ -902,15 +1034,19 @@ namespace Capycom.Controllers
 				//ViewData["additionalName"] = additionalName;
 				followerList1 = followerList1.Where(u => EF.Functions.Like(u.CpcmUserAdditionalName, $"%{filters.AdditionalName}%"));
 			}
-
+            if(CheckUserPrivilege("CpcmCanEditUsers", "True"))
+            {
+				followerList1 = followerList1.Where(u => u.CpcmUserRole==filters.UserRole);
+			}
             try
             {
                 var result = await followerList1.OrderBy(p => p.CpcmUserId).Take(10).ToListAsync();
 
                 return View(followerList1);
             }
-			catch (DbException)
+			catch (DbException ex)
 			{
+                Log.Error(ex, "Ошибка при попытке получить список подписчиков пользователя из базы данных {u}", user.CpcmIsDeleted);
 				Response.StatusCode = 500;
 				ViewData["ErrorCode"] = 500;
 				ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
@@ -932,14 +1068,16 @@ namespace Capycom.Controllers
 					user = await _context.CpcmUsers.Where(c => c.CpcmUserNickName == filters.NickName).FirstOrDefaultAsync();
 				}
 			}
-            catch (Exception)
+            catch (DbException ex)
             {
+                Log.Error(ex, "Ошибка при попытке получить пользователя из базы данных {u}", filters.UserId);
                 Response.StatusCode = 500;
                 return StatusCode(500);
             }
 
             if (user == null || user.CpcmIsDeleted)
             {
+                Log.Warning("Пользователь не найден или удалён {u}", user.CpcmUserId);
                 Response.StatusCode = 404;
                 return StatusCode(404);
             }
@@ -952,8 +1090,9 @@ namespace Capycom.Controllers
                 followerList1 =  _context.CpcmUserfollowers.Where(c => c.CpcmUserId == user.CpcmUserId && c.CpcmFollowersId.CompareTo(filters.lastId) > 0).Select(c => c.CpcmFollower);
                 //followerList2 = await _context.CpcmUserfollowers.Where(c => c.CpcmFollowerId == user.CpcmUserId).Select(c => c.CpcmUser).ToListAsync();
             }
-            catch (Exception)
+            catch (DbException ex)
             {
+                Log.Error(ex, "Ошибка при попытке получить список подписчиков пользователя из базы данных {u}", user.CpcmUserId);
                 Response.StatusCode = 500;
                 return StatusCode(500);
             }
@@ -987,14 +1126,18 @@ namespace Capycom.Controllers
 				//ViewData["additionalName"] = additionalName;
 				followerList1 = followerList1.Where(u => EF.Functions.Like(u.CpcmUserAdditionalName, $"%{filters.AdditionalName}%"));
 			}
-
+            if(CheckUserPrivilege("CpcmCanEditUsers", "True"))
+            {
+                followerList1 = followerList1.Where(u => u.CpcmUserRole==filters.UserRole);
+            }
             try
             {
                 var result = await followerList1.OrderBy(p => p.CpcmUserId).Take(10).ToListAsync();
                 return PartialView(result);
             }
-			catch (DbException)
+			catch (DbException ex)
 			{
+                Log.Error(ex, "Ошибка при попытке получить список подписчиков пользователя из базы данных {u}", user.CpcmUserId);
 				Response.StatusCode = 500;
 				ViewData["ErrorCode"] = 500;
 				ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
@@ -1016,8 +1159,9 @@ namespace Capycom.Controllers
 					user = await _context.CpcmUsers.Where(c => c.CpcmUserNickName == filters.NickName).FirstOrDefaultAsync();
 				}
 			}
-			catch (Exception)
+			catch (DbException ex)
 			{
+                Log.Error(ex, "Ошибка при попытке получить пользователя из базы данных {u}", filters.UserId);
 				Response.StatusCode = 500;
 				ViewData["ErrorCode"] = 500;
 				ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
@@ -1026,6 +1170,7 @@ namespace Capycom.Controllers
 
 			if (user == null || user.CpcmIsDeleted)
 			{
+                Log.Warning("Пользователь не найден или удалён {u}", user.CpcmUserId);
 				Response.StatusCode = 404;
 				ViewData["ErrorCode"] = 404;
 				ViewData["Message"] = "Пользователь не найден";
@@ -1041,8 +1186,9 @@ namespace Capycom.Controllers
 				//followerList2 = await _context.CpcmUserfollowers.Where(c => c.CpcmFollowerId == user.CpcmUserId).Select(c => c.CpcmUser).ToListAsync();
 				ViewData["CpcmGroupCity"] = new SelectList(await _context.CpcmCities.ToListAsync(), "CpcmCityId", "CpcmCityName");
 			}
-			catch (Exception)
+			catch (DbException ex)
 			{
+                Log.Error(ex, "Ошибка при попытке получить список групп пользователя из базы данных {u}", user.CpcmUserId);
 				Response.StatusCode = 500;
 				return StatusCode(500);
 			}
@@ -1070,8 +1216,9 @@ namespace Capycom.Controllers
                 var result = await groupsList.OrderBy(p => p.CpcmGroupId).Take(10).ToListAsync();
                 return View(groupsList);
             }
-			catch (DbException)
+			catch (DbException ex)
 			{
+                Log.Error(ex, "Ошибка при попытке получить список групп пользователя из базы данных {u}", user.CpcmUserId);
 				Response.StatusCode = 500;
 				ViewData["ErrorCode"] = 500;
 				ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
@@ -1093,8 +1240,9 @@ namespace Capycom.Controllers
 					user = await _context.CpcmUsers.Where(c => c.CpcmUserNickName == filters.NickName).FirstOrDefaultAsync();
 				}
 			}
-			catch (Exception)
+			catch (DbException ex)
 			{
+                Log.Error(ex, "Ошибка при попытке получить пользователя из базы данных {u}", filters.UserId);
 				Response.StatusCode = 500;
 				ViewData["ErrorCode"] = 500;
 				ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
@@ -1103,6 +1251,7 @@ namespace Capycom.Controllers
 
 			if (user == null || user.CpcmIsDeleted)
 			{
+                Log.Warning("Пользователь не найден или удалён {u}", user.CpcmUserId);
 				Response.StatusCode = 404;
 				ViewData["ErrorCode"] = 404;
 				ViewData["Message"] = "Пользователь не найден";
@@ -1117,8 +1266,9 @@ namespace Capycom.Controllers
 				groupsList = _context.CpcmGroupfollowers.Where(c => c.CpcmUserId == user.CpcmUserId && c.CpcmGroupId.CompareTo(filters.lastId) > 1).Select(c => c.CpcmGroup);
 				//followerList2 = await _context.CpcmUserfollowers.Where(c => c.CpcmFollowerId == user.CpcmUserId).Select(c => c.CpcmUser).ToListAsync();
 			}
-			catch (Exception)
+			catch (DbException ex)
 			{
+                Log.Error(ex, "Ошибка при попытке получить список групп пользователя из базы данных {u}", user.CpcmUserId);
 				Response.StatusCode = 500;
 				return StatusCode(500);
 			}
@@ -1146,8 +1296,9 @@ namespace Capycom.Controllers
                 var result = await groupsList.OrderBy(p => p.CpcmGroupId).Take(10).ToListAsync();
                 return PartialView(groupsList);
             }
-			catch (DbException)
+			catch (DbException ex)
 			{
+                Log.Error(ex, "Ошибка при попытке получить список групп пользователя из базы данных {u}", user.CpcmUserId);
 				Response.StatusCode = 500;
 				ViewData["ErrorCode"] = 500;
 				ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
@@ -1160,6 +1311,7 @@ namespace Capycom.Controllers
         {
             if (!CheckUserPrivilege("CpcmCanEditUsers", "True", id))
             {
+                Log.Warning("Пользователь {user} не имеет прав на удаление пользователя {u}",User.FindFirstValue("CpcmUserId"), id);
                 return StatusCode(403);
             }
 
@@ -1168,8 +1320,9 @@ namespace Capycom.Controllers
             {
                 user = await _context.CpcmUsers.Where(c => c.CpcmUserId == id).FirstOrDefaultAsync();
             }
-            catch (DbException)
+            catch (DbException ex)
             {
+                Log.Error(ex, "Ошибка при попытке получить пользователя из базы данных");
                 Response.StatusCode = 500;
                 ViewData["ErrorCode"] = 500;
                 ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
@@ -1178,6 +1331,7 @@ namespace Capycom.Controllers
 
             if (user == null || user.CpcmIsDeleted)
             {
+                Log.Warning("Пользователь не найден или удалён {u}", user.CpcmUserId);
                 Response.StatusCode = 404;
                 ViewData["ErrorCode"] = 404;
                 ViewData["Message"] = "Пользователь не найден";
@@ -1185,6 +1339,7 @@ namespace Capycom.Controllers
             }
             if (user.CpcmUserBanned)
             {
+                Log.Warning("Пользователь заблокирован и не может быть удалён {u}", user.CpcmUserId);
                 Response.StatusCode = 403;
                 ViewData["ErrorCode"] = 403;
                 ViewData["Message"] = "Пользователь заблокирован и не может быть удалён";
@@ -1200,6 +1355,7 @@ namespace Capycom.Controllers
         {
             if (!CheckUserPrivilege("CpcmCanEditUsers", "True", userdel.CpcmUserId))
             {
+                Log.Error("Пользователь {user} не имеет прав на удаление пользователя {u}", User.FindFirstValue("CpcmUserId"), userdel.CpcmUserId);
                 return StatusCode(403);
             }
 
@@ -1208,8 +1364,9 @@ namespace Capycom.Controllers
             {
                 user = await _context.CpcmUsers.Where(c => c.CpcmUserId == userdel.CpcmUserId).FirstOrDefaultAsync();
             }
-            catch (DbException)
+            catch (DbException ex)
             {
+                Log.Error(ex, "Ошибка при попытке получить пользователя из базы данных");
                 Response.StatusCode = 500;
                 ViewData["ErrorCode"] = 500;
                 ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
@@ -1218,6 +1375,7 @@ namespace Capycom.Controllers
 
             if (user == null || user.CpcmIsDeleted)
             {
+                Log.Warning("Пользователь не найден или удалён {u}", user.CpcmUserId);
                 Response.StatusCode = 404;
                 ViewData["ErrorCode"] = 404;
                 ViewData["Message"] = "Пользователь не найден";
@@ -1225,6 +1383,7 @@ namespace Capycom.Controllers
             }
             if (user.CpcmUserBanned)
             {
+                Log.Warning("Пользователь заблокирован и не может быть удалён {u}", user.CpcmUserId);
                 Response.StatusCode = 403;
                 ViewData["ErrorCode"] = 403;
                 ViewData["Message"] = "Пользователь заблокирован и не может быть удалён";
@@ -1238,8 +1397,25 @@ namespace Capycom.Controllers
                 await _context.SaveChangesAsync();
                 await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
             }
-            catch (DbException)
+            catch(DbUpdateConcurrencyException ex)
             {
+                Log.Error(ex, "Ошибка при попытке удалить пользователя из базы данных");
+                Response.StatusCode = 409;
+                ViewData["ErrorCode"] = 409;
+                ViewData["Message"] = "Пользователь был изменён другим пользователем. Повторите попытку позже";
+                return View("UserError");
+            }
+            catch (DbUpdateException ex)
+            {
+                Log.Fatal(ex,"Ошибка при попытке удалить пользователя из базы данных");
+                Response.StatusCode = 500;
+                ViewData["ErrorCode"] = 500;
+                ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
+                return View("UserError");
+            }
+            catch (DbException ex)
+            {
+                Log.Error(ex, "Ошибка при попытке удалить пользователя из базы данных");
                 Response.StatusCode = 500;
                 ViewData["ErrorCode"] = 500;
                 ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
@@ -1270,14 +1446,28 @@ namespace Capycom.Controllers
 				var follow = await _context.CpcmUserfollowers.Where(e => e.CpcmUserId == CpcmUserId && e.CpcmFollowerId == id).FirstOrDefaultAsync();
                 if (follow == null)
                 {
-					_context.CpcmUserfollowers.Add(follower);
-					await _context.SaveChangesAsync();
-				}                    
+                    _context.CpcmUserfollowers.Add(follower);
+                    await _context.SaveChangesAsync();
+                }
                 else
+                {
+                    Log.Warning("Чел уже подписан на этого человека {u}", CpcmUserId);
                     return StatusCode(200, new { status = false, message = "Вы уже подписаны на этого человека" });
+                }
             }
-            catch (DbException)
+            catch (DbUpdateConcurrencyException ex)
             {
+                Log.Error(ex, "Ошибка при попытке добавить подписчика в базу данных - конукуренция");
+                return StatusCode(409);
+            }
+            catch(DbUpdateException ex)
+            {
+                Log.Fatal(ex, "Ошибка при попытке добавить подписчика в базу данных");
+                return StatusCode(500);
+            }
+            catch (DbException ex)
+            {
+                Log.Error(ex, "Ошибка при попытке добавить подписчика в базу данных");
                 return StatusCode(500);
             }
 
@@ -1294,14 +1484,16 @@ namespace Capycom.Controllers
             {
                 follow = await _context.CpcmUserfollowers.Where(e => e.CpcmUserId == CpcmUserId).FirstOrDefaultAsync();
             }
-            catch (DbException)
+            catch (DbException ex)
             {
+                Log.Error(ex, "Ошибка при попытке получить подписчика из базы данных");
                 return StatusCode(500);
             }
 
 
             if (follow == null)
             {
+                Log.Warning("Подписчик не найден {u}", CpcmUserId);
                 return StatusCode(404);
             }
 
@@ -1311,8 +1503,19 @@ namespace Capycom.Controllers
             {
                 await _context.SaveChangesAsync();
             }
-            catch (DbException)
+            catch(DbUpdateConcurrencyException ex)
             {
+                Log.Error(ex, "Ошибка при попытке удалить подписчика из базы данных - конукуренция");
+                return StatusCode(409);
+            }
+            catch(DbUpdateException ex)
+            {
+				Log.Fatal(ex, "Ошибка при попытке удалить подписчика из базы данных");
+				return StatusCode(500);
+			}
+            catch (DbException ex)
+            {
+                Log.Error(ex, "Ошибка при попытке удалить подписчика из базы данных");
                 return StatusCode(500);
             }
 
@@ -1333,20 +1536,33 @@ namespace Capycom.Controllers
             //friendRequest.CmcpFriendId = CpcmUserId;
             var userGuid= Guid.Parse(HttpContext.User.FindFirst(c => c.Type == "CpcmUserId").Value);
             //_context.CpcmUserfriends.Add(friendRequest);
+            CpcmUserfriend? friendreq = null;
 
-            try
+			try
             {
-                var friendreq = _context.CpcmUserfriends.Where( f => f.CmcpUserId==userGuid && f.CmcpFriendId==CpcmUserId || f.CmcpUserId == CpcmUserId && f.CmcpFriendId == userGuid).FirstOrDefault();
+				friendreq = _context.CpcmUserfriends.Where( f => f.CmcpUserId==userGuid && f.CmcpFriendId==CpcmUserId || f.CmcpUserId == CpcmUserId && f.CmcpFriendId == userGuid).FirstOrDefault();
                 if(friendreq != null)
                 {
+                    Log.Warning("Попытка создать запрос на дружбу когда уже есть заявка {u}", CpcmUserId);
                     return StatusCode(200, new {status=false, message="У вас уже есть запрос на дружбу от этого человека"});
                 }
                 CpcmUserfriend friendRequest = new() { CmcpUserId=userGuid, CmcpFriendId=CpcmUserId};
 				_context.CpcmUserfriends.Add(friendRequest);
 				await _context.SaveChangesAsync();
             }
-            catch (DbException)
+            catch(DbUpdateConcurrencyException ex)
             {
+                Log.Error(ex, "Ошибка при попытке добавить запрос на дружбу в базу данных - конукуренция");
+                return StatusCode(409);
+            }
+            catch(DbUpdateException ex)
+            {
+				Log.Fatal(ex, "Ошибка при попытке добавить запрос на дружбу в базу данных {@fr}", friendreq);
+				return StatusCode(500);
+			}
+            catch (DbException ex)
+            {
+                Log.Error(ex, "Ошибка при попытке добавить запрос на дружбу в базу данных");
                 return StatusCode(500);
             }
 
@@ -1365,8 +1581,9 @@ namespace Capycom.Controllers
                 friendRequest = await _context.CpcmUserfriends.Where(c => c.CmcpUserId == CpcmUserId
                     && c.CmcpFriendId.ToString() == guidString).FirstOrDefaultAsync(); //Тут мы смотрим только те реквесты, которые адресованы нам. 
             }
-            catch (DbException)
+            catch (DbException ex)
             {
+                Log.Error(ex, "Ошибка при попытке получить запрос на дружбу из базы данных");
                 return StatusCode(500);
             }
             if (friendRequest == null)
@@ -1380,8 +1597,19 @@ namespace Capycom.Controllers
             {
                 await _context.SaveChangesAsync();
             }
-            catch (DbException)
+			catch (DbUpdateConcurrencyException ex)
+			{
+				Log.Error(ex, "Ошибка при попытке обновить запрос на дружбу из базы данных {@fr}",friendRequest);
+				return StatusCode(500);
+			}
+            catch (DbUpdateException ex)
             {
+				Log.Fatal(ex, "Ошибка при попытке обновить запрос на дружбу из базы данных {@fr}", friendRequest);
+				return StatusCode(500);
+			}
+			catch (DbException ex)
+            {
+                Log.Error(ex, "Ошибка при попытке обновить запрос на дружбу из базы данных");
                 return StatusCode(500);
             }
 
@@ -1401,12 +1629,14 @@ namespace Capycom.Controllers
 				friendRequest = await _context.CpcmUserfriends.Where(c => c.CmcpUserId.ToString() == guid && c.CmcpFriendId == CpcmUserId
                 || c.CmcpUserId == CpcmUserId && c.CmcpFriendId.ToString() == guid).FirstOrDefaultAsync();
             }
-            catch (DbException)
+            catch (DbException ex)
             {
+                Log.Error(ex, "Ошибка при попытке получить запрос на дружбу из базы данных");
                 return StatusCode(500);
             }
             if (friendRequest == null)
             {
+                Log.Warning("Запрос на дружбу не найден {u}", CpcmUserId);
                 return StatusCode(404);
             }
             _context.CpcmUserfriends.Remove(friendRequest);
@@ -1415,10 +1645,21 @@ namespace Capycom.Controllers
             {
                 await _context.SaveChangesAsync();
             }
-            catch (DbException)
+            catch (DbUpdateConcurrencyException ex)
             {
-                return StatusCode(500);
-            }
+				Log.Error(ex, "Ошибка при попытке удалить запрос на дружбу из базы данных");
+				return StatusCode(409);
+			}
+			catch (DbUpdateException ex)
+            {
+				Log.Fatal(ex, "Ошибка при попытке удалить запрос на дружбу из базы данных");
+				return StatusCode(500);
+			}
+			catch (DbException ex)
+            {
+				Log.Error(ex, "Ошибка при попытке удалить запрос на дружбу из базы данных");
+				return StatusCode(500);
+			}   
 
             return StatusCode(200, new { status = true });
         }
@@ -1431,18 +1672,21 @@ namespace Capycom.Controllers
 				var stringGuid = User.FindFirstValue("CpcmUserId");
 				user = await _context.CpcmUsers.Where(c => c.CpcmUserId.ToString() == stringGuid).FirstOrDefaultAsync();
 			}
-			catch (DbException)
+			catch (DbException ex)
 			{
+                Log.Error(ex, "Ошибка при попытке получить пользователя из базы данных {u}", User.FindFirstValue("CpcmUserId"));
 				Response.StatusCode = 500;
 				return StatusCode(500);
 			}
 			if (user == null || user.CpcmIsDeleted)
 			{
+                Log.Warning("Пользователь не найден или удалён {u}", user.CpcmUserId);
 				Response.StatusCode = 404;
 				return StatusCode(404);
 			}
             if (user.CpcmUserId.ToString() != User.FindFirstValue("CpcmUserId"))
             {
+                Log.Warning("Пользователь не имеет прав на просмотр запросов на дружбу {u}", user.CpcmUserId);
                 Response.StatusCode = 403;
 
                 return StatusCode(403);
@@ -1452,8 +1696,9 @@ namespace Capycom.Controllers
 			{
 				friendList1 = _context.CpcmUserfriends.Where(c => c.CmcpFriendId == user.CpcmUserId && (c.CpcmFriendRequestStatus == null)).Select(c => c.CmcpUser);//followerList2 = await _context.CpcmUserfollowers.Where(c => c.CpcmFollowerId == user.CpcmUserId).Select(c => c.CpcmUser).ToListAsync();
 			}
-			catch (Exception)
+			catch (DbException ex)
 			{
+                Log.Error(ex, "Ошибка при попытке получить список запросов на дружбу из базы данных {u}", user.CpcmUserId);
 				Response.StatusCode = 500;
 				return StatusCode(500);
 			}
@@ -1495,8 +1740,9 @@ namespace Capycom.Controllers
 
                 return View(result);
             }
-			catch (DbException)
+			catch (DbException ex)
 			{
+                Log.Error(ex, "Ошибка при попытке получить список запросов на дружбу из базы данных {u}", user.CpcmUserId);
 				Response.StatusCode = 500;
 				ViewData["ErrorCode"] = 500;
 				ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
@@ -1512,18 +1758,21 @@ namespace Capycom.Controllers
 				var stringGuid = User.FindFirstValue("CpcmUserId");
 				user = await _context.CpcmUsers.Where(c => c.CpcmUserId.ToString() == stringGuid).FirstOrDefaultAsync();
 			}
-			catch (DbException)
+			catch (DbException ex)
 			{
+                Log.Error(ex, "Ошибка при попытке получить пользователя из базы данных {u}", User.FindFirstValue("CpcmUserId"));
 				Response.StatusCode = 500;
 				return StatusCode(500);
 			}
 			if (user == null || user.CpcmIsDeleted)
 			{
+                Log.Warning("Пользователь не найден или удалён {u}", user.CpcmUserId);
 				Response.StatusCode = 404;
 				return StatusCode(404);
 			}
 			if (user.CpcmUserId.ToString() != User.FindFirstValue("CpcmUserId"))
 			{
+                Log.Warning("Пользователь не имеет прав на просмотр запросов на дружбу {u}", user.CpcmUserId);
 				Response.StatusCode = 403;
 
 				return StatusCode(403);
@@ -1533,8 +1782,9 @@ namespace Capycom.Controllers
 			{
 				friendList1 = _context.CpcmUserfriends.Where(c => c.CmcpFriendId == user.CpcmUserId && (c.CpcmFriendRequestStatus == null) && c.CmcpUserId.CompareTo(filters.lastId) > 0).Select(c => c.CmcpUser);//followerList2 = await _context.CpcmUserfollowers.Where(c => c.CpcmFollowerId == user.CpcmUserId).Select(c => c.CpcmUser).ToListAsync();
 			}
-			catch (Exception)
+			catch (DbException ex)
 			{
+                Log.Error(ex, "Ошибка при попытке получить список запросов на дружбу из базы данных {u}", user.CpcmUserId);
 				Response.StatusCode = 500;
 				return StatusCode(500);
 			}
@@ -1576,14 +1826,20 @@ namespace Capycom.Controllers
 
                 return PartialView(result);
             }
-			catch (DbException)
+			catch (DbException ex)
 			{
+                Log.Error(ex, "Ошибка при попытке получить список запросов на дружбу из базы данных {u}", user.CpcmUserId);
 				Response.StatusCode = 500;
 				ViewData["ErrorCode"] = 500;
 				ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
 				return View("UserError");
 			}
 		}
+
+
+
+
+
 		[Authorize]
         public async Task<IActionResult> CreatePost()
         {
@@ -1759,8 +2015,6 @@ namespace Capycom.Controllers
                 return StatusCode(200, new {status=false, message="Репост имел неккоректный вид. Возможно вы попытались прикрепить файлы. Однако этого нельзя делать для репостов.", errors= ModelState.SelectMany(x => x.Value.Errors.Select(e => e.ErrorMessage)).ToList() });
             }
         }
-
-
 
 
         [Authorize]
@@ -2240,10 +2494,8 @@ namespace Capycom.Controllers
         }
 
 
-        //public async Task<IActionResult> FindUser()
-        //{
-        //    return View();
-        //}
+
+
 
         [HttpGet]
         public async Task<IActionResult> FindUser(UserFilterModel filters)
@@ -2289,8 +2541,11 @@ namespace Capycom.Controllers
                 //ViewData["additionalName"] = additionalName;
                 query = query.Where(u => EF.Functions.Like(u.CpcmUserAdditionalName, $"%{filters.AdditionalName}%"));
             }
-
-            try
+			if (CheckUserPrivilege("CpcmCanEditUsers", "True"))
+			{
+				query = query.Where(u => u.CpcmUserRole == filters.UserRole);
+			}
+			try
             {
 				ViewData["CpcmUserCity"] = new SelectList(await _context.CpcmCities.ToListAsync(), "CpcmCityId", "CpcmCityName");
 				ViewData["CpcmUserSchool"] = new SelectList(await _context.CpcmSchools.ToListAsync(), "CpcmSchooldId", "CpcmSchoolName");
@@ -2298,8 +2553,9 @@ namespace Capycom.Controllers
 				var rez = await query.OrderBy(u => u.CpcmUserId).Take(10).ToListAsync();
                 return View(rez);
             }
-            catch (DbException)
+            catch (DbException ex)
             {
+                Log.Error(ex, "Ошибка при поиске пользователя");
                 Response.StatusCode = 500;
                 ViewData["ErrorCode"] = 500;
                 ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
@@ -2352,17 +2608,26 @@ namespace Capycom.Controllers
 				//ViewData["additionalName"] = additionalName;
 				query = query.Where(u => EF.Functions.Like(u.CpcmUserAdditionalName, $"%{filters.AdditionalName}%"));
 			}
-
+			if (CheckUserPrivilege("CpcmCanEditUsers", "True"))
+			{
+				query = query.Where(u => u.CpcmUserRole == filters.UserRole);
+			}
 			try
             {
                 var rez = await query.Where(u => u.CpcmUserId.CompareTo(filters.lastId) > 0).OrderBy(u => u.CpcmUserId).Take(10).ToListAsync();
-                return Json(rez);
+                return PartialView(rez);
             }
-            catch (DbException)
+            catch (DbException ex)
             {
+                Log.Error(ex, "Ошибка при поиске пользователя");
                 return StatusCode(500);
             }
         }
+
+
+
+
+
 
         private bool CheckUserPrivilege(string claimType, string claimValue, string id)
         {
