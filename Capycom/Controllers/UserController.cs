@@ -1860,6 +1860,7 @@ namespace Capycom.Controllers
             {
                 if(string.IsNullOrEmpty(userPost.Text)||string.IsNullOrWhiteSpace(userPost.Text) && userPost.Files == null)
                 {
+                    Log.Warning("Попытка создать пустой {@post} пост {u}",userPost, User.FindFirstValue("CpcmUserId"));
 					Response.StatusCode = 400;
 					ViewData["ErrorCode"] = 400;
 					ViewData["Message"] = "Нельзя создавать пустой пост";
@@ -1912,8 +1913,8 @@ namespace Capycom.Controllers
 
                             if (!ModelState.IsValid)
                             {
+                                Log.Warning("Попытка создать пост {@Files} с некорректными файлами {u}",userPost.Files ,User.FindFirstValue("CpcmUserId"));
                                 return View(userPost);
-
                             }
 
                             string uniqueFileName = Guid.NewGuid().ToString() + Path.GetExtension(file.FileName);
@@ -1934,8 +1935,16 @@ namespace Capycom.Controllers
 
                                 images.Add(image);
                             }
-                            catch (Exception ex)
+                            catch (IOException ex)
                             {
+                                Log.Error(ex, "Ошибка при попытке сохранить файл {u}", User.FindFirstValue("CpcmUserId"));
+                                foreach (var item in filePaths)
+                                {
+									if (System.IO.File.Exists(item))
+                                    {
+										System.IO.File.Delete(item);
+									}
+								}   
                                 Response.StatusCode = 500;
                                 ViewData["ErrorCode"] = 500;
                                 ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
@@ -1970,7 +1979,7 @@ namespace Capycom.Controllers
                     await _context.SaveChangesAsync();
                     if (userPost.PostFatherId != null)
                     {
-						var querry = await _context.Database.ExecuteSqlInterpolatedAsync($@"INSERT INTO CPCM_POSTREPOSTS VALUES ({post.CpcmPostFather},{post.CpcmUserId})");
+						var querry = await _context.Database.ExecuteSqlInterpolatedAsync($@"INSERT INTO CPCM_POSTREPOSTS VALUES ({post.CpcmPostFather},{post.CpcmUserId}, {false})");
 						if (querry == 1)
                         {
                             return StatusCode(200, new { status = true });
@@ -1981,7 +1990,51 @@ namespace Capycom.Controllers
                         } 
                     }
 				}
-                catch (DbException)
+                catch (DbUpdateConcurrencyException ex)
+                {
+                    Log.Error(ex, "Ошибка при попытке сохранить пост {post} {u} - конкуренция",userPost, User.FindFirstValue("CpcmUserId"));
+                    try
+                    {
+                        foreach (var item in filePaths)
+                        {
+                            if (System.IO.File.Exists(item))
+                            {
+                                System.IO.File.Delete(item);
+                            }
+                        }
+                    }
+                    catch (IOException exx)
+                    {
+                        Log.Error(exx, "Не удалось удалить файлы {@files}", filePaths);
+                    }
+					Response.StatusCode = 500;
+					ViewData["ErrorCode"] = 500;
+					ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
+					return View(userPost); // TODO Продумать место для сохранения еррора
+				}
+                catch(DbUpdateException ex)
+                {
+					Log.Fatal(ex, "Ошибка при попытке сохранить пост {post} {u}", userPost, User.FindFirstValue("CpcmUserId"));
+					try
+					{
+						foreach (var item in filePaths)
+						{
+							if (System.IO.File.Exists(item))
+							{
+								System.IO.File.Delete(item);
+							}
+						}
+					}
+					catch (IOException exx)
+					{
+						Log.Error(exx, "Не удалось удалить файлы {@files}", filePaths);
+					}
+					Response.StatusCode = 500;
+					ViewData["ErrorCode"] = 500;
+					ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
+					return View(userPost); // TODO Продумать место для сохранения еррора
+				}
+                catch (DbException ex)
                 {
                     foreach (var item in filePaths)
                     {
@@ -2006,6 +2059,7 @@ namespace Capycom.Controllers
                 }
 
             }
+            Log.Information("Пост {@userPost} не прошёл валидацию {u}", userPost,User.FindFirstValue("CpcmUserId"));
             if (userPost.PostFatherId == null)
             {
                 return View(userPost); 
@@ -2029,21 +2083,25 @@ namespace Capycom.Controllers
             {
                 post = await _context.CpcmPosts.Where(c => c.CpcmPostId == postGuid).FirstOrDefaultAsync();
             }
-            catch (DbException)
+            catch (DbException ex)
             {
+                Log.Error(ex, "Ошибка при попытке получить пост из базы данных");
                 return StatusCode(500);
             }
-            if (post == null || !post.CpcmIsDeleted)
+            if (post == null || post.CpcmIsDeleted)
             {
+                Log.Warning("Пост не найден или удалён {u}", postGuid);
                 return StatusCode(404);
             }
             if (post.CpcmPostBanned)
             {
+                Log.Warning("Пост заблокирован и не может быть удалён {u}", postGuid);
                 return StatusCode(403);
             }
 
             if (!CheckUserPrivilege("CpcmCanDelUsersPosts", "True", post.CpcmUserId.ToString()))
             {
+                Log.Warning("Пользователь {user} не имеет прав на удаление поста {u}",User.FindFirstValue("CpcmUserId"), postGuid);
                 return StatusCode(403);
             }
 
@@ -2053,8 +2111,19 @@ namespace Capycom.Controllers
             {
                 await _context.SaveChangesAsync();
             }
-            catch (DbException)
+            catch (DbUpdateConcurrencyException ex)
             {
+				Log.Error(ex, "Ошибка при попытке удалить пост из базы данных {post}",postGuid);
+				return StatusCode(409);
+			}
+			catch (DbUpdateException ex)
+            {
+				Log.Fatal(ex, "Ошибка при попытке удалить пост из базы данных {post}",postGuid);
+				return StatusCode(500);
+			}
+            catch (DbException ex)
+            {
+                Log.Error(ex, "Ошибка при попытке удалить пост из базы данных {post}",postGuid);
                 return StatusCode(500);
             }
             return StatusCode(200, new { status = true });
@@ -2068,21 +2137,25 @@ namespace Capycom.Controllers
             {
                 post = await _context.CpcmPosts.Where(c => c.CpcmPostId == postGuid).FirstOrDefaultAsync();
             }
-            catch (DbException)
+            catch (DbException ex)
             {
+                Log.Error(ex, "Ошибка при попытке получить пост из базы данных {guid}",postGuid);
                 return StatusCode(500);
             }
 
             if (post == null)
             {
+                Log.Warning("Пост не найден {u}", postGuid);
                 return StatusCode(404);
             }
             if (post.CpcmIsDeleted)
             {
+                Log.Warning("Пост удалён {u}", postGuid);
                 return StatusCode(404);
             }
             if (!CheckUserPrivilege("CpcmCanDelUsersPosts", "True", post.CpcmUserId.ToString()) || post.CpcmPostBanned == true)
             {
+                Log.Warning("Пользователь не имеет прав на редактирование поста {u}", postGuid);
                 return View("Index");
             }
             
@@ -2120,33 +2193,40 @@ namespace Capycom.Controllers
             //    return View(editPost);
             //}
 
-
+            Log.Debug("Попытка редактирования поста {@post} {u}", editPost, User.FindFirstValue("CpcmUserId"));
             if (ModelState.IsValid)
             {
+                Log.Debug("Пост прошёл валидацию {@post} {u}",editPost, User.FindFirstValue("CpcmUserId"));
                 CpcmPost? post = null;
                 try
                 {
                     post = await _context.CpcmPosts.Include(c => c.CpcmImages).Where(c => c.CpcmPostId == editPost.Id).FirstOrDefaultAsync();
 
                 }
-                catch (DbException)
+                catch (DbException ex)
                 {
+                    Log.Error(ex, "Ошибка при попытке получить пост из базы данных {post}",editPost.Id);
                     return StatusCode(500);
                 }
                 if (post == null)
                 {
+                    Log.Warning("Пост не найден {u}", editPost.Id);
                     return StatusCode(404);
                 }
                 if (post.CpcmIsDeleted)
                 {
+                    Log.Warning("Пост удалён {u}", editPost.Id);
                     return StatusCode(404);
                 }
                 if (!CheckUserPrivilege("CpcmCanDelUsersPosts", "True", post.CpcmUserId.ToString()) || post.CpcmPostBanned == true)
                 {
+                    Log.Warning("Пользователь не имеет прав на редактирование поста {u}", editPost.Id);
                     return StatusCode(403);
                 }
                 if (post.CpcmImages.Count - editPost.FilesToDelete.Count + editPost.NewFiles.Count > 4)
                 {
+                    //Log.Debug("Попытка добавить больше 4 файлов в пост {u}", editPost.Id);
+                    Log.Warning("Попытка добавить больше 4 файлов в пост {u}", editPost.Id);
                     ModelState.AddModelError("NewFiles", "В посте не может быть больше 4 фотографий");
                     return View(editPost);
                 }
@@ -2179,6 +2259,7 @@ namespace Capycom.Controllers
 				//post.CpcmPostPublishedDate = DateTime.UtcNow;
                 if(post.CpcmPostFather != null)
                 {
+                    Log.Debug("Создаётся репост {@post}", editPost);
                     editPost.FilesToDelete = new List<Guid>();
                     editPost.NewFiles = new();
                 }
@@ -2192,12 +2273,14 @@ namespace Capycom.Controllers
                 List<string> filePaths = new List<string>();
                 foreach (var file in editPost.NewFiles)
                 {
+                    Log.Debug("Попытка добавить файл {@file} в пост {u}",file, editPost.Id);
+
                     CheckIFormFile("NewFiles", file, 8388608, new[] { "image/jpeg", "image/png", "image/gif" });
 
                     if (!ModelState.IsValid)
                     {
+                        Log.Debug("Файл {@file} не прошёл валидацию {u}",file, User.FindFirstValue("CpcmUserId"));
                         return View(editPost);
-
                     }
 
                     string uniqueFileName = Guid.NewGuid().ToString() + Path.GetExtension(file.FileName);
@@ -2218,8 +2301,9 @@ namespace Capycom.Controllers
 
                         post.CpcmImages.Add(image);
                     }
-                    catch (Exception ex)
+                    catch (IOException ex)
                     {
+                        Log.Error(ex, "Ошибка при попытке сохранить файл {u}", User.FindFirstValue("CpcmUserId"));
                         foreach (var uploadedfile in filePaths)
                         {
                             if (System.IO.File.Exists(uploadedfile)){
@@ -2266,9 +2350,44 @@ namespace Capycom.Controllers
                         }
 
                     }
-                    catch (DbException)
+                    catch(IOException ex)
                     {
-
+                        Log.Error(ex, "Ошибка при попытке удалить файлы {u}", User.FindFirstValue("CpcmUserId"));
+						Response.StatusCode = 500;
+						ViewData["Message"] = "Не удалось сохранить пост. Пожалуйста, повторите запрос позднее или обратитесь к Администратору.";
+						return View("UserError");
+					}
+                    catch(DbUpdateConcurrencyException ex)
+                    {
+                        Log.Error(ex, "Ошибка при попытке сохранить пост {@post} {u} - конкуренция",editPost, User.FindFirstValue("CpcmUserId"));
+                        foreach (var path in filePaths)
+                        {
+							if (System.IO.File.Exists(path))
+                            {
+								System.IO.File.Delete(path);
+							}
+						}
+						Response.StatusCode = 409;
+						ViewData["Message"] = "Не удалось сохранить пост. Пожалуйста, повторите запрос позднее или обратитесь к Администратору.";
+						return View("UserError");
+					}
+                    catch(DbUpdateException ex)
+                    {
+						Log.Error(ex, "Ошибка при попытке сохранить пост {@post} {u} - конкуренция", editPost, User.FindFirstValue("CpcmUserId"));
+						foreach (var path in filePaths)
+						{
+							if (System.IO.File.Exists(path))
+							{
+								System.IO.File.Delete(path);
+							}
+						}
+						Response.StatusCode = 500;
+						ViewData["Message"] = "Не удалось сохранить пост. Пожалуйста, повторите запрос позднее или обратитесь к Администратору.";
+						return View("UserError");
+					}
+                    catch (DbException ex)
+                    {
+                        Log.Error(ex, "Ошибка при попытке сохранить пост {@post} {u}",editPost, User.FindFirstValue("CpcmUserId"));
                         foreach (var path in filePaths)
                         {
                             if (System.IO.File.Exists(path))
@@ -2276,9 +2395,10 @@ namespace Capycom.Controllers
                                 System.IO.File.Delete(path);
                             }
                         }
-
-                        return StatusCode(500);
-                    }
+						Response.StatusCode = 500;
+						ViewData["Message"] = "Не удалось сохранить пост. Пожалуйста, повторите запрос позднее или обратитесь к Администратору.";
+						return View("UserError");
+					}
                 }
 
 
@@ -2286,16 +2406,25 @@ namespace Capycom.Controllers
                 {
                     if(post.CpcmPostText == null && (await _context.CpcmImages.Where(p => p.CpcmPostId == post.CpcmPostId).ToListAsync()).Count == 0)
                     {
+                        Log.Error("Попытка создать пустой пост {u}", User.FindFirstValue("CpcmUserId"));
                         ModelState.AddModelError("Text", "Нельзя создать пустой пост");
-                        return View(editPost);
+                        return View("UserError");
                     }
                     await _context.SaveChangesAsync();
                 }
-                catch (DbException)
+                catch(DbUpdateConcurrencyException ex)
                 {
-                    Response.StatusCode = 418;
+                    Log.Error(ex, "Ошибка при попытке сохранить пост {@post} {u} - конкуренция",editPost, User.FindFirstValue("CpcmUserId"));
+					Response.StatusCode = 409;
                     ViewData["Message"] = "Не удалось сохранить пост. Пожалуйста, повторите запрос позднее или обратитесь к Администратору.";
-                    return View(editPost); // TODO Продумать место для сохранения еррора
+                    return View("UserError");
+                }
+                catch (DbException ex)
+                {
+                    Log.Error(ex, "Ошибка при попытке сохранить пост {@post} {u}",editPost, User.FindFirstValue("CpcmUserId"));
+                    Response.StatusCode = 500;
+                    ViewData["Message"] = "Не удалось сохранить пост. Пожалуйста, повторите запрос позднее или обратитесь к Администратору.";
+                    return View("UserError"); // TODO Продумать место для сохранения еррора
                 }
                 RedirectToAction("Index");
 
