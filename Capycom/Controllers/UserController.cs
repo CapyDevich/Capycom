@@ -1639,8 +1639,20 @@ namespace Capycom.Controllers
 			try
             {
                 Guid id = Guid.Parse(HttpContext.User.FindFirst(c => c.Type == "CpcmUserId").Value);
+                var user = await _context.CpcmUsers.FindAsync(id);
+				if (user==null)
+				{
+					Log.Warning("Пользователь не найден", CpcmUserId);
+					return StatusCode(404);
+				}
+                else if(user.CpcmIsDeleted || user.CpcmUserBanned)
+                {
+                    Log.Warning("Пользователь удалён или заблокирован", CpcmUserId);
+                    return StatusCode(403);
+                }
 
-				var follow = await _context.CpcmUserfollowers.Where(e => e.CpcmUserId == CpcmUserId && e.CpcmFollowerId == id).FirstOrDefaultAsync();
+				var follow = await _context.CpcmUserfollowers.Where(e => e.CpcmUserId == CpcmUserId && e.CpcmFollowerId == id).Include(e => e.CpcmUser).FirstOrDefaultAsync();
+
                 if (follow == null)
                 {
                     _context.CpcmUserfollowers.Add(follower);
@@ -1742,6 +1754,19 @@ namespace Capycom.Controllers
 
 			try
             {
+				var user = await _context.CpcmUsers.FindAsync(CpcmUserId);
+				if (user == null)
+				{
+					Log.Warning("Пользователь не найден", CpcmUserId);
+					return StatusCode(404);
+				}
+				else if (user.CpcmIsDeleted || user.CpcmUserBanned)
+				{
+					Log.Warning("Пользователь удалён или заблокирован", CpcmUserId);
+					return StatusCode(403);
+				}
+
+
 				friendreq = _context.CpcmUserfriends.Where( f => f.CmcpUserId==userGuid && f.CmcpFriendId==CpcmUserId || f.CmcpUserId == CpcmUserId && f.CmcpFriendId == userGuid).FirstOrDefault();
                 if(friendreq != null)
                 {
