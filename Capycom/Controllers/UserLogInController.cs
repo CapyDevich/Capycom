@@ -61,6 +61,14 @@ if (ModelState.IsValid)
                     }
 
                 }
+                catch (DbUpdateException ex)
+                {
+					Log.Error(ex, "Не удалось выполнить запрос к БД на выборку пользователя по email {@user}",user.CpcmUserEmail);
+					Response.StatusCode = 500;
+                    ViewData["ErrorCode"] = 500;
+                    ViewData["Message"] = "Ошибка связи с сервером";
+					return View("UserError");
+				}
                 catch (DbException ex)
                 {
                     Log.Error(ex, "Не удалось выполнить запрос к БД на выборку пользователя по email {@user}",user.CpcmUserEmail);
