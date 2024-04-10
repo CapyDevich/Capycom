@@ -36,6 +36,15 @@ namespace Capycom.Controllers
                 Log.Information("Пользователь {@HttpContext.User} зашел на страницу Roles. Данные по соединеню {@HttpContext.Connection}", HttpContext.User.FindFirstValue("CpcmUserId"),HttpContext.Connection); 
                 return View(await _context.CpcmRoles.ToListAsync());
             }
+            catch(DbUpdateException ex)
+            {
+				Log.Error(ex, "Не удалось выполнить запрос к базе данных на получения списка ролей");
+				Response.StatusCode = 500;
+				ViewData["ErrorCode"] = 500;
+				ViewData["Message"] = "Ошибка связи с сервером";
+				return View("UserError")
+
+			}
             catch (DbException ex)
             {
                 Log.Error(ex, "Не удалось выполнить запрос к базе данных на получения списка ролей");
@@ -72,6 +81,14 @@ namespace Capycom.Controllers
 					return View("UserError");
 				}
 				return View(cpcmRole);
+			}
+            catch (DbUpdateException ex)
+            {
+				Log.Error(ex, "Не удалось выполнить запрос к базе данных на получения роли с id {id}", id);
+				Response.StatusCode = 500;
+				ViewData["ErrorCode"] = 500;
+				ViewData["Message"] = "Ошибка связи с сервером";
+				return View("UserError");
 			}
             catch (DbException ex)
             {
@@ -116,6 +133,14 @@ namespace Capycom.Controllers
                     Log.Information("Пользователю {@HttpContext.User} удалось создать роль {@cpcmRole}. Данные по соединеню {@HttpContext.Connection}", HttpContext.User.FindFirstValue("CpcmUserId"), cpcmRole, HttpContext.Connection);
 					return RedirectToAction(nameof(Index));
 				}
+                catch (DbUpdateException ex)
+                {
+					Log.Error(ex, "Пользователю {@HttpContext.User} удалось выполнить запрос к базе данных на добавление роли {@cpcmRole}. Данные по соединению  {@HttpContext.Connection}", HttpContext.User.FindFirstValue("CpcmUserId"), cpcmRole, HttpContext.Connection);
+					Response.StatusCode = 500;
+					ViewData["ErrorCode"] = 500;
+					ViewData["Message"] = "Ошибка связи с сервером";
+					return View("UserError");
+				}
                 catch (DbException ex)
                 {
                     Log.Error(ex,"Пользователю {@HttpContext.User} удалось выполнить запрос к базе данных на добавление роли {@cpcmRole}. Данные по соединению  {@HttpContext.Connection}", HttpContext.User.FindFirstValue("CpcmUserId"), cpcmRole, HttpContext.Connection); 
@@ -157,6 +182,14 @@ namespace Capycom.Controllers
                 Log.Information("Пользователь {@HttpContext.User} удалось получить роль с id {id}. Данные по соединеню {@HttpContext.Connection}", HttpContext.User.Identity.Name, id, HttpContext.Connection);
                 return View(cpcmRole);
             }
+            catch (DbUpdateException ex)
+            {
+				Log.Error(ex, "Не удалось выполнить запрос к базе данных на получение роли с id {id}. Данные по соединеню {@HttpContext.Connection}", id, HttpContext.Connection);
+				Response.StatusCode = 500;
+				ViewData["ErrorCode"] = 500;
+				ViewData["Message"] = "Ошибка связи с сервером";
+				return View("UserError");
+			}
             catch (DbException ex)
             {
                 Log.Error(ex,"Не удалось выполнить запрос к базе данных на получение роли с id {id}. Данные по соединеню {@HttpContext.Connection}", id, HttpContext.Connection);
@@ -209,6 +242,22 @@ namespace Capycom.Controllers
 						return View("UserError");
 					}
                 }
+                catch (DbUpdateException ex)
+                {
+					Log.Error(ex, "Не удалось выполнить запрос к базе данных на изменение роли {@cpcmRole}. Данные по соединеню {@HttpContext.Connection}", cpcmRole, HttpContext.Connection);
+					Response.StatusCode = 500;
+					ViewData["ErrorCode"] = 500;
+					ViewData["Message"] = "Не удалось изменить запись. Неизвестная ошибка"+ex.Message;
+					return View("UserError");
+				}
+                catch (DbException ex)
+                {
+					Log.Error(ex, "Не удалось выполнить запрос к базе данных на изменение роли {@cpcmRole}. Данные по соединеню {@HttpContext.Connection}", cpcmRole, HttpContext.Connection);
+					Response.StatusCode = 500;
+					ViewData["ErrorCode"] = 500;
+					ViewData["Message"] = "Не удалось изменить запись. Неизвестная ошибка" + ex.Message;
+					return View("UserError");
+				}
                 return RedirectToAction(nameof(Index));
             }
             Log.Warning("Пользователь {@HttpContext.User} попытался изменить роль с некорректными данными {@data}. Данные по соединеню {@HttpContext.Connection}", HttpContext.User.Identity.Name, cpcmRole, HttpContext.Connection);
@@ -257,6 +306,15 @@ namespace Capycom.Controllers
                 ViewData["CpcmRoles"] = new SelectList(await _context.CpcmRoles.ToListAsync(), "CpcmRoleId", "CpcmRoleName");
                 return View();
             }
+            catch (DbUpdateException ex)
+            {
+				Log.Error(ex, "Не удалось выполнить запрос к базе данных на получение списка ролей");
+				Response.StatusCode = 500;
+				ViewData["ErrorCode"] = 500;
+				ViewData["Message"] = "Ошибка связи с сервером";
+				return View("UserError");
+
+			}
             catch (DbException ex)
             {
                 Log.Error(ex, "Не удалось выполнить запрос к базе данных на получение списка ролей");
