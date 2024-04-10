@@ -726,10 +726,25 @@ namespace Capycom.Controllers
                             }
                         }
                     }
-                }
+					var author = await _context.CpcmUsers.Where(u => u.CpcmUserId == father.CpcmUserId).FirstOrDefaultAsync();
+					if (author == null)
+					{
+						var group = await _context.CpcmGroups.Where(u => u.CpcmGroupId == father.CpcmGroupId).FirstOrDefaultAsync();
+						father.Group = group;
+					}
+					else
+					{
+						father.User = author;
+					}
+				}
                 return father;
             }
-            catch (DbException ex)
+			catch (DbUpdateException ex)
+			{
+				Log.Error(ex, "Не удалось выгрузить родительские посты {@fathrepostnavigation}", cpcmPostFatherNavigation);
+				throw;
+			}
+			catch (DbException ex)
             {
 				Log.Error(ex, "Не удалось выгрузить родительские посты {@fathrepostnavigation}", cpcmPostFatherNavigation);
 				throw;

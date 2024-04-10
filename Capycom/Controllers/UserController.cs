@@ -3199,6 +3199,16 @@ namespace Capycom.Controllers
 							}
 						}
 					}
+					var author = await _context.CpcmUsers.Where(u => u.CpcmUserId == father.CpcmUserId).FirstOrDefaultAsync();
+					if (author == null)
+					{
+						var group = await _context.CpcmGroups.Where(u => u.CpcmGroupId == father.CpcmGroupId).FirstOrDefaultAsync();
+						father.Group = group;
+					}
+					else
+					{
+						father.User = author;
+					}
 				}
 				return father;
 			}
