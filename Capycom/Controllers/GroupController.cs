@@ -836,7 +836,7 @@ namespace Capycom.Controllers
 		[Authorize]
 		[HttpPost]
 		[ValidateAntiForgeryToken]
-		public async Task<IActionResult> EdtiUserGroupRole(Guid userId, Guid groupId, int roleID)
+		public async Task<IActionResult> EditUserGroupRole(Guid userId, Guid groupId, int roleID)
 		{
 			Log.Information("Попытка редактирования роли пользователя {userId} в группе {groupId} пользователем {user}", userId, groupId, HttpContext.User.FindFirstValue("CpcmUserId"));
 			CpcmGroup? group;
