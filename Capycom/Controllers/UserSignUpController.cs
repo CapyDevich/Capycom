@@ -30,8 +30,17 @@ namespace Capycom.Controllers
                 capycomContext = await _context.CpcmUsers.Include(c => c.CpcmUserCityNavigation).Include(c => c.CpcmUserRoleNavigation).Include(c => c.CpcmUserSchoolNavigation).Include(c => c.CpcmUserUniversityNavigation).ToListAsync();
 
             }
-            catch (DbException)
+            catch(DbUpdateException ex)
             {
+                Log.Error(ex, "Ошибка при попытке извлечь из БД всех пользователей");
+				Response.StatusCode = 500;
+				ViewData["ErrorCode"] = 500;
+				ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
+				return View("UserError");
+			}
+            catch (DbException ex)
+            {
+                Log.Error(ex, "Ошибка при попытке извлечь из БД всех пользователей");
                 Response.StatusCode = 500;
                 ViewData["ErrorCode"] = 500;
                 ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
@@ -62,6 +71,15 @@ namespace Capycom.Controllers
                 ViewData["CpcmUserUniversity"] = new SelectList(await _context.CpcmUniversities.ToListAsync(), "CpcmUniversityId", "CpcmUniversityName");
                 return View();
             }
+            catch(DbUpdateException ex)
+            {
+				Response.StatusCode = 500;
+				ViewData["ErrorCode"] = 500;
+				ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
+				Log.Error(ex, "Ошибка при попытке извлечь из БД словари и составить из них SelectList при обработке гет запроса на страницу регистрацию");
+
+				return View("UserError");
+			}
             catch (DbException ex)
             {
                 Response.StatusCode = 500;
@@ -179,6 +197,14 @@ namespace Capycom.Controllers
                         ViewData["CpcmUserUniversity"] = new SelectList(await _context.CpcmUniversities.ToListAsync(), "CpcmUniversityId", "CpcmUniversityName", cpcmSignUser.CpcmUserUniversity);
                         return View(cpcmSignUser);
                     }
+                    catch(DbUpdateException ex)
+                    {
+						Response.StatusCode = 500;
+						ViewData["ErrorCode"] = 500;
+						ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
+						Log.Error(ex, "Ошибка при попытке извлечь из БД словари и составить из них SelectList при обработке пост запроса на регистрацию при валидной модели");
+						return View("UserError");
+					}
                     catch (DbException ex)
                     {
                         Response.StatusCode = 500;
@@ -196,6 +222,52 @@ namespace Capycom.Controllers
                 {
                     await _context.SaveChangesAsync();
                 }
+                catch(DbUpdateConcurrencyException ex)
+                {
+					Log.Error(ex, "Ошибка при попытке сохранить нового пользователя {@cpcmUser},{@cpcmSignUser}", cpcmUser, cpcmSignUser);
+					try
+					{
+						if (System.IO.File.Exists(filePathUserImage)) // TODO Возможно это стоит обернуть в try catch
+						{
+							System.IO.File.Delete(filePathUserImage);
+						}
+						if (System.IO.File.Exists(filePathUserCoverImage))
+						{
+							System.IO.File.Delete(filePathUserCoverImage);
+						}
+					}
+					catch (IOException exx)
+					{
+						Log.Error(exx, "Не удалось удалить фотографии пользователя при неудачной попытке регистрации: {@filePathUserImage}, {@filePathUserCoverImage}", filePathUserImage, filePathUserCoverImage);
+					}
+					Response.StatusCode = 500;
+					ViewData["ErrorCode"] = 500;
+					ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
+					return View("UserError");
+				}
+                catch(DbUpdateException ex)
+                {
+					Log.Error(ex, "Ошибка при попытке сохранить нового пользователя {@cpcmUser},{@cpcmSignUser}", cpcmUser, cpcmSignUser);
+					try
+					{
+						if (System.IO.File.Exists(filePathUserImage)) // TODO Возможно это стоит обернуть в try catch
+						{
+							System.IO.File.Delete(filePathUserImage);
+						}
+						if (System.IO.File.Exists(filePathUserCoverImage))
+						{
+							System.IO.File.Delete(filePathUserCoverImage);
+						}
+					}
+					catch (IOException exx)
+					{
+						Log.Error(exx, "Не удалось удалить фотографии пользователя при неудачной попытке регистрации: {@filePathUserImage}, {@filePathUserCoverImage}", filePathUserImage, filePathUserCoverImage);
+					}
+					Response.StatusCode = 500;
+					ViewData["ErrorCode"] = 500;
+					ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
+					return View("UserError");
+				}
                 catch (DbException ex)
                 {
 					Log.Error(ex,"Ошибка при попытке сохранить нового пользователя {@cpcmUser},{@cpcmSignUser}",cpcmUser,cpcmSignUser);
@@ -228,6 +300,14 @@ namespace Capycom.Controllers
                 ViewData["CpcmUserUniversity"] = new SelectList(await _context.CpcmUniversities.ToListAsync(), "CpcmUniversityId", "CpcmUniversityName", cpcmSignUser.CpcmUserUniversity);
                 return View(cpcmSignUser);
             }
+            catch(DbUpdateException ex)
+            {
+				Log.Error(ex, "Ошибка при попытке извлечь из БД словари и составить из них SelectList при обработке пост запроса на регистрацию при невалидной модели");
+				Response.StatusCode = 500;
+				ViewData["ErrorCode"] = 500;
+				ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
+				return View("UserError");
+			}
             catch (DbException ex)
             {
 				Log.Error(ex, "Ошибка при попытке извлечь из БД словари и составить из них SelectList при обработке пост запроса на регистрацию при невалидной модели");
@@ -257,6 +337,11 @@ namespace Capycom.Controllers
             {
                 rez = !await _context.CpcmUsers.AnyAsync(e => e.CpcmUserEmail == CpcmUserEmail);
             }
+            catch (DbUpdateException ex)
+            {
+                Log.Error(ex, "Не удалось установить соединение с сервером при проверки регистрируемоего email {@CpcmUserEmail}", CpcmUserEmail);
+                return Json(data: "Не удалось установить соединение с сервером");
+            }
             catch (DbException ex)
             {
 				Log.Error(ex, "Не удалось установить соединение с сервером при проверки регистрируемоего email {@CpcmUserEmail}", CpcmUserEmail);
@@ -285,6 +370,11 @@ namespace Capycom.Controllers
             {
                 rez = !await _context.CpcmUsers.AnyAsync(e => e.CpcmUserNickName == CpcmUserNickName);
             }
+            catch (DbUpdateException ex)
+            {
+				Log.Error(ex, "Не удалось установить соединение с сервером при проверки регистрируемоего nickname {@CpcmUserNickName}", CpcmUserNickName);
+				return Json(data: "Не удалось установить соединение с сервером");
+			}
             catch (DbException ex)
             {
 				Log.Error(ex, "Не удалось установить соединение с сервером при проверки регистрируемоего nickname {@CpcmUserNickName}", CpcmUserNickName);
@@ -308,6 +398,11 @@ namespace Capycom.Controllers
             try
             {
                 rez = !await _context.CpcmUsers.AnyAsync(e => e.CpcmUserTelNum == CpcmUserTelNum);
+            }
+            catch (DbUpdateException ex)
+            {
+				Log.Error(ex, "Не удалось установить соединение с сервером при проверки регистрируемоего телефона {@CpcmUserTelNum}", CpcmUserTelNum);
+                return Json(data: "Не удалось установить соединение с сервером");
             }
             catch (DbException ex)
             {
@@ -339,6 +434,16 @@ namespace Capycom.Controllers
                 {
                     await _context.SaveChangesAsync();
                 }
+                catch(DbUpdateConcurrencyException ex)
+                {
+                    Log.Error(ex, "Ошибка при попытке добавить город: {@newCity}", newCity);
+                    return new StatusCodeResult(409);
+                }
+                catch (DbUpdateException ex)
+                {
+					Log.Error(ex, "Ошибка при попытке добавить город: {@newCity}", newCity);
+					return new StatusCodeResult(500);
+				}
                 catch (DbException ex)
                 {
                     Log.Error(ex, "Ошибка при попытке добавить город: {@newCity}", newCity);
@@ -373,8 +478,19 @@ namespace Capycom.Controllers
                 {
                     await _context.SaveChangesAsync();
                 }
-                catch (DbException)
+                catch (DbUpdateConcurrencyException ex)
                 {
+                    Log.Error(ex, "Ошибка при попытке добавить школу: {@newSchool}", newSchool);
+					return new StatusCodeResult(409);
+				}
+                catch (DbUpdateException ex)
+                {
+                    Log.Error(ex, "Ошибка при попытке добавить школу: {@newSchool}", newSchool);
+					return new StatusCodeResult(500);
+                }
+                catch (DbException ex)
+                {
+                    Log.Error(ex, "Ошибка при попытке добавить школу: {@newSchool}", newSchool);
                     return new StatusCodeResult(500);
                 }
                 return Json(new { success = true, id = school.CpcmSchooldId });
@@ -402,8 +518,19 @@ namespace Capycom.Controllers
                 {
                     await _context.SaveChangesAsync();
                 }
-                catch (DbException)
+                catch (DbUpdateConcurrencyException ex)
                 {
+					Log.Error(ex, "Ошибка при попытке добавить университет: {@newUni}", newUni);
+					return new StatusCodeResult(409);
+				}
+				catch (DbUpdateException ex)
+                {
+					Log.Error(ex, "Ошибка при попытке добавить университет: {@newUni}", newUni);
+					return new StatusCodeResult(500);
+				}
+                catch (DbException ex)
+                {
+                    Log.Error(ex, "Ошибка при попытке добавить университет: {@newUni}", newUni);
                     return new StatusCodeResult(500);
                 }
                 return Json(new { success = true, id = university.CpcmUniversityId });
@@ -444,11 +571,13 @@ namespace Capycom.Controllers
             bool status = true;
             if (!CheckIFormFileContent(file,permittedTypes))
             {
+                Log.Warning("Попытка загрузить файл с недопустимым типом: {0}", file.ContentType);
                 ModelState.AddModelError(FormFieldName, "Допустимые типы файлов: png, jpeg, jpg, gif");
                 status = false;
             }
             if (!CheckIFormFileSize(file, size))
             {
+                Log.Warning("Попытка загрузить файл с недопустимым размером: {0}", file.Length);
                 ModelState.AddModelError(FormFieldName, $"Максимальный размер файла: {size/1024} Кбайт");
                 status = false;
             }
