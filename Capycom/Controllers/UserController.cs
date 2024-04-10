@@ -2228,7 +2228,10 @@ namespace Capycom.Controllers
                 {
                     if (userPost.PostFatherId !=null)
                     {
+                        
                         var fatherPost = await _context.CpcmPosts.Where(p => p.CpcmPostId == userPost.PostFatherId).FirstOrDefaultAsync(); 
+                        var fatheruser = await _context.CpcmUsers.FindAsync(fatherPost.CpcmUserId);
+                        var fathergroup = await _context.CpcmGroups.FindAsync(fatherPost.CpcmGroupId);
                         if(fatherPost==null || fatherPost.CpcmPostPublishedDate > DateTime.UtcNow)
                         {
                             return StatusCode(200, new {status=false,message= "Нельзя репостить неопубликованный пост" });
@@ -2241,6 +2244,25 @@ namespace Capycom.Controllers
                         {
                             return StatusCode(404, new { message = "Не найден родительский пост" });
                         }
+
+                        if (fatheruser == null)
+                        {
+							return StatusCode(404);
+						}
+                        if(fatheruser!=null &&  fatheruser.CpcmIsDeleted || fatheruser.CpcmUserBanned)
+                        {
+							return StatusCode(403);
+						}
+
+                        if(fathergroup == null)
+                        {
+							return StatusCode(404);
+						}
+                        if(fathergroup!=null && fathergroup.CpcmIsDeleted || fathergroup.CpcmGroupBanned)
+                        {
+                            return StatusCode(403);
+                        }
+
 						
 					}
                     await _context.SaveChangesAsync();
