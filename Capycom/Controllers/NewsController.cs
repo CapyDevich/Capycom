@@ -60,6 +60,23 @@ namespace Capycom.Controllers
 					.ToListAsync();
 				foreach (var post in posts)
 				{
+					var author = await _context.CpcmUsers.Where(u => u.CpcmUserId == post.CpcmUserId).FirstOrDefaultAsync();
+					if (author != null)
+					{
+						if (author.CpcmIsDeleted || author.CpcmUserBanned)
+						{
+							continue;
+						}
+					}
+					else
+					{
+						var authorgGroup = await _context.CpcmGroups.Where(u => u.CpcmGroupId == post.CpcmGroupId).FirstOrDefaultAsync();
+						if (authorgGroup != null && authorgGroup.CpcmIsDeleted || authorgGroup.CpcmGroupBanned)
+						{
+							continue;
+						}
+					}
+
 					if (post.CpcmPostFather != null)
 					{
 						post.CpcmPostFatherNavigation = await GetFatherPostReccurent(post);
@@ -90,6 +107,14 @@ namespace Capycom.Controllers
 
 				return View(postsModel);
 			}
+			catch(DbUpdateException ex)
+			{
+				Log.Error(ex, "Произошла ошибка при обращении к бд. Не удалось выполнить запрос. {user}", HttpContext.User.FindFirstValue("CpcmUserId"));
+				Response.StatusCode = 500;
+				ViewData["ErrorCode"] = 500;
+				ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
+				return View("UserError");
+			}
 			catch (DbException ex)
 			{
 				Log.Error(ex, "Произошла ошибка при обращении к бд. Не удалось выполнить запрос. {user}", HttpContext.User.FindFirstValue("CpcmUserId"));
@@ -110,6 +135,7 @@ namespace Capycom.Controllers
 				var lastPost = await _context.CpcmPosts.Where(p => p.CpcmPostId == lastPostId).FirstOrDefaultAsync();
 				if (lastPost == null)
 				{
+					Log.Warning("Пользователь {UserId} запросил следующие посты, но последний пост не найден", HttpContext.User.FindFirstValue("CpcmUserId"));
 					return StatusCode(404);
 				}
 
@@ -142,6 +168,23 @@ namespace Capycom.Controllers
 					.ToListAsync();
 				foreach (var post in posts)
 				{
+					var author = await _context.CpcmUsers.Where(u => u.CpcmUserId == post.CpcmUserId).FirstOrDefaultAsync();
+					if (author != null)
+					{
+						if(author.CpcmIsDeleted || author.CpcmUserBanned)
+						{
+							continue;
+						}
+					}
+					else
+					{
+						var authorgGroup = await _context.CpcmGroups.Where(u => u.CpcmGroupId == post.CpcmGroupId).FirstOrDefaultAsync();
+						if(authorgGroup!=null && authorgGroup.CpcmIsDeleted || authorgGroup.CpcmGroupBanned)
+						{
+							continue;
+						}
+					}
+
 					if (post.CpcmPostFather != null)
 					{
 						post.CpcmPostFatherNavigation = await GetFatherPostReccurent(post);
@@ -169,6 +212,11 @@ namespace Capycom.Controllers
 				}
 
 				return PartialView(postsModel);
+			}
+			catch (DbUpdateException ex)
+			{
+				Log.Error(ex, "Произошла ошибка при обращении к бд. Не удалось выполнить запрос. {user}", HttpContext.User.FindFirstValue("CpcmUserId"));
+				return StatusCode(500);
 			}
 			catch (DbException ex)
 			{
