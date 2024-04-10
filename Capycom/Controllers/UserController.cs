@@ -2172,7 +2172,7 @@ namespace Capycom.Controllers
                 if (userPost.PostFatherId != null)
                 {
                     int i = 0;
-                    if (userPost.Files!=null)
+                    if (userPost.Files==null)
                     {
                         foreach (IFormFile file in userPost.Files)
                         {
