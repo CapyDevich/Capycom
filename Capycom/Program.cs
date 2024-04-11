@@ -3,11 +3,9 @@ using Microsoft.EntityFrameworkCore;
 using Serilog.Events;
 using Serilog.Sinks.MSSqlServer;
 using Serilog;
-using System.Configuration;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
-using Serilog.Formatting.Json;
 using Microsoft.AspNetCore.RateLimiting;
 using System.Threading.RateLimiting;
+using System.Configuration;
 
 namespace Capycom
 {
@@ -59,14 +57,14 @@ namespace Capycom
 
 			builder.Services.AddControllersWithViews();
 
-			//builder.Services.AddRateLimiter(_ => _
-			//.AddFixedWindowLimiter(policyName: "fixed", options =>
-			//{
-			//	options.PermitLimit = 4;
-			//	options.Window = TimeSpan.FromSeconds(12);
-			//	options.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
-			//	options.QueueLimit = 2;
-			//}));
+			builder.Services.AddRateLimiter(_ => _
+			.AddFixedWindowLimiter(policyName: "fixed", options =>
+			{
+				options.PermitLimit = 1000;
+				options.Window = TimeSpan.FromSeconds(10);
+				options.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+				options.QueueLimit = 100;
+			}));
 
 			var app = builder.Build();
 			app.UseSerilogRequestLogging();
@@ -86,7 +84,7 @@ namespace Capycom
             app.UseAuthentication();
             app.UseAuthorization();
 
-			//app.UseRateLimiter();
+			app.UseRateLimiter();
 
 			app.UseMiddleware<UserAuthMiddleware>();
 
