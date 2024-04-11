@@ -247,10 +247,10 @@ namespace Capycom.Controllers
                 {
                     postik.CpcmPostFatherNavigation = await GetFatherPostReccurent(postik);
                     likes = await _context.Database.SqlQuery<long>($@"SELECT * FROM CPCM_POSTLIKES WHERE CPCM_PostID = {postik.CpcmPostId}").CountAsync();
-                    reposts = await _context.Database.SqlQuery<long>($@"SELECT * FROM CPCM_POSTREPOSTS WHERE CPCM_PostID = {postik.CpcmPostId}").CountAsync();
+                    reposts = await _context.Database.SqlQuery<long>($@"SELECT * FROM CPCM_POSTREPOSTS WHERE CPCM_PostID = {postik.CpcmPostId} AND CPCM_IsDeleted = 0").CountAsync();
                     if (User.Identity.IsAuthenticated)
                     {
-                        liked = await _context.Database.SqlQuery<long>($@"SELECT * FROM CPCM_POSTLIKES WHERE CPCM_PostID = {postik.CpcmPostId} AND CPCM_UserID = {User.FindFirstValue("CpcmUserId")} AND CPCM_IsDeleted = 0").CountAsync();
+                        liked = await _context.Database.SqlQuery<long>($@"SELECT * FROM CPCM_POSTLIKES WHERE CPCM_PostID = {postik.CpcmPostId} AND CPCM_UserID = {User.FindFirstValue("CpcmUserId")}").CountAsync();
 
                     }
                 }
