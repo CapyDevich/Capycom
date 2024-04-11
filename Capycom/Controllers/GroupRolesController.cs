@@ -297,6 +297,11 @@ namespace Capycom.Controllers
             {
                 return _context.CpcmGroupRoles.Any(e => e.CpcmRoleId == id);
             }
+            catch(DbUpdateException ex)
+            {
+				Log.Error(ex, "Не удалось выполнить запрос к базе данных на проверку существования роли с id {id}", id);
+				return true;
+			}
             catch (DbException ex)
             {
                 Log.Error(ex, "Не удалось выполнить запрос к базе данных на проверку существования роли с id {id}", id);
