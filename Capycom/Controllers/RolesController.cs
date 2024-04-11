@@ -42,7 +42,7 @@ namespace Capycom.Controllers
 				Response.StatusCode = 500;
 				ViewData["ErrorCode"] = 500;
 				ViewData["Message"] = "Ошибка связи с сервером";
-				return View("UserError")
+                return View("UserError");
 
 			}
             catch (DbException ex)
