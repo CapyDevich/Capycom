@@ -33,7 +33,7 @@ namespace Capycom.Controllers
 
             try
             {
-                CpcmPost? post = await _context.CpcmPosts.Where(p => p.CpcmPostId == postId).Include(p => p.CpcmImages).Include(p => p.Group).Include(p => p.User).Include(p => p.CpcmPostFatherNavigation).ThenInclude(p => p.CpcmImages).FirstOrDefaultAsync();
+                CpcmPost? post = await _context.CpcmPosts.Where(p => p.CpcmPostId == postId).Include(p => p.CpcmImages).Include(p => p.CpcmPostFatherNavigation).ThenInclude(p => p.CpcmImages).FirstOrDefaultAsync();
                 if(post == null || post.CpcmIsDeleted)
                 {
                     Log.Information("Попытка просмотра несуществующего поста {Post}", postId);
@@ -42,6 +42,8 @@ namespace Capycom.Controllers
                     ViewData["Message"] = "Пост не найден";
                     return View("UserError");
                 }
+                post.User = await _context.CpcmUsers.Where(u => u.CpcmUserId == post.CpcmUserId).FirstOrDefaultAsync();
+                post.Group = await _context.CpcmGroups.Where(g => g.CpcmGroupId == post.CpcmGroupId).FirstOrDefaultAsync();
                 if (post.CpcmPostBanned)
                 {
                     Log.Information("Попытка просмотра заблокированного поста {Post}", postId);
@@ -138,9 +140,17 @@ namespace Capycom.Controllers
 				PostModel postModel = new() { Post=post,UserOwner=userOwner, GroupOwner = groupOwner, LikesCount=likes,RepostsCount=reposts, TopLevelComments=topComments};
                 return View(postModel);
             }
-            catch (DbException)
+            catch(DbUpdateException ex)
             {
-                Log.Error("Не удалось выполнить запрос к БД на выборку поста {Post}", postId);
+				Log.Error(ex, "Не удалось выполнить запрос к БД на выборку поста {Post}", postId);
+				Response.StatusCode = 500;
+				ViewData["ErrorCode"] = 500;
+				ViewData["Message"] = "Ошибка связи с сервером";
+				return View("UserError");
+			}
+            catch (DbException ex )
+            {
+                Log.Error(ex,"Не удалось выполнить запрос к БД на выборку поста {Post}", postId);
                 Response.StatusCode = 500;
                 ViewData["ErrorCode"] = 500;
                 ViewData["Message"] = "Ошибка связи с сервером";
@@ -153,12 +163,14 @@ namespace Capycom.Controllers
         {
             try
             {
-                var post = await _context.CpcmPosts.Where(p => p.CpcmPostId == userComment.CpcmPostId).Include(u=> u.User).Include(g => g.Group).FirstOrDefaultAsync();
+                var post = await _context.CpcmPosts.Where(p => p.CpcmPostId == userComment.CpcmPostId).FirstOrDefaultAsync();
                 if(post == null || post.CpcmIsDeleted)
-                {
+                {   
                     Log.Warning("Пользователь {User} пытается добавить комментарий к несуществующему посту {Post}", HttpContext.User.FindFirstValue("CpcmUserId"), userComment.CpcmPostId);
 					return StatusCode(404);
 				}
+                post.User = await _context.CpcmUsers.Where(u => u.CpcmUserId == post.CpcmUserId).FirstOrDefaultAsync();
+                post.Group = await _context.CpcmGroups.Where(g => g.CpcmGroupId == post.CpcmGroupId).FirstOrDefaultAsync();
                 if (post.CpcmPostBanned)
                 {
                     Log.Warning("Пользователь {User} пытается добавить комментарий к заблокированному посту {Post}", HttpContext.User.FindFirstValue("CpcmUserId"), userComment.CpcmPostId);
@@ -186,12 +198,17 @@ namespace Capycom.Controllers
 					return StatusCode(403, new { message = "Группа поста заблокирована" });
 				}
             }
-            catch (Exception ex)
+            catch (DbUpdateException ex)
             {
                 Log.Error(ex, "Не удалось выполнить запрос к БД на выборку поста {Post}", userComment.CpcmPostId);
                 return StatusCode(500, new { message = "Ошибка связи с сервером" });
 
             }
+            catch(DbException ex)
+            {
+				Log.Error(ex, "Не удалось выполнить запрос к БД на выборку поста {Post}", userComment.CpcmPostId);
+				return StatusCode(500, new { message = "Ошибка связи с сервером" });
+			}
             Log.Information("Пользователь {User} пытается добавить комментарий к посту {Post}", HttpContext.User.FindFirstValue("CpcmUserId"), userComment.CpcmPostId);
             if (ModelState.IsValid)
             {
@@ -292,8 +309,9 @@ namespace Capycom.Controllers
                     }
                     return StatusCode(500, new { message = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку" });
                 }
-                catch (IOException)
+                catch (IOException ex)
                 {
+                    Log.Error(ex, "Пользователь {User} пытается добавить комментарий к посту {Post}. Произошла ошибка с доступом к серверу - не удалось создать файлы", HttpContext.User.FindFirstValue("CpcmUserId"), userComment.CpcmPostId);
                     return StatusCode(500, new { message = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку" });
                 }
                 //return StatusCode(200, new { status = true });
@@ -319,12 +337,14 @@ namespace Capycom.Controllers
 
 
 
-				var post = await _context.CpcmPosts.Where(p => p.CpcmPostId == comment.CpcmPostId).Include(u => u.User).Include(g => g.Group).FirstOrDefaultAsync();
+				var post = await _context.CpcmPosts.Where(p => p.CpcmPostId == comment.CpcmPostId).FirstOrDefaultAsync();
 				if (post == null || post.CpcmIsDeleted)
 				{
                     Log.Warning("Пользователь {User} пытается удалить комментарий {Comment}. Пост не найден или удалён", HttpContext.User.FindFirstValue("CpcmUserId"), commentId);
 					return StatusCode(404);
 				}
+                post.User = await _context.CpcmUsers.Where(u => u.CpcmUserId == post.CpcmUserId).FirstOrDefaultAsync();
+                post.Group = await _context.CpcmGroups.Where(g => g.CpcmGroupId == post.CpcmGroupId).FirstOrDefaultAsync();
 				if (post.CpcmPostBanned)
 				{
                     Log.Warning("Пользователь {User} пытается удалить комментарий {Comment}. Пост заблокирован", HttpContext.User.FindFirstValue("CpcmUserId"), commentId);
@@ -364,6 +384,7 @@ namespace Capycom.Controllers
                 }
                 else
                 {
+                    Log.Warning("Пользователь {User} пытается удалить комментарий {Comment}. У пользователя недостаточно прав", HttpContext.User.FindFirstValue("CpcmUserId"), commentId);
                     return StatusCode(403);
                 }
             }
@@ -394,7 +415,7 @@ namespace Capycom.Controllers
             }
             try
             {
-                var comment = await _context.CpcmComments.Where(c => c.CpcmCommentId == commentId).FirstOrDefaultAsync();
+                var comment = await _context.CpcmComments.Where(c => c.CpcmCommentId == commentId && c.CpcmIsDeleted != true).FirstOrDefaultAsync();
                 if(comment == null)
                 {
                     Log.Warning("Пользователь {User} пытается заблокировать/разблокировать комментарий {Comment}. Коммент не найден или удалён", HttpContext.User.FindFirstValue("CpcmUserId"), commentId);
@@ -429,8 +450,8 @@ namespace Capycom.Controllers
                 Log.Information("Неавторизирвоанный клиент {@client} просматривает комментарий {Comment}",HttpContext.Connection, commentId);
             try
             {
-                var comment = await _context.CpcmComments.Where(c => c.CpcmCommentId == commentId).Include(p => p.CpcmImages).Include(c => c.CpcmUser).Include(c => c.CpcmPost).ThenInclude(p => p.Group).
-					Include(c => c.CpcmPost).ThenInclude(p => p.User).FirstOrDefaultAsync();
+                var comment = await _context.CpcmComments.Where(c => c.CpcmCommentId == commentId).Include(p => p.CpcmImages).Include(c => c.CpcmUser)
+                    .Include(c => c.CpcmPost).Include(c => c.CpcmPost).FirstOrDefaultAsync();
                 if (comment == null)
                 {
                     Log.Warning("Попытка просмотра несуществующего комментария {Comment}", commentId);
@@ -439,6 +460,8 @@ namespace Capycom.Controllers
                     ViewData["Message"] = "Коммент не найден";
                     return View("UserError");
                 }
+                comment.CpcmPost.User = await _context.CpcmUsers.Where(u => u.CpcmUserId == comment.CpcmPost.CpcmUserId).FirstOrDefaultAsync();
+                comment.CpcmPost.Group = await _context.CpcmGroups.Where(g => g.CpcmGroupId == comment.CpcmPost.CpcmGroupId).FirstOrDefaultAsync();
                 if (comment.CpcmUser.CpcmIsDeleted)
                 {
 					Log.Warning("Попытка просмотра комментария удалённого пользователя{Comment}", commentId);
@@ -506,6 +529,14 @@ namespace Capycom.Controllers
                 return View(comment);
 
             }
+            catch(DbUpdateException ex)
+            {
+				Log.Warning(ex, "Не удалось выполнить запрос к БД на выборку комментария {Comment}. Произошла общая ошибка.", commentId);
+				Response.StatusCode = 500;
+				ViewData["ErrorCode"] = 500;
+				ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
+				return View("UserError");
+			}
             catch (DbException ex)
             {
                 Log.Warning(ex, "Не удалось выполнить запрос к БД на выборку комментария {Comment}. Произошла общая ошибка.", commentId);
@@ -532,12 +563,14 @@ namespace Capycom.Controllers
                 }
 
 
-				var post = await _context.CpcmPosts.Where(p => p.CpcmPostId == lastComment.CpcmPostId).Include(u => u.User).Include(g => g.Group).FirstOrDefaultAsync();
+				var post = await _context.CpcmPosts.Where(p => p.CpcmPostId == lastComment.CpcmPostId).FirstOrDefaultAsync();
 				if (post == null || post.CpcmIsDeleted)
 				{
                     Log.Warning("Пользователь {User} запрашивает следующие комментарии к посту {Post}. Пост не найден", HttpContext.User.FindFirstValue("CpcmUserId"), postId);
 					return StatusCode(404);
 				}
+                post.User = await _context.CpcmUsers.Where(u => u.CpcmUserId == post.CpcmUserId).FirstOrDefaultAsync();
+                post.Group = await _context.CpcmGroups.Where(g => g.CpcmGroupId == post.CpcmGroupId).FirstOrDefaultAsync();
 				if (post.CpcmPostBanned)
 				{
                     Log.Warning("Пользователь {User} запрашивает следующие комментарии к посту {Post}. Пост заблокирован", HttpContext.User.FindFirstValue("CpcmUserId"), postId);
@@ -593,6 +626,11 @@ namespace Capycom.Controllers
                 
                 return PartialView(rez);
             }
+            catch(DbUpdateException ex)
+            {
+				Log.Error(ex, "Не удалось выполнить запрос к БД на выборку комментариев к посту {Post}. Произошла общая ошибка", postId);
+				return StatusCode(500, new { message = "Не удалось установить соединение с сервером" });
+			}
             catch (DbException ex)
             {
                 Log.Error(ex, "Не удалось выполнить запрос к БД на выборку комментариев к посту {Post}. Произошла общая ошибка", postId);
@@ -606,12 +644,14 @@ namespace Capycom.Controllers
             Log.Information("Пользователь {User} пытается поставить/убрать лайк к посту {Post}", HttpContext.User.FindFirstValue("CpcmUserId"), postId);
             try
             {
-                var post = await _context.CpcmPosts.Where(p => p.CpcmPostId == postId && p.CpcmPostPublishedDate < DateTime.UtcNow).Include(u => u.User).Include(g => g.Group).FirstOrDefaultAsync();
+                var post = await _context.CpcmPosts.Where(p => p.CpcmPostId == postId && p.CpcmPostPublishedDate < DateTime.UtcNow).FirstOrDefaultAsync();
                 if (post == null)
                 {
                     Log.Warning("Пользователь {User} пытается поставить/убрать лайк к посту {Post}. Пост не найден", HttpContext.User.FindFirstValue("CpcmUserId"), postId);
                     return StatusCode(404);
                 }
+                post.User = await _context.CpcmUsers.Where(u => u.CpcmUserId == post.CpcmUserId).FirstOrDefaultAsync();
+                post.Group = await _context.CpcmGroups.Where(g => g.CpcmGroupId == post.CpcmGroupId).FirstOrDefaultAsync();
 
 				if (post == null || post.CpcmIsDeleted)
 				{
@@ -778,6 +818,11 @@ namespace Capycom.Controllers
                 }
                 return children;
             }
+            catch (DbUpdateException ex)
+            {
+				Log.Error(ex, "Не удалось выгрузить потомков комментария {@comm}", comm);
+				throw;
+			}
             catch (DbException ex)
             {
                 Log.Error(ex,"Не удалось выгрузить потомков комментария {@comm}",comm);
@@ -822,11 +867,13 @@ namespace Capycom.Controllers
             bool status = true;
             if (!CheckIFormFileContent(file, permittedTypes))
             {
+                Log.Warning("Пользователь {User} пытается загрузить файл с недопустимым форматом {@file}", HttpContext.User.FindFirstValue("CpcmUserId"), file);
                 ModelState.AddModelError(FormFieldName, "Допустимые типы файлов: png, jpeg, jpg, gif");
                 status = false;
             }
             if (!CheckIFormFileSize(file, size))
             {
+                Log.Warning("Пользователь {User} пытается загрузить файл с превышенным размером {@file}", HttpContext.User.FindFirstValue("CpcmUserId"), file);
                 ModelState.AddModelError(FormFieldName, $"Максимальный размер файла: {size / 1024} Кбайт");
                 status = false;
             }
