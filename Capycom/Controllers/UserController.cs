@@ -2137,6 +2137,14 @@ namespace Capycom.Controllers
 
                 post.CpcmPostText = userPost.Text.Trim();
                 post.CpcmPostId = Guid.NewGuid();
+                if (userPost.PostFatherId!=null)
+                {
+                    var fatherPost = await _context.CpcmPosts.FindAsync(userPost.PostFatherId);
+                    if (fatherPost == null)
+                        return StatusCode(StatusCodes.Status400BadRequest);
+                    if (fatherPost.CpcmUserId == Guid.Parse(User.FindFirst(c => c.Type == "CpcmUserId").Value))
+                        return StatusCode(StatusCodes.Status417ExpectationFailed);
+                }
                 post.CpcmPostFather = userPost.PostFatherId;
                 post.CpcmPostCreationDate = DateTime.UtcNow;
                 if (userPost.Published == null)
