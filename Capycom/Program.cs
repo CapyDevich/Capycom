@@ -6,6 +6,7 @@ using Serilog;
 using Microsoft.AspNetCore.RateLimiting;
 using System.Threading.RateLimiting;
 using System.Configuration;
+using AspNetCoreRateLimit;
 
 namespace Capycom
 {
@@ -66,6 +67,14 @@ namespace Capycom
 				options.QueueLimit = 100;
 			}));
 
+			builder.Services.AddOptions();
+			builder.Services.AddMemoryCache();
+			builder.Services.Configure<IpRateLimitOptions>(builder.Configuration.GetSection("IpRateLimiting"));
+			builder.Services.AddSingleton<IIpPolicyStore, MemoryCacheIpPolicyStore>();
+			builder.Services.AddSingleton<IRateLimitCounterStore, MemoryCacheRateLimitCounterStore>();
+			builder.Services.AddSingleton<IRateLimitConfiguration, RateLimitConfiguration>();
+
+			// Остальной код...
 			var app = builder.Build();
 			app.UseSerilogRequestLogging();
 			// Configure the HTTP request pipeline.
