@@ -55,11 +55,28 @@ namespace Capycom.Controllers
 								(p.CpcmUserId.HasValue && allUserIds.Contains(p.CpcmUserId.Value)))
 					.Include(p => p.CpcmImages)
 					//.Include(p => p.CpcmPostFatherNavigation)
-					.OrderByDescending(c => c.CpcmPostPublishedDate)
+					.OrderByDescending(c => c.CpcmPostPublishedDate).Where(p => p.CpcmIsDeleted == false)
 					.Take(10)
 					.ToListAsync();
 				foreach (var post in posts)
 				{
+					var author = await _context.CpcmUsers.Where(u => u.CpcmUserId == post.CpcmUserId).FirstOrDefaultAsync();
+					if (author != null)
+					{
+						if (author.CpcmIsDeleted || author.CpcmUserBanned)
+						{
+							continue;
+						}
+					}
+					else
+					{
+						var authorgGroup = await _context.CpcmGroups.Where(u => u.CpcmGroupId == post.CpcmGroupId).FirstOrDefaultAsync();
+						if (authorgGroup != null && authorgGroup.CpcmIsDeleted || authorgGroup.CpcmGroupBanned)
+						{
+							continue;
+						}
+					}
+
 					if (post.CpcmPostFather != null)
 					{
 						post.CpcmPostFatherNavigation = await GetFatherPostReccurent(post);
@@ -90,9 +107,17 @@ namespace Capycom.Controllers
 
 				return View(postsModel);
 			}
+			catch(DbUpdateException ex)
+			{
+				Log.Error(ex, "Произошла ошибка при обращении к бд. Не удалось выполнить запрос. {user}", HttpContext.User.FindFirstValue("CpcmUserId"));
+				Response.StatusCode = 500;
+				ViewData["ErrorCode"] = 500;
+				ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
+				return View("UserError");
+			}
 			catch (DbException ex)
 			{
-				Log.Error(ex, "Произошла ошибка при обращении к бд. Не удалось выполнить запрос.", HttpContext.User.FindFirstValue("CpcmUserId"));
+				Log.Error(ex, "Произошла ошибка при обращении к бд. Не удалось выполнить запрос. {user}", HttpContext.User.FindFirstValue("CpcmUserId"));
 				Response.StatusCode = 500;
 				ViewData["ErrorCode"] = 500;
 				ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
@@ -110,6 +135,7 @@ namespace Capycom.Controllers
 				var lastPost = await _context.CpcmPosts.Where(p => p.CpcmPostId == lastPostId).FirstOrDefaultAsync();
 				if (lastPost == null)
 				{
+					Log.Warning("Пользователь {UserId} запросил следующие посты, но последний пост не найден", HttpContext.User.FindFirstValue("CpcmUserId"));
 					return StatusCode(404);
 				}
 
@@ -137,11 +163,28 @@ namespace Capycom.Controllers
 								p.CpcmPostPublishedDate < lastPost.CpcmPostPublishedDate)
 					.Include(p => p.CpcmImages)
 					//.Include(p => p.CpcmPostFatherNavigation)
-					.OrderByDescending(c => c.CpcmPostPublishedDate)
+					.OrderByDescending(c => c.CpcmPostPublishedDate).Where(p => p.CpcmIsDeleted == false)
 					.Take(10)
 					.ToListAsync();
 				foreach (var post in posts)
 				{
+					var author = await _context.CpcmUsers.Where(u => u.CpcmUserId == post.CpcmUserId).FirstOrDefaultAsync();
+					if (author != null)
+					{
+						if(author.CpcmIsDeleted || author.CpcmUserBanned)
+						{
+							continue;
+						}
+					}
+					else
+					{
+						var authorgGroup = await _context.CpcmGroups.Where(u => u.CpcmGroupId == post.CpcmGroupId).FirstOrDefaultAsync();
+						if(authorgGroup!=null && authorgGroup.CpcmIsDeleted || authorgGroup.CpcmGroupBanned)
+						{
+							continue;
+						}
+					}
+
 					if (post.CpcmPostFather != null)
 					{
 						post.CpcmPostFatherNavigation = await GetFatherPostReccurent(post);
@@ -170,9 +213,14 @@ namespace Capycom.Controllers
 
 				return PartialView(postsModel);
 			}
+			catch (DbUpdateException ex)
+			{
+				Log.Error(ex, "Произошла ошибка при обращении к бд. Не удалось выполнить запрос. {user}", HttpContext.User.FindFirstValue("CpcmUserId"));
+				return StatusCode(500);
+			}
 			catch (DbException ex)
 			{
-				Log.Error(ex,"Произошла ошибка при обращении к бд. Не удалось выполнить запрос.", HttpContext.User.FindFirstValue("CpcmUserId"));
+				Log.Error(ex,"Произошла ошибка при обращении к бд. Не удалось выполнить запрос. {user}", HttpContext.User.FindFirstValue("CpcmUserId"));
 				return StatusCode(500);
 			}
 		}
@@ -199,12 +247,27 @@ namespace Capycom.Controllers
 							}
 						}
 					}
+					var author = await _context.CpcmUsers.Where(u => u.CpcmUserId == father.CpcmUserId).FirstOrDefaultAsync();
+					if(author == null)
+					{
+						var group = await _context.CpcmGroups.Where(u => u.CpcmGroupId == father.CpcmGroupId).FirstOrDefaultAsync();
+						father.Group= group;
+					}
+					else
+					{
+						father.User = author;
+					}
 				}
 				return father;
 			}
+			catch (DbUpdateException ex)
+			{
+				Log.Error(ex, "Не удалось выгрузить родительские посты {@fathrepostnavigation}", cpcmPostFatherNavigation);
+				throw;
+			}
 			catch (DbException ex)
 			{
-				Log.Error(ex, "Не удалось выгрузить родительские посты {fathrepostnavigation}", cpcmPostFatherNavigation);
+				Log.Error(ex, "Не удалось выгрузить родительские посты {@fathrepostnavigation}", cpcmPostFatherNavigation);
 				throw;
 			}
 		}
