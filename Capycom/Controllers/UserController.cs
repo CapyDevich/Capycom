@@ -932,7 +932,7 @@ namespace Capycom.Controllers
 				//ViewData["additionalName"] = additionalName;
 				friendList1 = friendList1.Where(u => EF.Functions.Like(u.CpcmUserAdditionalName, $"%{filters.AdditionalName}%"));
 			}
-            if(CheckUserPrivilege("CpcmCanEditUsers", "True"))
+            if(filters.UserRole != null && CheckUserPrivilege("CpcmCanEditUsers", "True"))
             {
 				friendList1 = friendList1.Where(u => u.CpcmUserRole==filters.UserRole);
 			}
@@ -1116,7 +1116,7 @@ namespace Capycom.Controllers
 
             if (user == null || user.CpcmIsDeleted)
             {
-                Log.Warning("Пользователь не найден или удалён {u}",user.CpcmIsDeleted);
+                Log.Warning("Пользователь не найден или удалён {u}",user?.CpcmIsDeleted);
                 Response.StatusCode = 404;
                 ViewData["ErrorCode"] = 404;
                 ViewData["Message"] = "Пользователь не найден";
@@ -1175,7 +1175,7 @@ namespace Capycom.Controllers
 				//ViewData["additionalName"] = additionalName;
 				followerList1 = followerList1.Where(u => EF.Functions.Like(u.CpcmUserAdditionalName, $"%{filters.AdditionalName}%"));
 			}
-            if(CheckUserPrivilege("CpcmCanEditUsers", "True"))
+            if(filters.UserRole != null && CheckUserPrivilege("CpcmCanEditUsers", "True"))
             {
 				followerList1 = followerList1.Where(u => u.CpcmUserRole==filters.UserRole);
 			}
@@ -1627,7 +1627,7 @@ namespace Capycom.Controllers
 
 		[Authorize]
         [HttpPost]
-        [ValidateAntiForgeryToken]
+        //[ValidateAntiForgeryToken]
         public async Task<IActionResult> Follow(Guid CpcmUserId)
         {
 
