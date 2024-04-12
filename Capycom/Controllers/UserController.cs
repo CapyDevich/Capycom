@@ -932,7 +932,7 @@ namespace Capycom.Controllers
 				//ViewData["additionalName"] = additionalName;
 				friendList1 = friendList1.Where(u => EF.Functions.Like(u.CpcmUserAdditionalName, $"%{filters.AdditionalName}%"));
 			}
-            if(CheckUserPrivilege("CpcmCanEditUsers", "True"))
+            if(filters.UserRole.HasValue && CheckUserPrivilege("CpcmCanEditUsers", "True"))
             {
 				friendList1 = friendList1.Where(u => u.CpcmUserRole==filters.UserRole);
 			}
@@ -1051,7 +1051,7 @@ namespace Capycom.Controllers
 				//ViewData["additionalName"] = additionalName;
 				friendList1 = friendList1.Where(u => EF.Functions.Like(u.CpcmUserAdditionalName, $"%{filters.AdditionalName}%"));
 			}
-            if(CheckUserPrivilege("CpcmCanEditUsers", "True"))
+            if(filters.UserRole.HasValue && CheckUserPrivilege("CpcmCanEditUsers", "True"))
             {
                 friendList1 = friendList1.Where(u => u.CpcmUserRole==filters.UserRole);
             }
@@ -1175,7 +1175,7 @@ namespace Capycom.Controllers
 				//ViewData["additionalName"] = additionalName;
 				followerList1 = followerList1.Where(u => EF.Functions.Like(u.CpcmUserAdditionalName, $"%{filters.AdditionalName}%"));
 			}
-            if(CheckUserPrivilege("CpcmCanEditUsers", "True"))
+            if(filters.UserRole.HasValue && CheckUserPrivilege("CpcmCanEditUsers", "True"))
             {
 				followerList1 = followerList1.Where(u => u.CpcmUserRole==filters.UserRole);
 			}
@@ -1287,7 +1287,7 @@ namespace Capycom.Controllers
 				//ViewData["additionalName"] = additionalName;
 				followerList1 = followerList1.Where(u => EF.Functions.Like(u.CpcmUserAdditionalName, $"%{filters.AdditionalName}%"));
 			}
-            if(CheckUserPrivilege("CpcmCanEditUsers", "True"))
+            if(filters.UserRole.HasValue && CheckUserPrivilege("CpcmCanEditUsers", "True"))
             {
                 followerList1 = followerList1.Where(u => u.CpcmUserRole==filters.UserRole);
             }
@@ -3048,7 +3048,7 @@ namespace Capycom.Controllers
                 //ViewData["additionalName"] = additionalName;
                 query = query.Where(u => EF.Functions.Like(u.CpcmUserAdditionalName, $"%{filters.AdditionalName}%"));
             }
-			if (CheckUserPrivilege("CpcmCanEditUsers", "True"))
+			if (filters.UserRole.HasValue && CheckUserPrivilege("CpcmCanEditUsers", "True"))
 			{
 				query = query.Where(u => u.CpcmUserRole == filters.UserRole);
 			}
@@ -3123,7 +3123,7 @@ namespace Capycom.Controllers
 				//ViewData["additionalName"] = additionalName;
 				query = query.Where(u => EF.Functions.Like(u.CpcmUserAdditionalName, $"%{filters.AdditionalName}%"));
 			}
-			if (CheckUserPrivilege("CpcmCanEditUsers", "True"))
+			if (filters.UserRole.HasValue && CheckUserPrivilege("CpcmCanEditUsers", "True"))
 			{
 				query = query.Where(u => u.CpcmUserRole == filters.UserRole);
 			}

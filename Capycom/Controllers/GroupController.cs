@@ -1304,7 +1304,7 @@ namespace Capycom.Controllers
 				//ViewData["additionalName"] = additionalName;
 				followerList1 = followerList1.Where(u => EF.Functions.Like(u.CpcmUserAdditionalName, $"%{filters.AdditionalName}%"));
 			}
-			if(true) //filters.GroupRole.HasValue && (await CheckUserPrivilegeClaim("CpcmCanEditGroups", "True") || await CheckOnlyGroupPrivelege("CpcmCanEditGroup",true, filters.GroupId))
+			if(filters.GroupRole.HasValue && true) //filters.GroupRole.HasValue && (await CheckUserPrivilegeClaim("CpcmCanEditGroups", "True") || await CheckOnlyGroupPrivelege("CpcmCanEditGroup",true, filters.GroupId))
 			{
 				followerList1 = followerList1.Where(u => _context.CpcmGroupfollowers.Any( gf => gf.CpcmUserId==u.CpcmUserId && gf.CpcmGroupId==filters.GroupId && gf.CpcmUserRole==filters.GroupRole)
 				);

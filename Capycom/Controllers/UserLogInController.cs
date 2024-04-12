@@ -143,8 +143,7 @@ if (ModelState.IsValid)
 
         private List<Claim> GetUserClaims(CpcmUser user)
         {
-            List<Claim> returnClaims = new List<Claim> { new Claim("CpcmUserId", user.CpcmUserId.ToString()) };
-
+            List<Claim> returnClaims = new List<Claim> { new Claim("CpcmUserId", user.CpcmUserId.ToString()),new Claim("ProfileImage", user.CpcmUserImagePath) };
             CpcmRole userRole = user.CpcmUserRoleNavigation;
             Type type = userRole.GetType();
             PropertyInfo[] properties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
