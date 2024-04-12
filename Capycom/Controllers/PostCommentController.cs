@@ -52,7 +52,7 @@ namespace Capycom.Controllers
                     ViewData["Message"] = "Пост заблокирован";
                     return View("UserError");
                 }
-                if (post.User!=null && post.User.CpcmIsDeleted)
+                if (post.User == null || post.User.CpcmIsDeleted)
                 {
 					Log.Information("Попытка просмотра поста удалённого Юзера {Post}", postId);
 					Response.StatusCode = 404;
@@ -68,7 +68,7 @@ namespace Capycom.Controllers
 					ViewData["Message"] = "Автор поста заблокирован";
 					return View("UserError");
 				}
-				if (post.Group != null && post.Group.CpcmIsDeleted )
+				if (post.Group == null || post.Group.CpcmIsDeleted )
 				{
 					Log.Information("Попытка просмотра поста удалённой Группы {Post}", postId);
 					Response.StatusCode = 404;
@@ -176,7 +176,7 @@ namespace Capycom.Controllers
                     Log.Warning("Пользователь {User} пытается добавить комментарий к заблокированному посту {Post}", HttpContext.User.FindFirstValue("CpcmUserId"), userComment.CpcmPostId);
                     return StatusCode(403, new {message = "Пост заблокирован"});
                 }
-                if(post.User!=null && post.User.CpcmIsDeleted)
+                if(post.User==null || post.User.CpcmIsDeleted)
                 {
                     Log.Warning("Пользователь {User} пытается добавить комментарий к посту {Post}. Автор поста удалён", HttpContext.User.FindFirstValue("CpcmUserId"), userComment.CpcmPostId);
 					return StatusCode(404);
@@ -187,7 +187,7 @@ namespace Capycom.Controllers
                     return StatusCode(403, new { message = "Автор поста заблокирован" });
 				
                 }
-                if (post.Group != null && post.Group.CpcmIsDeleted)
+                if (post.Group == null || post.Group.CpcmIsDeleted)
                 {
                     Log.Warning("Пользователь {User} пытается добавить комментарий к посту {Post}. Группа поста удалена", HttpContext.User.FindFirstValue("CpcmUserId"), userComment.CpcmPostId);
 					return StatusCode(404);
@@ -350,7 +350,7 @@ namespace Capycom.Controllers
                     Log.Warning("Пользователь {User} пытается удалить комментарий {Comment}. Пост заблокирован", HttpContext.User.FindFirstValue("CpcmUserId"), commentId);
 					return StatusCode(403, new { message = "Пост заблокирован" });
 				}
-				if (post.User != null && post.User.CpcmIsDeleted)
+				if (post.User == null || post.User.CpcmIsDeleted)
 				{
                     Log.Warning("Пользователь {User} пытается удалить комментарий {Comment}. Автор поста удалён", HttpContext.User.FindFirstValue("CpcmUserId"), commentId);
 					return StatusCode(404);
@@ -361,12 +361,12 @@ namespace Capycom.Controllers
 					return StatusCode(403, new { message = "Автор поста заблокирован" });
 
 				}
-				if (post.Group != null && post.Group.CpcmIsDeleted)
+				if (post.Group == null || post.Group.CpcmIsDeleted)
 				{
                     Log.Warning("Пользователь {User} пытается удалить комментарий {Comment}. Группа поста удалена", HttpContext.User.FindFirstValue("CpcmUserId"), commentId);
 					return StatusCode(404);
 				}
-				if (post.Group != null && post.Group.CpcmGroupBanned)
+				if (post.Group == null || post.Group.CpcmGroupBanned)
 				{
                     Log.Warning("Пользователь {User} пытается удалить комментарий {Comment}. Группа поста заблокирована", HttpContext.User.FindFirstValue("CpcmUserId"), commentId);
 					return StatusCode(403, new { message = "Группа поста заблокирована" });
@@ -478,7 +478,7 @@ namespace Capycom.Controllers
 					ViewData["Message"] = "Коммент не найден";
 					return View("UserError");
 				}
-                if(comment.CpcmPost.User!=null && comment.CpcmPost.User.CpcmIsDeleted)
+                if(comment.CpcmPost.User == null || comment.CpcmPost.User.CpcmIsDeleted)
                 {
                     Log.Warning("Попытка просмотра комментария к посту удалённого пользователя{Comment}", commentId);
                     Response.StatusCode = 404;
@@ -494,7 +494,7 @@ namespace Capycom.Controllers
                     ViewData["Message"] = "Пост комментария принадлежит заблокированному пользователю";
 					return View("UserError");
 				}
-                if (comment.CpcmPost.Group != null && comment.CpcmPost.Group.CpcmIsDeleted)
+                if (comment.CpcmPost.Group == null || comment.CpcmPost.Group.CpcmIsDeleted)
                 {
 					Log.Warning("Попытка просмотра комментария к посту удалённой группы{Comment}", commentId);
 					Response.StatusCode = 404;
@@ -576,23 +576,23 @@ namespace Capycom.Controllers
                     Log.Warning("Пользователь {User} запрашивает следующие комментарии к посту {Post}. Пост заблокирован", HttpContext.User.FindFirstValue("CpcmUserId"), postId);
 					return StatusCode(403, new { message = "Пост заблокирован" });
 				}
-				if (post.User != null && post.User.CpcmIsDeleted)
+				if (post.User == null || post.User.CpcmIsDeleted)
 				{
                     Log.Warning("Пользователь {User} запрашивает следующие комментарии к посту {Post}. Автор поста удалён", HttpContext.User.FindFirstValue("CpcmUserId"), postId);
 					return StatusCode(404);
 				}
-				if (post.User != null && post.User.CpcmUserBanned)
+				if (post.User == null || post.User.CpcmUserBanned)
 				{
                     Log.Warning("Пользователь {User} запрашивает следующие комментарии к посту {Post}. Автор поста заблокирован", HttpContext.User.FindFirstValue("CpcmUserId"), postId);
 					return StatusCode(403, new { message = "Автор поста заблокирован" });
 
 				}
-				if (post.Group != null && post.Group.CpcmIsDeleted)
+				if (post.Group == null || post.Group.CpcmIsDeleted)
 				{
                     Log.Warning("Пользователь {User} запрашивает следующие комментарии к посту {Post}. Группа поста удалена", HttpContext.User.FindFirstValue("CpcmUserId"), postId);
 					return StatusCode(404);
 				}
-				if (post.Group != null && post.Group.CpcmGroupBanned)
+				if (post.Group == null || post.Group.CpcmGroupBanned)
 				{
                     Log.Warning("Пользователь {User} запрашивает следующие комментарии к посту {Post}. Группа поста заблокирована", HttpContext.User.FindFirstValue("CpcmUserId"), postId);
 					return StatusCode(403, new { message = "Группа поста заблокирована" });
@@ -663,18 +663,18 @@ namespace Capycom.Controllers
                     Log.Warning("Пользователь {User} пытается поставить/убрать лайк к посту {Post}. Пост заблокирован", HttpContext.User.FindFirstValue("CpcmUserId"), postId);
 					return StatusCode(403, new { message = "Пост заблокирован" });
 				}
-				if (post.User != null && post.User.CpcmIsDeleted)
+				if (post.User == null || post.User.CpcmIsDeleted)
 				{
                     Log.Warning("Пользователь {User} пытается поставить/убрать лайк к посту {Post}. Автор поста удалён", HttpContext.User.FindFirstValue("CpcmUserId"), postId);
 					return StatusCode(404);
 				}
-				if (post.User != null && post.User.CpcmUserBanned)
+				if (post.User == null || post.User.CpcmUserBanned)
 				{
                     Log.Warning("Пользователь {User} пытается поставить/убрать лайк к посту {Post}. Автор поста заблокирован", HttpContext.User.FindFirstValue("CpcmUserId"), postId);
 					return StatusCode(403, new { message = "Автор поста заблокирован" });
 
 				}
-				if (post.Group != null && post.Group.CpcmIsDeleted)
+				if (post.Group == null || post.Group.CpcmIsDeleted)
 				{
                     Log.Warning("Пользователь {User} пытается поставить/убрать лайк к посту {Post}. Группа поста удалена", HttpContext.User.FindFirstValue("CpcmUserId"), postId);
 					return StatusCode(404);
