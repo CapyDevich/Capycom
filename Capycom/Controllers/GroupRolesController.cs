@@ -10,6 +10,7 @@ using Microsoft.Extensions.Options;
 using System.Data.Common;
 using Microsoft.AspNetCore.Authorization;
 using Serilog;
+using System.Security.Claims;
 
 namespace Capycom.Controllers
 {
@@ -30,11 +31,19 @@ namespace Capycom.Controllers
 		// GET: GroupRoles
 		public async Task<IActionResult> Index()
         {
-            Log.Information("Пользователь {User.Identity.Name} зашел на страницу просмотра ролей. Данные по соединеню {HttpContext.Connection}", User.Identity.Name, HttpContext.Connection);
+            Log.Information("Пользователь {User} зашел на страницу просмотра ролей. Данные по соединеню {@HttpContext.Connection}", HttpContext.User.FindFirstValue("CpcmUserId"), HttpContext.Connection);
             try
             {
                 return View(await _context.CpcmGroupRoles.ToListAsync());
             }
+            catch(DbUpdateException ex)
+            {
+				Log.Error(ex, "Не удалось выполнить запрос к базе данных на получения списка ролей");
+				Response.StatusCode = 500;
+				ViewData["ErrorCode"] = 500;
+				ViewData["Message"] = "Ошибка связи с сервером";
+				return View("UserError");
+			}
             catch (DbException ex)
             {
                 Log.Error(ex, "Не удалось выполнить запрос к базе данных на получения списка ролей");
@@ -52,7 +61,7 @@ namespace Capycom.Controllers
             {
                 if (id == null)
                 {
-                    Log.Warning("Пользователь {User.Identity.Name} попытался перейти на страницу роли без указания id. Данные по соединеню {HttpContext.Connection}", User.Identity.Name, HttpContext.Connection);
+                    Log.Warning("Пользователь {User} попытался перейти на страницу роли без указания id. Данные по соединеню {@HttpContext.Connection}", HttpContext.User.FindFirstValue("CpcmUserId"), HttpContext.Connection);
                     Response.StatusCode = 404;
                     ViewData["ErrorCode"] = 404;
                     ViewData["Message"] = "Роль с данным id не найден";
@@ -63,18 +72,26 @@ namespace Capycom.Controllers
                     .FirstOrDefaultAsync(m => m.CpcmRoleId == id);
                 if (cpcmGroupRole == null)
                 {
-                    Log.Warning("Пользователь {User.Identity.Name} попытался перейти на страницу роли с несуществующим id. Данные по соединеню {HttpContext.Connection}", User.Identity.Name, HttpContext.Connection);
+                    Log.Warning("Пользователь {User} попытался перейти на страницу роли без указания id. Данные по соединеню {@HttpContext.Connection}", HttpContext.User.FindFirstValue("CpcmUserId"), HttpContext.Connection);
                     Response.StatusCode = 404;
                     ViewData["ErrorCode"] = 404;
                     ViewData["Message"] = "Роль с данным id не найден";
                     return View("UserError");
                 }
-                Log.Information("Пользователь {User.Identity.Name} зашел на страницу роли {cpcmGroupRole.CpcmRoleName}. Данные по соединененю {HttpContext.Connection}", User.Identity.Name, cpcmGroupRole.CpcmRoleName, HttpContext.Connection);
+                Log.Information("Пользователь {User} зашел на страницу роли {cpcmGroupRole.CpcmRoleName}. Данные по соединененю {@HttpContext.Connection}", HttpContext.User.FindFirstValue("CpcmUserId"), cpcmGroupRole.CpcmRoleName, HttpContext.Connection);
                 return View(cpcmGroupRole);
             }
-            catch (DbException)
+            catch (DbUpdateException ex)
             {
-                Log.Error("Не удалось выполнить запрос к базе данных на получения роли с id {id}", id);
+				Log.Error(ex, "Не удалось выполнить запрос к базе данных на получения роли с id {id}", id);
+				Response.StatusCode = 500;
+				ViewData["ErrorCode"] = 500;
+				ViewData["Message"] = "Ошибка связи с сервером";
+				return View("UserError");
+			}
+            catch (DbException ex)
+            {
+                Log.Error(ex,"Не удалось выполнить запрос к базе данных на получения роли с id {id}", id);
 				Response.StatusCode = 500;
 				ViewData["ErrorCode"] = 500;
 				ViewData["Message"] = "Ошибка связи с сервером";
@@ -93,7 +110,7 @@ namespace Capycom.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("CpcmRoleName,CpcmCanEditGroup,CpcmCanMakePost,CpcmCanDelPost,CpcmCanEditPost")] CpcmGroupRole cpcmGroupRole)
         {
-            Log.Information("Пользователь {User.Identity.Name} пытается создать новую роль {cpcmGroupRole.CpcmRoleName}. Данные по соединененю {HttpContext.Connection}", User.Identity.Name, cpcmGroupRole.CpcmRoleName, HttpContext.Connection);
+            Log.Information("Пользователь {User} пытается создать новую роль {cpcmGroupRole.CpcmRoleName}. Данные по соединененю {@HttpContext.Connection}", HttpContext.User.FindFirstValue("CpcmUserId"), cpcmGroupRole.CpcmRoleName, HttpContext.Connection);
             if (ModelState.IsValid)
             {
                 try
@@ -111,31 +128,39 @@ namespace Capycom.Controllers
 					}
                     _context.Add(cpcmGroupRole);
                     await _context.SaveChangesAsync();
-                    Log.Warning("Пользователь {User.Identity.Name} создал новую роль {cpcmGroupRole.CpcmRoleName}. Данные по соединененю {HttpContext.Connection}", User.Identity.Name, cpcmGroupRole.CpcmRoleName, HttpContext.Connection);
+                    Log.Warning("Пользователь {Usere} создал новую роль {cpcmGroupRole.CpcmRoleName}. Данные по соединененю {@HttpContext.Connection}", HttpContext.User.FindFirstValue("CpcmUserId"), cpcmGroupRole.CpcmRoleName, HttpContext.Connection);
                     return RedirectToAction(nameof(Index));
                 }
-                catch (DbException)
+                catch (DbUpdateException ex)
                 {
-                    Log.Error("Не удалось выполнить запрос к базе данных на создание роли {cpcmGroupRole.CpcmRoleName}", cpcmGroupRole.CpcmRoleName);
+					Log.Error(ex, "Не удалось выполнить запрос к базе данных на создание роли {cpcmGroupRole.CpcmRoleName}", cpcmGroupRole.CpcmRoleName);
+					Response.StatusCode = 500;
+					ViewData["ErrorCode"] = 500;
+					ViewData["Message"] = "Ошибка связи с сервером";
+					return View("UserError");
+				}
+                catch (DbException ex)
+                {
+                    Log.Error(ex,"Не удалось выполнить запрос к базе данных на создание роли {cpcmGroupRole.CpcmRoleName}", cpcmGroupRole.CpcmRoleName);
 					Response.StatusCode = 500;
 					ViewData["ErrorCode"] = 500;
 					ViewData["Message"] = "Ошибка связи с сервером";
 					return View("UserError");
 				}
             }
-            Log.Warning("Пользователь {User.Identity.Name} попытался создать роль с некорректными данными. Данные по соединененю {HttpContext.Connection}", User.Identity.Name, HttpContext.Connection);
+            Log.Warning("Пользователь {@User} попытался перейти на страницу роли без указания id. Данные по соединеню {@HttpContext.Connection}", HttpContext.User.FindFirstValue("CpcmUserId"), HttpContext.Connection);
             return View(cpcmGroupRole);
         }
 
         // GET: GroupRoles/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
-            Log.Information("Пользователь {User.Identity.Name} зашел на страницу редактирования роли с id {id}. Данные по соединененю {HttpContext.Connection}", User.Identity.Name, id, HttpContext.Connection);
+            Log.Information("Пользователь {User} зашел на страницу редактирования роли с id {id}. Данные по соединененю {@HttpContext.Connection}", HttpContext.User.FindFirstValue("CpcmUserId"), id, HttpContext.Connection);
             try
             {
                 if (id == null)
                 {
-                    Log.Warning("Пользователь {User.Identity.Name} попытался перейти на страницу редактирования роли без указания id. Данные по соединеню {HttpContext.Connection}", User.Identity.Name, HttpContext.Connection);
+                    Log.Warning("Пользователь {User} попытался перейти на страницу редактирования роли без указания id. Данные по соединеню {@HttpContext.Connection}", HttpContext.User.FindFirstValue("CpcmUserId"), HttpContext.Connection);
                     Response.StatusCode = 404;
                     ViewData["ErrorCode"] = 404;
                     ViewData["Message"] = "Роль с данным id не найден";
@@ -145,7 +170,7 @@ namespace Capycom.Controllers
                 var cpcmGroupRole = await _context.CpcmGroupRoles.FindAsync(id);
                 if (cpcmGroupRole == null)
                 {
-                    Log.Warning("Пользователь {User.Identity.Name} попытался перейти на страницу редактирования роли с несуществующим id. Данные по соединеню {HttpContext.Connection}", User.Identity.Name, HttpContext.Connection);
+                    Log.Warning("Пользователь {User} попытался перейти на страницу редактирования роли с несуществующим id. Данные по соединеню {@HttpContext.Connection}", HttpContext.User.FindFirstValue("CpcmUserId"), HttpContext.Connection);
                     Response.StatusCode = 404;
                     ViewData["ErrorCode"] = 404;
                     ViewData["Message"] = "Роль с данным id не найден";
@@ -153,9 +178,17 @@ namespace Capycom.Controllers
                 }
                 return View(cpcmGroupRole);
             }
-            catch (DbException)
+            catch (DbUpdateException ex)
             {
-                Log.Error("Не удалось выполнить запрос к базе данных на получения роли с id {id}", id);
+				Log.Error(ex, "Не удалось выполнить запрос к базе данных на получения роли с id {id}", id);
+				Response.StatusCode = 500;
+				ViewData["ErrorCode"] = 500;
+				ViewData["Message"] = "Ошибка связи с сервером";
+				return View("UserError");
+			}
+            catch (DbException ex)
+            {
+                Log.Error(ex, "Не удалось выполнить запрос к базе данных на получения роли с id {id}", id);
 				Response.StatusCode = 500;
 				ViewData["ErrorCode"] = 500;
 				ViewData["Message"] = "Ошибка связи с сервером";
@@ -168,10 +201,10 @@ namespace Capycom.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("CpcmRoleName,CpcmCanEditGroup,CpcmCanMakePost,CpcmCanDelPost,CpcmCanEditPost")] CpcmGroupRole cpcmGroupRole)
         {
-            Log.Information("Пользователь {User.Identity.Name} пытается отредактировать роль {id} - изменив на {cpcmGroupROle}. Данные по соединененю {HttpContext.Connection}", User.Identity.Name, id, cpcmGroupRole,HttpContext.Connection);
+            Log.Information("Пользователь {User} пытается отредактировать роль {id} - изменив на {cpcmGroupROle}. Данные по соединененю {@HttpContext.Connection}", HttpContext.User.FindFirstValue("CpcmUserId"), id, cpcmGroupRole,HttpContext.Connection);
             if (id != cpcmGroupRole.CpcmRoleId)
             {
-                Log.Warning("Пользователь {User.Identity.Name} попытался изменить id роли. Данные по соединеню {HttpContext.Connection}", User.Identity.Name, HttpContext.Connection);
+                Log.Warning("Пользователь {User} попытался изменить id роли. Данные по соединеню {@HttpContext.Connection}", HttpContext.User.FindFirstValue("CpcmUserId"), HttpContext.Connection);
 				Response.StatusCode = 404;
 				ViewData["ErrorCode"] = 404;
 				ViewData["Message"] = "Роль с данным id не найден";
@@ -184,13 +217,13 @@ namespace Capycom.Controllers
                 {
                     _context.Update(cpcmGroupRole);
                     await _context.SaveChangesAsync();
-                    Log.Information("Пользователь {User.Identity.Name} изменил роль {cpcmGroupRole.CpcmRoleName}. Данные по соединененю {HttpContext.Connection}", User.Identity.Name, cpcmGroupRole.CpcmRoleName, HttpContext.Connection);
+                    Log.Information("Пользователь {User} изменил роль {cpcmGroupRole.CpcmRoleName}. Данные по соединененю {@HttpContext.Connection}", HttpContext.User.FindFirstValue("CpcmUserId"), cpcmGroupRole.CpcmRoleName, HttpContext.Connection);
                 }
-                catch (DbUpdateConcurrencyException)
+                catch (DbUpdateConcurrencyException ex)
                 {
                     if (!CpcmGroupRoleExists(cpcmGroupRole.CpcmRoleId))
                     {
-                        Log.Error("Пользователь {User.Identity.Name} попытался изменить роль Но данные не удалось сохранить. Данные по соединеню {HttpContext.Connection}", User.Identity.Name, HttpContext.Connection);
+                        Log.Error(ex, "Пользователь {User} попытался изменить роль Но данные не удалось сохранить. Данные по соединеню {@HttpContext.Connection}", HttpContext.User.FindFirstValue("CpcmUserId"), HttpContext.Connection);
 						Response.StatusCode = 404;
 						ViewData["ErrorCode"] = 404;
 						ViewData["Message"] = "Кто-то до вас удалил данную запись";
@@ -198,16 +231,30 @@ namespace Capycom.Controllers
 					}
                     else
                     {
-                        Log.Error("Не удалось выполнить запрос к базе данных на изменение роли {cpcmGroupRole.CpcmRoleName} поскольку её отредактировали до того, как вы начали отправили форму", cpcmGroupRole.CpcmRoleName);
-						Response.StatusCode = 500;
-						ViewData["ErrorCode"] = 500;
+                        Log.Error(ex, "Не удалось выполнить запрос к базе данных на изменение роли {cpcmGroupRole.CpcmRoleName} поскольку её отредактировали до того, как вы начали отправили форму", cpcmGroupRole.CpcmRoleName);
+						Response.StatusCode = 409;
+						ViewData["ErrorCode"] = 409;
 						ViewData["Message"] = "Ошибка связи с сервером";
 						return View("UserError");
 					}
                 }
+                catch (DbUpdateException ex)
+                {
+                    Log.Error(ex, "Не удалось выполнить запрос к базе данных на изменение роли {cpcmGroupRole.CpcmRoleName}", cpcmGroupRole.CpcmRoleName);
+                    Response.StatusCode = 500;
+                    ViewData["ErrorCode"] = 500;
+                    ViewData["Message"] = "Ошибка связи с сервером";
+                }
+                catch(DbException ex)
+                {
+					Log.Error(ex, "Не удалось выполнить запрос к базе данных на изменение роли {cpcmGroupRole.CpcmRoleName}", cpcmGroupRole.CpcmRoleName);
+					Response.StatusCode = 500;
+					ViewData["ErrorCode"] = 500;
+					ViewData["Message"] = "Ошибка связи с сервером";
+				}
                 return RedirectToAction(nameof(Index));
             }
-            Log.Warning("Пользователь {User.Identity.Name} попытался изменить роль на некорректные данные. Данные по соединененю {HttpContext.Connection}", User.Identity.Name, HttpContext.Connection);
+            Log.Warning("Пользователь {User} попытался изменить роль на некорректные данные. Данные по соединененю {@HttpContext.Connection}", HttpContext.User.FindFirstValue("CpcmUserId"), HttpContext.Connection);
             return View(cpcmGroupRole);
         }
 
@@ -250,8 +297,14 @@ namespace Capycom.Controllers
             {
                 return _context.CpcmGroupRoles.Any(e => e.CpcmRoleId == id);
             }
-            catch (DbException)
+            catch(DbUpdateException ex)
             {
+				Log.Error(ex, "Не удалось выполнить запрос к базе данных на проверку существования роли с id {id}", id);
+				return true;
+			}
+            catch (DbException ex)
+            {
+                Log.Error(ex, "Не удалось выполнить запрос к базе данных на проверку существования роли с id {id}", id);
                 return true;
             }
         }
