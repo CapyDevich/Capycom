@@ -222,7 +222,7 @@ namespace Capycom.Controllers
 					return StatusCode(404);
 				}
 				var group = await _context.CpcmGroups.Where(g => g.CpcmGroupId == groupId).FirstOrDefaultAsync();
-				if (group != null && group.CpcmIsDeleted)
+				if (group == null || group.CpcmIsDeleted)
 				{
 					Log.Warning("Попытка получить следующие посты для удалённой группы {groupId}", groupId);
 					return StatusCode(404);
@@ -1958,7 +1958,7 @@ namespace Capycom.Controllers
 			}
 			if (post == null||!post.CpcmIsDeleted)
 			{
-				Log.Warning("Пост не найден или уже удалён {postid}. IsDeleted {@post.CpcmIsDeleted}", postGuid, post.CpcmIsDeleted);
+				Log.Warning("Пост не найден или уже удалён {postid}. IsDeleted", postGuid);
 				return StatusCode(404);
 			}
 			if (post.CpcmPostBanned)
@@ -2010,7 +2010,7 @@ namespace Capycom.Controllers
 				var post = await _context.CpcmPosts.Where(c => c.CpcmPostId == id && c.CpcmPostPublishedDate < DateTime.UtcNow).FirstOrDefaultAsync();
 				if (post == null || post.CpcmIsDeleted == true)
 				{
-					Log.Warning("Пост не найден или уже удалён {id}. Isdeleted {@bool}", id, post.CpcmIsDeleted);
+					Log.Warning("Пост не найден или уже удалён {id}.", id);
 					return StatusCode(404);
 				}
 				post.CpcmPostBanned = !post.CpcmPostBanned;
@@ -2272,7 +2272,7 @@ namespace Capycom.Controllers
 					}
 					catch (IOException ex)
 					{
-						Log.Error("Ошибка при сохранении файла {@model}", editPost);
+						Log.Error(ex,"Ошибка при сохранении файла {@model}", editPost);
 						try
 						{
 							foreach (var uploadedfile in filePaths)
@@ -2430,7 +2430,7 @@ namespace Capycom.Controllers
 					return StatusCode(404);
 				}
 				var group = await _context.CpcmGroups.Where(g => g.CpcmGroupId == groupId).FirstOrDefaultAsync();
-				if (group != null && group.CpcmIsDeleted)
+				if (group == null || group.CpcmIsDeleted)
 				{
 					Log.Warning("Группа не найдена {groupId}", groupId);
 					return StatusCode(404);
@@ -2517,7 +2517,7 @@ namespace Capycom.Controllers
 				return StatusCode(403);
 			}
 			var group = await _context.CpcmGroups.Where(g => g.CpcmGroupId == groupId).FirstOrDefaultAsync();
-			if (group != null && group.CpcmIsDeleted)
+			if (group == null || group.CpcmIsDeleted)
 			{
 				Log.Warning("Группа не найдена {groupId}", groupId);
 				Response.StatusCode = 404;

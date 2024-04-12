@@ -13,6 +13,7 @@ using Capycom.Enums;
 using Serilog;
 using Microsoft.Data.SqlClient;
 using Microsoft.IdentityModel.Protocols.Configuration;
+using static NuGet.Packaging.PackagingConstants;
 
 namespace Capycom.Controllers
 {
@@ -152,7 +153,7 @@ namespace Capycom.Controllers
 
             if (user == null||user.CpcmIsDeleted)
             {
-                Log.Warning("Пользователь не найден или удалён {u}",user.CpcmIsDeleted);
+                Log.Warning("Пользователь не найден или удалён {u}", filter.UserId);
                 Response.StatusCode = 404;
                 ViewData["ErrorCode"] = 404;
                 ViewData["Message"] = "Пользователь не найден";
@@ -654,7 +655,7 @@ namespace Capycom.Controllers
             }
             if (user == null || user.CpcmIsDeleted)
             {
-                Log.Warning("Пользователь не найден {user}", User.FindFirstValue("CpcmUserId"));
+                Log.Warning("Пользователь не найден {user}", id);
                 Response.StatusCode = 404;
                 ViewData["ErrorCode"] = 404;
                 ViewData["Message"] = "Пользователь не найден";
@@ -804,7 +805,7 @@ namespace Capycom.Controllers
                 var user = await _context.CpcmUsers.Where(c => c.CpcmUserId == id && c.CpcmIsDeleted==false).FirstOrDefaultAsync();
                 if (user == null || user.CpcmIsDeleted)
                 {
-                    Log.Warning("Пользователь не найден {user}", User.FindFirstValue("CpcmUserId"));
+                    Log.Warning("Пользователь не найден {user}", id);
                     return StatusCode(404);
                 }
                 user.CpcmUserBanned = !user.CpcmUserBanned;
@@ -865,7 +866,7 @@ namespace Capycom.Controllers
 
             if (user == null || user.CpcmIsDeleted)
             {
-                Log.Warning("Пользователь не найден или удалён {u}",user.CpcmIsDeleted);
+                Log.Warning("Пользователь не найден или удалён {u}", filters.UserId);
                 Response.StatusCode = 404;
                 ViewData["ErrorCode"] = 404;
                 ViewData["Message"] = "Пользователь не найден";
@@ -992,6 +993,7 @@ namespace Capycom.Controllers
 
             if (user == null || user.CpcmIsDeleted)
             {
+                Log.Warning("Пользователь не найден или удалён {u}", filters.UserId);
                 Response.StatusCode = 404;
                 return StatusCode(404);
             }
@@ -1116,7 +1118,7 @@ namespace Capycom.Controllers
 
             if (user == null || user.CpcmIsDeleted)
             {
-                Log.Warning("Пользователь не найден или удалён {u}",user.CpcmIsDeleted);
+                Log.Warning("Пользователь не найден или удалён {u}", filters.UserId);
                 Response.StatusCode = 404;
                 ViewData["ErrorCode"] = 404;
                 ViewData["Message"] = "Пользователь не найден";
@@ -1136,7 +1138,7 @@ namespace Capycom.Controllers
 			}
             catch (DbException ex)
             {
-                Log.Error(ex,"Ошибка при попытке получить список подписчиков пользователя из базы данных {u}", user.CpcmIsDeleted);
+                Log.Error(ex,"Ошибка при попытке получить список подписчиков пользователя из базы данных {u}", filters.UserId);
                 Response.StatusCode = 500;
                 ViewData["ErrorCode"] = 500;
                 ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
@@ -1187,7 +1189,7 @@ namespace Capycom.Controllers
             }
             catch(DbUpdateException ex)
             {
-				Log.Error(ex, "Ошибка при попытке получить список подписчиков пользователя из базы данных {u}", user.CpcmIsDeleted);
+				Log.Error(ex, "Ошибка при попытке получить список подписчиков пользователя из базы данных {u}", filters.UserId);
 				Response.StatusCode = 500;
 				ViewData["ErrorCode"] = 500;
 				ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
@@ -1195,7 +1197,7 @@ namespace Capycom.Controllers
 			}
 			catch (DbException ex)
 			{
-                Log.Error(ex, "Ошибка при попытке получить список подписчиков пользователя из базы данных {u}", user.CpcmIsDeleted);
+                Log.Error(ex, "Ошибка при попытке получить список подписчиков пользователя из базы данных {u}", filters.UserId);
 				Response.StatusCode = 500;
 				ViewData["ErrorCode"] = 500;
 				ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
@@ -1232,7 +1234,7 @@ namespace Capycom.Controllers
 
             if (user == null || user.CpcmIsDeleted)
             {
-                Log.Warning("Пользователь не найден или удалён {u}", user.CpcmUserId);
+                Log.Warning("Пользователь не найден или удалён {u}", filters.UserId);
                 Response.StatusCode = 404;
                 return StatusCode(404);
             }
@@ -1339,7 +1341,7 @@ namespace Capycom.Controllers
 
 			if (user == null || user.CpcmIsDeleted)
 			{
-                Log.Warning("Пользователь не найден или удалён {u}", user.CpcmUserId);
+                Log.Warning("Пользователь не найден или удалён {u}", filters.UserId);
 				Response.StatusCode = 404;
 				ViewData["ErrorCode"] = 404;
 				ViewData["Message"] = "Пользователь не найден";
@@ -1428,7 +1430,7 @@ namespace Capycom.Controllers
 
 			if (user == null || user.CpcmIsDeleted)
 			{
-                Log.Warning("Пользователь не найден или удалён {u}", user.CpcmUserId);
+                Log.Warning("Пользователь не найден или удалён {u}", filters.UserId);
 				Response.StatusCode = 404;
 				ViewData["ErrorCode"] = 404;
 				ViewData["Message"] = "Пользователь не найден";
@@ -1521,8 +1523,8 @@ namespace Capycom.Controllers
             }
 
             if (user == null || user.CpcmIsDeleted)
-            {
-                Log.Warning("Пользователь не найден или удалён {u}", user.CpcmUserId);
+			{
+                Log.Warning("Пользователь не найден или удалён {u}", id);
                 Response.StatusCode = 404;
                 ViewData["ErrorCode"] = 404;
                 ViewData["Message"] = "Пользователь не найден";
@@ -1574,7 +1576,7 @@ namespace Capycom.Controllers
 
             if (user == null || user.CpcmIsDeleted)
             {
-                Log.Warning("Пользователь не найден или удалён {u}", user.CpcmUserId);
+                Log.Warning("Пользователь не найден или удалён {u}", userdel.CpcmUserId);
                 Response.StatusCode = 404;
                 ViewData["ErrorCode"] = 404;
                 ViewData["Message"] = "Пользователь не найден";
@@ -1927,7 +1929,7 @@ namespace Capycom.Controllers
 			}
 			if (user == null || user.CpcmIsDeleted)
 			{
-                Log.Warning("Пользователь не найден или удалён {u}", user.CpcmUserId);
+                Log.Warning("Пользователь не найден или удалён {u}", filters.UserId);
 				Response.StatusCode = 404;
 				return StatusCode(404);
 			}
@@ -2023,7 +2025,7 @@ namespace Capycom.Controllers
 			}
 			if (user == null || user.CpcmIsDeleted)
 			{
-                Log.Warning("Пользователь не найден или удалён {u}", user.CpcmUserId);
+                Log.Warning("Пользователь не найден или удалён {u}", filters.UserId);
 				Response.StatusCode = 404;
 				return StatusCode(404);
 			}
@@ -2351,6 +2353,7 @@ namespace Capycom.Controllers
 				}
                 catch (DbException ex)
                 {
+                    Log.Error(ex, "Ошибка при попытке сохранить пост {post} {u}", userPost, User.FindFirstValue("CpcmUserId"));
                     foreach (var item in filePaths)
                     {
                         if (System.IO.File.Exists(item))
