@@ -1,60 +1,102 @@
 ﻿<!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - Capycom</title>
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/Capycom.styles.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/lib/bootstrap-select/bootstrap-select.min.css" rel="stylesheet" />
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<title>@ViewData["Title"] - Capycom</title>
+	<link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+	<link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+	<link rel="stylesheet" href="~/Capycom.styles.css" asp-append-version="true" />
+	<link rel="stylesheet" href="~/lib/bootstrap-select/bootstrap-select.min.css" rel="stylesheet" />
+	<script src="~/lib/jquery/dist/jquery.min.js"></script>
 </head>
 <body>
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">Capycom</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="User" asp-action="Index">Профиль</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="">Группы</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="">Лента</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="">Найти пользователя</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="">Найти группу</a>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-        </nav>
-    </header>
-    <div class="container">
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
-    </div>
+	<header>
+		<nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
+			<div class="container-fluid">
+				<a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">Capycom</a>
+				<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
+						aria-expanded="false" aria-label="Toggle navigation">
+					<span class="navbar-toggler-icon"></span>
+				</button>
+				<div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
+					<ul class="navbar-nav flex-grow-1">
+						@if (User.Identity.IsAuthenticated)
+						{
+							<li class="nav-item">
+								<a class="nav-link text-dark" asp-area="" asp-controller="User" asp-action="Index">Профиль</a>
+							</li>
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2024 - Capycom - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-        </div>
-    </footer>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
+							<li class="nav-item">
+								<a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="">Группы</a>
+							</li>
+							<li class="nav-item">
+								<a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="">Лента</a>
+							</li>
+						}
+						<li class="nav-item">
+							<a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="">Найти пользователя</a>
+						</li>
+						<li class="nav-item">
+							<a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="">Найти группу</a>
+						</li>
+					</ul>
+				</div>
+				@if (User.Identity.IsAuthenticated)
+				{
+					<div class="dropdown" style="background-color: transparent;">
+						<button class="btn btn-light dropdown-toggle border-0 justify-content-sm-center" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false" style="background-color: transparent;">
+							<img src="@Url.Content(Context.User.FindFirst("ProfileImage")?.Value)"
+							class="rounded-circle me-3" style="width: 50px; height: 50px; object-fit: cover">
+						</button>
+						<ul class="dropdown-menu pb-0 dropdown-menu-end" aria-labelledby="dropdownMenuButton">
+							<li>
+								<a class="nav-link text-dark dropdown-button text-nowrap" asp-area="" asp-controller="User" asp-action="Index" style="font-size: 20px">
+									<img src="@Url.Content(Context.User.FindFirst("ProfileImage")?.Value)"
+										 class="rounded-circle me-3" style="display:inline-block; width: 50px; height: 50px; object-fit: cover">
+									Профиль
+									</a>
+							</li>
+							<li><hr class="dropdown-divider"></li>
+							<li>
+								<a class="nav-link text-dark dropdown-button  text-nowrap" asp-area="" asp-controller="" asp-action="">
+									<img class="d-inline m-1" src="~/images/pencil-square.svg" />Редактировать профиль
+									</a>
+							</li>
+							<li>
+								<a class="nav-link text-dark dropdown-button  text-nowrap" asp-area="" asp-controller="" asp-action="">
+									<img class="d-inline m-1" src="~/images/shield-lock-fill.svg" />Безопасность
+									</a>
+							</li>
+							<li>
+								<a class="nav-link text-dark dropdown-button  text-nowrap" asp-area="" asp-controller="UserLogIn" asp-action="LogOut">
+									<img class="d-inline m-1" src="~/images/box-arrow-right.svg" style="padding-left: 2px" />Выйти
+									</a>
+							</li>
+						</ul>
+					</div>
+				}
+				else
+				{
+					<a class="nav-link text-dark pe-md-1" asp-area="" asp-controller="UserLogIn" asp-action="Index">Войти или зарегистрироваться</a>
+				}
+			</div>
+		</nav>
+	</header>
+	<div class="container">
+		<main role="main" class="pb-3">
+			@RenderBody()
+		</main>
+	</div>
+
+	<footer class="border-top footer text-muted">
+		<div class="container">
+			&copy; 2024 - Capycom - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+		</div>
+	</footer>
+	<script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+	<script src="~/js/site.js" asp-append-version="true"></script>
 	<script src="~/lib/bootstrap-select/bootstrap-select.js"></script>
-    @await RenderSectionAsync("Scripts", required: false)
+	@await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>
