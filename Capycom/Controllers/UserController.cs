@@ -2779,7 +2779,7 @@ namespace Capycom.Controllers
                     ViewData["Message"] = "Не удалось сохранить пост. Пожалуйста, повторите запрос позднее или обратитесь к Администратору.";
                     return View("UserError"); // TODO Продумать место для сохранения еррора
                 }
-                RedirectToAction("Index");
+                return RedirectToAction("Index");
 
             }
             return View(editPost);
