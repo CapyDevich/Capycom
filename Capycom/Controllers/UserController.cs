@@ -2588,7 +2588,7 @@ namespace Capycom.Controllers
 
 				if (editPost.NewPublishDate == null)
 				{
-					post.CpcmPostPublishedDate = DateTime.UtcNow;
+					//post.CpcmPostPublishedDate = DateTime.UtcNow;
 				}
 				else
 				{
