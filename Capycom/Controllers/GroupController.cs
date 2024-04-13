@@ -2409,7 +2409,7 @@ namespace Capycom.Controllers
 					ViewData["Message"] = "Не удалось сохранить пост. Пожалуйста, повторите запрос позднее или обратитесь к Администратору.";
 					return View(editPost); // TODO Продумать место для сохранения еррора
 				}
-
+				return RedirectToAction("Index", new GroupFilterModel() {  GroupId= editPost.GroupId });
 			}
 			return View(editPost);
 		}
