@@ -2478,7 +2478,7 @@ namespace Capycom.Controllers
             CpcmPost? post = null;
             try
             {
-                post = await _context.CpcmPosts.Where(c => c.CpcmPostId == postGuid).FirstOrDefaultAsync();
+                post = await _context.CpcmPosts.Where(c => c.CpcmPostId == postGuid).Include(c => c.CpcmImages).FirstOrDefaultAsync();
             }
 			catch (DbUpdateException ex)
 			{
