@@ -2180,7 +2180,7 @@ namespace Capycom.Controllers
                 if (userPost.PostFatherId == null)
                 {
                     int i = 0;
-                    if (userPost.Files==null)
+                    if (userPost.Files != null)
                     {
                         foreach (IFormFile file in userPost.Files)
                         {
@@ -2475,8 +2475,8 @@ namespace Capycom.Controllers
             CpcmPost? post = null;
             try
             {
-                post = await _context.CpcmPosts.Where(c => c.CpcmPostId == postGuid).FirstOrDefaultAsync();
-            }
+				post = await _context.CpcmPosts.Where(c => c.CpcmPostId == postGuid).Include(c => c.CpcmImages).FirstOrDefaultAsync();
+			}
 			catch (DbUpdateException ex)
 			{
 				Log.Error(ex, "Ошибка при попытке получить пост из базы данных {guid}", postGuid);
