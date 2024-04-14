@@ -13,7 +13,10 @@
 		<div class="text-center">
 			<h4 class="mb-0">@Model.CpcmUserFirstName @Model.CpcmUserSecondName @Model.CpcmUserAdditionalName</h4>
 			<div id="userID" hidden>@Model.CpcmUserId</div>
+			@if (Model.CpcmUserNickName != null)
+			{
 			<small class="text-muted">@@<a href="~/User/Index?NickName=@Model.CpcmUserNickName">@Model.CpcmUserNickName</a></small>
+			}
 		</div>
 		<div class="mt-1">
 			<ul class="list-group list-group-flush">
@@ -25,17 +28,17 @@
 				@if (@Model.CpcmUserCity.HasValue)
 				{
 					<p class="m-0">Город</p>
-					<li class="list-group-item profile-block">@Model.CpcmUserCity.Value</li>
+					<li class="list-group-item profile-block">@Model.CpcmUserCityNavigation.CpcmCityName</li>
 				}
 				@if (@Model.CpcmUserUniversity.HasValue)
 				{
 					<p class="m-0">Университет</p>
-					<li class="list-group-item profile-block">@Model.CpcmUserUniversity.Value</li>
+					<li class="list-group-item profile-block">@Model.CpcmUserUniversityNavigation.CpcmUniversityName</li>
 				}
 				@if (@Model.CpcmUserSchool.HasValue)
 				{
 					<p class="m-0">Школа</p>
-					<li class="list-group-item profile-block">@Model.CpcmUserSchool.Value</li>
+					<li class="list-group-item profile-block">@Model.CpcmUserSchoolNavigation.CpcmSchoolName</li>
 				}
 				@if (@Model.CpcmUserBooks != string.Empty)
 				{
