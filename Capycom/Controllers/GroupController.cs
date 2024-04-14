@@ -1107,14 +1107,14 @@ namespace Capycom.Controllers
 					ViewData["Message"] = "Группа не найдена";
 					return View("UserError");
 				}
-				if(group !=null && group.CpcmGroupBanned)
-				{
-					Log.Warning("Группа для удаления заблокирована {gr}", groupId);
-					Response.StatusCode = 404;
-					ViewData["ErrorCode"] = 404;
-					ViewData["Message"] = "Группа для удаления заблокирована";
-					return View("UserError");
-				}
+				//if(group !=null && group.CpcmGroupBanned)
+				//{
+				//	Log.Warning("Группа для удаления заблокирована {gr}", groupId);
+				//	Response.StatusCode = 404;
+				//	ViewData["ErrorCode"] = 404;
+				//	ViewData["Message"] = "Группа для удаления заблокирована";
+				//	return View("UserError");
+				//}
 				if (await CheckUserPrivilege("CpcmCanEditGroup", true, "CpcmCanEditGroups", true, groupId))
 				{
 					return View();
@@ -1168,14 +1168,14 @@ namespace Capycom.Controllers
 					ViewData["Message"] = "Группа для удаления не найдена";
 					return View("UserError");
 				}
-				if (group != null && group.CpcmGroupBanned)
-				{
-					Log.Warning("Группа для удаления заблокирована {gr}", groupId);
-					Response.StatusCode = 403;
-					ViewData["ErrorCode"] = 403;
-					ViewData["Message"] = "Группа для удаления заблокирована";
-					return View("UserError");
-				}
+				//if (group != null && group.CpcmGroupBanned)
+				//{
+				//	Log.Warning("Группа для удаления заблокирована {gr}", groupId);
+				//	Response.StatusCode = 403;
+				//	ViewData["ErrorCode"] = 403;
+				//	ViewData["Message"] = "Группа для удаления заблокирована";
+				//	return View("UserError");
+				//}
 				if (await CheckUserPrivilege("CpcmCanEditGroup", true, "CpcmCanEditGroups", true, groupId))
 				{
 
@@ -1961,11 +1961,11 @@ namespace Capycom.Controllers
 				Log.Warning("Пост не найден или уже удалён {postid}. IsDeleted", postGuid);
 				return StatusCode(404);
 			}
-			if (post.CpcmPostBanned)
-			{
-				Log.Warning("Попытка удаления заблокированного поста {post}", postGuid);
-				return StatusCode(403);
-			}
+			//if (post.CpcmPostBanned)
+			//{
+			//	Log.Warning("Попытка удаления заблокированного поста {post}", postGuid);
+			//	return StatusCode(403);
+			//}
 
 			if (!await CheckOnlyGroupPrivelege("CpcmCanDelPost", true, groupId))
 			{
