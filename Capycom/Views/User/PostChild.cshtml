@@ -14,13 +14,13 @@
 			<div class="row g-1 p-1">
 				@Model.CpcmPostText
 			</div>
-			<div class="@(Model.CpcmImages.Count != 0 ? ("row row-cols-1" + (Model.CpcmImages.Count > 1 ? "row-cols-md-2 row-cols-lg-2" : "") + "g-4") : "")">
+			<div class="@(Model.CpcmImages.Count != 0 ? ("row row-cols-1 g-4 " + (Model.CpcmImages.Count > 1 ? "row-cols-md-2 row-cols-lg-2" : "")) : "")">
 				@{
 					if (Model.CpcmPostFatherNavigation == null)
-						foreach (var image in Model.CpcmImages)
+						foreach (var image in Model.CpcmImages.OrderBy(c => c.CpcmImageOrder))
 						{
 							<div class="col m-0" style="padding: 1px;">
-								<img src="@Url.Content(@image.CpcmImagePath)" class="rounded card-img-top object-fit-cover h-100" alt="Изображение">
+								<img src="@Url.Content(@image.CpcmImagePath)" class="rounded card-img-top h-100" alt="Изображение" style="object-fit: cover;">
 							</div>
 						}
 						else

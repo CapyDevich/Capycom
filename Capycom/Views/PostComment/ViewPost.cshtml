@@ -35,6 +35,7 @@
 		@if (User.Identity.IsAuthenticated) {
 			<div class="card mt-2">
 				<form class="d-flex" id="commentForm" enctype="multipart/form-data">
+					@Html.AntiForgeryToken()
 					<img src="~/uploads/@Model.Post.User?.CpcmUserImagePath"
 					class="rounded-circle mt-3 ms-2 me-3 user-icon">
 					<div class="row p-1">
