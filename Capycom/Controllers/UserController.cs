@@ -1530,14 +1530,14 @@ namespace Capycom.Controllers
                 ViewData["Message"] = "Пользователь не найден";
                 return View("UserError");
             }
-            if (user.CpcmUserBanned)
-            {
-                Log.Warning("Пользователь заблокирован и не может быть удалён {u}", user.CpcmUserId);
-                Response.StatusCode = 403;
-                ViewData["ErrorCode"] = 403;
-                ViewData["Message"] = "Пользователь заблокирован и не может быть удалён";
-                return View("UserError");
-            }
+            //if (user.CpcmUserBanned)
+            //{
+            //    Log.Warning("Пользователь заблокирован и не может быть удалён {u}", user.CpcmUserId);
+            //    Response.StatusCode = 403;
+            //    ViewData["ErrorCode"] = 403;
+            //    ViewData["Message"] = "Пользователь заблокирован и не может быть удалён";
+            //    return View("UserError");
+            //}
             return View(user);
         }
 
@@ -1582,14 +1582,14 @@ namespace Capycom.Controllers
                 ViewData["Message"] = "Пользователь не найден";
                 return View("UserError");
             }
-            if (user.CpcmUserBanned)
-            {
-                Log.Warning("Пользователь заблокирован и не может быть удалён {u}", user.CpcmUserId);
-                Response.StatusCode = 403;
-                ViewData["ErrorCode"] = 403;
-                ViewData["Message"] = "Пользователь заблокирован и не может быть удалён";
-                return View("UserError");
-            }
+            //if (user.CpcmUserBanned)
+            //{
+            //    Log.Warning("Пользователь заблокирован и не может быть удалён {u}", user.CpcmUserId);
+            //    Response.StatusCode = 403;
+            //    ViewData["ErrorCode"] = 403;
+            //    ViewData["Message"] = "Пользователь заблокирован и не может быть удалён";
+            //    return View("UserError");
+            //}
             //_context.CpcmUsers.Remove(user);
             user.CpcmIsDeleted = true;
 
@@ -2421,11 +2421,11 @@ namespace Capycom.Controllers
                 Log.Warning("Пост не найден или удалён {u}", postGuid);
                 return StatusCode(404);
             }
-            if (post.CpcmPostBanned)
-            {
-                Log.Warning("Пост заблокирован и не может быть удалён {u}", postGuid);
-                return StatusCode(403);
-            }
+            //if (post.CpcmPostBanned)
+            //{
+            //    Log.Warning("Пост заблокирован и не может быть удалён {u}", postGuid);
+            //    return StatusCode(403);
+            //}
 
             if (!CheckUserPrivilege("CpcmCanDelUsersPosts", "True", post.CpcmUserId.ToString()))
             {
@@ -2478,7 +2478,7 @@ namespace Capycom.Controllers
             CpcmPost? post = null;
             try
             {
-                post = await _context.CpcmPosts.Where(c => c.CpcmPostId == postGuid).FirstOrDefaultAsync();
+                post = await _context.CpcmPosts.Where(c => c.CpcmPostId == postGuid).Include(c => c.CpcmImages).FirstOrDefaultAsync();
             }
 			catch (DbUpdateException ex)
 			{
