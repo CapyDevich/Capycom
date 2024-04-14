@@ -620,7 +620,6 @@ namespace Capycom.Controllers
 
 
         [Authorize]
-        [HttpPost]
         public async Task<ActionResult> EditIdentity(string id)
         {
             if (!CheckUserPrivilege("CpcmCanEditUsers", "True", id))
@@ -784,7 +783,7 @@ namespace Capycom.Controllers
                 }
 
 
-                return RedirectToAction($"Index\\{user.CpcmUserId}");
+                return RedirectToAction("Index");
             }
             Log.Warning("Ошибка валидации формы редактирования пользователя {user}", User.FindFirstValue("CpcmUserId"));
             return View(user);
