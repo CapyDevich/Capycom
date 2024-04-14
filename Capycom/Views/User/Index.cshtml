@@ -25,3 +25,21 @@
 </div>
 @await Html.PartialAsync("RepostModal")
 <script type="text/javascript" charset="utf-8" src="~/js/post.js"></script>
+<!-- Модальное окно на подтверждение удаление поста -->
+<div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteModalLabel" aria-hidden="true">
+	<div class="modal-dialog">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h5 class="modal-title" id="confirmDeleteModalLabel">Подтверждение удаления</h5>
+				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+			</div>
+			<div class="modal-body">
+				Вы уверены, что хотите удалить данный пост?
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+				<button type="button" class="btn btn-danger" data-bs-dismiss="modal" onclick="deletePost()">Удалить</button>
+			</div>
+		</div>
+	</div>
+</div>
