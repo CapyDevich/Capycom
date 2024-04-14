@@ -24,9 +24,7 @@
 		<div class="ps-1 pe-1 mb-1">
 			@foreach (var image in Model.CpcmImages)
 			{
-				<div>
-					<img id="@image.CpcmImageId" src="@Url.Content(@image.CpcmImagePath)" class="rounded card-img-top h-100" alt="Изображение" style="object-fit: cover; width: 128px; height: 128px;">
-				</div>
+				<img id="@image.CpcmImageId" src="@Url.Content(@image.CpcmImagePath)" class="rounded card-img-top h-100" alt="Изображение" style="object-fit: cover; width: 128px; height: 128px;">
 			}
 		</div>
 		@if (@Model.NewPublishDate > DateTime.Now)
