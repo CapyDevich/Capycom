@@ -1657,7 +1657,7 @@ namespace Capycom.Controllers
 		[Authorize]
 		[HttpPost]
 		[ValidateAntiForgeryToken]
-		public async Task<IActionResult> CreatePost(GroupPostModel groupPost)
+		public async Task<IActionResult> CreatePostP(GroupPostModel groupPost)
 		{
 			try
 			{
@@ -1831,7 +1831,7 @@ namespace Capycom.Controllers
 					Response.StatusCode = 409;
 					ViewData["ErrorCode"] = 409;
 					ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
-					return View(groupPost);
+					return View("CreatePost",groupPost);
 				}
 				catch(DbUpdateException ex)
 				{
@@ -1853,7 +1853,7 @@ namespace Capycom.Controllers
 					Response.StatusCode = 500;
 					ViewData["ErrorCode"] = 500;
 					ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
-					return View(groupPost);
+					return View("CreatePost",groupPost);
 				}
 				catch (DbException ex)
 				{
@@ -1875,7 +1875,7 @@ namespace Capycom.Controllers
 					Response.StatusCode = 500;
 					ViewData["ErrorCode"] = 500;
 					ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
-					return View(groupPost);
+					return View("CreatePost", groupPost);
 				}
 
 				if (groupPost.PostFatherId != null)
@@ -1891,7 +1891,7 @@ namespace Capycom.Controllers
 			Log.Warning("Ошибка валидации модели. {@model}", groupPost);
 			if (groupPost.PostFatherId == null)
 			{
-				return View(groupPost);
+				return View("CreatePost", groupPost);
 			}
 			else
 			{
@@ -2079,7 +2079,7 @@ namespace Capycom.Controllers
 			CpcmPost? post = null;
 			try
 			{
-				post = await _context.CpcmPosts.Where(c => c.CpcmPostId == postGuid && c.CpcmGroupId==groupId).FirstOrDefaultAsync();
+				post = await _context.CpcmPosts.Where(c => c.CpcmPostId == postGuid && c.CpcmGroupId==groupId).Include(c => c.CpcmImages).FirstOrDefaultAsync();
 			}
 			catch (DbException ex)
 			{
@@ -2119,7 +2119,7 @@ namespace Capycom.Controllers
 		[Authorize]
 		[HttpPost]
 		[ValidateAntiForgeryToken]
-		public async Task<IActionResult> EditPost(GroupPostEditModel editPost) 
+		public async Task<IActionResult> EditPostP(GroupPostEditModel editPost) 
 		{
 			//if (editPost.Text == null && editPost.FilesToDelete.Count == 0 && editPost.NewFiles.Count == 0)
 			//{
@@ -2196,6 +2196,7 @@ namespace Capycom.Controllers
 					Log.Warning("Недостаточно прав для редактирования поста {id}. User {user}", editPost.Id, HttpContext.User.FindFirstValue("CpcmUserId"));
 					return StatusCode(403);
 				}
+				editPost.CpcmImages = post.CpcmImages;
 				if (post.CpcmImages.Count - editPost.FilesToDelete.Count + editPost.NewFiles.Count > 4)
 				{
 					Log.Warning("Превышено количество фотографий в посте {id}", editPost.Id);
@@ -2296,7 +2297,7 @@ namespace Capycom.Controllers
 				}
 
 
-				List<CpcmImage>? images = post.CpcmImages.Where(c => !editPost.FilesToDelete.Contains(c.CpcmImageId)).ToList(); //TODO возможно ! тут не нужен 
+				List<CpcmImage>? images = post.CpcmImages.Where(c => editPost.FilesToDelete.Contains(c.CpcmImageId)).ToList();
 				if (images != null || images.Count != 0)
 				{
 					//_context.CpcmImages.RemoveRange(images);

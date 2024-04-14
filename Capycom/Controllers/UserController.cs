@@ -2549,7 +2549,7 @@ namespace Capycom.Controllers
                 try
                 {
                     post = await _context.CpcmPosts.Include(c => c.CpcmImages).Where(c => c.CpcmPostId == editPost.Id).FirstOrDefaultAsync();
-					editPost.CpcmImages = post.CpcmImages;
+
 				}
                 catch(DbUpdateException ex)
                 {
@@ -2576,7 +2576,8 @@ namespace Capycom.Controllers
                     Log.Warning("Пользователь не имеет прав на редактирование поста {u}", editPost.Id);
                     return StatusCode(403);
                 }
-                if (post.CpcmImages.Count - editPost.FilesToDelete.Count + editPost.NewFiles.Count > 4)
+				editPost.CpcmImages = post.CpcmImages;
+				if (post.CpcmImages.Count - editPost.FilesToDelete.Count + editPost.NewFiles.Count > 4)
                 {
                     //Log.Debug("Попытка добавить больше 4 файлов в пост {u}", editPost.Id);
                     Log.Warning("Попытка добавить больше 4 файлов в пост {u}", editPost.Id);
