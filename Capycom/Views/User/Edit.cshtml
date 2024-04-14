@@ -1,0 +1,151 @@
+﻿@model UserEditAboutDataModel
+@{
+	ViewData["Title"] = "Изменение информации в профиле";
+}
+<link href="~/css/signup.css" rel="stylesheet" />
+<div class="container">
+	<h1 class="text-center mt-5">@ViewData["Title"]</h1>
+	<form class="col-md-6 mx-auto" asp-action="Edit" enctype="multipart/form-data">
+		@Html.AntiForgeryToken()
+		<input asp-for="CpcmUserId" value="@Model.CpcmUserId" hidden />
+		<div asp-validation-summary="ModelOnly" class="text-danger"></div>
+		<div class="row mb-3">
+			<div class="col">
+				<label asp-for="CpcmUserFirstName" class="form-label">Имя</label>
+				<input type="text" class="form-control" id="firstName" required asp-for="CpcmUserFirstName">
+			</div>
+			<div class="col">
+				<label asp-for="CpcmUserSecondName" class="form-label">Фамилия</label>
+				<input type="text" class="form-control" id="lastName" required asp-for="CpcmUserSecondName">
+			</div>
+			<div class="col">
+				<label asp-for="CpcmUserAdditionalName" class="form-label">Отчество</label>
+				<input type="text" class="form-control" id="middleName" asp-for="CpcmUserAdditionalName">
+			</div>
+			<span asp-validation-for="CpcmUserFirstName" class="text-danger"></span>
+			<span asp-validation-for="CpcmUserSecondName" class="text-danger"></span>
+		</div>
+		<div class="mb-3">
+			<label asp-for="CpcmUserImage" class="form-label">Иконка профиля</label>
+			<input asp-for="CpcmUserImage" class="form-control" type="file" id="formFile">
+		</div>
+		<span asp-validation-for="CpcmUserImage" class="text-danger"></span>
+		<div class="col mb-3">
+			<label asp-for="CpcmUserAbout" userAbout" class="form-label">О себе</label>
+			<textarea asp-for="CpcmUserAbout" type="text" class="form-control" id="userAbout" rows="3"></textarea>
+		</div>
+
+		<label asp-for="CpcmUserCity" class="form-label">Город</label>
+		<div class="flex-grow-1 input-group d-flex justify-content-between mb-3">
+			<select data-live-search="true" asp-for="CpcmUserCity" asp-items="ViewBag.CpcmUserCity" class="selectpicker flex-grow-1" id="city" data-live-search="true">
+				<option value="" selected disabled>Выберите город...</option>
+			</select>
+			<button type="button" class="btn btn-light addOptionButton" data-bs-toggle="modal" data-bs-target="#addingCityModal">+</button>
+		</div>
+
+		<label asp-for="CpcmUserUniversity" class="form-label">Университет</label>
+		<div class="flex-grow-1 input-group d-flex justify-content-between mb-3">
+			<select data-live-search="true" asp-for="CpcmUserUniversity" asp-items="ViewBag.CpcmUserUniversity" class="selectpicker flex-grow-1" id="university">
+				<option value="" selected disabled>Выберите университет...</option>
+			</select>
+			<button type="button" class="btn btn-light addOptionButton" data-bs-toggle="modal" data-bs-target="#addingUniversityModal">+</button>
+		</div>
+
+		<label asp-for="CpcmUserSchool" class="form-label">Школа</label>
+		<div class="flex-grow-1 input-group d-flex justify-content-between mb-3">
+			<select data-live-search="true" asp-for="CpcmUserSchool" asp-items="ViewBag.CpcmUserSchool" class="selectpicker flex-grow-1" id="school">
+				<option value="" selected disabled>Выберите школу...</option>
+			</select>
+			<button type="button" class="btn btn-light addOptionButton" data-bs-toggle="modal" data-bs-target="#addingSchoolModal">+</button>
+		</div>
+		<div class="col mb-3">
+			<label asp-for="CpcmUserSite" class="form-label">Сайт</label>
+			<input asp-for="CpcmUserSite" type="text" class="form-control" id="site">
+		</div>
+		<span asp-validation-for="CpcmUserSite" class="text-danger"></span>
+		<div class="col mb-3">
+			<label asp-for="CpcmUserBooks" class="form-label">Книги</label>
+			<input asp-for="CpcmUserBooks" type="text" class="form-control" id="books">
+		</div>
+		<span asp-validation-for="CpcmUserBooks" class="text-danger"></span>
+		<div class="col mb-3">
+			<label asp-for="CpcmUserFilms" class="form-label">Фильмы</label>
+			<input asp-for="CpcmUserFilms" type="text" class="form-control" id="films">
+		</div>
+		<span asp-validation-for="CpcmUserFilms" class="text-danger"></span>
+		<div class="col mb-3">
+			<label asp-for="CpcmUserMusics" class="form-label">Музыка</label>
+			<input asp-for="CpcmUserMusics" type="text" class="form-control" id="music">
+		</div>
+		<span asp-validation-for="CpcmUserMusics" class="text-danger"></span>
+		<button type="submit" class="btn btn-primary" value="Create">Сохранить изменения</button>
+	</form>
+</div>
+<!-- Модальное окно на добавление города -->
+<div class="modal fade" id="addingCityModal" tabindex="-1" aria-labelledby="addingCityModalLabel" aria-hidden="true">
+	<div class="modal-dialog">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h1 class="modal-title fs-5" id="addingCityModalLabel">Добавление города</h1>
+				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+			</div>
+			<form>
+				<div class="modal-body">
+					<label for="addingCityInput" class="col-form-label">Название</label>
+					<input type="text" class="form-control" id="addingCityInput">
+					<div id="addingCityModalAlert" class="alert alert-danger mt-1" role="alert" style="display: none"></div>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отменить</button>
+					<button type="button" class="btn btn-primary" onclick="sendNewCityName()">Добавить</button>
+				</div>
+			</form>
+		</div>
+	</div>
+</div>
+<!-- Модальное окно на добавление университета -->
+<div class="modal fade" id="addingUniversityModal" tabindex="-1" aria-labelledby="addingUniversityModalLabel" aria-hidden="true">
+	<div class="modal-dialog">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h1 class="modal-title fs-5" id="addingUniversityModalLabel">Добавление университа</h1>
+				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+			</div>
+			<form>
+				<div class="modal-body">
+					<label for="addingUniversityInput" class="col-form-label">Название</label>
+					<input type="text" class="form-control" id="addingUniversityInput">
+					<div id="addingUniversityModalAlert" class="alert alert-danger mt-1" role="alert" style="display: none"></div>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отменить</button>
+					<button type="button" class="btn btn-primary" onclick="sendNewUniversityName()">Добавить</button>
+				</div>
+			</form>
+		</div>
+	</div>
+</div>
+<!-- Модальное окно на добавление школы -->
+<div class="modal fade" id="addingSchoolModal" tabindex="-1" aria-labelledby="addingSchoolModalLabel" aria-hidden="true">
+	<div class="modal-dialog">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h1 class="modal-title fs-5" id="addingSchoolModalLabel">Добавление школы</h1>
+				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+			</div>
+			<form>
+				<div class="modal-body">
+					<label for="addingSchoolInput" class="col-form-label">Название</label>
+					<input type="text" class="form-control" id="addingSchoolInput">
+					<div id="addingSchoolModalAlert" class="alert alert-danger mt-1" role="alert" style="display: none"></div>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отменить</button>
+					<button type="button" class="btn btn-primary" onclick="sendNewSchoolName()">Добавить</button>
+				</div>
+			</form>
+		</div>
+	</div>
+</div>
+
+<script src="~/js/signup.js"></script>
