@@ -2549,8 +2549,8 @@ namespace Capycom.Controllers
                 try
                 {
                     post = await _context.CpcmPosts.Include(c => c.CpcmImages).Where(c => c.CpcmPostId == editPost.Id).FirstOrDefaultAsync();
-
-                }
+					editPost.CpcmImages = post.CpcmImages;
+				}
                 catch(DbUpdateException ex)
                 {
 					Log.Error(ex, "Ошибка при попытке получить пост из базы данных {post}", editPost.Id);
@@ -2583,7 +2583,7 @@ namespace Capycom.Controllers
                     ModelState.AddModelError("NewFiles", "В посте не может быть больше 4 фотографий");
                     return View("EditPost", editPost);
                 }
-                editPost.CpcmImages = post.CpcmImages;
+
                 post.CpcmPostText = editPost.Text.Trim();
 
 				if (editPost.NewPublishDate == null)
@@ -2672,7 +2672,7 @@ namespace Capycom.Controllers
                 }
 
 
-                List<CpcmImage>? images = post.CpcmImages.Where(c => !editPost.FilesToDelete.Contains(c.CpcmImageId)).ToList(); //TODO возможно ! тут не нужен 
+                List<CpcmImage>? images = post.CpcmImages.Where(c => editPost.FilesToDelete.Contains(c.CpcmImageId)).ToList();
                 if (images!=null&&images.Count != 0)
                 {
                     //_context.CpcmImages.RemoveRange(images);
