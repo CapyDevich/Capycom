@@ -1,6 +1,17 @@
 using Capycom;
 using Capycom.Controllers;
 using Microsoft.EntityFrameworkCore;
+using FakeItEasy;
+using Microsoft.Extensions.Logging;
+using Microsoft.CodeAnalysis.Options;
+using Microsoft.Extensions.Options;
+using FluentAssertions;
+using Microsoft.AspNetCore.Mvc;
+using Serilog.Events;
+using Serilog;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Http;
+using System.ComponentModel.DataAnnotations;
 namespace PostCurdTests
 {
 	public class CurdTests
@@ -151,10 +162,68 @@ namespace PostCurdTests
 		}
 
 		[Fact]
-		public async Task Test1()
+		public async Task CreatePostP_SendNullModel_ExpectViewWithMessageAnd400Code()
 		{
-			var userController = new UserController();
-			Assert.True(true);
+			// Arrange
+
+			var userController = new UserController(A.Fake<ILogger<UserController>>(),context,A.Fake<IOptions<MyConfig>>());
+			var httpcontext = new DefaultHttpContext();
+			userController.ControllerContext = new ControllerContext()
+			{
+				HttpContext = httpcontext
+			};
+			userController.User.AddIdentity(new ClaimsIdentity(new List<Claim>() {new Claim ("CpcmUserId", "123") }, "Cookies"));
+
+			var userPostModel = new Capycom.Models.UserPostModel();
+			var validationContext = new ValidationContext(userPostModel);
+			var validationResults = new List<ValidationResult>();
+			Validator.TryValidateObject(userPostModel, validationContext, validationResults, true);
+			if (validationResults.Any())
+			{
+				foreach (var validationResult in validationResults)
+				{
+					userController.ModelState.AddModelError(validationResult.MemberNames.First(), validationResult.ErrorMessage);
+				}
+			}
+
+			//Act
+
+			var result = await userController.CreatePostP(new Capycom.Models.UserPostModel());
+
+
+			//Asserts
+
+			//Assert.True(true);
+			result.Should().BeAssignableTo<IActionResult>();
+			//if (result is ObjectResult)
+			//{
+			//	httpcontext.Response.StatusCode.Should().Be(200);
+			//}
+
+			if (result is StatusCodeResult statusCodeResult)
+			{
+				statusCodeResult.StatusCode.Should().Be(200);
+			}
+			else if (result is ViewResult viewResult)
+			{
+				viewResult.ViewName.Should().Be("CreatePost");
+				//viewResult.StatusCode.Should().Be(400);
+				httpcontext.Response.StatusCode.Should().Be(400);
+				viewResult.ViewData["Message"].Should().NotBeNull();
+			}
+			else if (result is PartialViewResult partialViewResult)
+			{
+				//var model = partialViewResult.Model;
+				//model.Should().NotBeNull();
+				//model.ToString().Should().Contain("expected text");
+
+				partialViewResult.ViewName.Should().Be("UserError");
+				partialViewResult.ViewData["Message"].Should().NotBeNull();
+			}
+			//else
+			//{
+			//	Assert.Fail("Unexpected result type");
+			//}
 		}
 	}
 }
