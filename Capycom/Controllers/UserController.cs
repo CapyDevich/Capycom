@@ -2133,7 +2133,7 @@ namespace Capycom.Controllers
 					Response.StatusCode = 400;
 					ViewData["ErrorCode"] = 400;
 					ViewData["Message"] = "Нельзя создавать пустой пост";
-					return View(userPost);
+					return View("CreatePost",userPost);
 				}
                 CpcmPost post = new CpcmPost();
 
@@ -2191,7 +2191,7 @@ namespace Capycom.Controllers
                             if (!ModelState.IsValid)
                             {
                                 Log.Warning("Попытка создать пост {@Files} с некорректными файлами {u}",userPost.Files ,User.FindFirstValue("CpcmUserId"));
-                                return View(userPost);
+                                return View("CreatePost", userPost);
                             }
 
                             string uniqueFileName = Guid.NewGuid().ToString() + Path.GetExtension(file.FileName);
@@ -2225,7 +2225,7 @@ namespace Capycom.Controllers
                                 Response.StatusCode = 500;
                                 ViewData["ErrorCode"] = 500;
                                 ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
-                                return View(userPost);
+                                return View("CreatePost", userPost);
                             }
 
                         }
@@ -2327,7 +2327,7 @@ namespace Capycom.Controllers
 					Response.StatusCode = 500;
 					ViewData["ErrorCode"] = 500;
 					ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
-					return View(userPost); // TODO Продумать место для сохранения еррора
+					return View("CreatePost", userPost); // TODO Продумать место для сохранения еррора
 				}
                 catch(DbUpdateException ex)
                 {
@@ -2349,7 +2349,7 @@ namespace Capycom.Controllers
 					Response.StatusCode = 500;
 					ViewData["ErrorCode"] = 500;
 					ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
-					return View(userPost); // TODO Продумать место для сохранения еррора
+					return View("CreatePost", userPost); // TODO Продумать место для сохранения еррора
 				}
                 catch (DbException ex)
                 {
@@ -2364,7 +2364,7 @@ namespace Capycom.Controllers
                     Response.StatusCode = 500;
                     ViewData["ErrorCode"] = 500;
                     ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
-                    return View(userPost); // TODO Продумать место для сохранения еррора
+                    return View("CreatePost", userPost); // TODO Продумать место для сохранения еррора
                 }
 
                 if (userPost.PostFatherId == null)
@@ -2380,7 +2380,7 @@ namespace Capycom.Controllers
             Log.Information("Пост {@userPost} не прошёл валидацию {u}", userPost,User.FindFirstValue("CpcmUserId"));
             if (userPost.PostFatherId == null)
             {
-                return View(userPost); 
+                return View("CreatePost", userPost); 
             }
             else
             {
