@@ -291,7 +291,6 @@ namespace Capycom.Controllers
 
 
         [Authorize]
-        [HttpPost]
         public async Task<ActionResult> Edit(string id)
         {
             if (!CheckUserPrivilege("CpcmCanEditUsers", "True", id))
