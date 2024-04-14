@@ -11,7 +11,7 @@
 			@if (User.Identity.IsAuthenticated && Model.Post.CpcmUserId.ToString() == User.FindAll(x => x.Type == "CpcmUserId").FirstOrDefault().Value)
 			{
 				<a asp-controller="User" asp-action="EditPost" asp-route-postGuid="@Model.Post.CpcmPostId" class="ms-auto mb-auto">
-					<img src="~/images/pencil-square.svg" / class="edit-post-button">
+					<img src="~/images/pencil-square.svg" />
 				</a>
 			}
 		</div>
