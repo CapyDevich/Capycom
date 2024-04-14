@@ -2534,7 +2534,7 @@ namespace Capycom.Controllers
         [Authorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> EditPost(UserPostEditModel editPost)
+        public async Task<IActionResult> EditPostP(UserPostEditModel editPost)
         {
             //if (editPost.Text == null && editPost.FilesToDelete.Count == 0 && editPost.NewFiles.Count == 0)
             //{
@@ -2581,9 +2581,9 @@ namespace Capycom.Controllers
                     //Log.Debug("Попытка добавить больше 4 файлов в пост {u}", editPost.Id);
                     Log.Warning("Попытка добавить больше 4 файлов в пост {u}", editPost.Id);
                     ModelState.AddModelError("NewFiles", "В посте не может быть больше 4 фотографий");
-                    return View(editPost);
+                    return View("EditPost", editPost);
                 }
-
+                editPost.CpcmImages = post.CpcmImages;
                 post.CpcmPostText = editPost.Text.Trim();
 
 				if (editPost.NewPublishDate == null)
@@ -2633,7 +2633,7 @@ namespace Capycom.Controllers
                     if (!ModelState.IsValid)
                     {
                         Log.Debug("Файл {@file} не прошёл валидацию {u}",file, User.FindFirstValue("CpcmUserId"));
-                        return View(editPost);
+                        return View("EditPost", editPost);
                     }
 
                     string uniqueFileName = Guid.NewGuid().ToString() + Path.GetExtension(file.FileName);
@@ -2666,14 +2666,14 @@ namespace Capycom.Controllers
                         Response.StatusCode = 500;
                         ViewData["ErrorCode"] = 500;
                         ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
-                        return View(editPost);
+                        return View("EditPost", editPost);
                     }
 
                 }
 
 
-                List<CpcmImage>? images = post.CpcmImages.Where(c => editPost.FilesToDelete.Contains(c.CpcmImageId)).ToList(); //TODO возможно ! тут не нужен 
-                if (images!=null && images.Count != 0)
+                List<CpcmImage>? images = post.CpcmImages.Where(c => !editPost.FilesToDelete.Contains(c.CpcmImageId)).ToList(); //TODO возможно ! тут не нужен 
+                if (images!=null&&images.Count != 0)
                 {
                     //_context.CpcmImages.RemoveRange(images);
                     foreach (var item in images)
@@ -2782,7 +2782,7 @@ namespace Capycom.Controllers
                 return RedirectToAction("Index");
 
             }
-            return View(editPost);
+            return View("EditPost", editPost);
         }
 
         [HttpPost]
