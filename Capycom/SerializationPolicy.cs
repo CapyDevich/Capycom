@@ -22,7 +22,14 @@ namespace Capycom
 					var formFile = property.GetValue(value) as IFormFile;
 					if (formFile != null)
 					{
-						properties.Add(property.Name, new { formFile.FileName, formFile.ContentType, formFile.Length });
+						try
+						{
+							properties.Add(property.Name, new { formFile.FileName, formFile.ContentType, formFile.Length });
+						}
+						catch (Exception)
+						{
+							continue;
+						}
 					}
 				}
 
@@ -31,7 +38,14 @@ namespace Capycom
 					var formFileCollection = property.GetValue(value) as IFormFileCollection;
 					if (formFileCollection != null)
 					{
-						properties.Add(property.Name, formFileCollection.Select(f => new { f.FileName, f.ContentType, f.Length }).ToList());
+						try
+						{
+							properties.Add(property.Name, formFileCollection.Select(f => new { f.FileName, f.ContentType, f.Length }).ToList());
+						}
+						catch (Exception)
+						{
+							continue;
+						}
 					}
 				}
 
@@ -41,7 +55,14 @@ namespace Capycom
 					var formFileList = property.GetValue(value) as List<IFormFile>;
 					if (formFileList != null)
 					{
-						properties.Add(property.Name, formFileList.Select(f => new { f.FileName, f.ContentType, f.Length }).ToList());
+						try
+						{
+							properties.Add(property.Name, formFileList.Select(f => new { f.FileName, f.ContentType, f.Length }).ToList());
+						}
+						catch (Exception)
+						{
+							continue;
+						}
 					}
 				}
 
@@ -123,8 +144,12 @@ namespace Capycom
 		}
 		private bool IsBinary(Type type)
 		{
-			return type == typeof(byte[]) || (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(List<>)
-				&& type.GetGenericArguments()[0] == typeof(byte));
+			return type == typeof(byte[])
+				|| (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(List<>) && type.GetGenericArguments()[0] == typeof(byte))
+				|| type == typeof(IFormFile)
+				|| type == typeof(IFormFileCollection)
+				|| (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(List<>) && type.GetGenericArguments()[0] == typeof(IFormFile));
 		}
+
 	}
 }
