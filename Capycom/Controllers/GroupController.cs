@@ -222,7 +222,7 @@ namespace Capycom.Controllers
 					return StatusCode(404);
 				}
 				var group = await _context.CpcmGroups.Where(g => g.CpcmGroupId == groupId).FirstOrDefaultAsync();
-				if (group != null && group.CpcmIsDeleted)
+				if (group == null || group.CpcmIsDeleted)
 				{
 					Log.Warning("Попытка получить следующие посты для удалённой группы {groupId}", groupId);
 					return StatusCode(404);
@@ -1107,14 +1107,14 @@ namespace Capycom.Controllers
 					ViewData["Message"] = "Группа не найдена";
 					return View("UserError");
 				}
-				if(group !=null && group.CpcmGroupBanned)
-				{
-					Log.Warning("Группа для удаления заблокирована {gr}", groupId);
-					Response.StatusCode = 404;
-					ViewData["ErrorCode"] = 404;
-					ViewData["Message"] = "Группа для удаления заблокирована";
-					return View("UserError");
-				}
+				//if(group !=null && group.CpcmGroupBanned)
+				//{
+				//	Log.Warning("Группа для удаления заблокирована {gr}", groupId);
+				//	Response.StatusCode = 404;
+				//	ViewData["ErrorCode"] = 404;
+				//	ViewData["Message"] = "Группа для удаления заблокирована";
+				//	return View("UserError");
+				//}
 				if (await CheckUserPrivilege("CpcmCanEditGroup", true, "CpcmCanEditGroups", true, groupId))
 				{
 					return View();
@@ -1168,14 +1168,14 @@ namespace Capycom.Controllers
 					ViewData["Message"] = "Группа для удаления не найдена";
 					return View("UserError");
 				}
-				if (group != null && group.CpcmGroupBanned)
-				{
-					Log.Warning("Группа для удаления заблокирована {gr}", groupId);
-					Response.StatusCode = 403;
-					ViewData["ErrorCode"] = 403;
-					ViewData["Message"] = "Группа для удаления заблокирована";
-					return View("UserError");
-				}
+				//if (group != null && group.CpcmGroupBanned)
+				//{
+				//	Log.Warning("Группа для удаления заблокирована {gr}", groupId);
+				//	Response.StatusCode = 403;
+				//	ViewData["ErrorCode"] = 403;
+				//	ViewData["Message"] = "Группа для удаления заблокирована";
+				//	return View("UserError");
+				//}
 				if (await CheckUserPrivilege("CpcmCanEditGroup", true, "CpcmCanEditGroups", true, groupId))
 				{
 
@@ -1304,7 +1304,7 @@ namespace Capycom.Controllers
 				//ViewData["additionalName"] = additionalName;
 				followerList1 = followerList1.Where(u => EF.Functions.Like(u.CpcmUserAdditionalName, $"%{filters.AdditionalName}%"));
 			}
-			if(true) //filters.GroupRole.HasValue && (await CheckUserPrivilegeClaim("CpcmCanEditGroups", "True") || await CheckOnlyGroupPrivelege("CpcmCanEditGroup",true, filters.GroupId))
+			if(filters.GroupRole.HasValue && true) //filters.GroupRole.HasValue && (await CheckUserPrivilegeClaim("CpcmCanEditGroups", "True") || await CheckOnlyGroupPrivelege("CpcmCanEditGroup",true, filters.GroupId))
 			{
 				followerList1 = followerList1.Where(u => _context.CpcmGroupfollowers.Any( gf => gf.CpcmUserId==u.CpcmUserId && gf.CpcmGroupId==filters.GroupId && gf.CpcmUserRole==filters.GroupRole)
 				);
@@ -1958,14 +1958,14 @@ namespace Capycom.Controllers
 			}
 			if (post == null||!post.CpcmIsDeleted)
 			{
-				Log.Warning("Пост не найден или уже удалён {postid}. IsDeleted {@post.CpcmIsDeleted}", postGuid, post.CpcmIsDeleted);
+				Log.Warning("Пост не найден или уже удалён {postid}. IsDeleted", postGuid);
 				return StatusCode(404);
 			}
-			if (post.CpcmPostBanned)
-			{
-				Log.Warning("Попытка удаления заблокированного поста {post}", postGuid);
-				return StatusCode(403);
-			}
+			//if (post.CpcmPostBanned)
+			//{
+			//	Log.Warning("Попытка удаления заблокированного поста {post}", postGuid);
+			//	return StatusCode(403);
+			//}
 
 			if (!await CheckOnlyGroupPrivelege("CpcmCanDelPost", true, groupId))
 			{
@@ -2010,7 +2010,7 @@ namespace Capycom.Controllers
 				var post = await _context.CpcmPosts.Where(c => c.CpcmPostId == id && c.CpcmPostPublishedDate < DateTime.UtcNow).FirstOrDefaultAsync();
 				if (post == null || post.CpcmIsDeleted == true)
 				{
-					Log.Warning("Пост не найден или уже удалён {id}. Isdeleted {@bool}", id, post.CpcmIsDeleted);
+					Log.Warning("Пост не найден или уже удалён {id}.", id);
 					return StatusCode(404);
 				}
 				post.CpcmPostBanned = !post.CpcmPostBanned;
@@ -2272,7 +2272,7 @@ namespace Capycom.Controllers
 					}
 					catch (IOException ex)
 					{
-						Log.Error("Ошибка при сохранении файла {@model}", editPost);
+						Log.Error(ex,"Ошибка при сохранении файла {@model}", editPost);
 						try
 						{
 							foreach (var uploadedfile in filePaths)
@@ -2409,7 +2409,7 @@ namespace Capycom.Controllers
 					ViewData["Message"] = "Не удалось сохранить пост. Пожалуйста, повторите запрос позднее или обратитесь к Администратору.";
 					return View(editPost); // TODO Продумать место для сохранения еррора
 				}
-
+				return RedirectToAction("Index", new GroupFilterModel() {  GroupId= editPost.GroupId });
 			}
 			return View(editPost);
 		}
@@ -2430,7 +2430,7 @@ namespace Capycom.Controllers
 					return StatusCode(404);
 				}
 				var group = await _context.CpcmGroups.Where(g => g.CpcmGroupId == groupId).FirstOrDefaultAsync();
-				if (group != null && group.CpcmIsDeleted)
+				if (group == null || group.CpcmIsDeleted)
 				{
 					Log.Warning("Группа не найдена {groupId}", groupId);
 					return StatusCode(404);
@@ -2517,7 +2517,7 @@ namespace Capycom.Controllers
 				return StatusCode(403);
 			}
 			var group = await _context.CpcmGroups.Where(g => g.CpcmGroupId == groupId).FirstOrDefaultAsync();
-			if (group != null && group.CpcmIsDeleted)
+			if (group == null || group.CpcmIsDeleted)
 			{
 				Log.Warning("Группа не найдена {groupId}", groupId);
 				Response.StatusCode = 404;
