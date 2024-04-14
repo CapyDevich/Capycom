@@ -1,4 +1,5 @@
 using Capycom;
+using Capycom.Controllers;
 using Microsoft.EntityFrameworkCore;
 namespace PostCurdTests
 {
@@ -96,9 +97,10 @@ namespace PostCurdTests
 
 			context.CpcmUsers.AddRange(users);
 
-			//AddPosts User1
+			//AddPosts
 			var lastGuid = new Guid("00000000-0000-0000-0000-000000000012");
 			var usernum = 0;
+			List<CpcmPost> posts = new List<CpcmPost>();
 			for (int i = 0; i < 18; i++)
 			{
 				if (i % 6 == 0)
@@ -108,20 +110,33 @@ namespace PostCurdTests
 				var post = new CpcmPost
 				{
 					CpcmPostId = NextGuid(lastGuid),
-					CpcmUserId = users[usernum-1].CpcmUserId,
+					CpcmUserId = users[usernum - 1].CpcmUserId,
 					CpcmGroupId = null,
 					CpcmPostText = $"Post {(i % 6) + 1} by User {usernum}",
 					CpcmPostCreationDate = DateTime.UtcNow,
 					CpcmPostPublishedDate = null,
-					CpcmPostBanned = i%12==0?true:false,
-					CpcmIsDeleted = i%12==0?false:true
+					CpcmPostBanned = false,
+					CpcmIsDeleted = false
 				};
-				context.CpcmPosts.Add(post);
+				posts.Add(post);
 				lastGuid = post.CpcmPostId;
 			}
+			posts[0].CpcmIsDeleted = true;
+			posts[1].CpcmPostBanned = true;
+			posts[2].CpcmIsDeleted = true; posts[2].CpcmPostBanned=true;
+			posts[3].CpcmPostPublishedDate = posts[3].CpcmPostCreationDate + TimeSpan.FromHours(1);
 
+			posts[6].CpcmIsDeleted = true;
+			posts[7].CpcmPostBanned = true;
+			posts[8].CpcmIsDeleted = true; posts[8].CpcmPostBanned = true;
+			posts[9].CpcmPostPublishedDate = posts[9].CpcmPostCreationDate + TimeSpan.FromHours(1);
+
+			posts[12].CpcmIsDeleted = true;
+			posts[13].CpcmPostBanned = true;
+			posts[14].CpcmIsDeleted = true; posts[14].CpcmPostBanned = true;
+			posts[15].CpcmPostPublishedDate = posts[15].CpcmPostCreationDate + TimeSpan.FromHours(1);
+			context.CpcmPosts.AddRange(posts);
 			context.SaveChanges();
-			var a = context.CpcmPosts.ToList();
 		}
 
 		private static Guid NextGuid(Guid guid)
@@ -138,6 +153,7 @@ namespace PostCurdTests
 		[Fact]
 		public async Task Test1()
 		{
+			var userController = new UserController();
 			Assert.True(true);
 		}
 	}
