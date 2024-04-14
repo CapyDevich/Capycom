@@ -8,19 +8,25 @@
 				<h5>@Model.Post.User?.CpcmUserFirstName @Model.Post.User?.CpcmUserSecondName @Model.Post.User?.CpcmUserAdditionalName</h5>
 				<small class="text-muted">@Model.Post.CpcmPostPublishedDate?.ToString("dd.MM.yyyy HH:mm")</small>
 			</div>
+			@if (User.Identity.IsAuthenticated && Model.Post.CpcmUserId.ToString() == User.FindAll(x => x.Type == "CpcmUserId").FirstOrDefault().Value)
+			{
+				<a asp-controller="User" asp-action="EditPost" asp-route-postGuid="@Model.Post.CpcmPostId" class="ms-auto mb-auto">
+					<img src="~/images/pencil-square.svg" />
+				</a>
+			}
 		</div>
 
 		<div class="g-2">
 			<div class="row g-1 p-1">
 				@Model.Post.CpcmPostText
 			</div>
-			<div class="@(Model.Post.CpcmImages.Count != 0 ? ("row row-cols-1" + (Model.Post.CpcmImages.Count > 1 ? "row-cols-md-2 row-cols-lg-2" : "") + "g-4") : "")">
+			<div class="@(Model.Post.CpcmImages.Count != 0 ? ("row row-cols-1 g-4 " + (Model.Post.CpcmImages.Count > 1 ? "row-cols-md-2 row-cols-lg-2" : "")) : "")">
 				@{
 					if (Model.Post.CpcmPostFatherNavigation == null)
-						foreach (var image in Model.Post.CpcmImages)
+						foreach (var image in Model.Post.CpcmImages.OrderBy(c => c.CpcmImageOrder))
 						{
 							<div class="col m-0" style="padding: 1px;">
-								<img src="@Url.Content(@image.CpcmImagePath)" class="rounded card-img-top object-fit-cover h-100" alt="Изображение">
+								<img src="@Url.Content(@image.CpcmImagePath)" class="rounded card-img-top h-100" alt="Изображение" style="object-fit: cover;">
 							</div>
 						}
 					else
