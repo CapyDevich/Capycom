@@ -12,8 +12,7 @@ using System.Security.Claims;
 using Capycom.Enums;
 using Serilog;
 using Microsoft.Data.SqlClient;
-using Microsoft.IdentityModel.Protocols.Configuration;
-using static NuGet.Packaging.PackagingConstants;
+
 
 namespace Capycom.Controllers
 {
@@ -291,7 +290,6 @@ namespace Capycom.Controllers
 
 
         [Authorize]
-        [HttpPost]
         public async Task<ActionResult> Edit(string id)
         {
             if (!CheckUserPrivilege("CpcmCanEditUsers", "True", id))
@@ -582,7 +580,18 @@ namespace Capycom.Controllers
                     return View("UserError");
                 }
 
-                if (cpcmUser.CpcmUserNickName != null)
+
+                if (user.CpcmUserImage != null && user.CpcmUserImage.Length != 0)
+                {
+                    var identity = new ClaimsIdentity(User.Identity);
+                    identity.RemoveClaim(User.FindFirst("ProfileImage"));
+                    identity.AddClaim(new Claim("ProfileImage", cpcmUser.CpcmUserImagePath));
+                    var principal = new ClaimsPrincipal(identity);
+                    HttpContext.User = principal; 
+                }
+
+
+				if (cpcmUser.CpcmUserNickName != null)
                 {
                     return RedirectToAction("Index", new { nickName = cpcmUser.CpcmUserNickName });
                 }
@@ -621,7 +630,6 @@ namespace Capycom.Controllers
 
 
         [Authorize]
-        [HttpPost]
         public async Task<ActionResult> EditIdentity(string id)
         {
             if (!CheckUserPrivilege("CpcmCanEditUsers", "True", id))
@@ -785,7 +793,7 @@ namespace Capycom.Controllers
                 }
 
 
-                return RedirectToAction($"Index\\{user.CpcmUserId}");
+                return RedirectToAction("Index");
             }
             Log.Warning("Ошибка валидации формы редактирования пользователя {user}", User.FindFirstValue("CpcmUserId"));
             return View(user);
