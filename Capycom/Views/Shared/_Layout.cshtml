@@ -65,7 +65,7 @@
 									</a>
 							</li>
 							<li>
-								<a class="nav-link text-dark dropdown-button  text-nowrap" asp-area="" asp-controller="" asp-action="">
+								<a class="nav-link text-dark dropdown-button  text-nowrap" asp-area="" asp-controller="User" asp-action="EditIdentity" asp-route-id="@User.FindAll(x => x.Type == "CpcmUserId").FirstOrDefault().Value">
 									<img class="d-inline m-1" src="~/images/shield-lock-fill.svg" />
 									Безопасность
 									</a>
