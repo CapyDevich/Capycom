@@ -1570,27 +1570,27 @@ namespace Capycom.Controllers
             {
 				Log.Error(ex, "Ошибка при попытке получить пользователя из базы данных");
 				Response.StatusCode = 500;
-				ViewData["ErrorCode"] = 500;
-				ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
-				return View("UserError");
+				//ViewData["ErrorCode"] = 500;
+				//ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
+                return StatusCode(500, new { message = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку" });
 			}
             catch (DbException ex)
             {
                 Log.Error(ex, "Ошибка при попытке получить пользователя из базы данных");
                 Response.StatusCode = 500;
-                ViewData["ErrorCode"] = 500;
-                ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
-                return View("UserError");
-            }
+                //ViewData["ErrorCode"] = 500;
+                //ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
+				return StatusCode(500, new { message = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку" });
+			}
 
             if (user == null || user.CpcmIsDeleted)
             {
                 Log.Warning("Пользователь не найден или удалён {u}", userdel.CpcmUserId);
                 Response.StatusCode = 404;
-                ViewData["ErrorCode"] = 404;
-                ViewData["Message"] = "Пользователь не найден";
-                return View("UserError");
-            }
+                //ViewData["ErrorCode"] = 404;
+                //ViewData["Message"] = "Пользователь не найден";
+				return StatusCode(404, new { message = "Пользователь не найден." });
+			}
             //if (user.CpcmUserBanned)
             //{
             //    Log.Warning("Пользователь заблокирован и не может быть удалён {u}", user.CpcmUserId);
@@ -1611,28 +1611,28 @@ namespace Capycom.Controllers
             {
                 Log.Error(ex, "Ошибка при попытке удалить пользователя из базы данных");
                 Response.StatusCode = 409;
-                ViewData["ErrorCode"] = 409;
-                ViewData["Message"] = "Пользователь был изменён другим пользователем. Повторите попытку позже";
-                return View("UserError");
-            }
+				//ViewData["ErrorCode"] = 409;
+				//ViewData["Message"] = "Пользователь был изменён другим пользователем. Повторите попытку позже";
+				return StatusCode(409, new { message = "Пользователь был изменён другим пользователем. Повторите попытку позже" });
+			}
             catch (DbUpdateException ex)
             {
                 Log.Fatal(ex,"Ошибка при попытке удалить пользователя из базы данных");
                 Response.StatusCode = 500;
-                ViewData["ErrorCode"] = 500;
-                ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
-                return View("UserError");
-            }
+				//ViewData["ErrorCode"] = 500;
+				//ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
+				return StatusCode(500, new { message = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку" });
+			}
             catch (DbException ex)
             {
                 Log.Error(ex, "Ошибка при попытке удалить пользователя из базы данных");
                 Response.StatusCode = 500;
                 ViewData["ErrorCode"] = 500;
                 ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
-                return View("UserError");
-            }
+				return StatusCode(500, new { message = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку" });
+			}
             
-            return RedirectToAction("UserLogIn", "Index");
+            return RedirectToAction("Index","UserLogIn");
 
         }
 
