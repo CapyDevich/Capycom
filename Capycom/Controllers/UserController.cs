@@ -464,31 +464,38 @@ namespace Capycom.Controllers
 
 
                 string filePathUserImage = "";
-                if (user.CpcmUserImage != null && user.CpcmUserImage.Length != 0)// Почему тут а не в [Remote] - чтобы клиент не посылал запросы дважды. Т.е. чтобы клиент не посылал запрос на валидацию, а потом всю форму. 
+                if (!user.IsDeletingUserImage)
                 {
-                    CheckIFormFile("CpcmUserImage", user.CpcmUserImage, 8388608, new[] { "image/jpeg", "image/png", "image/gif" });
-
-                    if (ModelState.IsValid)
+                    if (user.CpcmUserImage != null && user.CpcmUserImage.Length != 0)// Почему тут а не в [Remote] - чтобы клиент не посылал запросы дважды. Т.е. чтобы клиент не посылал запрос на валидацию, а потом всю форму. 
                     {
-                        var uniqueFileName = Guid.NewGuid().ToString() + Path.GetExtension(user.CpcmUserImage.FileName);
-                        filePathUserImage = Path.Combine("wwwroot", "uploads", uniqueFileName);
+                        CheckIFormFile("CpcmUserImage", user.CpcmUserImage, 8388608, new[] { "image/jpeg", "image/png", "image/gif" });
 
-                        try
+                        if (ModelState.IsValid)
                         {
-                            using (var fileStream = new FileStream(filePathUserImage, FileMode.Create))
+                            var uniqueFileName = Guid.NewGuid().ToString() + Path.GetExtension(user.CpcmUserImage.FileName);
+                            filePathUserImage = Path.Combine("wwwroot", "uploads", uniqueFileName);
+
+                            try
                             {
-                                await user.CpcmUserImage.CopyToAsync(fileStream);
+                                using (var fileStream = new FileStream(filePathUserImage, FileMode.Create))
+                                {
+                                    await user.CpcmUserImage.CopyToAsync(fileStream);
+                                }
+                                cpcmUser.CpcmUserImagePath = filePathUserImage.Replace("wwwroot", "");
                             }
-                            cpcmUser.CpcmUserImagePath = filePathUserImage.Replace("wwwroot", "");
+                            catch (Exception ex)
+                            {
+                                Log.Error(ex, "Ошибка при попытке сохранить изображение {@image} пользователя {user} на сервере", user.CpcmUserImage, User.FindFirstValue("CpcmUserId"));
+                                cpcmUser.CpcmUserImagePath = Path.Combine("images", "default.png");
+                            }
                         }
-                        catch (Exception ex)
-                        {
-                            Log.Error(ex, "Ошибка при попытке сохранить изображение {@image} пользователя {user} на сервере", user.CpcmUserImage, User.FindFirstValue("CpcmUserId"));
-                            cpcmUser.CpcmUserImagePath = null;
-                        }
-                    }
 
+                    }
                 }
+                else
+                {
+					cpcmUser.CpcmUserImagePath = Path.Combine("images", "default.png");
+				}
 
                 string filePathUserCoverImage = "";
                 if (user.CpcmUserCoverImage != null && user.CpcmUserCoverImage.Length != 0)
