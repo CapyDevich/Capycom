@@ -20,21 +20,21 @@
 
 	<label for="CpcmUserCity" class="form-label">Город</label>
 	<div class="flex-grow-1 input-group d-flex justify-content-between mb-3">
-		<select data-live-search="true" name="CityId" class="selectpicker flex-grow-1" id="city" data-live-search="true">
+		<select data-live-search="true" name="CityId" class="selectpicker flex-grow-1" id="city" data-live-search="true" asp-items="ViewBag.CpcmUserCity">
 			<option value="" selected disabled>Выберите город...</option>
 		</select>
 	</div>
 
 	<label for="CpcmUserUniversity" class="form-label">Университет</label>
 	<div class="flex-grow-1 input-group d-flex justify-content-between mb-3">
-		<select data-live-search="true" name="UniversityId" class="selectpicker flex-grow-1" id="university">
+		<select data-live-search="true" name="UniversityId" class="selectpicker flex-grow-1" id="university" asp-items="ViewBag.CpcmUserUniversity">
 			<option value="" selected disabled>Выберите университет...</option>
 		</select>
 	</div>
 
 	<label for="CpcmUserSchool" class="form-label">Школа</label>
 	<div class="flex-grow-1 input-group d-flex justify-content-between mb-3">
-		<select data-live-search="true" name="SchoolId" class="selectpicker flex-grow-1" id="school">
+		<select data-live-search="true" name="SchoolId" class="selectpicker flex-grow-1" id="school" asp-items="ViewBag.CpcmUserSchool">
 			<option value="" selected disabled>Выберите школу...</option>
 		</select>
 	</div>
