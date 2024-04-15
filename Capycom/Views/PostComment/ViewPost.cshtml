@@ -58,7 +58,7 @@
 		}
 		@foreach (var comment in Model.TopLevelComments)
 		{
-			<div class="card mt-2">
+			<div class="card mt-2" id="@comment.CpcmCommentId">
 				<div class="d-flex">
 					<img src="@Url.Content(@comment.CpcmUser?.CpcmUserImagePath)"
 						 class="rounded-circle mt-2 ms-2 me-2 user-icon">
@@ -67,6 +67,20 @@
 						<small class="text-muted">@comment.CpcmCommentCreationDate.ToString("dd.MM.yyyy hh:mm")</small>
 						<p class="mb-1">@comment.CpcmCommentText</p>
 					</div>
+					@if (User.Identity.IsAuthenticated && comment.CpcmUser.CpcmUserId.ToString() == User.FindAll(x => x.Type == "CpcmUserId").FirstOrDefault().Value)
+					{
+						<div class="ms-auto mb-auto me-1 d-flex" style="flex-direction: column;">
+							@* 							
+							<a asp-controller="User" asp-action="EditPost" asp-route-postGuid="@Model.Post.CpcmPostId">
+								<img src="~/images/pencil-square.svg" />
+							</a>
+							*@
+							<a style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#confirmDeleteModal" onclick="askCommentDelete('@comment.CpcmCommentId')">
+								<svg class="text-danger" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash3" viewBox="0 0 16 16">
+									<path d="M6.5 1h3a.5.5 0 0 1 .5.5v1H6v-1a.5.5 0 0 1 .5-.5M11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3A1.5 1.5 0 0 0 5 1.5v1H1.5a.5.5 0 0 0 0 1h.538l.853 10.66A2 2 0 0 0 4.885 16h6.23a2 2 0 0 0 1.994-1.84l.853-10.66h.538a.5.5 0 0 0 0-1zm1.958 1-.846 10.58a1 1 0 0 1-.997.92h-6.23a1 1 0 0 1-.997-.92L3.042 3.5zm-7.487 1a.5.5 0 0 1 .528.47l.5 8.5a.5.5 0 0 1-.998.06L5 5.03a.5.5 0 0 1 .47-.53Zm5.058 0a.5.5 0 0 1 .47.53l-.5 8.5a.5.5 0 1 1-.998-.06l.5-8.5a.5.5 0 0 1 .528-.47M8 4.5a.5.5 0 0 1 .5.5v8.5a.5.5 0 0 1-1 0V5a.5.5 0 0 1 .5-.5" />
+								</svg>
+							</a>
+						</div>
 					}
 				</div>
 				<div class="row row-cols-1 ps-2 pb-1 @(comment.CpcmImages.Count > 1 ? "row-cols-md-2 row-cols-lg-2" : "") g-2">
@@ -83,3 +97,21 @@
 </div>
 <script src="~/js/post-content.js"></script>
 <script src="~/js/comment-requests.js"></script>
+<!-- Модальное окно на подтверждение удаление комментария -->
+<div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteModalLabel" aria-hidden="true">
+	<div class="modal-dialog">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h5 class="modal-title" id="confirmDeleteModalLabel">Подтверждение удаления</h5>
+				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+			</div>
+			<div class="modal-body">
+				Вы уверены, что хотите удалить данный комментарий?
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+				<button type="button" class="btn btn-danger" data-bs-dismiss="modal" onclick="deleteComment()">Удалить</button>
+			</div>
+		</div>
+	</div>
+</div>
