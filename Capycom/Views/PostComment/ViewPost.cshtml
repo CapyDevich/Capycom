@@ -3,10 +3,10 @@
 <div class="card mb-2">
 	<div class="card-body">
 		<div class="d-flex align-items-center mb-3">
-			<img src="~/uploads/@Model.Post.User?.CpcmUserImagePath"
+			<img src="@Url.Content(@Model.Post.User?.CpcmUserImagePath)"
 				 class="rounded-circle me-3 user-icon">
 			<div>
-				<h5>Nickname</h5>
+				<h5>@Model.Post.User?.CpcmUserFirstName @Model.Post.User?.CpcmUserSecondName @Model.Post.User?.CpcmUserAdditionalName</h5>
 				<small class="text-muted">@Model.Post.CpcmPostPublishedDate?.ToString("dd.MM.yyyy hh:mm")</small>
 			</div>
 		</div>
@@ -17,30 +17,30 @@
 			</div>
 			@if (Model.Post.CpcmImages.Count != 0)
 			{
-			<div class="row row-cols-1 @(Model.Post.CpcmImages.Count > 1 ? "row-cols-md-2 row-cols-lg-2" : "") g-4">
-				@{
-					if (Model.Post.CpcmPostFatherNavigation == null)
-						foreach (var image in Model.Post.CpcmImages)
-						{
-							<div class="col m-0" style="padding: 1px;">
-								<img src="@Url.Content(@image.CpcmImagePath)" class="rounded card-img-top object-fit-cover h-100" alt="Изображение">
-							</div>
-						}
-					else
-						@await Html.PartialAsync("/Views/User/PostChild.cshtml", Model.Post.CpcmPostFatherNavigation)
-				}
-			</div>
+				<div class="row row-cols-1 @(Model.Post.CpcmImages.Count > 1 ? "row-cols-md-2 row-cols-lg-2" : "") g-4">
+					@{
+						if (Model.Post.CpcmPostFatherNavigation == null)
+							foreach (var image in Model.Post.CpcmImages)
+							{
+								<div class="col m-0" style="padding: 1px;">
+									<img src="@Url.Content(@image.CpcmImagePath)" class="rounded card-img-top object-fit-cover h-100" alt="Изображение">
+								</div>
+							}
+						else
+							@await Html.PartialAsync("/Views/User/PostChild.cshtml", Model.Post.CpcmPostFatherNavigation)
+					}
+				</div>
 			}
 		</div>
-		@if (User.Identity.IsAuthenticated) {
+		@if (User.Identity.IsAuthenticated)
+		{
 			<div class="card mt-2">
-				<form class="d-flex" id="commentForm" enctype="multipart/form-data">
+				<form class="d-flex align-content-center" id="commentForm" enctype="multipart/form-data">
 					@Html.AntiForgeryToken()
-					<img src="~/uploads/@Model.Post.User?.CpcmUserImagePath"
-					class="rounded-circle mt-3 ms-2 me-3 user-icon">
-					<div class="row p-1">
-						<p class="mt-2 mb-1">Nickname</p>
-						<div class="input-group mb-3">
+					<img src="@Url.Content(Context.User.FindFirst("ProfileImage")?.Value)"
+						 class="rounded-circle m-2 user-icon">
+					<div class="row mt-auto mb-auto">
+						<div class="input-group">
 							<input name="CpcmPostId" value="@Model.Post.CpcmPostId" hidden />
 							<textarea name="CpcmCommentText" type="text" class="form-control comment-text" id="commentText" rows="1" required></textarea>
 							<div class="d-flex align-items-center btn btn-light border-top border-bottom">
@@ -60,13 +60,14 @@
 		{
 			<div class="card mt-2">
 				<div class="d-flex">
-					<img src="~/uploads/@Model.Post.User?.CpcmUserImagePath"
-						 class="rounded-circle mt-3 ms-2 me-3 user-icon">
+					<img src="@Url.Content(@comment.CpcmUser?.CpcmUserImagePath)"
+						 class="rounded-circle mt-2 ms-2 me-2 user-icon">
 					<div class="row p-1">
-						<p class="mt-2 mb-0">Nickname</p>
+						<p class="mt-0 mb-0">@comment.CpcmUser?.CpcmUserFirstName @comment.CpcmUser?.CpcmUserSecondName @comment.CpcmUser?.CpcmUserAdditionalName</p>
 						<small class="text-muted">@comment.CpcmCommentCreationDate.ToString("dd.MM.yyyy hh:mm")</small>
-						<p class="mb-0">@comment.CpcmCommentText</p>
+						<p class="mb-1">@comment.CpcmCommentText</p>
 					</div>
+					}
 				</div>
 				<div class="row row-cols-1 ps-2 pb-1 @(comment.CpcmImages.Count > 1 ? "row-cols-md-2 row-cols-lg-2" : "") g-2">
 					@foreach (var image in comment.CpcmImages)
