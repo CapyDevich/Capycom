@@ -1500,6 +1500,8 @@ namespace Capycom.Controllers
 		}
 
 		[Authorize]
+        [Obsolete]
+        [NonAction]
         public async Task<ActionResult> Delete(Guid id)
         {
             if (!CheckUserPrivilege("CpcmCanEditUsers", "True", id))
@@ -1551,7 +1553,6 @@ namespace Capycom.Controllers
 
         [Authorize]
         [HttpPost]
-        [ValidateAntiForgeryToken]
         public async Task<ActionResult> Delete(UserDeleteModel userdel)
         {
             if (!CheckUserPrivilege("CpcmCanEditUsers", "True", userdel.CpcmUserId))
