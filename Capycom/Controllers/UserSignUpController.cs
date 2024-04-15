@@ -161,6 +161,11 @@ namespace Capycom.Controllers
                     }
 
                 }
+                else
+                {
+                    cpcmUser.CpcmUserImagePath = Path.Combine("images", "default.png");
+
+				}
 
                 string filePathUserCoverImage = "";
                 if (cpcmSignUser.CpcmUserCoverImage != null && cpcmSignUser.CpcmUserCoverImage.Length != 0)
