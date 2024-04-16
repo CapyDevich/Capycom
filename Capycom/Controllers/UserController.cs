@@ -1506,57 +1506,6 @@ namespace Capycom.Controllers
 			}
 		}
 
-		[Authorize]
-        [Obsolete]
-        [NonAction]
-        public async Task<ActionResult> Delete(Guid id)
-        {
-            if (!CheckUserPrivilege("CpcmCanEditUsers", "True", id))
-            {
-                Log.Warning("Пользователь {user} не имеет прав на удаление пользователя {u}",User.FindFirstValue("CpcmUserId"), id);
-                return StatusCode(403);
-            }
-
-            CpcmUser user;
-            try
-            {
-                user = await _context.CpcmUsers.Where(c => c.CpcmUserId == id).FirstOrDefaultAsync();
-            }
-            catch(DbUpdateException ex)
-            {
-				Log.Error(ex, "Ошибка при попытке получить пользователя из базы данных");
-				Response.StatusCode = 500;
-				ViewData["ErrorCode"] = 500;
-				ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
-				return View("UserError");
-			}
-            catch (DbException ex)
-            {
-                Log.Error(ex, "Ошибка при попытке получить пользователя из базы данных");
-                Response.StatusCode = 500;
-                ViewData["ErrorCode"] = 500;
-                ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
-                return View("UserError");
-            }
-
-            if (user == null || user.CpcmIsDeleted)
-			{
-                Log.Warning("Пользователь не найден или удалён {u}", id);
-                Response.StatusCode = 404;
-                ViewData["ErrorCode"] = 404;
-                ViewData["Message"] = "Пользователь не найден";
-                return View("UserError");
-            }
-            //if (user.CpcmUserBanned)
-            //{
-            //    Log.Warning("Пользователь заблокирован и не может быть удалён {u}", user.CpcmUserId);
-            //    Response.StatusCode = 403;
-            //    ViewData["ErrorCode"] = 403;
-            //    ViewData["Message"] = "Пользователь заблокирован и не может быть удалён";
-            //    return View("UserError");
-            //}
-            return View(user);
-        }
 
         [Authorize]
         [HttpPost]
