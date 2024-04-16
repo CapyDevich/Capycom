@@ -7,7 +7,7 @@
 				 class="rounded-circle me-3 user-icon">
 			<div>
 				<h5>@Model.Post.User?.CpcmUserFirstName @Model.Post.User?.CpcmUserSecondName @Model.Post.User?.CpcmUserAdditionalName</h5>
-				<small class="text-muted">@Model.Post.CpcmPostPublishedDate?.ToString("dd.MM.yyyy hh:mm")</small>
+				<a asp-controller="PostComment" asp-action="ViewPost" asp-route-postId="@Model.Post.CpcmPostId" class="text-muted">@Model.Post.CpcmPostPublishedDate?.ToString("dd.MM.yyyy hh:mm")</a>
 			</div>
 		</div>
 
