@@ -157,7 +157,7 @@
 									</a>
 								</div>
 							}
-							<small class="text-muted">@comment.CpcmCommentCreationDate.ToString("dd.MM.yyyy hh:mm")</small>
+							<a asp-controller="PostComment" asp-action="ViewComment" asp-route-commentId="@comment.CpcmCommentId" class="text-muted">@comment.CpcmCommentCreationDate.ToString("dd.MM.yyyy hh:mm")</a>
 							<p class="mb-1">@comment.CpcmCommentText</p>
 						</div>
 						@if (User.Identity.IsAuthenticated && comment.CpcmUser.CpcmUserId.ToString() == User.FindAll(x => x.Type == "CpcmUserId").FirstOrDefault().Value)
