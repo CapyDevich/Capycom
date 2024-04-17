@@ -50,9 +50,31 @@
 			{
 				<div class="col-md-4" id="@user.CpcmUserId">
 					<div class="card mb-4 shadow-sm">
-						<img src="@Url.Content(@user.CpcmUserImagePath)" class="bd-placeholder-img card-img-top" width="100%" height="225" alt="Иконка пользователя" style="object-fit: none; object-position: center;">
+						@if (user.CpcmUserNickName != null)
+						{
+							<a asp-controller="User" asp-action="Index" asp-route-Nickname="@user.CpcmUserNickName">
+								<img src="@Url.Content(@user.CpcmUserImagePath)" class="bd-placeholder-img card-img-top" width="100%" height="225" alt="Иконка пользователя" style="object-fit: none; object-position: center;">
+							</a>
+						}
+						else
+						{
+							<a asp-controller="User" asp-action="Index" asp-route-UserId="@user.CpcmUserId">
+								<img src="@Url.Content(@user.CpcmUserImagePath)" class="bd-placeholder-img card-img-top" width="100%" height="225" alt="Иконка пользователя" style="object-fit: none; object-position: center;">
+							</a>
+						}
 						<div class="card-body">
-							<p class="card-text">@user.CpcmUserFirstName @user.CpcmUserSecondName @user.CpcmUserAdditionalName</p>
+							@if (user.CpcmUserNickName != null)
+							{
+								<a class="card-text link-dark nickname" asp-controller="User" asp-action="Index" asp-route-Nickname="@user.CpcmUserNickName">
+									@user.CpcmUserFirstName @user.CpcmUserSecondName @user.CpcmUserAdditionalName
+								</a>
+							}
+							else
+							{
+								<a class="card-text link-dark nickname" asp-controller="User" asp-action="Index" asp-route-UserId="@user.CpcmUserId" class="mt-0 mb-0">
+									@user.CpcmUserFirstName @user.CpcmUserSecondName @user.CpcmUserAdditionalName
+								</a>
+							}
 						</div>
 					</div>
 				</div>
