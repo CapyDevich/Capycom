@@ -466,7 +466,7 @@ namespace Capycom.Controllers
                 string filePathUserImage = "";
                 if (!user.IsDeletingUserImage)
                 {
-                    if (user.CpcmUserImage != null && user.CpcmUserImage.Length != 0)// Почему тут а не в [Remote] - чтобы клиент не посылал запросы дважды. Т.е. чтобы клиент не посылал запрос на валидацию, а потом всю форму. 
+                    if (user.CpcmUserImage != null && user.CpcmUserImage.Length != 0)// Почему тут а не в [Remote] - чтобы клиент не посылал запросы дважды. Т.е. чтобы клиент не посылал запрос на валидацию, а потом всю форму.  
                     {
                         CheckIFormFile("CpcmUserImage", user.CpcmUserImage, 8388608, new[] { "image/jpeg", "image/png", "image/gif" });
 
@@ -1192,7 +1192,7 @@ namespace Capycom.Controllers
 				//ViewData["additionalName"] = additionalName;
 				followerList1 = followerList1.Where(u => EF.Functions.Like(u.CpcmUserAdditionalName, $"%{filters.AdditionalName}%"));
 			}
-            if(CheckUserPrivilege("CpcmCanEditUsers", "True"))
+            if(filters.UserRole.HasValue&&CheckUserPrivilege("CpcmCanEditUsers", "True"))
             {
 				followerList1 = followerList1.Where(u => u.CpcmUserRole==filters.UserRole);
 			}
