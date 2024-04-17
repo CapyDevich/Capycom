@@ -78,7 +78,7 @@
 					@Html.AntiForgeryToken()
 					<img src="@Url.Content(Context.User.FindFirst("ProfileImage")?.Value)"
 						 class="rounded-circle m-2 user-icon">
-					<div class="row mt-auto mb-auto">
+					<div class="row mt-auto mb-auto mt-1 mb-1 me-1" style="width: 100vw">
 						<div class="input-group">
 							<input name="CpcmPostId" value="@Model.Post.CpcmPostId" hidden />
 							<textarea name="CpcmCommentText" type="text" class="form-control comment-text" id="commentText" rows="1" required></textarea>
