@@ -1787,7 +1787,10 @@ namespace Capycom.Controllers
             {
                 var guidString = HttpContext.User.FindFirst(c => c.Type == "CpcmUserId").Value;
                 friendRequest = await _context.CpcmUserfriends.Where(c => c.CmcpUserId == CpcmUserId
-                    && c.CmcpFriendId.ToString() == guidString).FirstOrDefaultAsync(); //Тут мы смотрим только те реквесты, которые адресованы нам. 
+                    && c.CmcpFriendId.ToString() == guidString)
+                    .Include(c =>c.CmcpFriend)
+                    .Include(c => c.CmcpUser)
+                    .FirstOrDefaultAsync(); //Тут мы смотрим только те реквесты, которые адресованы нам. 
             }
             catch (DbUpdateException ex)
             {
@@ -1803,7 +1806,11 @@ namespace Capycom.Controllers
             {
                 return StatusCode(404);
             }
-
+            if(friendRequest.CmcpUser.CpcmIsDeleted || friendRequest.CmcpFriend.CpcmIsDeleted)
+            {
+                _context.CpcmUserfriends.Remove(friendRequest);
+				return StatusCode(404);
+			}
             friendRequest.CpcmFriendRequestStatus = status;
 
             try
