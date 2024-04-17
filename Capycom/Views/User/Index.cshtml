@@ -13,7 +13,7 @@
 			{
 				<a asp-area="" asp-controller="User" asp-action="CreatePost" asp-route-postId="" class="btn btn-outline-primary col-12 mb-1">Добавить пост</a>
 			}
-			@if (!Model.User.CpcmUserBanned)
+			@if (!(Model.User.CpcmUserBanned && Model.User.CpcmIsDeleted))
 			{
 				@if (Model.Posts != null)
 				{
@@ -22,6 +22,14 @@
 						@await Html.PartialAsync("Post", item)
 					}
 				}
+			}
+			else if (Model.User.CpcmIsDeleted)
+			{
+				<div class="card mb-2">
+					<div class="card-body">
+						<h5 class="text-center">Аккаунт пользователя удалён ;;</h5>
+					</div>
+				</div>
 			}
 			else
 			{
