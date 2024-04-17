@@ -5,15 +5,31 @@
 			@if (Model.User?.CpcmUserNickName != null)
 			{
 				<a asp-controller="User" asp-action="Index" asp-route-Nickname="@Model.User?.CpcmUserNickName">
-					<img src="@Url.Content(@Model.User?.CpcmUserImagePath)"
-						 class="rounded-circle me-3" style="width: 50px; height: 50px; object-fit: cover;">
+					@if (@Model.User?.CpcmUserImagePath != string.Empty)
+					{
+						<img src="@Url.Content(@Model.User?.CpcmUserImagePath)"
+							 class="rounded-circle me-3" style="width: 50px; height: 50px; object-fit: cover;">
+					}
+					else
+					{
+						<img src="\uploads\default.png"
+							 class="rounded-circle me-3" style="width: 50px; height: 50px; object-fit: cover;">
+					}
 				</a>
 			}
 			else
 			{
 				<a asp-controller="User" asp-action="Index" asp-route-UserId="@Model.CpcmUserId">
-					<img src="@Url.Content(@Model.User?.CpcmUserImagePath)"
-						 class="rounded-circle me-3" style="width: 50px; height: 50px; object-fit: cover;">
+					@if (@Model.User?.CpcmUserImagePath != string.Empty)
+					{
+						<img src="@Url.Content(@Model.User?.CpcmUserImagePath)"
+							 class="rounded-circle me-3" style="width: 50px; height: 50px; object-fit: cover;">
+					}
+					else
+					{
+						<img src="\uploads\default.png"
+							 class="rounded-circle me-3" style="width: 50px; height: 50px; object-fit: cover;">
+					}
 				</a>
 			}
 			<div>
@@ -40,14 +56,56 @@
 			<div class="@(Model.CpcmImages.Count != 0 ? ("row row-cols-1 g-4 " + (Model.CpcmImages.Count > 1 ? "row-cols-md-2 row-cols-lg-2" : "")) : "")">
 				@{
 					if (Model.CpcmPostFatherNavigation == null)
+					{
 						foreach (var image in Model.CpcmImages.OrderBy(c => c.CpcmImageOrder))
 						{
 							<div class="col m-0" style="padding: 1px;">
 								<img src="@Url.Content(@image.CpcmImagePath)" class="rounded card-img-top h-100" alt="Изображение" style="object-fit: cover;">
 							</div>
 						}
-						else
-							@await Html.PartialAsync("PostChild", Model.CpcmPostFatherNavigation)
+					}
+					else if (Model.CpcmPostFatherNavigation.CpcmIsDeleted)
+					{
+						<div class="card mb-2">
+							<div class="card-body">
+								<div class="d-flex align-items-center">
+									Пост был удалён :(
+								</div>
+							</div>
+						</div>
+					}
+					else if (Model.CpcmPostFatherNavigation.CpcmPostBanned)
+					{
+						<div class="card mb-2">
+							<div class="card-body">
+								<div class="d-flex align-items-center">
+									Пост был забаннен :(
+								</div>
+							</div>
+						</div>
+					}
+					else if (Model.CpcmPostFatherNavigation.User.CpcmIsDeleted)
+					{
+						<div class="card mb-2">
+							<div class="card-body">
+								<div class="d-flex align-items-center">
+									Аккаунт автора поста был удалён :(
+								</div>
+							</div>
+						</div>
+					}
+					else if (Model.CpcmPostFatherNavigation.User.CpcmUserBanned)
+					{
+						<div class="card mb-2">
+							<div class="card-body">
+								<div class="d-flex align-items-center">
+									Автор поста был забаннен :(
+								</div>
+							</div>
+						</div>
+					}
+					else
+						@await Html.PartialAsync("PostChild", Model.CpcmPostFatherNavigation)
 				}
 			</div>
 		</div>

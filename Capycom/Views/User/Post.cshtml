@@ -5,15 +5,31 @@
 			@if (Model.Post.User.CpcmUserNickName != null)
 			{
 				<a asp-controller="User" asp-action="Index" asp-route-Nickname="@Model.Post.User?.CpcmUserNickName">
-					<img src="@Url.Content(@Model.Post.User?.CpcmUserImagePath)"
-						 class="rounded-circle me-3" style="width: 50px; height: 50px; object-fit: cover;">
+					@if (@Model.Post.User?.CpcmUserImagePath != string.Empty)
+					{
+						<img src="@Url.Content(@Model.Post.User?.CpcmUserImagePath)"
+							 class="rounded-circle me-3" style="width: 50px; height: 50px; object-fit: cover;">
+					}
+					else
+					{
+						<img src="\uploads\default.png"
+							 class="rounded-circle me-3" style="width: 50px; height: 50px; object-fit: cover;">
+					}
 				</a>
 			}
 			else
 			{
 				<a asp-controller="User" asp-action="Index" asp-route-UserId="@Model.Post.CpcmUserId">
-					<img src="@Url.Content(@Model.Post.User?.CpcmUserImagePath)"
-						 class="rounded-circle me-3" style="width: 50px; height: 50px; object-fit: cover;">
+					@if (@Model.Post.User?.CpcmUserImagePath != string.Empty)
+					{
+						<img src="@Url.Content(@Model.Post.User?.CpcmUserImagePath)"
+							 class="rounded-circle me-3" style="width: 50px; height: 50px; object-fit: cover;">
+					}
+					else
+					{
+						<img src="\uploads\default.png"
+							 class="rounded-circle me-3" style="width: 50px; height: 50px; object-fit: cover;">
+					}
 				</a>
 			}
 
@@ -60,8 +76,50 @@
 								<img src="@Url.Content(@image.CpcmImagePath)" class="rounded card-img-top h-100" alt="Изображение" style="object-fit: cover;">
 							</div>
 						}
+					else if (Model.Post.CpcmPostFatherNavigation.CpcmIsDeleted)
+					{
+						<div class="card mb-2">
+							<div class="card-body">
+								<div class="d-flex align-items-center">
+									Пост был удалён :(
+								</div>
+							</div>
+						</div>
+					}
+					else if (Model.Post.CpcmPostFatherNavigation.CpcmPostBanned)
+					{
+						<div class="card mb-2">
+							<div class="card-body">
+								<div class="d-flex align-items-center">
+									Пост был забаннен :(
+								</div>
+							</div>
+						</div>
+					}
+					else if (Model.Post.CpcmPostFatherNavigation.User.CpcmIsDeleted)
+					{
+						<div class="card mb-2">
+							<div class="card-body">
+								<div class="d-flex align-items-center">
+									Аккаунт автора поста был удалён :(
+								</div>
+							</div>
+						</div>
+					}
+					else if (Model.Post.CpcmPostFatherNavigation.User.CpcmUserBanned)
+					{
+						<div class="card mb-2">
+							<div class="card-body">
+								<div class="d-flex align-items-center">
+									Автор поста был забаннен :(
+								</div>
+							</div>
+						</div>
+					}
 					else
+					{
 						@await Html.PartialAsync("PostChild", Model.Post.CpcmPostFatherNavigation)
+					}
 				}
 			</div>
 			<div class="d-grid d-flex mt-1 justify-content-md-start">
