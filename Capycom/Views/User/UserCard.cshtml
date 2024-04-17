@@ -4,7 +4,7 @@
 		background-color: #f7f7f7;
 	}
 </style>
-@if (!@Model.CpcmUserBanned)
+@if (!(Model.CpcmUserBanned && Model.CpcmIsDeleted))
 {
 	<div class="row">
 		<div class="pt-2 pb-2 profile-block card mb-2">
@@ -142,7 +142,14 @@ else
 			</div>
 
 			<div class="text-center">
-				<h4 class="mb-0">Пользователь забаннен советом капибар</h4>
+				@if (!Model.CpcmIsDeleted)
+				{
+					<h4 class="mb-0">Пользователь забаннен советом капибар</h4>
+				}
+				else
+				{
+					<h4 class="mb-0">Аккаунт пользователя удалён ;;</h4>
+				}
 			</div>
 		</div>
 	</div>
