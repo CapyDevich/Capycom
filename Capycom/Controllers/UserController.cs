@@ -2157,6 +2157,10 @@ namespace Capycom.Controllers
 							}
 						}
 					}
+                    if(post.CpcmPostPublishedDate < post.CpcmPostCreationDate)
+                    {
+						post.CpcmPostPublishedDate = post.CpcmPostCreationDate;
+					}
 				}
                 
                 post.CpcmUserId = Guid.Parse(User.FindFirst(c => c.Type == "CpcmUserId").Value);
@@ -2578,8 +2582,8 @@ namespace Capycom.Controllers
 				}
 				else
 				{
-
-                    if (post.CpcmPostPublishedDate > DateTime.UtcNow)
+                    var datetimeNow = DateTime.UtcNow;
+                    if (post.CpcmPostPublishedDate > datetimeNow)
                     {
                         post.CpcmPostPublishedDate = editPost.NewPublishDate;
                         if (HttpContext.Request.Cookies.ContainsKey("TimeZone"))
@@ -2595,8 +2599,8 @@ namespace Capycom.Controllers
 
                                 }
                             }
-                        } 
-                    }
+                        }
+					}
 				}
 
 				//post.CpcmPostPublishedDate = DateTime.UtcNow;
