@@ -45,6 +45,9 @@
 				<option value="" selected disabled>Выберите город...</option>
 			</select>
 			<button type="button" class="btn btn-light addOptionButton" data-bs-toggle="modal" data-bs-target="#addingCityModal">+</button>
+			<button type="button" class="btn btn-light addOptionButton" onclick="clearSelect('city')">
+				<img src="~/images/eraser-fill.svg" />
+			</button>
 		</div>
 
 		<label asp-for="CpcmUserUniversity" class="form-label">Университет</label>
@@ -53,6 +56,9 @@
 				<option value="" selected disabled>Выберите университет...</option>
 			</select>
 			<button type="button" class="btn btn-light addOptionButton" data-bs-toggle="modal" data-bs-target="#addingUniversityModal">+</button>
+			<button type="button" class="btn btn-light addOptionButton" onclick="clearSelect('university')">
+				<img src="~/images/eraser-fill.svg" />
+			</button>
 		</div>
 
 		<label asp-for="CpcmUserSchool" class="form-label">Школа</label>
@@ -61,6 +67,9 @@
 				<option value="" selected disabled>Выберите школу...</option>
 			</select>
 			<button type="button" class="btn btn-light addOptionButton" data-bs-toggle="modal" data-bs-target="#addingSchoolModal">+</button>
+			<button type="button" class="btn btn-light addOptionButton" onclick="clearSelect('school')">
+				<img src="~/images/eraser-fill.svg" />
+			</button>
 		</div>
 		<div class="col mb-3">
 			<label asp-for="CpcmUserSite" class="form-label">Сайт</label>
