@@ -67,7 +67,22 @@
 					@if (@Model.CpcmUserSite != string.Empty)
 					{
 						<p class="m-0">Сайт</p>
-						<li class="list-group-item profile-block"><a href="@Model.CpcmUserSite">@Model.CpcmUserSite</a></li>
+						if (@Model.CpcmUserSite.StartsWith("http://") || @Model.CpcmUserSite.StartsWith("https://"))
+						{
+								<li class="list-group-item profile-block">
+									<a href="@Model.CpcmUserSite.ToString()">
+										@Model.CpcmUserSite
+									</a>
+								</li>
+						}
+						else
+						{
+							<li class="list-group-item profile-block">
+								<a href="http://@Model.CpcmUserSite.ToString()">
+									@Model.CpcmUserSite
+								</a>
+							</li>
+						}
 					}
 				</ul>
 			</div>
