@@ -2,6 +2,7 @@
 <div class="card mb-2" id="@Model.Post.CpcmPostId">
 	<div class="card-body">
 		<div class="d-flex align-items-center mb-3">
+			<div class="PostId" hidden>@Model.Post.CpcmPostId</div>
 			@if (Model.UserOwner.CpcmUserNickName != null)
 			{
 				<a asp-controller="User" asp-action="Index" asp-route-Nickname="@Model.UserOwner.CpcmUserNickName">

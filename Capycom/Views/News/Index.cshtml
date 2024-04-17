@@ -36,13 +36,16 @@
 					}
 				}
 			}
-			<button class="btn btn-primary container-fluid">Загрузить ещё</button>
+		</div>
+		<div class="col-lg-8 mx-auto">
+			<button class="btn btn-primary container-fluid" onclick="loadNews(this)">Загрузить ещё</button>
 		</div>
 	</div>
 </div>
 
 @await Html.PartialAsync("~/Views/User/RepostModal.cshtml")
 <script type="text/javascript" charset="utf-8" src="~/js/post.js"></script>
+<script src="~/js/load-more.js"></script>
 <!-- Модальное окно на подтверждение удаление поста -->
 <div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteModalLabel" aria-hidden="true">
 	<div class="modal-dialog">
