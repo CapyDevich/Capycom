@@ -2,12 +2,12 @@
 <div class="card mb-2" id="@Model.Post.CpcmPostId">
 	<div class="card-body">
 		<div class="d-flex align-items-center mb-3">
-			@if (Model.Post.User.CpcmUserNickName != null)
+			@if (Model.UserOwner.CpcmUserNickName != null)
 			{
-				<a asp-controller="User" asp-action="Index" asp-route-Nickname="@Model.Post.User?.CpcmUserNickName">
-					@if (@Model.Post.User?.CpcmUserImagePath != string.Empty)
+				<a asp-controller="User" asp-action="Index" asp-route-Nickname="@Model.UserOwner.CpcmUserNickName">
+					@if (@Model.UserOwner.CpcmUserImagePath != string.Empty)
 					{
-						<img src="@Url.Content(@Model.Post.User?.CpcmUserImagePath)"
+						<img src="@Url.Content(@Model.UserOwner.CpcmUserImagePath)"
 							 class="rounded-circle me-3" style="width: 50px; height: 50px; object-fit: cover;">
 					}
 					else
@@ -20,9 +20,9 @@
 			else
 			{
 				<a asp-controller="User" asp-action="Index" asp-route-UserId="@Model.Post.CpcmUserId">
-					@if (@Model.Post.User?.CpcmUserImagePath != string.Empty)
+					@if (@Model.UserOwner.CpcmUserImagePath != string.Empty)
 					{
-						<img src="@Url.Content(@Model.Post.User?.CpcmUserImagePath)"
+						<img src="@Url.Content(@Model.UserOwner.CpcmUserImagePath)"
 							 class="rounded-circle me-3" style="width: 50px; height: 50px; object-fit: cover;">
 					}
 					else
@@ -34,16 +34,16 @@
 			}
 
 			<div>
-				@if (Model.Post.User.CpcmUserNickName != null)
+				@if (Model.UserOwner.CpcmUserNickName != null)
 				{
-					<a class="link-dark nickname" asp-controller="User" asp-action="Index" asp-route-Nickname="@Model.Post.User?.CpcmUserNickName">
-						<h5>@Model.Post.User?.CpcmUserFirstName @Model.Post.User?.CpcmUserSecondName @Model.Post.User?.CpcmUserAdditionalName</h5>
+					<a class="link-dark nickname" asp-controller="User" asp-action="Index" asp-route-Nickname="@Model.UserOwner.CpcmUserNickName">
+						<h5>@Model.UserOwner.CpcmUserFirstName @Model.UserOwner.CpcmUserSecondName @Model.UserOwner.CpcmUserAdditionalName</h5>
 					</a>
 				}
 				else
 				{
 					<a class="link-dark nickname" asp-controller="User" asp-action="Index" asp-route-UserId="@Model.Post.CpcmUserId">
-						<h5>@Model.Post.User?.CpcmUserFirstName @Model.Post.User?.CpcmUserSecondName @Model.Post.User?.CpcmUserAdditionalName</h5>
+						<h5>@Model.UserOwner.CpcmUserFirstName @Model.UserOwner.CpcmUserSecondName @Model.UserOwner.CpcmUserAdditionalName</h5>
 					</a>
 				}
 				<a asp-controller="PostComment" asp-action="ViewPost" asp-route-postId="@Model.Post.CpcmPostId" class="text-muted">@Model.Post.CpcmPostPublishedDate?.ToString("dd.MM.yyyy HH:mm")</a>
@@ -118,7 +118,7 @@
 					}
 					else
 					{
-						@await Html.PartialAsync("PostChild", Model.Post.CpcmPostFatherNavigation)
+						@await Html.PartialAsync("~/Views/User/PostChild.cshtml", Model.Post.CpcmPostFatherNavigation)
 					}
 				}
 			</div>
