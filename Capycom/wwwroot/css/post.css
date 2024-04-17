@@ -9,3 +9,12 @@
 likes-count-show, comments-count, repost-count {
     margin-left: 7px;
 }
+
+a.nickname {
+    text-decoration: none;
+}
+
+a.nickname:hover {
+    text-decoration: underline;
+    transition: ease-in-out 0.2s;
+}
