@@ -165,57 +165,7 @@ namespace Capycom.Controllers
                 {
 
                     posts = await _context.CpcmPosts.Where(c => c.CpcmUserId == user.CpcmUserId && c.CpcmPostPublishedDate < DateTime.UtcNow && !c.CpcmIsDeleted).Include(c => c.CpcmImages).OrderByDescending(c => c.CpcmPostPublishedDate).Take(10).ToListAsync();
-                    if (HttpContext.User.Identity.IsAuthenticated && user.CpcmUserId.ToString() != User.FindFirstValue("CpcmUserId"))
-                    {
-                        var friend = await _context.CpcmUserfriends.Where(f => f.CmcpUserId == user.CpcmUserId && f.CmcpFriendId.ToString() == User.FindFirstValue("CpcmUserId")).FirstOrDefaultAsync(); // Тут мы смотрим подал ли ОН запрос в друзья НАМ.                    
-                        if (friend != null)
-                        {
-                            if (friend.CpcmFriendRequestStatus == true)
-                                user.IsFriend = FriendStatusEnum.HisApproved; // Будет кнопка удалить из друзей (удалить friendRequest)
-                            else if (friend.CpcmFriendRequestStatus == false)
-                                user.IsFriend = FriendStatusEnum.HisRejected; // будет кнопка подтвердить запрос в друзья
-                            else
-                                user.IsFriend = FriendStatusEnum.HisNotAnswered; // будет кнопка подтвердить запрос в друзья
-
-                        }
-                        else if (friend == null)
-                        {
-                            friend = await _context.CpcmUserfriends.Where(f => f.CmcpUserId.ToString() == User.FindFirstValue("CpcmUserId") && f.CmcpFriendId == user.CpcmUserId).FirstOrDefaultAsync();// Теперь мы смотрим подали ли МЫ запрос в друзья ЕМУ.
-                            if (friend != null)
-                            {
-                                if (friend.CpcmFriendRequestStatus == true)
-                                    user.IsFriend = FriendStatusEnum.OurApproved; // будет кнопка удалить из друзей
-                                else if (friend.CpcmFriendRequestStatus == false)
-                                    user.IsFriend = FriendStatusEnum.OurRejected; // будет кнопка отозвать запрос (удалить friendRequest)
-                                else
-                                    user.IsFriend = FriendStatusEnum.OurNotAnswered; // будет кнопка отозвать запрос (удалить friendRequest)
-                            }
-                            else
-                            {
-                                user.IsFriend = FriendStatusEnum.NoFriendRequest; // Будет кнопка добавить в друзья
-                            }
-                        }
-
-
-
-
-
-
-                        var follower = await _context.CpcmUserfollowers.Where(f => f.CpcmFollowerId.ToString() == User.FindFirstValue("CpcmUserId") && f.CpcmUserId == user.CpcmUserId).FirstOrDefaultAsync();
-                        if (follower == null)
-                        {
-                            user.IsFollowing = false;
-                        }
-                        else
-                        {
-                            user.IsFollowing = true;
-                        }
-                    }
-                    else
-                    {
-                        user.IsFriend = FriendStatusEnum.NoFriendRequest;
-                        user.IsFollowing = false;
-                    }
+                    
                 }
                 catch(DbUpdateException ex)
                 {
@@ -234,7 +184,71 @@ namespace Capycom.Controllers
                     return View("UserError");
                 } 
             }
-            ICollection<PostModel> postsWithLikesCount = new List<PostModel>();
+            try
+            {
+				if (HttpContext.User.Identity.IsAuthenticated && user.CpcmUserId.ToString() != User.FindFirstValue("CpcmUserId"))
+				{
+					var friend = await _context.CpcmUserfriends.Where(f => f.CmcpUserId == user.CpcmUserId && f.CmcpFriendId.ToString() == User.FindFirstValue("CpcmUserId")).FirstOrDefaultAsync(); // Тут мы смотрим подал ли ОН запрос в друзья НАМ.                    
+					if (friend != null)
+					{
+						if (friend.CpcmFriendRequestStatus == true)
+							user.IsFriend = FriendStatusEnum.HisApproved; // Будет кнопка удалить из друзей (удалить friendRequest)
+						else if (friend.CpcmFriendRequestStatus == false)
+							user.IsFriend = FriendStatusEnum.HisRejected; // будет кнопка подтвердить запрос в друзья
+						else
+							user.IsFriend = FriendStatusEnum.HisNotAnswered; // будет кнопка подтвердить запрос в друзья
+
+					}
+					else if (friend == null)
+					{
+						friend = await _context.CpcmUserfriends.Where(f => f.CmcpUserId.ToString() == User.FindFirstValue("CpcmUserId") && f.CmcpFriendId == user.CpcmUserId).FirstOrDefaultAsync();// Теперь мы смотрим подали ли МЫ запрос в друзья ЕМУ.
+						if (friend != null)
+						{
+							if (friend.CpcmFriendRequestStatus == true)
+								user.IsFriend = FriendStatusEnum.OurApproved; // будет кнопка удалить из друзей
+							else if (friend.CpcmFriendRequestStatus == false)
+								user.IsFriend = FriendStatusEnum.OurRejected; // будет кнопка отозвать запрос (удалить friendRequest)
+							else
+								user.IsFriend = FriendStatusEnum.OurNotAnswered; // будет кнопка отозвать запрос (удалить friendRequest)
+						}
+						else
+						{
+							user.IsFriend = FriendStatusEnum.NoFriendRequest; // Будет кнопка добавить в друзья
+						}
+					}
+					var follower = await _context.CpcmUserfollowers.Where(f => f.CpcmFollowerId.ToString() == User.FindFirstValue("CpcmUserId") && f.CpcmUserId == user.CpcmUserId).FirstOrDefaultAsync();
+					if (follower == null)
+					{
+						user.IsFollowing = false;
+					}
+					else
+					{
+						user.IsFollowing = true;
+					}
+				}
+				else
+				{
+					user.IsFriend = FriendStatusEnum.NoFriendRequest;
+					user.IsFollowing = false;
+				}
+			}
+			catch (DbUpdateException ex)
+			{
+				Log.Error(ex, "Ошибка при попытке получить посты пользователя из базы данных, а также статура дружбы и подписоты");
+				Response.StatusCode = 500;
+				ViewData["ErrorCode"] = 500;
+				ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
+				return View("UserError");
+			}
+			catch (DbException ex)
+			{
+				Log.Error(ex, "Ошибка при попытке получить посты пользователя из базы данных, а также статура дружбы и подписоты");
+				Response.StatusCode = 500;
+				ViewData["ErrorCode"] = 500;
+				ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
+				return View("UserError");
+			}
+			ICollection<PostModel> postsWithLikesCount = new List<PostModel>();
             UserProfileAndPostsModel userProfile = new();
             userProfile.User = user;
             foreach (var postik in posts)
