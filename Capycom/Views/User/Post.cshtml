@@ -60,8 +60,50 @@
 								<img src="@Url.Content(@image.CpcmImagePath)" class="rounded card-img-top h-100" alt="Изображение" style="object-fit: cover;">
 							</div>
 						}
+					else if (Model.Post.CpcmPostFatherNavigation.CpcmIsDeleted)
+					{
+						<div class="card mb-2">
+							<div class="card-body">
+								<div class="d-flex align-items-center">
+									Пост был удалён :(
+								</div>
+							</div>
+						</div>
+					}
+					else if (Model.Post.CpcmPostFatherNavigation.CpcmPostBanned)
+					{
+						<div class="card mb-2">
+							<div class="card-body">
+								<div class="d-flex align-items-center">
+									Пост был забаннен :(
+								</div>
+							</div>
+						</div>
+					}
+					else if (Model.Post.CpcmPostFatherNavigation.User.CpcmIsDeleted)
+					{
+						<div class="card mb-2">
+							<div class="card-body">
+								<div class="d-flex align-items-center">
+									Аккаунт автора поста был удалён :(
+								</div>
+							</div>
+						</div>
+					}
+					else if (Model.Post.CpcmPostFatherNavigation.User.CpcmUserBanned)
+					{
+						<div class="card mb-2">
+							<div class="card-body">
+								<div class="d-flex align-items-center">
+									Автор поста был забаннен :(
+								</div>
+							</div>
+						</div>
+					}
 					else
+					{
 						@await Html.PartialAsync("PostChild", Model.Post.CpcmPostFatherNavigation)
+					}
 				}
 			</div>
 			<div class="d-grid d-flex mt-1 justify-content-md-start">
