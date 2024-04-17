@@ -1,5 +1,6 @@
 ﻿'use strict'
 function loadNews(button) {
+    button.innerHTML = '<img src="../images/loading.svg" />';
     let dataToSend = {
         lastPostId: $(`.PostId`).last()[0].innerText
     };
@@ -11,6 +12,7 @@ function loadNews(button) {
             let postBody = document.getElementsByClassName('col-lg-8')[0];
             if (response != '') {
                 postBody.innerHTML += response;
+                button.innerHTML = 'Загрузить ещё';
             }
             else {
                 button.remove();
