@@ -2578,21 +2578,25 @@ namespace Capycom.Controllers
 				}
 				else
 				{
-					post.CpcmPostPublishedDate = editPost.NewPublishDate;
-					if (HttpContext.Request.Cookies.ContainsKey("TimeZone"))
-					{
-						string timezoneOffsetCookie = HttpContext.Request.Cookies["TimeZone"];
-						if (timezoneOffsetCookie != null)
-						{
-							if (int.TryParse(timezoneOffsetCookie, out int timezoneOffsetMinutes))
-							{
-								TimeSpan offset = TimeSpan.FromMinutes(timezoneOffsetMinutes);
 
-								post.CpcmPostPublishedDate += offset;
+                    if (post.CpcmPostPublishedDate > DateTime.UtcNow)
+                    {
+                        post.CpcmPostPublishedDate = editPost.NewPublishDate;
+                        if (HttpContext.Request.Cookies.ContainsKey("TimeZone"))
+                        {
+                            string timezoneOffsetCookie = HttpContext.Request.Cookies["TimeZone"];
+                            if (timezoneOffsetCookie != null)
+                            {
+                                if (int.TryParse(timezoneOffsetCookie, out int timezoneOffsetMinutes))
+                                {
+                                    TimeSpan offset = TimeSpan.FromMinutes(timezoneOffsetMinutes);
 
-							}
-						}
-					}
+                                    post.CpcmPostPublishedDate += offset;
+
+                                }
+                            }
+                        } 
+                    }
 				}
 
 				//post.CpcmPostPublishedDate = DateTime.UtcNow;
