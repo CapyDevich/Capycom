@@ -30,3 +30,11 @@ body {
     background-color: rgba(0, 0, 0, 0.05);
     transition: background-color ease-in-out 0.1s;
 }
+a.nickname {
+    text-decoration: none;
+}
+
+a.nickname:hover {
+    text-decoration: underline;
+    transition: ease-in-out 0.2s;
+}
