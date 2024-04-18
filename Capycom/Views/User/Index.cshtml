@@ -23,8 +23,8 @@
 					{
 						@await Html.PartialAsync("Post", item)
 					}
-						<button class="btn btn-primary container-fluid" onclick="loadProfilePost(this)">Загрузить ещё</button>
 					</div>
+					<button class="btn btn-primary container-fluid" onclick="loadProfilePost(this)">Загрузить ещё</button>
 				}
 			}
 			else if (Model.User.CpcmIsDeleted)
