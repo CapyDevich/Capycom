@@ -1273,9 +1273,9 @@ namespace Capycom.Controllers
             //List<CpcmUser> followerList2;
             try
             {
-                followerList1 =  _context.CpcmUserfollowers.Where(c => c.CpcmUserId == user.CpcmUserId && c.CpcmFollowersId.CompareTo(filters.lastId) > 0).Select(c => c.CpcmFollower);
-                //followerList2 = await _context.CpcmUserfollowers.Where(c => c.CpcmFollowerId == user.CpcmUserId).Select(c => c.CpcmUser).ToListAsync();
-            }
+				followerList1 = _context.CpcmUserfollowers.Where(c => c.CpcmUserId == user.CpcmUserId && c.CpcmFollowersId > filters.lastId).Select(c => c.CpcmFollower);
+				//followerList2 = await _context.CpcmUserfollowers.Where(c => c.CpcmFollowerId == user.CpcmUserId).Select(c => c.CpcmUser).ToListAsync();
+			}
             catch(DbUpdateException ex)
             {
 				Log.Error(ex, "Ошибка при попытке получить список подписчиков пользователя из базы данных {u}", user.CpcmUserId);
