@@ -2865,9 +2865,9 @@ namespace Capycom.Controllers
                 foreach (var postik in posts)
                 {
                     postik.CpcmPostFatherNavigation = await GetFatherPostReccurent(postik);
-					//long likes = await _context.Database.SqlQuery<long>($@"SELECT * FROM CPCM_POSTLIKES WHERE CPCM_PostID = '{postik.CpcmGroupId}'");
-					//long reposts = await _context.Database.SqlQuery<long>($@"SELECT * FROM CPCM_POSTREPOSTS WHERE CPCM_PostID = '{postik.CpcmGroupId}'");
-					if (HttpContext.Request.Cookies.ContainsKey("TimeZone"))
+                    //long likes = await _context.Database.SqlQuery<long>($@"SELECT * FROM CPCM_POSTLIKES WHERE CPCM_PostID = '{postik.CpcmGroupId}'");
+                    //long reposts = await _context.Database.SqlQuery<long>($@"SELECT * FROM CPCM_POSTREPOSTS WHERE CPCM_PostID = '{postik.CpcmGroupId}'");
+                    if (HttpContext.Request.Cookies.ContainsKey("TimeZone"))
 					{
 						string timezoneOffsetCookie = HttpContext.Request.Cookies["TimeZone"];
 						if (timezoneOffsetCookie != null)
