@@ -2825,7 +2825,7 @@ namespace Capycom.Controllers
 							}
 						}
 					}
-					postModels.Add(new() { Post = postik, LikesCount = likes, RepostsCount = reposts });
+					postModels.Add(new() { Post = postik, LikesCount = likes, RepostsCount = reposts, UserOwner = user });
 
                 }
             }
@@ -2889,7 +2889,7 @@ namespace Capycom.Controllers
 							}
 						}
 					}
-					postModels.Add(new() { Post = postik, LikesCount = 0, RepostsCount = 0 });
+					postModels.Add(new() { Post = postik, LikesCount = 0, RepostsCount = 0 , UserOwner = user });
                 }
             }
             catch (DbException ex)
@@ -2944,7 +2944,7 @@ namespace Capycom.Controllers
 							}
 						}
 					}
-					postModels.Add(new() { Post = postik, LikesCount = 0, RepostsCount = 0 });
+					postModels.Add(new() { Post = postik, LikesCount = 0, RepostsCount = 0, UserOwner = user });
                 }
             }
             catch (DbException ex)
