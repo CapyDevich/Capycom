@@ -80,20 +80,64 @@ function loadFollowers(button) {
             NickName: $.urlParam('NickName'),
             lastId: $('.follower').last()[0].id
         };
-        console.log(dataToSend);
         $.ajax({
             url: '/User/GetNextFollowers',
             type: 'POST',
             data: dataToSend,
             success: function (response) {
-                let feedBody = document.getElementById('followers-container')[0];
+                let followersContainer = document.getElementById('followers-container')[0];
                 if (response != '') {
-                    feedBody.innerHTML += response;
+                    followersContainer.innerHTML += response;
                     button.innerHTML = 'Загрузить ещё';
                 }
                 else {
                     button.remove();
                     document.getElementById('followers-footer').innerHTML += '<p class="text-center">Больше за этим пользователем никто не наблюдает<br/><span class="text-muted">(или нет?🤔)</span></p>'
+                }
+            },
+            error: function (obj) {
+                if (obj.status == 401)
+                    window.location.replace("/UserLogIn");
+                else
+                    alert(`:(\nСтатус: ${obj.status}`);
+                button.innerHTML = 'Загрузить ещё';
+            }
+        });
+    }
+}
+function loadFriends(button) {
+    if ($('.friend').length > 0) {
+        button.innerHTML = '<img src="../images/loading.svg" />';
+        $.urlParam = function (name) {
+            let results = new RegExp('[\?&]' + name + '=([^&#]*)').exec(window.location.href);
+            if (results == null) {
+                return null;
+            }
+            return decodeURI(results[1]) || 0;
+        }
+        let dataToSend = {
+            FirstName: $.urlParam('FirstName'),
+            SecondName: $.urlParam('SecondName'),
+            AdditionalName: $.urlParam('AdditionalName') == 0 ? null : $.urlParam('AdditionalName'),
+            CityId: $.urlParam('CityId'),
+            UniversityId: $.urlParam('UniversityId'),
+            SchoolId: $.urlParam('SchoolId'),
+            NickName: $.urlParam('NickName'),
+            lastId: $('.friend').last()[0].id
+        };
+        $.ajax({
+            url: '/User/GetNextFriends',
+            type: 'POST',
+            data: dataToSend,
+            success: function (response) {
+                let friendsContainer = document.getElementById('friends-container');
+                if (response != '') {
+                    friendsContainer.innerHTML += response;
+                    button.innerHTML = 'Загрузить ещё';
+                }
+                else {
+                    button.remove();
+                    document.getElementById('friends-footer').innerHTML += '<p class="text-center">Больше c этим пользователем никто не дружит<br/><span class="text-muted">(ну, кроме капибар, конечно)</span></p>'
                 }
             },
             error: function (obj) {
