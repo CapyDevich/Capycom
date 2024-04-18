@@ -1035,8 +1035,8 @@ namespace Capycom.Controllers
 			IQueryable<CpcmUser> friendList2;
 			try
             {
-                friendList1 =  _context.CpcmUserfriends.Where(c => c.CmcpUserId == user.CpcmUserId && c.CpcmFriendRequestStatus == true && c.CmcpFriendId.CompareTo(filters.lastId) > 0).Select(c => c.CmcpFriend);
-                friendList2 =  _context.CpcmUserfriends.Where(c => c.CmcpFriendId == user.CpcmUserId && c.CpcmFriendRequestStatus == true && c.CmcpUserId.CompareTo(filters.lastId) > 0).Select(c => c.CmcpUser);
+                friendList1 =  _context.CpcmUserfriends.Where(c => c.CmcpUserId == user.CpcmUserId && c.CpcmFriendRequestStatus == true && c.CmcpFriendId > filters.lastId).Select(c => c.CmcpFriend);
+                friendList2 =  _context.CpcmUserfriends.Where(c => c.CmcpFriendId == user.CpcmUserId && c.CpcmFriendRequestStatus == true && c.CmcpUserId > filters.lastId).Select(c => c.CmcpUser);
             }
             catch(DbUpdateException ex)
             {
@@ -1273,7 +1273,7 @@ namespace Capycom.Controllers
             //List<CpcmUser> followerList2;
             try
             {
-                followerList1 =  _context.CpcmUserfollowers.Where(c => c.CpcmUserId == user.CpcmUserId && c.CpcmFollowersId.CompareTo(filters.lastId) > 0).Select(c => c.CpcmFollower);
+                followerList1 =  _context.CpcmUserfollowers.Where(c => c.CpcmUserId == user.CpcmUserId && c.CpcmFollowersId > filters.lastId).Select(c => c.CpcmFollower);
                 //followerList2 = await _context.CpcmUserfollowers.Where(c => c.CpcmFollowerId == user.CpcmUserId).Select(c => c.CpcmUser).ToListAsync();
             }
             catch(DbUpdateException ex)
@@ -1471,7 +1471,7 @@ namespace Capycom.Controllers
 			//List<CpcmUser> followerList2;
 			try
 			{
-				groupsList = _context.CpcmGroupfollowers.Where(c => c.CpcmUserId == user.CpcmUserId && c.CpcmGroupId.CompareTo(filters.lastId) > 1).Select(c => c.CpcmGroup);
+				groupsList = _context.CpcmGroupfollowers.Where(c => c.CpcmUserId == user.CpcmUserId && c.CpcmGroupId > filters.lastId).Select(c => c.CpcmGroup);
 				//followerList2 = await _context.CpcmUserfollowers.Where(c => c.CpcmFollowerId == user.CpcmUserId).Select(c => c.CpcmUser).ToListAsync();
 			}
             catch(DbUpdateException ex)
@@ -2025,7 +2025,7 @@ namespace Capycom.Controllers
 			IQueryable<CpcmUser> friendList1;
 			try
 			{
-				friendList1 = _context.CpcmUserfriends.Where(c => c.CmcpFriendId == user.CpcmUserId && (c.CpcmFriendRequestStatus == null) && c.CmcpUserId.CompareTo(filters.lastId) > 0).Select(c => c.CmcpUser);//followerList2 = await _context.CpcmUserfollowers.Where(c => c.CpcmFollowerId == user.CpcmUserId).Select(c => c.CpcmUser).ToListAsync();
+				friendList1 = _context.CpcmUserfriends.Where(c => c.CmcpFriendId == user.CpcmUserId && (c.CpcmFriendRequestStatus == null) && c.CmcpUserId > filters.lastId).Select(c => c.CmcpUser);//followerList2 = await _context.CpcmUserfollowers.Where(c => c.CpcmFollowerId == user.CpcmUserId).Select(c => c.CpcmUser).ToListAsync();
 			}
             catch(DbUpdateException ex)
             {
@@ -3126,7 +3126,7 @@ namespace Capycom.Controllers
 			}
 			try
             {
-                var rez = await query.Where(u => u.CpcmUserId.CompareTo(filters.lastId) > 0).OrderBy(u => u.CpcmUserId).Take(10).ToListAsync();
+                var rez = await query.Where(u => u.CpcmUserId > filters.lastId).OrderBy(u => u.CpcmUserId).Take(10).ToListAsync();
                 return PartialView(rez);
             }
             catch (DbUpdateException ex)
