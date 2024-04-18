@@ -930,45 +930,45 @@ namespace Capycom.Controllers
                 return View("UserError");
             }
 
-            friendList1.Concat(friendList2);
+            var fr = friendList1.Concat(friendList2);
 
 			if (filters.CityId.HasValue)
 			{
 				//ViewData["cityId"]=cityId;
-				friendList1 = friendList1.Where(u => u.CpcmUserCity == filters.CityId);
+				fr = fr.Where(u => u.CpcmUserCity == filters.CityId);
 			}
 			if (filters.SchoolId.HasValue)
 			{
 				//ViewData["scgoolId"]=schoolId;
-				friendList1 = friendList1.Where(u => u.CpcmUserSchool == filters.SchoolId);
+				fr = fr.Where(u => u.CpcmUserSchool == filters.SchoolId);
 			}
 			if (filters.UniversityId.HasValue)
 			{
 				//ViewData["universityId"] = universityId;
-				friendList1 = friendList1.Where(u => u.CpcmUserUniversity == filters.UniversityId);
+				fr = fr.Where(u => u.CpcmUserUniversity == filters.UniversityId);
 			}
 			if (!string.IsNullOrEmpty(filters.FirstName))
 			{
 				//ViewData["firstName"] = firstName;
-				friendList1 = friendList1.Where(u => EF.Functions.Like(u.CpcmUserFirstName, $"%{filters.FirstName}%"));
+				fr = fr.Where(u => EF.Functions.Like(u.CpcmUserFirstName, $"%{filters.FirstName}%"));
 			}
 			if (!string.IsNullOrEmpty(filters.SecondName))
 			{
 				//ViewData["secondName"] = secondName;
-				friendList1 = friendList1.Where(u => EF.Functions.Like(u.CpcmUserSecondName, $"%{filters.SecondName}%"));
+				fr = fr.Where(u => EF.Functions.Like(u.CpcmUserSecondName, $"%{filters.SecondName}%"));
 			}
 			if (!string.IsNullOrEmpty(filters.AdditionalName))
 			{
 				//ViewData["additionalName"] = additionalName;
-				friendList1 = friendList1.Where(u => EF.Functions.Like(u.CpcmUserAdditionalName, $"%{filters.AdditionalName}%"));
+				fr = fr.Where(u => EF.Functions.Like(u.CpcmUserAdditionalName, $"%{filters.AdditionalName}%"));
 			}
             if(filters.UserRole.HasValue && CheckUserPrivilege("CpcmCanEditUsers", "True"))
             {
-				friendList1 = friendList1.Where(u => u.CpcmUserRole==filters.UserRole);
+				fr = fr.Where(u => u.CpcmUserRole==filters.UserRole);
 			}
             try
             {
-                var result = await friendList1.OrderBy(p => p.CpcmUserId).Take(10).ToListAsync();
+                var result = await fr.OrderBy(p => p.CpcmUserId).Take(10).ToListAsync();
                 return View(result);
             }
 			catch (DbUpdateException ex)
@@ -1051,44 +1051,44 @@ namespace Capycom.Controllers
                 return StatusCode(500);
             }
 
-            friendList1.Concat(friendList2);
+            var fr = friendList1.Concat(friendList2);
 			if (filters.CityId.HasValue)
 			{
 				//ViewData["cityId"]=cityId;
-				friendList1 = friendList1.Where(u => u.CpcmUserCity == filters.CityId);
+				fr = fr.Where(u => u.CpcmUserCity == filters.CityId);
 			}
 			if (filters.SchoolId.HasValue)
 			{
 				//ViewData["scgoolId"]=schoolId;
-				friendList1 = friendList1.Where(u => u.CpcmUserSchool == filters.SchoolId);
+				fr = fr.Where(u => u.CpcmUserSchool == filters.SchoolId);
 			}
 			if (filters.UniversityId.HasValue)
 			{
 				//ViewData["universityId"] = universityId;
-				friendList1 = friendList1.Where(u => u.CpcmUserUniversity == filters.UniversityId);
+				fr = fr.Where(u => u.CpcmUserUniversity == filters.UniversityId);
 			}
 			if (!string.IsNullOrEmpty(filters.FirstName))
 			{
 				//ViewData["firstName"] = firstName;
-				friendList1 = friendList1.Where(u => EF.Functions.Like(u.CpcmUserFirstName, $"%{filters.FirstName}%"));
+				fr = fr.Where(u => EF.Functions.Like(u.CpcmUserFirstName, $"%{filters.FirstName}%"));
 			}
 			if (!string.IsNullOrEmpty(filters.SecondName))
 			{
 				//ViewData["secondName"] = secondName;
-				friendList1 = friendList1.Where(u => EF.Functions.Like(u.CpcmUserSecondName, $"%{filters.SecondName}%"));
+				fr = fr.Where(u => EF.Functions.Like(u.CpcmUserSecondName, $"%{filters.SecondName}%"));
 			}
 			if (!string.IsNullOrEmpty(filters.AdditionalName))
 			{
 				//ViewData["additionalName"] = additionalName;
-				friendList1 = friendList1.Where(u => EF.Functions.Like(u.CpcmUserAdditionalName, $"%{filters.AdditionalName}%"));
+				fr = fr.Where(u => EF.Functions.Like(u.CpcmUserAdditionalName, $"%{filters.AdditionalName}%"));
 			}
             if(filters.UserRole.HasValue && CheckUserPrivilege("CpcmCanEditUsers", "True"))
             {
-                friendList1 = friendList1.Where(u => u.CpcmUserRole==filters.UserRole);
+				fr = fr.Where(u => u.CpcmUserRole==filters.UserRole);
             }
             try
             {
-                var result = await friendList1.OrderBy(p => p.CpcmUserId).Take(10).ToListAsync();
+                var result = await fr.OrderBy(p => p.CpcmUserId).Take(10).ToListAsync();
 				return PartialView(result);
 			}
             catch (DbUpdateException ex)
