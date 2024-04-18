@@ -1368,7 +1368,7 @@ namespace Capycom.Controllers
 			//List<CpcmUser> followerList2;
 			try
 			{
-				followerList1 = _context.CpcmGroupfollowers.Where(c => c.CpcmGroupId == group.CpcmGroupId && c.CpcmUserId.CompareTo(filters.lastId) > 0).Select(c => c.CpcmUser);
+				followerList1 = _context.CpcmGroupfollowers.Where(c => c.CpcmGroupId == group.CpcmGroupId && c.CpcmUserId > filters.lastId).Select(c => c.CpcmUser);
 				//followerList2 = await _context.CpcmUserfollowers.Where(c => c.CpcmFollowerId == user.CpcmUserId).Select(c => c.CpcmUser).ToListAsync();
 			}
 			catch(DbUpdateException ex)
@@ -1580,7 +1580,7 @@ namespace Capycom.Controllers
 			query.Where(u => u.CpcmIsDeleted == false && u.CpcmGroupBanned == false);
 			try
 			{
-				var rez = await query.OrderBy(u => u.CpcmGroupId).Where(g=>g.CpcmGroupId.CompareTo(filters.lastId)>0).Take(10).ToListAsync();
+				var rez = await query.OrderBy(u => u.CpcmGroupId).Where(g=>g.CpcmGroupId > filters.lastId).Take(10).ToListAsync();
 				return View(rez);
 			}
 			catch(DbUpdateException ex)
