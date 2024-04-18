@@ -418,7 +418,7 @@ namespace Capycom.Controllers
         public async Task<IActionResult> BanUnbanComment(Guid commentId)
         {
             Log.Information("Пользователь {User} пытается заблокировать/разблокировать комментарий {Comment}", HttpContext.User.FindFirstValue("CpcmUserId"), commentId);
-            if(!CheckUserPrivilege("CpcmCanDelUsersComments","True")){
+            if(!CheckUserAdminPrivilege("CpcmCanDelUsersComments","True")){
                 Log.Warning("Пользователь {User} пытается заблокировать/разблокировать комментарий {Comment}. У пользователя недостаточно прав", HttpContext.User.FindFirstValue("CpcmUserId"), commentId);
                 return StatusCode(403);
             }
@@ -848,7 +848,7 @@ namespace Capycom.Controllers
             }
         }
 
-        private bool CheckUserPrivilege(string claimType, string claimValue)
+        private bool CheckUserAdminPrivilege(string claimType, string claimValue)
         {
             var authFactor = HttpContext.User.FindFirst(c => c.Type == claimType && c.Value == claimValue);
             if (authFactor == null)
