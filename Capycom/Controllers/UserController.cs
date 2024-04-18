@@ -824,7 +824,7 @@ namespace Capycom.Controllers
         [HttpPost]
         public async Task<IActionResult> BanUnbanUser(Guid id)
         {
-            if (!CheckUserPrivilege("CpcmCanEditUsers", "True"))
+            if (!CheckUserAdminPrivilege("CpcmCanEditUsers", "True"))
             {
                 Log.Warning("Пользователь {user} не имеет прав на редактирование пользователей", User.FindFirstValue("CpcmUserId"));
                 return StatusCode(403);
@@ -962,7 +962,7 @@ namespace Capycom.Controllers
 				//ViewData["additionalName"] = additionalName;
 				fr = fr.Where(u => EF.Functions.Like(u.CpcmUserAdditionalName, $"%{filters.AdditionalName}%"));
 			}
-            if(filters.UserRole.HasValue && CheckUserPrivilege("CpcmCanEditUsers", "True"))
+            if(filters.UserRole.HasValue && CheckUserAdminPrivilege("CpcmCanEditUsers", "True"))
             {
 				fr = fr.Where(u => u.CpcmUserRole==filters.UserRole);
 			}
@@ -1082,7 +1082,7 @@ namespace Capycom.Controllers
 				//ViewData["additionalName"] = additionalName;
 				fr = fr.Where(u => EF.Functions.Like(u.CpcmUserAdditionalName, $"%{filters.AdditionalName}%"));
 			}
-            if(filters.UserRole.HasValue && CheckUserPrivilege("CpcmCanEditUsers", "True"))
+            if(filters.UserRole.HasValue && CheckUserAdminPrivilege("CpcmCanEditUsers", "True"))
             {
 				fr = fr.Where(u => u.CpcmUserRole==filters.UserRole);
             }
@@ -1206,7 +1206,7 @@ namespace Capycom.Controllers
 				//ViewData["additionalName"] = additionalName;
 				followerList1 = followerList1.Where(u => EF.Functions.Like(u.CpcmUserAdditionalName, $"%{filters.AdditionalName}%"));
 			}
-            if(filters.UserRole.HasValue&&CheckUserPrivilege("CpcmCanEditUsers", "True"))
+            if(filters.UserRole.HasValue&&CheckUserAdminPrivilege("CpcmCanEditUsers", "True"))
             {
 				followerList1 = followerList1.Where(u => u.CpcmUserRole==filters.UserRole);
 			}
@@ -1318,7 +1318,7 @@ namespace Capycom.Controllers
 				//ViewData["additionalName"] = additionalName;
 				followerList1 = followerList1.Where(u => EF.Functions.Like(u.CpcmUserAdditionalName, $"%{filters.AdditionalName}%"));
 			}
-            if(filters.UserRole.HasValue && CheckUserPrivilege("CpcmCanEditUsers", "True"))
+            if(filters.UserRole.HasValue && CheckUserAdminPrivilege("CpcmCanEditUsers", "True"))
             {
                 followerList1 = followerList1.Where(u => u.CpcmUserRole==filters.UserRole);
             }
@@ -2963,7 +2963,7 @@ namespace Capycom.Controllers
         [HttpPost]
         public async Task<IActionResult> BanUnbanPost(Guid id)
         {
-            if (!CheckUserPrivilege("CpcmCanDelUsersPosts", "True"))
+            if (!CheckUserAdminPrivilege("CpcmCanDelUsersPosts", "True"))
             {
                 Log.Warning("Пользователь {uu} не имеет прав на блокировку постов {u}", User.FindFirstValue("CpcmUserId"), id);
                 return StatusCode(403);
@@ -3045,7 +3045,7 @@ namespace Capycom.Controllers
                 //ViewData["additionalName"] = additionalName;
                 query = query.Where(u => EF.Functions.Like(u.CpcmUserAdditionalName, $"%{filters.AdditionalName}%"));
             }
-			if (filters.UserRole.HasValue && CheckUserPrivilege("CpcmCanEditUsers", "True"))
+			if (filters.UserRole.HasValue && CheckUserAdminPrivilege("CpcmCanEditUsers", "True"))
 			{
 				query = query.Where(u => u.CpcmUserRole == filters.UserRole);
 			}
@@ -3120,7 +3120,7 @@ namespace Capycom.Controllers
 				//ViewData["additionalName"] = additionalName;
 				query = query.Where(u => EF.Functions.Like(u.CpcmUserAdditionalName, $"%{filters.AdditionalName}%"));
 			}
-			if (filters.UserRole.HasValue && CheckUserPrivilege("CpcmCanEditUsers", "True"))
+			if (filters.UserRole.HasValue && CheckUserAdminPrivilege("CpcmCanEditUsers", "True"))
 			{
 				query = query.Where(u => u.CpcmUserRole == filters.UserRole);
 			}
@@ -3145,7 +3145,15 @@ namespace Capycom.Controllers
 
 
 
+        private string GetUserIdString()
+        {
+            if (User.Identity.IsAuthenticated)
+            {
+                return HttpContext.User.FindFirst(c => c.Type == "CpcmUserId").Value;
 
+			}
+            return null;
+        }
         private bool CheckUserPrivilege(string claimType, string claimValue, string id)
         {
             var authFactor = HttpContext.User.FindFirst(c => c.Type == "CpcmUserId" && c.Value == id || c.Type == claimType && c.Value == claimValue);
@@ -3168,7 +3176,7 @@ namespace Capycom.Controllers
 			Log.Information("Привелегии подтверждены {claim} {user}", claimValue, HttpContext.User.FindFirst(c => c.Type == "CpcmUserId").Value);
 			return true;
         }
-        private bool CheckUserPrivilege(string claimType, string claimValue)
+        private bool CheckUserAdminPrivilege(string claimType, string claimValue)
         {
             var authFactor = HttpContext.User.FindFirst(c => c.Type == claimType && c.Value == claimValue);
             if (authFactor == null)

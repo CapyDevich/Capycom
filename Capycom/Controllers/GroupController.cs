@@ -1062,7 +1062,7 @@ namespace Capycom.Controllers
 					Log.Warning("Группа не найдена {group}", groupId);
 					return StatusCode(404);
 				}
-				if (await CheckUserPrivilegeClaim("CpcmCanEditGroups", "True"))
+				if (await CheckUserAdminPrivilege("CpcmCanEditGroups", "True"))
 				{
 					group.CpcmGroupBanned = !group.CpcmGroupBanned;
 					await _context.SaveChangesAsync();
@@ -1304,12 +1304,12 @@ namespace Capycom.Controllers
 				//ViewData["additionalName"] = additionalName;
 				followerList1 = followerList1.Where(u => EF.Functions.Like(u.CpcmUserAdditionalName, $"%{filters.AdditionalName}%"));
 			}
-			if(filters.GroupRole.HasValue && true) //filters.GroupRole.HasValue && (await CheckUserPrivilegeClaim("CpcmCanEditGroups", "True") || await CheckOnlyGroupPrivelege("CpcmCanEditGroup",true, filters.GroupId))
+			if(filters.GroupRole.HasValue && true) //filters.GroupRole.HasValue && (await CheckUserAdminPrivilege("CpcmCanEditGroups", "True") || await CheckOnlyGroupPrivelege("CpcmCanEditGroup",true, filters.GroupId))
 			{
 				followerList1 = followerList1.Where(u => _context.CpcmGroupfollowers.Any( gf => gf.CpcmUserId==u.CpcmUserId && gf.CpcmGroupId==filters.GroupId && gf.CpcmUserRole==filters.GroupRole)
 				);
 			}
-			if(filters.UserRole.HasValue && await CheckUserPrivilegeClaim("CpcmCanEditGroups", "True"))
+			if(filters.UserRole.HasValue && await CheckUserAdminPrivilege("CpcmCanEditGroups", "True"))
 			{
 				followerList1 = followerList1.Where(u => u.CpcmUserRole == filters.UserRole);
 			}
@@ -1413,12 +1413,12 @@ namespace Capycom.Controllers
 				//ViewData["additionalName"] = additionalName;
 				followerList1 = followerList1.Where(u => EF.Functions.Like(u.CpcmUserAdditionalName, $"%{filters.AdditionalName}%"));
 			}
-			if (true) //filters.GroupRole.HasValue && (await CheckUserPrivilegeClaim("CpcmCanEditGroups", "True") || await CheckOnlyGroupPrivelege("CpcmCanEditGroup", true, filters.GroupId))
+			if (true) //filters.GroupRole.HasValue && (await CheckUserAdminPrivilege("CpcmCanEditGroups", "True") || await CheckOnlyGroupPrivelege("CpcmCanEditGroup", true, filters.GroupId))
 			{
 				followerList1 = followerList1.Where(u => _context.CpcmGroupfollowers.Any(gf => gf.CpcmUserId == u.CpcmUserId && gf.CpcmGroupId == filters.GroupId && gf.CpcmUserRole == filters.GroupRole)
 				);
 			}
-			if (filters.UserRole.HasValue && await CheckUserPrivilegeClaim("CpcmCanEditGroups", "True"))
+			if (filters.UserRole.HasValue && await CheckUserAdminPrivilege("CpcmCanEditGroups", "True"))
 			{
 				followerList1 = followerList1.Where(u => u.CpcmUserRole == filters.UserRole);
 			}
@@ -2000,7 +2000,7 @@ namespace Capycom.Controllers
 		public async Task<IActionResult> BanUnbanPost(Guid id)
 		{
 			Log.Information("Попытка забанить/разбанить пост {postGuid} пользователем {user}", id, HttpContext.User.FindFirstValue("CpcmUserId"));
-			if (!await CheckUserPrivilegeClaim("CpcmCanDelUsersPosts", "True"))
+			if (!await CheckUserAdminPrivilege("CpcmCanDelUsersPosts", "True"))
 			{
 				Log.Warning("Недостаточно прав для забана/разбана поста {id}", id);
 				return StatusCode(403);
@@ -2842,7 +2842,7 @@ namespace Capycom.Controllers
 
 		}
 
-		private async Task<bool> CheckUserPrivilegeClaim(string claimType, string claimValue)
+		private async Task<bool> CheckUserAdminPrivilege(string claimType, string claimValue)
 		{
 			var authFactor = HttpContext.User.FindFirst(c => c.Type == claimType && c.Value == claimValue);
 			if (authFactor == null)
