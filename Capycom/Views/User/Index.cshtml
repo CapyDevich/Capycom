@@ -15,12 +15,16 @@
 			}
 			@if (!(Model.User.CpcmUserBanned && Model.User.CpcmIsDeleted))
 			{
+				
 				@if (Model.Posts != null)
 				{
+					<div class="feed">
 					@foreach (var item in Model.Posts)
 					{
 						@await Html.PartialAsync("Post", item)
 					}
+						<button class="btn btn-primary container-fluid" onclick="loadProfilePost(this)">Загрузить ещё</button>
+					</div>
 				}
 			}
 			else if (Model.User.CpcmIsDeleted)
@@ -47,6 +51,7 @@
 	@await Html.PartialAsync("RepostModal")
 }
 <script type="text/javascript" charset="utf-8" src="~/js/post.js"></script>
+<script src="~/js/load-more.js"></script>
 @if (!Model.User.CpcmUserBanned)
 {
 	<!-- Модальное окно на подтверждение удаление поста -->

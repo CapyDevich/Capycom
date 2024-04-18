@@ -9,14 +9,14 @@ function loadNews(button) {
         type: 'POST',
         data: dataToSend,
         success: function (response) {
-            let postBody = document.getElementsByClassName('col-lg-8')[0];
+            let feedBody = document.getElementsByClassName('feed')[0];
             if (response != '') {
-                postBody.innerHTML += response;
+                feedBody.innerHTML += response;
                 button.innerHTML = 'Загрузить ещё';
             }
             else {
                 button.remove();
-                postBody.innerHTML += '<p class="text-center">У наших капибар закончились новости!</p>'
+                feedBody.innerHTML += '<p class="text-center">У наших капибар закончились новости!</p>'
             } 
         },
         error: function (obj) {
@@ -24,6 +24,38 @@ function loadNews(button) {
                 window.location.replace("/UserLogIn");
             else
                 alert(`:(\nСтатус: ${obj.status}`);
+            button.innerHTML = 'Загрузить ещё';
+        }
+    });
+
+}
+function loadProfilePost(button) {
+    button.innerHTML = '<img src="../images/loading.svg" />';
+    let dataToSend = {
+        userId: $(`#userID`)[0].innerText,
+        lastPostId: $(`.PostId`).last()[0].innerText
+    };
+    $.ajax({
+        url: '/User/GetNextPosts',
+        type: 'POST',
+        data: dataToSend,
+        success: function (response) {
+            let feedBody = document.getElementsByClassName('feed')[0];
+            if (response != '') {
+                feedBody.innerHTML += response;
+                button.innerHTML = 'Загрузить ещё';
+            }
+            else {
+                button.remove();
+                feedBody.innerHTML += '<p class="text-center">У наших капибар закончились новости!</p>'
+            }
+        },
+        error: function (obj) {
+            if (obj.status == 401)
+                window.location.replace("/UserLogIn");
+            else
+                alert(`:(\nСтатус: ${obj.status}`);
+            button.innerHTML = 'Загрузить ещё';
         }
     });
 
