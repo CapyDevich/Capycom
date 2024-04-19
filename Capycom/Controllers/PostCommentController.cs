@@ -120,6 +120,13 @@ namespace Capycom.Controllers
                 }
                 CpcmUser? userOwner = await _context.CpcmUsers.Where(u => u.CpcmUserId == post.CpcmUserId).FirstOrDefaultAsync();
                 CpcmGroup? groupOwner = await _context.CpcmGroups.Where(u => u.CpcmGroupId == post.CpcmGroupId).FirstOrDefaultAsync();
+				if (User.Identity.IsAuthenticated)
+				{
+					var authUserId = GetUserIdString();
+					var authFollower = await _context.CpcmGroupfollowers.Where(f => f.CpcmUserId == authUserId && f.CpcmGroupId == groupOwner.CpcmGroupId).Include(f => f.CpcmUserRoleNavigation).FirstOrDefaultAsync();
+                    groupOwner.UserFollowerRole = authFollower.CpcmUserRoleNavigation;
+                    post.Group.UserFollowerRole = authFollower.CpcmUserRoleNavigation;
+				}
                 long likes = await _context.Database.SqlQuery<long>($@"SELECT * FROM CPCM_POSTLIKES WHERE CPCM_PostID = {post.CpcmPostId}").CountAsync();
                 long reposts = await _context.Database.SqlQuery<long>($@"SELECT * FROM CPCM_POSTREPOSTS WHERE CPCM_PostID = {post.CpcmPostId}").CountAsync();
 
@@ -935,5 +942,13 @@ namespace Capycom.Controllers
             }
             return status;
         }
+		private Guid GetUserIdString()
+		{
+			if (User.Identity.IsAuthenticated)
+			{
+				return Guid.Parse(HttpContext.User.FindFirst(c => c.Type == "CpcmUserId").Value);
+			}
+			throw new InvalidOperationException("User is not authenticated");
+		}
     }
 }

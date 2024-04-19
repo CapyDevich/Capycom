@@ -8,6 +8,7 @@ using Serilog;
 using System.Data.Common;
 using System.Reflection;
 using System.Security.Claims;
+using System.Text.RegularExpressions;
 
 namespace Capycom.Controllers
 {
@@ -101,7 +102,7 @@ namespace Capycom.Controllers
 					posts = await _context.CpcmPosts.Where(c => c.CpcmGroupId == group.CpcmGroupId && c.CpcmPostPublishedDate < DateTime.UtcNow).Include(c => c.CpcmImages).OrderByDescending(c => c.CpcmPostPublishedDate).AsNoTracking().Take(10).ToListAsync();
 					if (User.Identity.IsAuthenticated)
 					{
-						follower = await _context.CpcmGroupfollowers.Where(f => f.CpcmGroupId == group.CpcmGroupId && f.CpcmUserId.ToString() == User.FindFirstValue("CpcmUserId")).FirstOrDefaultAsync();
+						follower = await _context.CpcmGroupfollowers.Where(f => f.CpcmGroupId == group.CpcmGroupId && f.CpcmUserId.ToString() == User.FindFirstValue("CpcmUserId")).Include(c => c.CpcmUserRole).FirstOrDefaultAsync();
 					}
 				}
 				catch(DbUpdateException ex)
@@ -124,6 +125,10 @@ namespace Capycom.Controllers
 			ICollection<CpcmPost> postsWithLikesCount = new List<CpcmPost>();
 			GroupProfileAndPostsModel groupProfile = new();
 			groupProfile.Group = group;
+			if (follower != null)
+			{
+				group.UserFollowerRole = follower.CpcmUserRoleNavigation;
+			}
 			foreach (var postik in posts)
 			{
 				postik.Group = group;
@@ -133,6 +138,7 @@ namespace Capycom.Controllers
 					postik.CpcmPostFatherNavigation = await GetFatherPostReccurent(postik);
 					long likes = await _context.Database.SqlQuery<long>($@"SELECT * FROM CPCM_POSTLIKES WHERE CPCM_PostID = {postik.CpcmPostId}").CountAsync();
 					long reposts = await _context.Database.SqlQuery<long>($@"SELECT * FROM CPCM_POSTREPOSTS WHERE CPCM_PostID = {postik.CpcmPostId}").CountAsync();
+					postik.Group = group;
 					postik.LikesCount = likes;
 					postik.RepostsCount = reposts;
 				}
@@ -177,14 +183,7 @@ namespace Capycom.Controllers
 					else
 						postik.IsLiked = false;
 
-					if (follower != null)
-					{
-						group.IsFollowed = true;
-						if(follower.CpcmUserRole==CpcmGroupfollower.AuthorRole || follower.CpcmUserRole == CpcmGroupfollower.AdminRole)
-						{
-							group.IsAdmin = true;
-						}
-					}
+					
 
 				}
 				if (HttpContext.Request.Cookies.ContainsKey("TimeZone"))
@@ -245,6 +244,14 @@ namespace Capycom.Controllers
 						long reposts = await _context.Database.SqlQuery<long>($@"SELECT * FROM CPCM_POSTREPOSTS WHERE CPCM_PostID = {postik.CpcmPostId} AND CPCM_IsDeleted = 0 ").CountAsync();
 						postik.LikesCount = likes;
 						postik.RepostsCount = reposts;
+
+						if (User.Identity.IsAuthenticated)
+						{
+							var authUserId = GetUserIdString();
+							var authFollower = await _context.CpcmGroupfollowers.Where(f => f.CpcmUserId == authUserId && f.CpcmGroupId == group.CpcmGroupId).Include(f => f.CpcmUserRoleNavigation).FirstOrDefaultAsync();
+							group.UserFollowerRole = authFollower.CpcmUserRoleNavigation;
+						}						
+						postik.Group = group;
 					}
 					catch(DbUpdateException ex)
 					{
@@ -1231,6 +1238,12 @@ namespace Capycom.Controllers
 				{
 					group = await _context.CpcmGroups.Where(c => c.CpcmGroupNickName == filters.NickName).FirstOrDefaultAsync();
 				}
+				if (User.Identity.IsAuthenticated)
+				{
+					var authUserId = GetUserIdString();
+					var authFollower = await _context.CpcmGroupfollowers.Where(f => f.CpcmUserId == authUserId && f.CpcmGroupId == group.CpcmGroupId).Include(f => f.CpcmUserRoleNavigation).FirstOrDefaultAsync();
+					group.UserFollowerRole = authFollower.CpcmUserRoleNavigation;
+				}
 			}
 			catch (DbException ex)
 			{
@@ -1316,7 +1329,7 @@ namespace Capycom.Controllers
 			try
 			{
 				var result = await followerList1.OrderBy(p => p.CpcmUserId).Take(10).ToListAsync();
-
+				ViewData["CurrentUserRole"] = group.UserFollowerRole;
 				return View(followerList1);
 			}
 			catch (DbException ex)
@@ -1341,6 +1354,12 @@ namespace Capycom.Controllers
 				else
 				{
 					group = await _context.CpcmGroups.Where(c => c.CpcmGroupNickName == filters.NickName).FirstOrDefaultAsync();
+				}
+				if (User.Identity.IsAuthenticated)
+				{
+					var authUserId = GetUserIdString();
+					var authFollower = await _context.CpcmGroupfollowers.Where(f => f.CpcmUserId == authUserId && f.CpcmGroupId == group.CpcmGroupId).Include(f => f.CpcmUserRoleNavigation).FirstOrDefaultAsync();
+					group.UserFollowerRole = authFollower.CpcmUserRoleNavigation;
 				}
 			}
 			catch(DbUpdateException ex)
@@ -1426,7 +1445,7 @@ namespace Capycom.Controllers
 			{
 				var result = await followerList1.OrderBy(p => p.CpcmUserId).Take(10).ToListAsync();
 				//followerList1.AddRange(followerList2);
-
+				ViewData["CurrentUserRole"] = group.UserFollowerRole;
 				return PartialView(followerList1);
 			}
 			catch (DbUpdateException ex)
@@ -2850,6 +2869,14 @@ namespace Capycom.Controllers
 				return false;
 			}
 			return true;
+		}
+		private Guid GetUserIdString()
+		{
+			if (User.Identity.IsAuthenticated)
+			{
+				return Guid.Parse(HttpContext.User.FindFirst(c => c.Type == "CpcmUserId").Value);
+			}
+			throw new InvalidOperationException("User is not authenticated");
 		}
 
 	}
