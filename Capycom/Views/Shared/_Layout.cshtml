@@ -46,13 +46,13 @@
 				{
 					<div class="dropdown" style="background-color: transparent;">
 						<button class="btn btn-light dropdown-toggle border-0 justify-content-sm-center" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false" style="background-color: transparent;">
-							<img src='@("../" + @Url.Content(Context.User.FindFirst("ProfileImage")?.Value))'
+							<img src='@Url.Content($"~/{Context.User.FindFirst("ProfileImage")?.Value}")'
 							class="rounded-circle me-3" style="width: 50px; height: 50px; object-fit: cover">
 						</button>
 						<ul class="dropdown-menu pb-0 dropdown-menu-end" aria-labelledby="dropdownMenuButton">
 							<li>
 								<a class="nav-link text-dark dropdown-button text-nowrap" asp-area="" asp-controller="User" asp-action="Index" style="font-size: 20px">
-									<img src='@("../" + @Url.Content(Context.User.FindFirst("ProfileImage")?.Value))'
+									<img src='@Url.Content($"~/{Context.User.FindFirst("ProfileImage")?.Value}")'
 										 class="rounded-circle me-3" style="display:inline-block; width: 50px; height: 50px; object-fit: cover">
 									Профиль
 									</a>
