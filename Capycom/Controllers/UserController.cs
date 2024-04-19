@@ -2132,7 +2132,12 @@ namespace Capycom.Controllers
                         return StatusCode(StatusCodes.Status400BadRequest);
                     if (fatherPost.CpcmUserId == Guid.Parse(User.FindFirst(c => c.Type == "CpcmUserId").Value))
                         return StatusCode(StatusCodes.Status417ExpectationFailed);
-                }
+					if (fatherPost.CpcmPostPublishedDate < DateTime.UtcNow)
+					{
+						Log.Information("Попытка репоста отложенного поста {Post}", post.CpcmPostId);
+                        return StatusCode(404);
+					}
+				}
                 post.CpcmPostFather = userPost.PostFatherId;
                 post.CpcmPostCreationDate = DateTime.UtcNow;
                 if (userPost.Published == null)
