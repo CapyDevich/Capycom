@@ -16,7 +16,7 @@
 				{
 					if (!(post.UserOwner.CpcmUserBanned && post.UserOwner.CpcmIsDeleted))
 					{
-						@await Html.PartialAsync("~/Views/User/Post.cshtml", post)
+						@await Html.PartialAsync("~/Views/User/NotPublishedPost.cshtml", post)
 					}
 					else if (post.UserOwner.CpcmIsDeleted)
 					{
