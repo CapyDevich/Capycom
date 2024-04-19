@@ -38,7 +38,7 @@ namespace Capycom.Controllers
 
 				// Получаем всех друзей пользователя
 				var friendIds = await _context.CpcmUserfriends
-					.Where(f => f.CmcpUserId == userId || f.CmcpFriendId == userId)
+					.Where(f => f.CmcpUserId == userId && f.CpcmFriendRequestStatus==true || f.CmcpFriendId == userId && f.CpcmFriendRequestStatus == true)
 					.Select(f => f.CmcpUserId == userId ? f.CmcpFriendId : f.CmcpUserId).ToListAsync();
 
 				// Получаем всех пользователей, на которых подписан пользователь
