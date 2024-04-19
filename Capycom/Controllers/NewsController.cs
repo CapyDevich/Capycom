@@ -43,8 +43,8 @@ namespace Capycom.Controllers
 
 				// Получаем всех пользователей, на которых подписан пользователь
 				var followerIds = await _context.CpcmUserfollowers
-					.Where(f => f.CpcmUserId == userId)
-					.Select(f => f.CpcmFollowersId).ToListAsync();
+					.Where(f => f.CpcmFollowerId == userId)
+					.Select(f => f.CpcmUserId).ToListAsync();
 
 				// Объединяем все ID в одну коллекцию
 				var allUserIds = friendIds.Union(followerIds).ToList();
