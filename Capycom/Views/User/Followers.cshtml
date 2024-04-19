@@ -23,6 +23,9 @@
 		<select data-live-search="true" name="CityId" class="selectpicker flex-grow-1" id="city" data-live-search="true" asp-items="ViewBag.CpcmUserCity">
 			<option value="" selected disabled>Выберите город...</option>
 		</select>
+		<button type="button" class="btn btn-light addOptionButton" onclick="clearSelect('city')">
+			<img src="~/images/eraser-fill.svg" />
+		</button>
 	</div>
 
 	<label for="CpcmUserUniversity" class="form-label">Университет</label>
@@ -30,6 +33,9 @@
 		<select data-live-search="true" name="UniversityId" class="selectpicker flex-grow-1" id="university" asp-items="ViewBag.CpcmUserUniversity">
 			<option value="" selected disabled>Выберите университет...</option>
 		</select>
+		<button type="button" class="btn btn-light addOptionButton" onclick="clearSelect('university')">
+			<img src="~/images/eraser-fill.svg" />
+		</button>
 	</div>
 
 	<label for="CpcmUserSchool" class="form-label">Школа</label>
@@ -37,6 +43,9 @@
 		<select data-live-search="true" name="SchoolId" class="selectpicker flex-grow-1" id="school" asp-items="ViewBag.CpcmUserSchool">
 			<option value="" selected disabled>Выберите школу...</option>
 		</select>
+		<button type="button" class="btn btn-light addOptionButton" onclick="clearSelect('school')">
+			<img src="~/images/eraser-fill.svg" />
+		</button>
 	</div>
 	<div class="row">
 		<button type="submit" class="btn btn-outline-primary">Найти</button>
@@ -100,3 +109,4 @@
 </div>
 <script src="~/js/friends.js"></script>
 <script src="~/js/load-more.js"></script>
+<script src="~/js/signup.js"></script>
