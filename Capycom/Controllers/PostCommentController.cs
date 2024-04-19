@@ -87,7 +87,7 @@ namespace Capycom.Controllers
                         return View("UserError");
                     } 
                 }
-                if(post.CpcmPostPublishedDate < DateTime.UtcNow)
+                if(post.CpcmPostPublishedDate > DateTime.UtcNow)
                 {
 					Log.Information("Попытка просмотра отложенного поста {Post}", postId);
 					Response.StatusCode = 404;
@@ -127,7 +127,7 @@ namespace Capycom.Controllers
                     groupOwner.UserFollowerRole = authFollower.CpcmUserRoleNavigation;
                     post.Group.UserFollowerRole = authFollower.CpcmUserRoleNavigation;
 				}
-                long likes = await _context.Database.SqlQuery<long>($@"SELECT * FROM CPCM_POSTLIKES WHERE CPCM_PostID = {post.CpcmPostId}").CountAsync();
+				long likes = await _context.Database.SqlQuery<long>($@"SELECT * FROM CPCM_POSTLIKES WHERE CPCM_PostID = {post.CpcmPostId}").CountAsync();
                 long reposts = await _context.Database.SqlQuery<long>($@"SELECT * FROM CPCM_POSTREPOSTS WHERE CPCM_PostID = {post.CpcmPostId}").CountAsync();
 
 				if (User.Identity.IsAuthenticated)
@@ -218,7 +218,7 @@ namespace Capycom.Controllers
                         return StatusCode(403, new { message = "Группа поста заблокирована" });
                     } 
                 }
-				if (post.CpcmPostPublishedDate < DateTime.UtcNow)
+				if (post.CpcmPostPublishedDate > DateTime.UtcNow)
 				{
 					Log.Information("Попытка просмкомментировать отложенный пост {Post}", post.CpcmPostId);
 					Response.StatusCode = 404;
@@ -643,7 +643,7 @@ namespace Capycom.Controllers
                         return StatusCode(403, new { message = "Группа поста заблокирована" });
                     } 
                 }
-				if (post.CpcmPostPublishedDate < DateTime.UtcNow)
+				if (post.CpcmPostPublishedDate > DateTime.UtcNow)
 				{
 					Log.Information("Попытка просмотра коммента ??? отложенного поста {Post}", post.CpcmPostId);
 					Response.StatusCode = 404;
@@ -740,7 +740,7 @@ namespace Capycom.Controllers
                         return StatusCode(403, new { message = "Группа поста заблокирована" });
                     } 
                 }
-				if (post.CpcmPostPublishedDate < DateTime.UtcNow)
+				if (post.CpcmPostPublishedDate > DateTime.UtcNow)
 				{
 					Log.Information("Попытка лайка отложенного поста {Post}", post.CpcmPostId);
 					Response.StatusCode = 404;
@@ -950,5 +950,5 @@ namespace Capycom.Controllers
 			}
 			throw new InvalidOperationException("User is not authenticated");
 		}
-    }
+	}
 }
