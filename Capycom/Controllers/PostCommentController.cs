@@ -87,6 +87,14 @@ namespace Capycom.Controllers
                         return View("UserError");
                     } 
                 }
+                if(post.CpcmPostPublishedDate < DateTime.UtcNow)
+                {
+					Log.Information("Попытка просмотра отложенного поста {Post}", postId);
+					Response.StatusCode = 404;
+					ViewData["ErrorCode"] = 404;
+					ViewData["Message"] = "Пост не найден";
+					return View("UserError");
+				}
 				var topComments = await _context.CpcmComments.Where(p => p.CpcmPostId == post.CpcmPostId && p.CpcmCommentFather == null && !p.CpcmIsDeleted).Include(c => c.CpcmImages).Include(c => c.CpcmUser).Take(10).OrderBy(u => u.CpcmCommentCreationDate).ToListAsync(); // впринципе эту итерацию можно пихнуть сразу в тот метод
                 foreach (var TopComment in topComments)
                 {
@@ -203,7 +211,15 @@ namespace Capycom.Controllers
                         return StatusCode(403, new { message = "Группа поста заблокирована" });
                     } 
                 }
-            }
+				if (post.CpcmPostPublishedDate < DateTime.UtcNow)
+				{
+					Log.Information("Попытка просмкомментировать отложенный пост {Post}", post.CpcmPostId);
+					Response.StatusCode = 404;
+					ViewData["ErrorCode"] = 404;
+					ViewData["Message"] = "Пост не найден";
+					return View("UserError");
+				}
+			}
             catch (DbUpdateException ex)
             {
                 Log.Error(ex, "Не удалось выполнить запрос к БД на выборку поста {Post}", userComment.CpcmPostId);
@@ -537,6 +553,14 @@ namespace Capycom.Controllers
 						}
 					}
 				}
+				if (comment.CpcmPost.CpcmPostPublishedDate < DateTime.UtcNow)
+				{
+					Log.Information("Попытка просмотра коммента ??? отложенного поста {Post}", comment.CpcmPost.CpcmPostId);
+					Response.StatusCode = 404;
+					ViewData["ErrorCode"] = 404;
+					ViewData["Message"] = "Пост не найден";
+					return View("UserError");
+				}
 				await _context.SaveChangesAsync();
                 return View(comment);
 
@@ -612,7 +636,14 @@ namespace Capycom.Controllers
                         return StatusCode(403, new { message = "Группа поста заблокирована" });
                     } 
                 }
-
+				if (post.CpcmPostPublishedDate < DateTime.UtcNow)
+				{
+					Log.Information("Попытка просмотра коммента ??? отложенного поста {Post}", post.CpcmPostId);
+					Response.StatusCode = 404;
+					ViewData["ErrorCode"] = 404;
+					ViewData["Message"] = "Пост не найден";
+					return View("UserError");
+				}
 
 
 
@@ -702,7 +733,14 @@ namespace Capycom.Controllers
                         return StatusCode(403, new { message = "Группа поста заблокирована" });
                     } 
                 }
-
+				if (post.CpcmPostPublishedDate < DateTime.UtcNow)
+				{
+					Log.Information("Попытка лайка отложенного поста {Post}", post.CpcmPostId);
+					Response.StatusCode = 404;
+					ViewData["ErrorCode"] = 404;
+					ViewData["Message"] = "Пост не найден";
+					return View("UserError");
+				}
 
 
 
