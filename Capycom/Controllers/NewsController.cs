@@ -85,7 +85,13 @@ namespace Capycom.Controllers
 					CpcmGroup? groupOwner = await _context.CpcmGroups.Where(u => u.CpcmGroupId == post.CpcmGroupId).FirstOrDefaultAsync();
 					long likes = await _context.Database.SqlQuery<long>($@"SELECT * FROM CPCM_POSTLIKES WHERE CPCM_PostID = {post.CpcmPostId}").CountAsync();
 					long reposts = await _context.Database.SqlQuery<long>($@"SELECT * FROM CPCM_POSTREPOSTS WHERE CPCM_PostID = {post.CpcmPostId}").CountAsync();
-
+					if (User.Identity.IsAuthenticated)
+					{
+						var authUserId = GetUserIdString();
+						var authFollower = await _context.CpcmGroupfollowers.Where(f => f.CpcmUserId == authUserId && f.CpcmGroupId == groupOwner.CpcmGroupId).Include(f => f.CpcmUserRoleNavigation).FirstOrDefaultAsync();
+						groupOwner.UserFollowerRole = authFollower.CpcmUserRoleNavigation;
+						post.Group.UserFollowerRole = authFollower.CpcmUserRoleNavigation;
+					}
 					if (HttpContext.Request.Cookies.ContainsKey("TimeZone"))
 					{
 						string timezoneOffsetCookie = HttpContext.Request.Cookies["TimeZone"];
@@ -270,6 +276,14 @@ namespace Capycom.Controllers
 				Log.Error(ex, "Не удалось выгрузить родительские посты {@fathrepostnavigation}", cpcmPostFatherNavigation);
 				throw;
 			}
+		}
+		private Guid GetUserIdString()
+		{
+			if (User.Identity.IsAuthenticated)
+			{
+				return Guid.Parse(HttpContext.User.FindFirst(c => c.Type == "CpcmUserId").Value);
+			}
+			throw new InvalidOperationException("User is not authenticated");
 		}
 	}
 }
