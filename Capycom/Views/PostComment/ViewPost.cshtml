@@ -76,8 +76,8 @@
 			<div class="card mt-2">
 				<form class="d-flex align-content-center" id="commentForm" enctype="multipart/form-data">
 					@Html.AntiForgeryToken()
-					<img src="@Url.Content(Context.User.FindFirst("ProfileImage")?.Value)"
-						 class="rounded-circle m-2 user-icon">
+					<img src='@("../" + @Url.Content(Context.User.FindFirst("ProfileImage")?.Value))'
+							class="rounded-circle m-2 user-icon" style="object-fit: cover;">
 					<div class="row mt-auto mb-auto mt-1 mb-1 me-1" style="width: 100vw">
 						<div class="input-group">
 							<input name="CpcmPostId" value="@Model.Post.CpcmPostId" hidden />
@@ -127,7 +127,7 @@
 								}
 								else
 								{
-									<img src="\uploads\default.png"
+									<img src="\images\default.png"
 										 class="rounded-circle mt-2 ms-2 me-2 user-icon">
 								}
 
