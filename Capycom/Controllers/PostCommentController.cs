@@ -714,7 +714,7 @@ namespace Capycom.Controllers
                     Log.Warning("Пользователь {User} пытается поставить/убрать лайк к посту {Post}. Автор поста удалён", HttpContext.User.FindFirstValue("CpcmUserId"), postId);
 					return StatusCode(404);
 				}
-				if (post.User != null || post.User.CpcmUserBanned)
+				if (post.User != null && post.User.CpcmUserBanned)
 				{
                     Log.Warning("Пользователь {User} пытается поставить/убрать лайк к посту {Post}. Автор поста заблокирован", HttpContext.User.FindFirstValue("CpcmUserId"), postId);
 					return StatusCode(403, new { message = "Автор поста заблокирован" });
