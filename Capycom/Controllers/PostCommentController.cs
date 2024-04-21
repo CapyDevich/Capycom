@@ -120,7 +120,7 @@ namespace Capycom.Controllers
                 }
                 CpcmUser? userOwner = await _context.CpcmUsers.Where(u => u.CpcmUserId == post.CpcmUserId).FirstOrDefaultAsync();
                 CpcmGroup? groupOwner = await _context.CpcmGroups.Where(u => u.CpcmGroupId == post.CpcmGroupId).FirstOrDefaultAsync();
-				if (User.Identity.IsAuthenticated)
+				if (User.Identity.IsAuthenticated && groupOwner != null )
 				{
 					var authUserId = GetUserIdString();
 					var authFollower = await _context.CpcmGroupfollowers.Where(f => f.CpcmUserId == authUserId && f.CpcmGroupId == groupOwner.CpcmGroupId).Include(f => f.CpcmUserRoleNavigation).FirstOrDefaultAsync();
