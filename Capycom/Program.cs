@@ -40,19 +40,33 @@ namespace Capycom
 			builder.Logging.ClearProviders();
 			var columnOptions = new ColumnOptions();
 			columnOptions.Store.Add(StandardColumn.LogEvent);
+#if DEBUG
 			Log.Logger = new LoggerConfiguration()
-				.Destructure.With<SerializationPolicy>()
-                .MinimumLevel.Debug() //Information()
-				.MinimumLevel.Override("Microsoft", LogEventLevel.Error) //все события от Microsoft, Microsoft.AspNetCore, Microsoft.AspNetCore.Hosting и т.д., будут записываться на уровне Information и выше.
-				.Enrich.FromLogContext()
-	            .WriteTo.Console()
-	            .WriteTo.Async(a=> a.File(path:"Logs/log-.txt", rollingInterval: RollingInterval.Day, retainedFileTimeLimit: TimeSpan.FromDays(30))) //formatter: new JsonFormatter()
-				.WriteTo.Async(a=> a.MSSqlServer(
-		            connectionString: builder.Configuration.GetSection("Test1")["OurDB"],
-					columnOptions: columnOptions,
-					sinkOptions: new MSSqlServerSinkOptions { TableName = "CPCM_LogEvents", AutoCreateSqlTable = true, }))
-	            .CreateLogger();
-
+					.Destructure.With<SerializationPolicy>()
+					.MinimumLevel.Debug() //Information()
+					.MinimumLevel.Override("Microsoft", LogEventLevel.Error) //все события от Microsoft, Microsoft.AspNetCore, Microsoft.AspNetCore.Hosting и т.д., будут записываться на уровне Information и выше.
+					.Enrich.FromLogContext()
+					.WriteTo.Console()
+					.WriteTo.Async(a => a.File(path: "Logs/log-.txt", rollingInterval: RollingInterval.Day, retainedFileTimeLimit: TimeSpan.FromDays(30))) //formatter: new JsonFormatter()
+					.WriteTo.Async(a => a.MSSqlServer(
+						connectionString: builder.Configuration.GetSection("Test1")["OurDB"],
+						columnOptions: columnOptions,
+						sinkOptions: new MSSqlServerSinkOptions { TableName = "CPCM_LogEvents", AutoCreateSqlTable = true, }))
+					.CreateLogger();
+#elif RELEASE
+			Log.Logger = new LoggerConfiguration()
+					.Destructure.With<SerializationPolicy>()
+					.MinimumLevel.Warning() //Information()
+					.MinimumLevel.Override("Microsoft", LogEventLevel.Error) //все события от Microsoft, Microsoft.AspNetCore, Microsoft.AspNetCore.Hosting и т.д., будут записываться на уровне Information и выше.
+					.Enrich.FromLogContext()
+					.WriteTo.Console()
+					.WriteTo.Async(a => a.File(path: "Logs/log-.txt", rollingInterval: RollingInterval.Day, retainedFileTimeLimit: TimeSpan.FromDays(30))) //formatter: new JsonFormatter()
+					.WriteTo.Async(a => a.MSSqlServer(
+						connectionString: builder.Configuration.GetSection("Test1")["OurDB"],
+						columnOptions: columnOptions,
+						sinkOptions: new MSSqlServerSinkOptions { TableName = "CPCM_LogEvents", AutoCreateSqlTable = true, }))
+					.CreateLogger();
+#endif
 			builder.Host.UseSerilog();
 			Serilog.Debugging.SelfLog.Enable(msg => Console.WriteLine(msg));
 
@@ -95,7 +109,7 @@ namespace Capycom
 
 			app.UseRateLimiter();
 
-			app.UseMiddleware<UserAuthMiddleware>();
+			//app.UseMiddleware<UserAuthMiddleware>();
 
 			app.MapControllerRoute(
                 name: "default",
