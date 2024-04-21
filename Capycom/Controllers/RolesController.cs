@@ -14,7 +14,7 @@ using System.Security.Claims;
 
 namespace Capycom.Controllers
 {
-	[Authorize(Policy = "CanEditRoles")]
+	[Authorize(Policy = "CpcmCanEditRoles")]
 	public class RolesController : Controller
     {
 		private readonly CapycomContext _context;
