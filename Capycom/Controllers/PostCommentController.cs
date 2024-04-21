@@ -545,7 +545,7 @@ namespace Capycom.Controllers
                         return View("UserError");
                     } 
                 }
-				comment.CpcmCommentBanned = !comment.CpcmCommentBanned;
+				//comment.CpcmCommentBanned = !comment.CpcmCommentBanned;
 				if (HttpContext.Request.Cookies.ContainsKey("TimeZone"))
 				{
 					string timezoneOffsetCookie = HttpContext.Request.Cookies["TimeZone"];
@@ -560,7 +560,7 @@ namespace Capycom.Controllers
 						}
 					}
 				}
-				if (comment.CpcmPost.CpcmPostPublishedDate < DateTime.UtcNow)
+				if (comment.CpcmPost.CpcmPostPublishedDate > DateTime.UtcNow)
 				{
 					Log.Information("Попытка просмотра коммента ??? отложенного поста {Post}", comment.CpcmPost.CpcmPostId);
 					Response.StatusCode = 404;
