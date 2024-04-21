@@ -20,10 +20,10 @@ namespace Capycom
 		{
 			using (var scope = _serviceProvider.CreateAsyncScope())
 			{
-				_context = scope.ServiceProvider.GetRequiredService<CapycomContext>();
+				var dbContext = scope.ServiceProvider.GetRequiredService<CapycomContext>();
 				if (context.User.Identity.IsAuthenticated)
 				{
-					var user = _context.CpcmUsers.FirstOrDefault(u => u.CpcmUserId.ToString() == context.User.FindFirstValue("CpcmUserId"));
+					var user = dbContext.CpcmUsers.FirstOrDefault(u => u.CpcmUserId.ToString() == context.User.FindFirstValue("CpcmUserId"));
 					if (user != null && user.CpcmUserBanned || user.CpcmIsDeleted)
 					{
 						await context.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
