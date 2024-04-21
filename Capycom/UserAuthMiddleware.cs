@@ -4,6 +4,7 @@ using System.Security.Claims;
 
 namespace Capycom
 {
+	[Obsolete]
     public class UserAuthMiddleware
     {
 		private readonly RequestDelegate _next;
