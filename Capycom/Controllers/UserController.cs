@@ -2259,13 +2259,14 @@ namespace Capycom.Controllers
 							return StatusCode(403);
 						}
 
-                        if(fathergroup == null)
+                        if(fatheruser ==null && fathergroup == null)
                         {
 							return StatusCode(404);
 						}
-                        if(fathergroup!=null && fathergroup.CpcmIsDeleted || fathergroup.CpcmGroupBanned)
+                        if(fatheruser == null && fathergroup != null)
                         {
-                            return StatusCode(403);
+                            if(fathergroup.CpcmIsDeleted || fathergroup.CpcmGroupBanned)
+                                return StatusCode(403);
                         }
 
 						
