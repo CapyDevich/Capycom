@@ -344,7 +344,7 @@ namespace Capycom.Controllers
                     return StatusCode(500, new { message = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку" });
                 }
                 //return StatusCode(200, new { status = true });
-                return PartialView(comment.CpcmImages = images);
+                return PartialView(comment);
             }
             Log.Information("Пользователь {User} пытается добавить комментарий к посту {Post}. Комментарий имеет некорректные значения , {@Comment}", HttpContext.User.FindFirstValue("CpcmUserId"), userComment.CpcmPostId, userComment);
             return StatusCode(200, new { status=false,message = "Комментарий имеет некорректные значения.",errors= ModelState.SelectMany(x => x.Value.Errors.Select(e => e.ErrorMessage)).ToList() });
