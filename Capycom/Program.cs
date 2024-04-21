@@ -72,6 +72,12 @@ namespace Capycom
 
 			builder.Services.AddControllersWithViews();
 
+			builder.Services.AddMvc(options =>
+			{
+				options.Filters.Add(typeof(AuthFilter)); // Добавляем фильтр аутентификации
+			});
+
+
 			builder.Services.AddRateLimiter(_ => _
 			.AddFixedWindowLimiter(policyName: "fixed", options =>
 			{
