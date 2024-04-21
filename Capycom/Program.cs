@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.RateLimiting;
 using System.Threading.RateLimiting;
 using System.Configuration;
 using AspNetCoreRateLimit;
+using Microsoft.AspNetCore.HttpOverrides;
 
 namespace Capycom
 {
@@ -92,6 +93,11 @@ namespace Capycom
 				options.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
 				options.QueueLimit = 100;
 			}));
+			builder.Services.AddSession(options =>
+			{
+				options.Cookie.HttpOnly = true; //  уки сессии будут доступны только через HTTP(S), а не через клиентский скрипт
+				options.Cookie.IsEssential = true; //  уки сессии €вл€ютс€ существенными, что позвол€ет их сохран€ть даже при отключенном согласии на куки
+			});
 
 			builder.Services.AddOptions();
 			builder.Services.AddMemoryCache();
@@ -116,10 +122,17 @@ namespace Capycom
 
             app.UseRouting();
 
-            app.UseAuthentication();
+			app.UseForwardedHeaders(new ForwardedHeadersOptions
+			{
+				ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+			});
+
+
+			app.UseAuthentication();
             app.UseAuthorization();
 
 			app.UseRateLimiter();
+			app.UseSession();
 
 			//app.UseMiddleware<UserAuthMiddleware>();
 
