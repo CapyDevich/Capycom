@@ -500,7 +500,7 @@ namespace Capycom.Controllers
                             catch (Exception ex)
                             {
                                 Log.Error(ex, "Ошибка при попытке сохранить изображение {@image} пользователя {user} на сервере", user.CpcmUserImage, User.FindFirstValue("CpcmUserId"));
-                                cpcmUser.CpcmUserImagePath = Path.Combine("images", "default.png");
+                                cpcmUser.CpcmUserImagePath = Path.Combine("\\","images", "default.png");
                             }
                         }
 
@@ -508,7 +508,7 @@ namespace Capycom.Controllers
                 }
                 else
                 {
-					cpcmUser.CpcmUserImagePath = Path.Combine("images", "default.png");
+					cpcmUser.CpcmUserImagePath = Path.Combine("\\","images", "default.png");
 				}
 
                 string filePathUserCoverImage = "";
