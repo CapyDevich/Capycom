@@ -76,17 +76,8 @@
 			<div class="card mt-2">
 				<form class="d-flex align-content-center" id="commentForm" enctype="multipart/form-data">
 					@Html.AntiForgeryToken()
-
-					@if (Context.User.FindFirst("ProfileImage")?.Value[0] != '\\')
-					{
-						<img src='@Url.Content($"~/{Context.User.FindFirst("ProfileImage")?.Value}")'
-							 class="rounded-circle m-2 user-icon" style="object-fit: cover;">
-					}
-					else
-					{
-						<img src='@Url.Content(Context.User.FindFirst("ProfileImage")?.Value)'
-							 class="rounded-circle m-2 user-icon" style="object-fit: cover;">
-					}
+					<img src='@Url.Content(Context.Session.GetString("ProfileImage"))'
+							class="rounded-circle m-2 user-icon" style="object-fit: cover;">
 					<div class="row mt-auto mb-auto mt-1 mb-1 me-1" style="width: 100vw">
 						<div class="input-group">
 							<input name="CpcmPostId" value="@Model.Post.CpcmPostId" hidden />
