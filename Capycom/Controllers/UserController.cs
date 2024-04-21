@@ -33,7 +33,7 @@ namespace Capycom.Controllers
 
 
         [Authorize]
-        public async Task<ActionResult> Index()
+		public async Task<ActionResult> Index()
         {
             string userId = HttpContext.User.FindFirst(c => c.Type == "CpcmUserId").Value;
 
@@ -89,7 +89,7 @@ namespace Capycom.Controllers
 
 
         [HttpGet]
-        public async Task<ActionResult> Index(UserFilterModel filter)
+		public async Task<ActionResult> Index(UserFilterModel filter)
         {
             CpcmUser? user;
             try
@@ -2148,7 +2148,7 @@ namespace Capycom.Controllers
 					}
 				}
                 post.CpcmPostFather = userPost.PostFatherId;
-                post.CpcmPostCreationDate = DateTime.UtcNow;
+                post.CpcmPostCreationDate = DateTime.UtcNow - new TimeSpan(0,1,0);
                 if (userPost.Published == null)
                 {
 					post.CpcmPostPublishedDate = post.CpcmPostCreationDate;

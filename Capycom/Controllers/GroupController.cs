@@ -1735,7 +1735,7 @@ namespace Capycom.Controllers
 				post.CpcmPostCreationDate = DateTime.UtcNow;
 				if (groupPost.Published == null)
 				{
-					post.CpcmPostPublishedDate = post.CpcmPostCreationDate;
+					post.CpcmPostPublishedDate = post.CpcmPostCreationDate - new TimeSpan(0, 1, 0);
 				}
 				else
 				{
