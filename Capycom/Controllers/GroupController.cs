@@ -1355,7 +1355,7 @@ namespace Capycom.Controllers
 				{
 					group = await _context.CpcmGroups.Where(c => c.CpcmGroupNickName == filters.NickName).FirstOrDefaultAsync();
 				}
-				if (User.Identity.IsAuthenticated)
+				if (User.Identity.IsAuthenticated && group != null)
 				{
 					var authUserId = GetUserIdString();
 					var authFollower = await _context.CpcmGroupfollowers.Where(f => f.CpcmUserId == authUserId && f.CpcmGroupId == group.CpcmGroupId).Include(f => f.CpcmUserRoleNavigation).FirstOrDefaultAsync();
