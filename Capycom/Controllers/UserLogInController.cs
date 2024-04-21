@@ -143,7 +143,7 @@ if (ModelState.IsValid)
 
         private List<Claim> GetUserClaims(CpcmUser user)
         {
-            List<Claim> returnClaims = new List<Claim> { new Claim("CpcmUserId", user.CpcmUserId.ToString()),new Claim("ProfileImage", string.IsNullOrEmpty(user.CpcmUserImagePath) ? Path.Combine("images", "default.png") : user.CpcmUserImagePath) };
+            List<Claim> returnClaims = new List<Claim> { new Claim("CpcmUserId", user.CpcmUserId.ToString()) };
             CpcmRole userRole = user.CpcmUserRoleNavigation;
             Type type = userRole.GetType();
             PropertyInfo[] properties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
@@ -155,7 +155,9 @@ if (ModelState.IsValid)
                     returnClaims.Add(new Claim(property.Name, property.GetValue(userRole).ToString()));          
                 }       
             }
-            return returnClaims;
+			HttpContext.Session.SetString("ProfileImage", string.IsNullOrEmpty(user.CpcmUserImagePath) ? Path.Combine("images", "default.png") : user.CpcmUserImagePath); 
+
+			return returnClaims;
         }
     }
 }

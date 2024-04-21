@@ -604,12 +604,13 @@ namespace Capycom.Controllers
 
                 if (user.CpcmUserImage != null && user.CpcmUserImage.Length != 0)
                 {
-                    var identity = new ClaimsIdentity(User.Identity);
-                    identity.RemoveClaim(User.FindFirst("ProfileImage"));
-                    identity.AddClaim(new Claim("ProfileImage", cpcmUser.CpcmUserImagePath));
-                    var principal = new ClaimsPrincipal(identity);
-                    HttpContext.User = principal; 
-                }
+					//var identity = new ClaimsIdentity(HttpContext.User.Identity);
+					//identity.RemoveClaim(HttpContext.User.FindFirst("ProfileImage"));
+					//identity.AddClaim(new Claim("ProfileImage", cpcmUser.CpcmUserImagePath));
+					//var principal = new ClaimsPrincipal(identity);
+					//HttpContext.User = principal;
+					HttpContext.Session.SetString("ProfileImage", cpcmUser.CpcmUserImagePath);
+				}
 
 
 				if (cpcmUser.CpcmUserNickName != null)
