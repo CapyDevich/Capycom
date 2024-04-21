@@ -163,7 +163,7 @@ namespace Capycom.Controllers
                 }
                 else
                 {
-                    cpcmUser.CpcmUserImagePath = Path.Combine("images", "default.png");
+                    cpcmUser.CpcmUserImagePath = Path.Combine("\\","images", "default.png");
 
 				}
 
