@@ -28,7 +28,13 @@ namespace Capycom
 
             builder.Services.Configure<MyConfig>((options => builder.Configuration.GetSection("MyConfig").Bind(options)));
 
-            builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme).AddCookie(options => options.LoginPath = "/UserLogIn") ;
+            builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme).AddCookie(options => 
+			{
+				options.LoginPath = "/UserLogIn";
+				options.LogoutPath = "/UserLogIn/LogOut";
+				options.AccessDeniedPath = "/Error/Code403";
+			}
+			) ;
 
             builder.Services.AddAuthorization();
 
