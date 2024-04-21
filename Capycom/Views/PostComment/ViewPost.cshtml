@@ -150,7 +150,7 @@
 							</a>
 						}
 						<div class="row p-1">
-							@if (Model.Post.User?.CpcmUserNickName != null)
+							@if (@comment.CpcmUser?.CpcmUserNickName != null)
 							{
 								<div>
 									<a class="mt-0 mb-0 link-dark nickname" asp-controller="User" asp-action="Index" asp-route-Nickname="@comment.CpcmUser.CpcmUserNickName">
