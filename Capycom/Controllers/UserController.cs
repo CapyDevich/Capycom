@@ -2129,9 +2129,18 @@ namespace Capycom.Controllers
                 {
                     var fatherPost = await _context.CpcmPosts.FindAsync(userPost.PostFatherId);
                     if (fatherPost == null)
-                        return StatusCode(StatusCodes.Status400BadRequest);
+                    {
+						Log.Warning("репост поста которого нет {@user}", User.FindFirst(c => c.Type == "CpcmUserId").Value);
+						return StatusCode(StatusCodes.Status400BadRequest);
+					}
+
                     if (fatherPost.CpcmUserId == Guid.Parse(User.FindFirst(c => c.Type == "CpcmUserId").Value))
-                        return StatusCode(StatusCodes.Status417ExpectationFailed);
+                    {
+                        Log.Warning("Саморепост {@user}", User.FindFirst(c => c.Type == "CpcmUserId").Value);
+						return StatusCode(StatusCodes.Status417ExpectationFailed);
+
+					}
+
 					if (fatherPost.CpcmPostPublishedDate > DateTime.UtcNow)
 					{
 						Log.Information("Попытка репоста отложенного поста {Post}", post.CpcmPostId);
