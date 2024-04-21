@@ -29,7 +29,7 @@
 			</div>
 			<div class="mt-1">
 				<ul class="list-group list-group-flush">
-					@if (@Model.CpcmUserAbout != string.Empty)
+					@if (@Model.CpcmUserAbout != null && @Model.CpcmUserAbout != string.Empty)
 					{
 						<p class="m-0">О себе</p>
 						<li class="list-group-item profile-block">@Model.CpcmUserAbout</li>
@@ -49,22 +49,22 @@
 						<p class="m-0">Школа</p>
 						<li class="list-group-item profile-block">@Model.CpcmUserSchoolNavigation.CpcmSchoolName</li>
 					}
-					@if (@Model.CpcmUserBooks != string.Empty)
+					@if (@Model.CpcmUserBooks != null && @Model.CpcmUserBooks != string.Empty)
 					{
 						<p class="m-0">Книги</p>
 						<li class="list-group-item profile-block">@Model.CpcmUserBooks</li>
 					}
-					@if (@Model.CpcmUserFilms != string.Empty)
+					@if (@Model.CpcmUserFilms != null && @Model.CpcmUserFilms != string.Empty)
 					{
 						<p class="m-0">Фильмы</p>
 						<li class="list-group-item profile-block">@Model.CpcmUserFilms</li>
 					}
-					@if (@Model.CpcmUserMusics != string.Empty)
+					@if (@Model.CpcmUserMusics != null && @Model.CpcmUserMusics != string.Empty)
 					{
 						<p class="m-0">Музыка</p>
 						<li class="list-group-item profile-block">@Model.CpcmUserMusics</li>
 					}
-					@if (@Model.CpcmUserSite != string.Empty)
+					@if (@Model.CpcmUserSite != null && @Model.CpcmUserSite != string.Empty)
 					{
 						<p class="m-0">Сайт</p>
 						if (@Model.CpcmUserSite.StartsWith("http://") || @Model.CpcmUserSite.StartsWith("https://"))
