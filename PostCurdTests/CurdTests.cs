@@ -12,11 +12,13 @@ using Serilog;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Http;
 using System.ComponentModel.DataAnnotations;
+using System.Diagnostics;
 namespace PostCurdTests
 {
-	public class CurdTests
+	public class CurdTests : IDisposable
 	{
 		private readonly CapycomContext context;
+		private readonly UserController controller;
 
 		public CurdTests()
 		{
@@ -24,6 +26,7 @@ namespace PostCurdTests
 				.UseInMemoryDatabase(Guid.NewGuid().ToString())
 				.Options;
 			context = new CapycomContext(options);
+			context.Database.EnsureDeleted();
 			context.Database.EnsureCreated();
 
 			//AddUsers
@@ -148,8 +151,76 @@ namespace PostCurdTests
 			posts[15].CpcmPostPublishedDate = posts[15].CpcmPostCreationDate + TimeSpan.FromHours(1);
 			context.CpcmPosts.AddRange(posts);
 			context.SaveChanges();
+
+			controller = new UserController(A.Fake<ILogger<UserController>>(), context, A.Fake<IOptions<MyConfig>>());
+			var httpcontext = new DefaultHttpContext();
+			controller.ControllerContext = new ControllerContext()
+			{
+				HttpContext = httpcontext
+			};
+			controller.User.AddIdentity(new ClaimsIdentity(new List<Claim>() { new Claim("CpcmUserId", "123") }, "Cookies"));
 		}
 
+		
+
+		[Fact]
+		public async Task CreatePostP_SendNullModel_ExpectViewWithMessageAnd400Code()
+		{
+			// Arrange
+
+			
+
+			var userPostModel = new Capycom.Models.UserPostModel();
+			var validationContext = new ValidationContext(userPostModel);
+			var validationResults = new List<ValidationResult>();
+			Validator.TryValidateObject(userPostModel, validationContext, validationResults, true);
+			if (validationResults.Any())
+			{
+				foreach (var validationResult in validationResults)
+				{
+					controller.ModelState.AddModelError(validationResult.MemberNames.First(), validationResult.ErrorMessage);
+				}
+			}
+
+			//Act
+
+			var result = await controller.CreatePostP(new Capycom.Models.UserPostModel());
+
+
+			//Asserts
+
+			result.Should().BeAssignableTo<IActionResult>();
+			//if (result is ObjectResult)
+			//{
+			//	httpcontext.Response.StatusCode.Should().Be(200);
+			//}
+			//if (result is StatusCodeResult statusCodeResult)
+			//{
+			//	statusCodeResult.StatusCode.Should().Be(200);
+			//}
+			if (result is ViewResult viewResult)
+			{
+				viewResult.ViewName.Should().Be("CreatePost");
+				//viewResult.StatusCode.Should().Be(400);
+				controller.HttpContext.Response.StatusCode.Should().Be(400);
+				viewResult.ViewData["Message"].Should().NotBeNull();
+			}
+			//else if (result is PartialViewResult partialViewResult)
+			//{
+			//	//var model = partialViewResult.Model;
+			//	//model.Should().NotBeNull();
+			//	//model.ToString().Should().Contain("expected text");
+
+			//	partialViewResult.ViewName.Should().Be("UserError");
+			//	partialViewResult.ViewData["Message"].Should().NotBeNull();
+			//}
+
+		}
+
+
+
+
+		#region Вспомогательные методы
 		private static Guid NextGuid(Guid guid)
 		{
 			var guidStr = guid.ToString("N");
@@ -161,69 +232,10 @@ namespace PostCurdTests
 			return Guid.ParseExact(newGuidStr, "N");
 		}
 
-		[Fact]
-		public async Task CreatePostP_SendNullModel_ExpectViewWithMessageAnd400Code()
+		public void Dispose()
 		{
-			// Arrange
-
-			var userController = new UserController(A.Fake<ILogger<UserController>>(),context,A.Fake<IOptions<MyConfig>>());
-			var httpcontext = new DefaultHttpContext();
-			userController.ControllerContext = new ControllerContext()
-			{
-				HttpContext = httpcontext
-			};
-			userController.User.AddIdentity(new ClaimsIdentity(new List<Claim>() {new Claim ("CpcmUserId", "123") }, "Cookies"));
-
-			var userPostModel = new Capycom.Models.UserPostModel();
-			var validationContext = new ValidationContext(userPostModel);
-			var validationResults = new List<ValidationResult>();
-			Validator.TryValidateObject(userPostModel, validationContext, validationResults, true);
-			if (validationResults.Any())
-			{
-				foreach (var validationResult in validationResults)
-				{
-					userController.ModelState.AddModelError(validationResult.MemberNames.First(), validationResult.ErrorMessage);
-				}
-			}
-
-			//Act
-
-			var result = await userController.CreatePostP(new Capycom.Models.UserPostModel());
-
-
-			//Asserts
-
-			//Assert.True(true);
-			result.Should().BeAssignableTo<IActionResult>();
-			//if (result is ObjectResult)
-			//{
-			//	httpcontext.Response.StatusCode.Should().Be(200);
-			//}
-
-			if (result is StatusCodeResult statusCodeResult)
-			{
-				statusCodeResult.StatusCode.Should().Be(200);
-			}
-			else if (result is ViewResult viewResult)
-			{
-				viewResult.ViewName.Should().Be("CreatePost");
-				//viewResult.StatusCode.Should().Be(400);
-				httpcontext.Response.StatusCode.Should().Be(400);
-				viewResult.ViewData["Message"].Should().NotBeNull();
-			}
-			else if (result is PartialViewResult partialViewResult)
-			{
-				//var model = partialViewResult.Model;
-				//model.Should().NotBeNull();
-				//model.ToString().Should().Contain("expected text");
-
-				partialViewResult.ViewName.Should().Be("UserError");
-				partialViewResult.ViewData["Message"].Should().NotBeNull();
-			}
-			//else
-			//{
-			//	Assert.Fail("Unexpected result type");
-			//}
+			context.Dispose();
 		}
+		#endregion
 	}
 }
