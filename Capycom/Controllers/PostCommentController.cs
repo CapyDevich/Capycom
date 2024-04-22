@@ -87,7 +87,15 @@ namespace Capycom.Controllers
                         return View("UserError");
                     } 
                 }
-				var topComments = await _context.CpcmComments.Where(p => p.CpcmPostId == post.CpcmPostId && p.CpcmCommentFather == null).Include(c => c.CpcmImages).Include(c => c.CpcmUser).Take(10).OrderBy(u => u.CpcmCommentCreationDate).ToListAsync(); // впринципе эту итерацию можно пихнуть сразу в тот метод
+                if(post.CpcmPostPublishedDate > DateTime.UtcNow)
+                {
+					Log.Information("Попытка просмотра отложенного поста {Post}", postId);
+					Response.StatusCode = 404;
+					ViewData["ErrorCode"] = 404;
+					ViewData["Message"] = "Пост не найден";
+					return View("UserError");
+				}
+				var topComments = await _context.CpcmComments.Where(p => p.CpcmPostId == post.CpcmPostId && p.CpcmCommentFather == null && !p.CpcmIsDeleted).Include(c => c.CpcmImages).Include(c => c.CpcmUser).Take(10).OrderBy(u => u.CpcmCommentCreationDate).ToListAsync(); // впринципе эту итерацию можно пихнуть сразу в тот метод
                 foreach (var TopComment in topComments)
                 {
                     TopComment.InverseCpcmCommentFatherNavigation = await GetCommentChildrenReccurent(TopComment);
@@ -112,7 +120,14 @@ namespace Capycom.Controllers
                 }
                 CpcmUser? userOwner = await _context.CpcmUsers.Where(u => u.CpcmUserId == post.CpcmUserId).FirstOrDefaultAsync();
                 CpcmGroup? groupOwner = await _context.CpcmGroups.Where(u => u.CpcmGroupId == post.CpcmGroupId).FirstOrDefaultAsync();
-                long likes = await _context.Database.SqlQuery<long>($@"SELECT * FROM CPCM_POSTLIKES WHERE CPCM_PostID = {post.CpcmPostId}").CountAsync();
+				if (User.Identity.IsAuthenticated && groupOwner != null )
+				{
+					var authUserId = GetUserIdString();
+					var authFollower = await _context.CpcmGroupfollowers.Where(f => f.CpcmUserId == authUserId && f.CpcmGroupId == groupOwner.CpcmGroupId).Include(f => f.CpcmUserRoleNavigation).FirstOrDefaultAsync();
+                    groupOwner.UserFollowerRole = authFollower.CpcmUserRoleNavigation;
+                    post.Group.UserFollowerRole = authFollower.CpcmUserRoleNavigation;
+				}
+				long likes = await _context.Database.SqlQuery<long>($@"SELECT * FROM CPCM_POSTLIKES WHERE CPCM_PostID = {post.CpcmPostId}").CountAsync();
                 long reposts = await _context.Database.SqlQuery<long>($@"SELECT * FROM CPCM_POSTREPOSTS WHERE CPCM_PostID = {post.CpcmPostId}").CountAsync();
 
 				if (User.Identity.IsAuthenticated)
@@ -203,7 +218,15 @@ namespace Capycom.Controllers
                         return StatusCode(403, new { message = "Группа поста заблокирована" });
                     } 
                 }
-            }
+				if (post.CpcmPostPublishedDate > DateTime.UtcNow)
+				{
+					Log.Information("Попытка просмкомментировать отложенный пост {Post}", post.CpcmPostId);
+					Response.StatusCode = 404;
+					ViewData["ErrorCode"] = 404;
+					ViewData["Message"] = "Пост не найден";
+					return View("UserError");
+				}
+			}
             catch (DbUpdateException ex)
             {
                 Log.Error(ex, "Не удалось выполнить запрос к БД на выборку поста {Post}", userComment.CpcmPostId);
@@ -321,7 +344,7 @@ namespace Capycom.Controllers
                     return StatusCode(500, new { message = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку" });
                 }
                 //return StatusCode(200, new { status = true });
-                return PartialView(comment.CpcmImages = images);
+                return PartialView(comment);
             }
             Log.Information("Пользователь {User} пытается добавить комментарий к посту {Post}. Комментарий имеет некорректные значения , {@Comment}", HttpContext.User.FindFirstValue("CpcmUserId"), userComment.CpcmPostId, userComment);
             return StatusCode(200, new { status=false,message = "Комментарий имеет некорректные значения.",errors= ModelState.SelectMany(x => x.Value.Errors.Select(e => e.ErrorMessage)).ToList() });
@@ -418,7 +441,7 @@ namespace Capycom.Controllers
         public async Task<IActionResult> BanUnbanComment(Guid commentId)
         {
             Log.Information("Пользователь {User} пытается заблокировать/разблокировать комментарий {Comment}", HttpContext.User.FindFirstValue("CpcmUserId"), commentId);
-            if(!CheckUserPrivilege("CpcmCanDelUsersComments","True")){
+            if(!CheckUserAdminPrivilege("CpcmCanDelUsersComments","True")){
                 Log.Warning("Пользователь {User} пытается заблокировать/разблокировать комментарий {Comment}. У пользователя недостаточно прав", HttpContext.User.FindFirstValue("CpcmUserId"), commentId);
                 return StatusCode(403);
             }
@@ -522,7 +545,7 @@ namespace Capycom.Controllers
                         return View("UserError");
                     } 
                 }
-				comment.CpcmCommentBanned = !comment.CpcmCommentBanned;
+				//comment.CpcmCommentBanned = !comment.CpcmCommentBanned;
 				if (HttpContext.Request.Cookies.ContainsKey("TimeZone"))
 				{
 					string timezoneOffsetCookie = HttpContext.Request.Cookies["TimeZone"];
@@ -536,6 +559,14 @@ namespace Capycom.Controllers
 
 						}
 					}
+				}
+				if (comment.CpcmPost.CpcmPostPublishedDate > DateTime.UtcNow)
+				{
+					Log.Information("Попытка просмотра коммента ??? отложенного поста {Post}", comment.CpcmPost.CpcmPostId);
+					Response.StatusCode = 404;
+					ViewData["ErrorCode"] = 404;
+					ViewData["Message"] = "Пост не найден";
+					return View("UserError");
 				}
 				await _context.SaveChangesAsync();
                 return View(comment);
@@ -612,12 +643,19 @@ namespace Capycom.Controllers
                         return StatusCode(403, new { message = "Группа поста заблокирована" });
                     } 
                 }
+				if (post.CpcmPostPublishedDate > DateTime.UtcNow)
+				{
+					Log.Information("Попытка просмотра коммента ??? отложенного поста {Post}", post.CpcmPostId);
+					Response.StatusCode = 404;
+					ViewData["ErrorCode"] = 404;
+					ViewData["Message"] = "Пост не найден";
+					return View("UserError");
+				}
 
 
 
 
-
-				var rez = await _context.CpcmComments.Where(c => c.CpcmCommentCreationDate.CompareTo(lastComment.CpcmCommentCreationDate) > 0 && c.CpcmPostId == postId && c.InverseCpcmCommentFatherNavigation == null).Include( c=>c.CpcmUser).OrderBy(u => u.CpcmCommentCreationDate).Take(10).ToListAsync();
+				var rez = await _context.CpcmComments.Where(c => c.CpcmCommentCreationDate > lastComment.CpcmCommentCreationDate && c.CpcmPostId == postId && c.InverseCpcmCommentFatherNavigation == null).Include( c=>c.CpcmUser).OrderBy(u => u.CpcmCommentCreationDate).Take(10).ToListAsync();
                 foreach (var comment in rez)
                 {
                     //await _context.Entry(comment).Collection(p => p.InverseCpcmCommentFatherNavigation).LoadAsync();
@@ -683,7 +721,7 @@ namespace Capycom.Controllers
                     Log.Warning("Пользователь {User} пытается поставить/убрать лайк к посту {Post}. Автор поста удалён", HttpContext.User.FindFirstValue("CpcmUserId"), postId);
 					return StatusCode(404);
 				}
-				if (post.User != null || post.User.CpcmUserBanned)
+				if (post.User != null && post.User.CpcmUserBanned)
 				{
                     Log.Warning("Пользователь {User} пытается поставить/убрать лайк к посту {Post}. Автор поста заблокирован", HttpContext.User.FindFirstValue("CpcmUserId"), postId);
 					return StatusCode(403, new { message = "Автор поста заблокирован" });
@@ -702,7 +740,14 @@ namespace Capycom.Controllers
                         return StatusCode(403, new { message = "Группа поста заблокирована" });
                     } 
                 }
-
+				if (post.CpcmPostPublishedDate > DateTime.UtcNow)
+				{
+					Log.Information("Попытка лайка отложенного поста {Post}", post.CpcmPostId);
+					Response.StatusCode = 404;
+					ViewData["ErrorCode"] = 404;
+					ViewData["Message"] = "Пост не найден";
+					return View("UserError");
+				}
 
 
 
@@ -848,7 +893,7 @@ namespace Capycom.Controllers
             }
         }
 
-        private bool CheckUserPrivilege(string claimType, string claimValue)
+        private bool CheckUserAdminPrivilege(string claimType, string claimValue)
         {
             var authFactor = HttpContext.User.FindFirst(c => c.Type == claimType && c.Value == claimValue);
             if (authFactor == null)
@@ -897,5 +942,13 @@ namespace Capycom.Controllers
             }
             return status;
         }
-    }
+		private Guid GetUserIdString()
+		{
+			if (User.Identity.IsAuthenticated)
+			{
+				return Guid.Parse(HttpContext.User.FindFirst(c => c.Type == "CpcmUserId").Value);
+			}
+			throw new InvalidOperationException("User is not authenticated");
+		}
+	}
 }

@@ -1,0 +1,75 @@
+﻿@model CpcmComment
+<link href="~/css/post-content.css" rel="stylesheet" />
+<div class="card mb-2">
+	<div class="card-body">
+		<div class="d-flex align-items-center mb-3">
+			@if (Model.CpcmUser.CpcmUserNickName != null)
+			{
+				<a asp-controller="User" asp-action="Index" asp-route-Nickname="@Model.CpcmUser.CpcmUserNickName">
+					@if (@Model.CpcmUser.CpcmUserImagePath != string.Empty)
+					{
+						<img src="@Url.Content(@Model.CpcmUser.CpcmUserImagePath)"
+							 class="rounded-circle me-3" style="width: 50px; height: 50px; object-fit: cover;">
+					}
+					else
+					{
+						<img src="\uploads\default.png"
+							 class="rounded-circle me-3" style="width: 50px; height: 50px; object-fit: cover;">
+					}
+				</a>
+			}
+			else
+			{
+				<a asp-controller="User" asp-action="Index" asp-route-UserId="@Model.CpcmUser.CpcmUserId">
+					@if (@Model.CpcmUser.CpcmUserImagePath != string.Empty)
+					{
+						<img src="@Url.Content(@Model.CpcmUser.CpcmUserImagePath)"
+							 class="rounded-circle me-3" style="width: 50px; height: 50px; object-fit: cover;">
+					}
+					else
+					{
+						<img src="\uploads\default.png"
+							 class="rounded-circle me-3" style="width: 50px; height: 50px; object-fit: cover;">
+					}
+				</a>
+			}
+			<div>
+				@if (Model.CpcmUser.CpcmUserNickName != null)
+				{
+					<a class="link-dark nickname" asp-controller="User" asp-action="Index" asp-route-Nickname="@Model.CpcmUser.CpcmUserNickName">
+						<h5>@Model.CpcmUser.CpcmUserFirstName @Model.CpcmUser.CpcmUserSecondName @Model.CpcmUser.CpcmUserAdditionalName</h5>
+					</a>
+				}
+				else
+				{
+					<a class="link-dark nickname" asp-controller="User" asp-action="Index" asp-route-UserId="@Model.CpcmUser.CpcmUserId">
+						<h5>@Model.CpcmUser.CpcmUserFirstName @Model.CpcmUser.CpcmUserSecondName @Model.CpcmUser.CpcmUserAdditionalName</h5>
+					</a>
+				}
+				<a asp-controller="PostComment" asp-action="ViewComment" asp-route-commentId="@Model.CpcmCommentId" class="text-muted">@Model.CpcmCommentCreationDate.ToString("dd.MM.yyyy hh:mm")</a>
+			</div>
+		</div>
+
+		<div class="g-2">
+			<div class="row g-1 p-1">
+				@Model.CpcmCommentText
+			</div>
+			@if (Model.CpcmImages.Count != 0)
+			{
+				<div class="row row-cols-1 @(Model.CpcmImages.Count > 1 ? "row-cols-md-2 row-cols-lg-2" : "") g-4">
+					@{
+						if (Model.CpcmCommentFatherNavigation == null) // Задел на комментарии к комментариям
+							foreach (var image in Model.CpcmImages)
+							{
+								<div class="col m-0" style="padding: 1px;">
+									<img src="@Url.Content(@image.CpcmImagePath)" class="rounded card-img-top object-fit-cover h-100" alt="Изображение">
+								</div>
+							}
+						else
+							@await Html.PartialAsync("", Model.CpcmCommentFatherNavigation)
+					}
+				</div>
+			}
+		</div>
+<script src="~/js/post-content.js"></script>
+<script src="~/js/comment-requests.js"></script>

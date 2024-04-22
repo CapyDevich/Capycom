@@ -25,3 +25,7 @@ textarea.comment-text {
 .paperclip-label {
     cursor: pointer;
 }
+
+.darken-image {
+    filter: brightness(0.5);
+}

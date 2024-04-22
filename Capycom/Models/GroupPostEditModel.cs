@@ -6,7 +6,7 @@ namespace Capycom.Models
 {
 	public class GroupPostEditModel
 	{
-		public Guid? Id { get; set; }
+		public Guid Id { get; set; }
 		public Guid? GroupId { get; set; }
 		[MaxLength(500,ErrorMessage ="Текст поста не может состоять из более чем 500 символов")]
 		public string? Text { get; set; }

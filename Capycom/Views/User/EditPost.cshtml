@@ -1,0 +1,52 @@
+﻿@model UserPostEditModel
+
+<link href="~/css/post-content.css" rel="stylesheet" />
+
+<div class="container mt-5">
+	<div class="text-center mb-md-3">
+		<h3>Редактирование поста</h3>
+	</div>
+	<form asp-action="EditPostP" enctype="multipart/form-data" id="EditPost">
+		@Html.AntiForgeryToken()
+		<input asp-for="Id" value="@Model.Id" hidden />
+		<label asp-for="Text" class="form-label">Текст поста</label>
+		<div class="input-group mb-1">
+			<textarea asp-for="Text" type="text" class="form-control comment-text" id="commentText" rows="3" required>@Model.Text</textarea>
+			<div class="d-flex align-items-center btn btn-light border-top border-bottom border-end">
+				<label class="paperclip-label" for="fileInput">
+					<img class="paperclip-icon" src="~/images/paperclip.svg" />
+				</label>
+			</div>
+		</div>
+		<input asp-validation-for="NewFiles" asp-for="NewFiles" id="fileInput" type="file" multiple hidden />
+		<div class="ps-1 pe-1 mb-1">
+			<div class="file-list"></div>
+			<span asp-validation-for="NewFiles" class="text-danger d-flex justify-content-between text ps-1 mb-1 rounded"></span>
+		</div>
+		<div class="ps-1 pe-1 mb-1">
+			@foreach (var image in Model.CpcmImages.OrderBy(c => c.CpcmImageOrder))
+			{
+				<img id="@image.CpcmImageId" src="@Url.Content(@image.CpcmImagePath)" class="existing-img rounded card-img-top" alt="Изображение" style="object-fit: cover; width: 128px; height: 128px;" onclick="darkenImage(this)">
+			}
+		</div>
+		@if (@Model.NewPublishDate > DateTime.Now)
+		{
+			<div class="mb-3">
+				<label asp-for="NewPublishDate" class="form-label">Дата публикации</label>
+				<input type="datetime-local" id="datetimePicker" class="form-control" asp-for="NewPublishDate" value="@Model.NewPublishDate?.ToString("yyyy-MM-ddTHH:mm")">
+			</div>
+		}
+		<div class="ps-1 pe-1">
+			@if (@Model.NewPublishDate <= DateTime.Now)
+			{
+				<button type="submit" id="postButton" class="btn btn-primary col-12" value="CreatePostP">Опубликовать</button>
+			}
+			else
+			{
+				<button type="submit" id="postButton" class="btn btn-primary col-12" value="CreatePostP">Запланировать публикацию</button>
+			}
+		</div>
+	</form>
+</div>
+<script src="~/js/create-post.js"></script>
+<script src="~/js/edit-post.js"></script>

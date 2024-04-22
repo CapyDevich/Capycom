@@ -14,7 +14,7 @@ using System.Security.Claims;
 
 namespace Capycom.Controllers
 {
-	[Authorize(Policy = "CanEditRoles")]
+	[Authorize(Policy = "CpcmCanEditRoles")]
 	public class RolesController : Controller
     {
 		private readonly CapycomContext _context;
@@ -158,10 +158,10 @@ namespace Capycom.Controllers
         // GET: Roles/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
-            Log.Information("Пользователь {@HttpContext.User} пытается изменить роль с id {id}. Данные по соединеню {@HttpContext.Connection}", HttpContext.User.Identity.Name, id, HttpContext.Connection);
+            Log.Information("Пользователь {@HttpContext.User} пытается изменить роль с id {id}. Данные по соединеню {@HttpContext.Connection}", HttpContext.User, id, HttpContext.Connection);
             if (id == null)
             {
-                Log.Warning("Пользователь {@HttpContext.User} попытался изменить роль без указанного id. Данные по соединеню {@HttpContext.Connection}", HttpContext.User.Identity.Name, HttpContext.Connection);
+                Log.Warning("Пользователь {@HttpContext.User} попытался изменить роль без указанного id. Данные по соединеню {@HttpContext.Connection}", HttpContext.User, HttpContext.Connection);
 				Response.StatusCode = 404;
 				ViewData["ErrorCode"] = 404;
 				ViewData["Message"] = "Не найдена Роль с таикм id.";
@@ -173,13 +173,13 @@ namespace Capycom.Controllers
                 var cpcmRole = await _context.CpcmRoles.FindAsync(id);
                 if (cpcmRole == null)
                 {
-                    Log.Warning("Пользователь {@HttpContext.User} попытался изменить роль с id {id}, но такой роли не существует. Данные по соединеню {@HttpContext.Connection}", HttpContext.User.Identity.Name, id, HttpContext.Connection);
+                    Log.Warning("Пользователь {@HttpContext.User} попытался изменить роль с id {id}, но такой роли не существует. Данные по соединеню {@HttpContext.Connection}", HttpContext.User, id, HttpContext.Connection);
                     Response.StatusCode = 404;
                     ViewData["ErrorCode"] = 404;
                     ViewData["Message"] = "Не найдена Роль с таикм id.";
                     return View("UserError");
                 }
-                Log.Information("Пользователь {@HttpContext.User} удалось получить роль с id {id}. Данные по соединеню {@HttpContext.Connection}", HttpContext.User.Identity.Name, id, HttpContext.Connection);
+                Log.Information("Пользователь {@HttpContext.User} удалось получить роль с id {id}. Данные по соединеню {@HttpContext.Connection}", HttpContext.User, id, HttpContext.Connection);
                 return View(cpcmRole);
             }
             catch (DbUpdateException ex)
@@ -205,10 +205,10 @@ namespace Capycom.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("CpcmRoleName,CpcmCanEditUsers,CpcmCanEditGroups,CpcmCanEditRoles,CpcmCanDelUsersPosts,CpcmCanDelUsersComments,CpcmCanDelGroupsPosts,CpcmCanAddPost,CpcmCanAddGroups,CpcmCanAddComments")] CpcmRole cpcmRole)
         {
-            Log.Information ("Пользователь {HttpContext.User.Identity.Name} пытается изменить роль {cpcmRole}. Данные по соединеню {HttpContext.Connection}", HttpContext.User.Identity.Name, cpcmRole, HttpContext.Connection);
+            Log.Information ("Пользователь {@HttpContext.User.Identity.Name} пытается изменить роль {@cpcmRole}. Данные по соединеню {@HttpContext.Connection}", HttpContext.User, cpcmRole, HttpContext.Connection);
             if (id != cpcmRole.CpcmRoleId)
             {
-                Log.Warning("Пользователь {@HttpContext.User} попытался изменить id роли. Данные по соединеню {@HttpContext.Connection}", HttpContext.User.Identity.Name, HttpContext.Connection);
+                Log.Warning("Пользователь {@HttpContext.User} попытался изменить id роли. Данные по соединеню {@HttpContext.Connection}", HttpContext.User, HttpContext.Connection);
 				Response.StatusCode = 404;
 				ViewData["ErrorCode"] = 404;
 				ViewData["Message"] = "Не найдена роль с таким id";
@@ -221,13 +221,13 @@ namespace Capycom.Controllers
                 {
                     _context.Update(cpcmRole);
                     await _context.SaveChangesAsync();
-                    Log.Information("Пользователю {@HttpContext.User} удалось изменить роль {@cpcmRole}. Данные по соединеню {@HttpContext.Connection}", HttpContext.User.Identity.Name, cpcmRole, HttpContext.Connection);
+                    Log.Information("Пользователю {@HttpContext.User} удалось изменить роль {@cpcmRole}. Данные по соединеню {@HttpContext.Connection}", HttpContext.User, cpcmRole, HttpContext.Connection);
                 }
                 catch (DbUpdateConcurrencyException ex)
                 {
                     if (!CpcmRoleExists(cpcmRole.CpcmRoleId))
                     {
-                        Log.Error(ex,"Пользователь {@HttpContext.User} попытался изменить роль с id {id}, сохранение не удалось произвести, поскольку запись была удалена. Данные по соединеню {@HttpContext.Connection}", HttpContext.User.Identity.Name, id, HttpContext.Connection);
+                        Log.Error(ex,"Пользователь {@HttpContext.User} попытался изменить роль с id {id}, сохранение не удалось произвести, поскольку запись была удалена. Данные по соединеню {@HttpContext.Connection}", HttpContext.User, id, HttpContext.Connection);
 						Response.StatusCode = 404;
 						ViewData["ErrorCode"] = 404;
 						ViewData["Message"] = "Запись была ранее удалена";
@@ -260,7 +260,7 @@ namespace Capycom.Controllers
 				}
                 return RedirectToAction(nameof(Index));
             }
-            Log.Warning("Пользователь {@HttpContext.User} попытался изменить роль с некорректными данными {@data}. Данные по соединеню {@HttpContext.Connection}", HttpContext.User.Identity.Name, cpcmRole, HttpContext.Connection);
+            Log.Warning("Пользователь {@HttpContext.User} попытался изменить роль с некорректными данными {@data}. Данные по соединеню {@HttpContext.Connection}", HttpContext.User, cpcmRole, HttpContext.Connection);
             return View(cpcmRole);
         }
 
@@ -300,7 +300,7 @@ namespace Capycom.Controllers
         [HttpPost]
         public async Task<IActionResult> EditUserRole()
         {
-            Log.Information("Пользователь {@HttpContext.User} пытается изменить роль пользователя. Данные по соединеню {@HttpContext.Connection}", HttpContext.User.Identity.Name, HttpContext.Connection);
+            Log.Information("Пользователь {@HttpContext.User} пытается изменить роль пользователя. Данные по соединеню {@HttpContext.Connection}", HttpContext.User, HttpContext.Connection);
             try
             {
                 ViewData["CpcmRoles"] = new SelectList(await _context.CpcmRoles.ToListAsync(), "CpcmRoleId", "CpcmRoleName");
@@ -328,13 +328,13 @@ namespace Capycom.Controllers
         [HttpPost]
 		public async Task<IActionResult> EditUserRole(Guid userId, int roleId)
 		{
-            Log.Information("Пользователь {@HttpContext.User} пытается изменить роль пользователя {userId} на {roleId}. Данные по соединеню {@HttpContext.Connection}", HttpContext.User.Identity.Name, userId,roleId, HttpContext.Connection);
+            Log.Information("Пользователь {@HttpContext.User} пытается изменить роль пользователя {userId} на {roleId}. Данные по соединеню {@HttpContext.Connection}", HttpContext.User, userId,roleId, HttpContext.Connection);
             try
             {
                 var user = await _context.CpcmUsers.Where(u => u.CpcmUserId == userId).FirstOrDefaultAsync();
                 if(user == null)
                 {
-                    Log.Warning("Пользователь {@HttpContext.User} попытался изменить роль пользователя {userId} на {roleId}, но такого пользователя не существует. Данные по соединеню {@HttpContext.Connection}", HttpContext.User.Identity.Name, userId, roleId, HttpContext.Connection);
+                    Log.Warning("Пользователь {@HttpContext.User} попытался изменить роль пользователя {userId} на {roleId}, но такого пользователя не существует. Данные по соединеню {@HttpContext.Connection}", HttpContext.User, userId, roleId, HttpContext.Connection);
 					Response.StatusCode = 404;
 					ViewData["ErrorCode"] = 404;
 					ViewData["Message"] = "Пользователь с данным id не найден";
@@ -343,7 +343,7 @@ namespace Capycom.Controllers
                 var role = await _context.CpcmGroupRoles.Where(r=>r.CpcmRoleId==roleId).FirstOrDefaultAsync();
                 if ((role==null))
                 {
-                    Log.Warning("Пользователь {@HttpContext.User} попытался изменить роль пользователя {userId} на {roleId}, но такой роли не существует. Данные по соединеню {@HttpContext.Connection}", HttpContext.User.Identity.Name, userId, roleId, HttpContext.Connection);
+                    Log.Warning("Пользователь {@HttpContext.User} попытался изменить роль пользователя {userId} на {roleId}, но такой роли не существует. Данные по соединеню {@HttpContext.Connection}", HttpContext.User, userId, roleId, HttpContext.Connection);
 					Response.StatusCode = 404;
 					ViewData["ErrorCode"] = 404;
 					ViewData["Message"] = "Роль не найдена";
@@ -351,7 +351,7 @@ namespace Capycom.Controllers
 				}
                 user.CpcmUserRole = roleId;
                 await _context.SaveChangesAsync();
-                Log.Information("Пользователю {@HttpContext.User} удалось изменить роль пользователя {userId} на {roleId}. Данные по соединеню {@HttpContext.Connection}", HttpContext.User.Identity.Name, userId, roleId, HttpContext.Connection);
+                Log.Information("Пользователю {@HttpContext.User} удалось изменить роль пользователя {userId} на {roleId}. Данные по соединеню {@HttpContext.Connection}", HttpContext.User, userId, roleId, HttpContext.Connection);
                 return StatusCode(200, new { status = true });
 
 			}

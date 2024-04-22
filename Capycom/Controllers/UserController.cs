@@ -12,8 +12,7 @@ using System.Security.Claims;
 using Capycom.Enums;
 using Serilog;
 using Microsoft.Data.SqlClient;
-using Microsoft.IdentityModel.Protocols.Configuration;
-using static NuGet.Packaging.PackagingConstants;
+
 
 namespace Capycom.Controllers
 {
@@ -34,7 +33,7 @@ namespace Capycom.Controllers
 
 
         [Authorize]
-        public async Task<ActionResult> Index()
+		public async Task<ActionResult> Index()
         {
             string userId = HttpContext.User.FindFirst(c => c.Type == "CpcmUserId").Value;
 
@@ -90,7 +89,7 @@ namespace Capycom.Controllers
 
 
         [HttpGet]
-        public async Task<ActionResult> Index(UserFilterModel filter)
+		public async Task<ActionResult> Index(UserFilterModel filter)
         {
             CpcmUser? user;
             try
@@ -151,72 +150,22 @@ namespace Capycom.Controllers
                 return View("UserError");
             }
 
-            if (user == null||user.CpcmIsDeleted)
-            {
-                Log.Warning("Пользователь не найден или удалён {u}", filter.UserId);
-                Response.StatusCode = 404;
-                ViewData["ErrorCode"] = 404;
-                ViewData["Message"] = "Пользователь не найден";
-                return View("UserError");
-            }
+            //if (user == null||user.CpcmIsDeleted)
+            //{
+            //    Log.Warning("Пользователь не найден или удалён {u}", filter.UserId);
+            //    Response.StatusCode = 404;
+            //    ViewData["ErrorCode"] = 404;
+            //    ViewData["Message"] = "Пользователь не найден";
+            //    return View("UserError");
+            //}
             List<CpcmPost> posts = new List<CpcmPost>();
             if (!user.CpcmIsDeleted || !user.CpcmUserBanned)
             {
                 try
                 {
 
-                    posts = await _context.CpcmPosts.Where(c => c.CpcmUserId == user.CpcmUserId && c.CpcmPostPublishedDate < DateTime.UtcNow).Include(c => c.CpcmImages).OrderByDescending(c => c.CpcmPostPublishedDate).Take(10).ToListAsync();
-                    if (HttpContext.User.Identity.IsAuthenticated && user.CpcmUserId.ToString() != User.FindFirstValue("CpcmUserId"))
-                    {
-                        var friend = await _context.CpcmUserfriends.Where(f => f.CmcpUserId == user.CpcmUserId && f.CmcpFriendId.ToString() == User.FindFirstValue("CpcmUserId")).FirstOrDefaultAsync(); // Тут мы смотрим подал ли ОН запрос в друзья НАМ.                    
-                        if (friend != null)
-                        {
-                            if (friend.CpcmFriendRequestStatus == true)
-                                user.IsFriend = FriendStatusEnum.HisApproved; // Будет кнопка удалить из друзей (удалить friendRequest)
-                            else if (friend.CpcmFriendRequestStatus == false)
-                                user.IsFriend = FriendStatusEnum.HisRejected; // будет кнопка подтвердить запрос в друзья
-                            else
-                                user.IsFriend = FriendStatusEnum.HisNotAnswered; // будет кнопка подтвердить запрос в друзья
-
-                        }
-                        else if (friend == null)
-                        {
-                            friend = await _context.CpcmUserfriends.Where(f => f.CmcpUserId.ToString() == User.FindFirstValue("CpcmUserId") && f.CmcpFriendId == user.CpcmUserId).FirstOrDefaultAsync();// Теперь мы смотрим подали ли МЫ запрос в друзья ЕМУ.
-                            if (friend != null)
-                            {
-                                if (friend.CpcmFriendRequestStatus == true)
-                                    user.IsFriend = FriendStatusEnum.OurApproved; // будет кнопка удалить из друзей
-                                else if (friend.CpcmFriendRequestStatus == false)
-                                    user.IsFriend = FriendStatusEnum.OurRejected; // будет кнопка отозвать запрос (удалить friendRequest)
-                                else
-                                    user.IsFriend = FriendStatusEnum.OurNotAnswered; // будет кнопка отозвать запрос (удалить friendRequest)
-                            }
-                            else
-                            {
-                                user.IsFriend = FriendStatusEnum.NoFriendRequest; // Будет кнопка добавить в друзья
-                            }
-                        }
-
-
-
-
-
-
-                        var follower = await _context.CpcmUserfollowers.Where(f => f.CpcmFollowerId.ToString() == User.FindFirstValue("CpcmUserId") && f.CpcmUserId == user.CpcmUserId).FirstOrDefaultAsync();
-                        if (follower == null)
-                        {
-                            user.IsFollowing = false;
-                        }
-                        else
-                        {
-                            user.IsFollowing = true;
-                        }
-                    }
-                    else
-                    {
-                        user.IsFriend = FriendStatusEnum.NoFriendRequest;
-                        user.IsFollowing = false;
-                    }
+                    posts = await _context.CpcmPosts.Where(c => c.CpcmUserId == user.CpcmUserId && c.CpcmPostPublishedDate < DateTime.UtcNow && !c.CpcmIsDeleted).Include(c => c.CpcmImages).OrderByDescending(c => c.CpcmPostPublishedDate).Take(10).ToListAsync();
+                    
                 }
                 catch(DbUpdateException ex)
                 {
@@ -235,7 +184,71 @@ namespace Capycom.Controllers
                     return View("UserError");
                 } 
             }
-            ICollection<PostModel> postsWithLikesCount = new List<PostModel>();
+            try
+            {
+				if (HttpContext.User.Identity.IsAuthenticated && user.CpcmUserId.ToString() != User.FindFirstValue("CpcmUserId"))
+				{
+					var friend = await _context.CpcmUserfriends.Where(f => f.CmcpUserId == user.CpcmUserId && f.CmcpFriendId.ToString() == User.FindFirstValue("CpcmUserId")).FirstOrDefaultAsync(); // Тут мы смотрим подал ли ОН запрос в друзья НАМ.                    
+					if (friend != null)
+					{
+						if (friend.CpcmFriendRequestStatus == true)
+							user.IsFriend = FriendStatusEnum.HisApproved; // Будет кнопка удалить из друзей (удалить friendRequest)
+						else if (friend.CpcmFriendRequestStatus == false)
+							user.IsFriend = FriendStatusEnum.HisRejected; // будет кнопка подтвердить запрос в друзья
+						else
+							user.IsFriend = FriendStatusEnum.HisNotAnswered; // будет кнопка подтвердить запрос в друзья
+
+					}
+					else if (friend == null)
+					{
+						friend = await _context.CpcmUserfriends.Where(f => f.CmcpUserId.ToString() == User.FindFirstValue("CpcmUserId") && f.CmcpFriendId == user.CpcmUserId).FirstOrDefaultAsync();// Теперь мы смотрим подали ли МЫ запрос в друзья ЕМУ.
+						if (friend != null)
+						{
+							if (friend.CpcmFriendRequestStatus == true)
+								user.IsFriend = FriendStatusEnum.OurApproved; // будет кнопка удалить из друзей
+							else if (friend.CpcmFriendRequestStatus == false)
+								user.IsFriend = FriendStatusEnum.OurRejected; // будет кнопка отозвать запрос (удалить friendRequest)
+							else
+								user.IsFriend = FriendStatusEnum.OurNotAnswered; // будет кнопка отозвать запрос (удалить friendRequest)
+						}
+						else
+						{
+							user.IsFriend = FriendStatusEnum.NoFriendRequest; // Будет кнопка добавить в друзья
+						}
+					}
+					var follower = await _context.CpcmUserfollowers.Where(f => f.CpcmFollowerId.ToString() == User.FindFirstValue("CpcmUserId") && f.CpcmUserId == user.CpcmUserId).FirstOrDefaultAsync();
+					if (follower == null)
+					{
+						user.IsFollowing = false;
+					}
+					else
+					{
+						user.IsFollowing = true;
+					}
+				}
+				else
+				{
+					user.IsFriend = FriendStatusEnum.NoFriendRequest;
+					user.IsFollowing = false;
+				}
+			}
+			catch (DbUpdateException ex)
+			{
+				Log.Error(ex, "Ошибка при попытке получить посты пользователя из базы данных, а также статура дружбы и подписоты");
+				Response.StatusCode = 500;
+				ViewData["ErrorCode"] = 500;
+				ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
+				return View("UserError");
+			}
+			catch (DbException ex)
+			{
+				Log.Error(ex, "Ошибка при попытке получить посты пользователя из базы данных, а также статура дружбы и подписоты");
+				Response.StatusCode = 500;
+				ViewData["ErrorCode"] = 500;
+				ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
+				return View("UserError");
+			}
+			ICollection<PostModel> postsWithLikesCount = new List<PostModel>();
             UserProfileAndPostsModel userProfile = new();
             userProfile.User = user;
             foreach (var postik in posts)
@@ -291,7 +304,6 @@ namespace Capycom.Controllers
 
 
         [Authorize]
-        [HttpPost]
         public async Task<ActionResult> Edit(string id)
         {
             if (!CheckUserPrivilege("CpcmCanEditUsers", "True", id))
@@ -466,31 +478,38 @@ namespace Capycom.Controllers
 
 
                 string filePathUserImage = "";
-                if (user.CpcmUserImage != null && user.CpcmUserImage.Length != 0)// Почему тут а не в [Remote] - чтобы клиент не посылал запросы дважды. Т.е. чтобы клиент не посылал запрос на валидацию, а потом всю форму. 
+                if (!user.IsDeletingUserImage)
                 {
-                    CheckIFormFile("CpcmUserImage", user.CpcmUserImage, 8388608, new[] { "image/jpeg", "image/png", "image/gif" });
-
-                    if (ModelState.IsValid)
+                    if (user.CpcmUserImage != null && user.CpcmUserImage.Length != 0)// Почему тут а не в [Remote] - чтобы клиент не посылал запросы дважды. Т.е. чтобы клиент не посылал запрос на валидацию, а потом всю форму.  
                     {
-                        var uniqueFileName = Guid.NewGuid().ToString() + Path.GetExtension(user.CpcmUserImage.FileName);
-                        filePathUserImage = Path.Combine("wwwroot", "uploads", uniqueFileName);
+                        CheckIFormFile("CpcmUserImage", user.CpcmUserImage, 8388608, new[] { "image/jpeg", "image/png", "image/gif" });
 
-                        try
+                        if (ModelState.IsValid)
                         {
-                            using (var fileStream = new FileStream(filePathUserImage, FileMode.Create))
+                            var uniqueFileName = Guid.NewGuid().ToString() + Path.GetExtension(user.CpcmUserImage.FileName);
+                            filePathUserImage = Path.Combine("wwwroot", "uploads", uniqueFileName);
+
+                            try
                             {
-                                await user.CpcmUserImage.CopyToAsync(fileStream);
+                                using (var fileStream = new FileStream(filePathUserImage, FileMode.Create))
+                                {
+                                    await user.CpcmUserImage.CopyToAsync(fileStream);
+                                }
+                                cpcmUser.CpcmUserImagePath = filePathUserImage.Replace("wwwroot", "");
                             }
-                            cpcmUser.CpcmUserImagePath = filePathUserImage.Replace("wwwroot", "");
+                            catch (Exception ex)
+                            {
+                                Log.Error(ex, "Ошибка при попытке сохранить изображение {@image} пользователя {user} на сервере", user.CpcmUserImage, User.FindFirstValue("CpcmUserId"));
+                                cpcmUser.CpcmUserImagePath = Path.Combine("\\","images", "default.png");
+                            }
                         }
-                        catch (Exception ex)
-                        {
-                            Log.Error(ex, "Ошибка при попытке сохранить изображение {@image} пользователя {user} на сервере", user.CpcmUserImage, User.FindFirstValue("CpcmUserId"));
-                            cpcmUser.CpcmUserImagePath = null;
-                        }
-                    }
 
+                    }
                 }
+                else
+                {
+					cpcmUser.CpcmUserImagePath = Path.Combine("\\","images", "default.png");
+				}
 
                 string filePathUserCoverImage = "";
                 if (user.CpcmUserCoverImage != null && user.CpcmUserCoverImage.Length != 0)
@@ -582,7 +601,19 @@ namespace Capycom.Controllers
                     return View("UserError");
                 }
 
-                if (cpcmUser.CpcmUserNickName != null)
+
+                if (user.CpcmUserImage != null && user.CpcmUserImage.Length != 0)
+                {
+					//var identity = new ClaimsIdentity(HttpContext.User.Identity);
+					//identity.RemoveClaim(HttpContext.User.FindFirst("ProfileImage"));
+					//identity.AddClaim(new Claim("ProfileImage", cpcmUser.CpcmUserImagePath));
+					//var principal = new ClaimsPrincipal(identity);
+					//HttpContext.User = principal;
+					HttpContext.Session.SetString("ProfileImage", cpcmUser.CpcmUserImagePath);
+				}
+
+
+				if (cpcmUser.CpcmUserNickName != null)
                 {
                     return RedirectToAction("Index", new { nickName = cpcmUser.CpcmUserNickName });
                 }
@@ -621,7 +652,6 @@ namespace Capycom.Controllers
 
 
         [Authorize]
-        [HttpPost]
         public async Task<ActionResult> EditIdentity(string id)
         {
             if (!CheckUserPrivilege("CpcmCanEditUsers", "True", id))
@@ -785,7 +815,7 @@ namespace Capycom.Controllers
                 }
 
 
-                return RedirectToAction($"Index\\{user.CpcmUserId}");
+                return RedirectToAction("Index");
             }
             Log.Warning("Ошибка валидации формы редактирования пользователя {user}", User.FindFirstValue("CpcmUserId"));
             return View(user);
@@ -795,7 +825,7 @@ namespace Capycom.Controllers
         [HttpPost]
         public async Task<IActionResult> BanUnbanUser(Guid id)
         {
-            if (!CheckUserPrivilege("CpcmCanEditUsers", "True"))
+            if (!CheckUserAdminPrivilege("CpcmCanEditUsers", "True"))
             {
                 Log.Warning("Пользователь {user} не имеет прав на редактирование пользователей", User.FindFirstValue("CpcmUserId"));
                 return StatusCode(403);
@@ -901,45 +931,45 @@ namespace Capycom.Controllers
                 return View("UserError");
             }
 
-            friendList1.Concat(friendList2);
+            var fr = friendList1.Concat(friendList2);
 
 			if (filters.CityId.HasValue)
 			{
 				//ViewData["cityId"]=cityId;
-				friendList1 = friendList1.Where(u => u.CpcmUserCity == filters.CityId);
+				fr = fr.Where(u => u.CpcmUserCity == filters.CityId);
 			}
 			if (filters.SchoolId.HasValue)
 			{
 				//ViewData["scgoolId"]=schoolId;
-				friendList1 = friendList1.Where(u => u.CpcmUserSchool == filters.SchoolId);
+				fr = fr.Where(u => u.CpcmUserSchool == filters.SchoolId);
 			}
 			if (filters.UniversityId.HasValue)
 			{
 				//ViewData["universityId"] = universityId;
-				friendList1 = friendList1.Where(u => u.CpcmUserUniversity == filters.UniversityId);
+				fr = fr.Where(u => u.CpcmUserUniversity == filters.UniversityId);
 			}
 			if (!string.IsNullOrEmpty(filters.FirstName))
 			{
 				//ViewData["firstName"] = firstName;
-				friendList1 = friendList1.Where(u => EF.Functions.Like(u.CpcmUserFirstName, $"%{filters.FirstName}%"));
+				fr = fr.Where(u => EF.Functions.Like(u.CpcmUserFirstName, $"%{filters.FirstName}%"));
 			}
 			if (!string.IsNullOrEmpty(filters.SecondName))
 			{
 				//ViewData["secondName"] = secondName;
-				friendList1 = friendList1.Where(u => EF.Functions.Like(u.CpcmUserSecondName, $"%{filters.SecondName}%"));
+				fr = fr.Where(u => EF.Functions.Like(u.CpcmUserSecondName, $"%{filters.SecondName}%"));
 			}
 			if (!string.IsNullOrEmpty(filters.AdditionalName))
 			{
 				//ViewData["additionalName"] = additionalName;
-				friendList1 = friendList1.Where(u => EF.Functions.Like(u.CpcmUserAdditionalName, $"%{filters.AdditionalName}%"));
+				fr = fr.Where(u => EF.Functions.Like(u.CpcmUserAdditionalName, $"%{filters.AdditionalName}%"));
 			}
-            if(filters.UserRole.HasValue && CheckUserPrivilege("CpcmCanEditUsers", "True"))
+            if(filters.UserRole.HasValue && CheckUserAdminPrivilege("CpcmCanEditUsers", "True"))
             {
-				friendList1 = friendList1.Where(u => u.CpcmUserRole==filters.UserRole);
+				fr = fr.Where(u => u.CpcmUserRole==filters.UserRole);
 			}
             try
             {
-                var result = await friendList1.OrderBy(p => p.CpcmUserId).Take(10).ToListAsync();
+                var result = await fr.OrderBy(p => p.CpcmUserId).Take(10).ToListAsync();
                 return View(result);
             }
 			catch (DbUpdateException ex)
@@ -1006,8 +1036,8 @@ namespace Capycom.Controllers
 			IQueryable<CpcmUser> friendList2;
 			try
             {
-                friendList1 =  _context.CpcmUserfriends.Where(c => c.CmcpUserId == user.CpcmUserId && c.CpcmFriendRequestStatus == true && c.CmcpFriendId.CompareTo(filters.lastId) > 0).Select(c => c.CmcpFriend);
-                friendList2 =  _context.CpcmUserfriends.Where(c => c.CmcpFriendId == user.CpcmUserId && c.CpcmFriendRequestStatus == true && c.CmcpUserId.CompareTo(filters.lastId) > 0).Select(c => c.CmcpUser);
+                friendList1 =  _context.CpcmUserfriends.Where(c => c.CmcpUserId == user.CpcmUserId && c.CpcmFriendRequestStatus == true && c.CmcpFriendId > filters.lastId).Select(c => c.CmcpFriend);
+                friendList2 =  _context.CpcmUserfriends.Where(c => c.CmcpFriendId == user.CpcmUserId && c.CpcmFriendRequestStatus == true && c.CmcpUserId > filters.lastId).Select(c => c.CmcpUser);
             }
             catch(DbUpdateException ex)
             {
@@ -1022,44 +1052,44 @@ namespace Capycom.Controllers
                 return StatusCode(500);
             }
 
-            friendList1.Concat(friendList2);
+            var fr = friendList1.Concat(friendList2);
 			if (filters.CityId.HasValue)
 			{
 				//ViewData["cityId"]=cityId;
-				friendList1 = friendList1.Where(u => u.CpcmUserCity == filters.CityId);
+				fr = fr.Where(u => u.CpcmUserCity == filters.CityId);
 			}
 			if (filters.SchoolId.HasValue)
 			{
 				//ViewData["scgoolId"]=schoolId;
-				friendList1 = friendList1.Where(u => u.CpcmUserSchool == filters.SchoolId);
+				fr = fr.Where(u => u.CpcmUserSchool == filters.SchoolId);
 			}
 			if (filters.UniversityId.HasValue)
 			{
 				//ViewData["universityId"] = universityId;
-				friendList1 = friendList1.Where(u => u.CpcmUserUniversity == filters.UniversityId);
+				fr = fr.Where(u => u.CpcmUserUniversity == filters.UniversityId);
 			}
 			if (!string.IsNullOrEmpty(filters.FirstName))
 			{
 				//ViewData["firstName"] = firstName;
-				friendList1 = friendList1.Where(u => EF.Functions.Like(u.CpcmUserFirstName, $"%{filters.FirstName}%"));
+				fr = fr.Where(u => EF.Functions.Like(u.CpcmUserFirstName, $"%{filters.FirstName}%"));
 			}
 			if (!string.IsNullOrEmpty(filters.SecondName))
 			{
 				//ViewData["secondName"] = secondName;
-				friendList1 = friendList1.Where(u => EF.Functions.Like(u.CpcmUserSecondName, $"%{filters.SecondName}%"));
+				fr = fr.Where(u => EF.Functions.Like(u.CpcmUserSecondName, $"%{filters.SecondName}%"));
 			}
 			if (!string.IsNullOrEmpty(filters.AdditionalName))
 			{
 				//ViewData["additionalName"] = additionalName;
-				friendList1 = friendList1.Where(u => EF.Functions.Like(u.CpcmUserAdditionalName, $"%{filters.AdditionalName}%"));
+				fr = fr.Where(u => EF.Functions.Like(u.CpcmUserAdditionalName, $"%{filters.AdditionalName}%"));
 			}
-            if(filters.UserRole.HasValue && CheckUserPrivilege("CpcmCanEditUsers", "True"))
+            if(filters.UserRole.HasValue && CheckUserAdminPrivilege("CpcmCanEditUsers", "True"))
             {
-                friendList1 = friendList1.Where(u => u.CpcmUserRole==filters.UserRole);
+				fr = fr.Where(u => u.CpcmUserRole==filters.UserRole);
             }
             try
             {
-                var result = await friendList1.OrderBy(p => p.CpcmUserId).Take(10).ToListAsync();
+                var result = await fr.OrderBy(p => p.CpcmUserId).Take(10).ToListAsync();
 				return PartialView(result);
 			}
             catch (DbUpdateException ex)
@@ -1177,7 +1207,7 @@ namespace Capycom.Controllers
 				//ViewData["additionalName"] = additionalName;
 				followerList1 = followerList1.Where(u => EF.Functions.Like(u.CpcmUserAdditionalName, $"%{filters.AdditionalName}%"));
 			}
-            if(filters.UserRole.HasValue && CheckUserPrivilege("CpcmCanEditUsers", "True"))
+            if(filters.UserRole.HasValue&&CheckUserAdminPrivilege("CpcmCanEditUsers", "True"))
             {
 				followerList1 = followerList1.Where(u => u.CpcmUserRole==filters.UserRole);
 			}
@@ -1185,7 +1215,7 @@ namespace Capycom.Controllers
             {
                 var result = await followerList1.OrderBy(p => p.CpcmUserId).Take(10).ToListAsync();
 
-                return View(followerList1);
+                return View(result);
             }
             catch(DbUpdateException ex)
             {
@@ -1244,7 +1274,7 @@ namespace Capycom.Controllers
             //List<CpcmUser> followerList2;
             try
             {
-                followerList1 =  _context.CpcmUserfollowers.Where(c => c.CpcmUserId == user.CpcmUserId && c.CpcmFollowersId.CompareTo(filters.lastId) > 0).Select(c => c.CpcmFollower);
+                followerList1 =  _context.CpcmUserfollowers.Where(c => c.CpcmUserId == user.CpcmUserId && c.CpcmFollowersId > filters.lastId).Select(c => c.CpcmFollower);
                 //followerList2 = await _context.CpcmUserfollowers.Where(c => c.CpcmFollowerId == user.CpcmUserId).Select(c => c.CpcmUser).ToListAsync();
             }
             catch(DbUpdateException ex)
@@ -1289,7 +1319,7 @@ namespace Capycom.Controllers
 				//ViewData["additionalName"] = additionalName;
 				followerList1 = followerList1.Where(u => EF.Functions.Like(u.CpcmUserAdditionalName, $"%{filters.AdditionalName}%"));
 			}
-            if(filters.UserRole.HasValue && CheckUserPrivilege("CpcmCanEditUsers", "True"))
+            if(filters.UserRole.HasValue && CheckUserAdminPrivilege("CpcmCanEditUsers", "True"))
             {
                 followerList1 = followerList1.Where(u => u.CpcmUserRole==filters.UserRole);
             }
@@ -1442,7 +1472,7 @@ namespace Capycom.Controllers
 			//List<CpcmUser> followerList2;
 			try
 			{
-				groupsList = _context.CpcmGroupfollowers.Where(c => c.CpcmUserId == user.CpcmUserId && c.CpcmGroupId.CompareTo(filters.lastId) > 1).Select(c => c.CpcmGroup);
+				groupsList = _context.CpcmGroupfollowers.Where(c => c.CpcmUserId == user.CpcmUserId && c.CpcmGroupId > filters.lastId).Select(c => c.CpcmGroup);
 				//followerList2 = await _context.CpcmUserfollowers.Where(c => c.CpcmFollowerId == user.CpcmUserId).Select(c => c.CpcmUser).ToListAsync();
 			}
             catch(DbUpdateException ex)
@@ -1491,59 +1521,9 @@ namespace Capycom.Controllers
 			}
 		}
 
-		[Authorize]
-        public async Task<ActionResult> Delete(Guid id)
-        {
-            if (!CheckUserPrivilege("CpcmCanEditUsers", "True", id))
-            {
-                Log.Warning("Пользователь {user} не имеет прав на удаление пользователя {u}",User.FindFirstValue("CpcmUserId"), id);
-                return StatusCode(403);
-            }
-
-            CpcmUser user;
-            try
-            {
-                user = await _context.CpcmUsers.Where(c => c.CpcmUserId == id).FirstOrDefaultAsync();
-            }
-            catch(DbUpdateException ex)
-            {
-				Log.Error(ex, "Ошибка при попытке получить пользователя из базы данных");
-				Response.StatusCode = 500;
-				ViewData["ErrorCode"] = 500;
-				ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
-				return View("UserError");
-			}
-            catch (DbException ex)
-            {
-                Log.Error(ex, "Ошибка при попытке получить пользователя из базы данных");
-                Response.StatusCode = 500;
-                ViewData["ErrorCode"] = 500;
-                ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
-                return View("UserError");
-            }
-
-            if (user == null || user.CpcmIsDeleted)
-			{
-                Log.Warning("Пользователь не найден или удалён {u}", id);
-                Response.StatusCode = 404;
-                ViewData["ErrorCode"] = 404;
-                ViewData["Message"] = "Пользователь не найден";
-                return View("UserError");
-            }
-            //if (user.CpcmUserBanned)
-            //{
-            //    Log.Warning("Пользователь заблокирован и не может быть удалён {u}", user.CpcmUserId);
-            //    Response.StatusCode = 403;
-            //    ViewData["ErrorCode"] = 403;
-            //    ViewData["Message"] = "Пользователь заблокирован и не может быть удалён";
-            //    return View("UserError");
-            //}
-            return View(user);
-        }
 
         [Authorize]
         [HttpPost]
-        [ValidateAntiForgeryToken]
         public async Task<ActionResult> Delete(UserDeleteModel userdel)
         {
             if (!CheckUserPrivilege("CpcmCanEditUsers", "True", userdel.CpcmUserId))
@@ -1561,27 +1541,27 @@ namespace Capycom.Controllers
             {
 				Log.Error(ex, "Ошибка при попытке получить пользователя из базы данных");
 				Response.StatusCode = 500;
-				ViewData["ErrorCode"] = 500;
-				ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
-				return View("UserError");
+				//ViewData["ErrorCode"] = 500;
+				//ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
+                return StatusCode(500, new { message = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку" });
 			}
             catch (DbException ex)
             {
                 Log.Error(ex, "Ошибка при попытке получить пользователя из базы данных");
                 Response.StatusCode = 500;
-                ViewData["ErrorCode"] = 500;
-                ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
-                return View("UserError");
-            }
+                //ViewData["ErrorCode"] = 500;
+                //ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
+				return StatusCode(500, new { message = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку" });
+			}
 
             if (user == null || user.CpcmIsDeleted)
             {
                 Log.Warning("Пользователь не найден или удалён {u}", userdel.CpcmUserId);
                 Response.StatusCode = 404;
-                ViewData["ErrorCode"] = 404;
-                ViewData["Message"] = "Пользователь не найден";
-                return View("UserError");
-            }
+                //ViewData["ErrorCode"] = 404;
+                //ViewData["Message"] = "Пользователь не найден";
+				return StatusCode(404, new { message = "Пользователь не найден." });
+			}
             //if (user.CpcmUserBanned)
             //{
             //    Log.Warning("Пользователь заблокирован и не может быть удалён {u}", user.CpcmUserId);
@@ -1602,34 +1582,34 @@ namespace Capycom.Controllers
             {
                 Log.Error(ex, "Ошибка при попытке удалить пользователя из базы данных");
                 Response.StatusCode = 409;
-                ViewData["ErrorCode"] = 409;
-                ViewData["Message"] = "Пользователь был изменён другим пользователем. Повторите попытку позже";
-                return View("UserError");
-            }
+				//ViewData["ErrorCode"] = 409;
+				//ViewData["Message"] = "Пользователь был изменён другим пользователем. Повторите попытку позже";
+				return StatusCode(409, new { message = "Пользователь был изменён другим пользователем. Повторите попытку позже" });
+			}
             catch (DbUpdateException ex)
             {
                 Log.Fatal(ex,"Ошибка при попытке удалить пользователя из базы данных");
                 Response.StatusCode = 500;
-                ViewData["ErrorCode"] = 500;
-                ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
-                return View("UserError");
-            }
+				//ViewData["ErrorCode"] = 500;
+				//ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
+				return StatusCode(500, new { message = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку" });
+			}
             catch (DbException ex)
             {
                 Log.Error(ex, "Ошибка при попытке удалить пользователя из базы данных");
                 Response.StatusCode = 500;
                 ViewData["ErrorCode"] = 500;
                 ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
-                return View("UserError");
-            }
+				return StatusCode(500, new { message = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку" });
+			}
             
-            return RedirectToAction("UserLogIn", "Index");
+            return RedirectToAction("Index","UserLogIn");
 
         }
 
 		[Authorize]
         [HttpPost]
-        [ValidateAntiForgeryToken]
+        //[ValidateAntiForgeryToken]
         public async Task<IActionResult> Follow(Guid CpcmUserId)
         {
 
@@ -1682,12 +1662,12 @@ namespace Capycom.Controllers
                 return StatusCode(500);
             }
 
-            return StatusCode(200, new {status=true});
-        }
+			return StatusCode(200, new { status = true });
+		}
 
-        [Authorize]
+		[Authorize]
         [HttpPost]
-        [ValidateAntiForgeryToken]
+        //[ValidateAntiForgeryToken]
         public async Task<IActionResult> Unfollow(Guid CpcmUserId)
         {
             CpcmUserfollower? follow;
@@ -1744,7 +1724,7 @@ namespace Capycom.Controllers
 
         [Authorize]
         [HttpPost]
-        [ValidateAntiForgeryToken]
+        //[ValidateAntiForgeryToken]
         public async Task<IActionResult> CreateFriendRequest(Guid CpcmUserId)
         {
             //CpcmUserfriend friendRequest = new();
@@ -1800,7 +1780,7 @@ namespace Capycom.Controllers
 
         [Authorize]
         [HttpPost]
-        [ValidateAntiForgeryToken]
+        //[ValidateAntiForgeryToken]
         public async Task<IActionResult> AnswerToFriendRequests(Guid CpcmUserId, bool status)
         {
             CpcmUserfriend? friendRequest;
@@ -1808,7 +1788,10 @@ namespace Capycom.Controllers
             {
                 var guidString = HttpContext.User.FindFirst(c => c.Type == "CpcmUserId").Value;
                 friendRequest = await _context.CpcmUserfriends.Where(c => c.CmcpUserId == CpcmUserId
-                    && c.CmcpFriendId.ToString() == guidString).FirstOrDefaultAsync(); //Тут мы смотрим только те реквесты, которые адресованы нам. 
+                    && c.CmcpFriendId.ToString() == guidString)
+                    .Include(c =>c.CmcpFriend)
+                    .Include(c => c.CmcpUser)
+                    .FirstOrDefaultAsync(); //Тут мы смотрим только те реквесты, которые адресованы нам. 
             }
             catch (DbUpdateException ex)
             {
@@ -1824,7 +1807,11 @@ namespace Capycom.Controllers
             {
                 return StatusCode(404);
             }
-
+            if(friendRequest.CmcpUser.CpcmIsDeleted || friendRequest.CmcpFriend.CpcmIsDeleted)
+            {
+                _context.CpcmUserfriends.Remove(friendRequest);
+				return StatusCode(404);
+			}
             friendRequest.CpcmFriendRequestStatus = status;
 
             try
@@ -1852,13 +1839,13 @@ namespace Capycom.Controllers
 
         [Authorize]
         [HttpPost]
-        [ValidateAntiForgeryToken]
+        //[ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteFriendRequests(Guid CpcmUserId)
         {
             CpcmUserfriend? friendRequest;
-            try
-            {
-                var guid = HttpContext.User.FindFirst(d => d.Type == "CpcmUserId").Value;
+			try
+			{
+				var guid = HttpContext.User.FindFirst(d => d.Type == "CpcmUserId").Value;
 
 				friendRequest = await _context.CpcmUserfriends.Where(c => c.CmcpUserId.ToString() == guid && c.CmcpFriendId == CpcmUserId
                 || c.CmcpUserId == CpcmUserId && c.CmcpFriendId.ToString() == guid).FirstOrDefaultAsync();
@@ -2039,7 +2026,7 @@ namespace Capycom.Controllers
 			IQueryable<CpcmUser> friendList1;
 			try
 			{
-				friendList1 = _context.CpcmUserfriends.Where(c => c.CmcpFriendId == user.CpcmUserId && (c.CpcmFriendRequestStatus == null) && c.CmcpUserId.CompareTo(filters.lastId) > 0).Select(c => c.CmcpUser);//followerList2 = await _context.CpcmUserfollowers.Where(c => c.CpcmFollowerId == user.CpcmUserId).Select(c => c.CpcmUser).ToListAsync();
+				friendList1 = _context.CpcmUserfriends.Where(c => c.CmcpFriendId == user.CpcmUserId && (c.CpcmFriendRequestStatus == null) && c.CmcpUserId > filters.lastId).Select(c => c.CmcpUser);//followerList2 = await _context.CpcmUserfollowers.Where(c => c.CpcmFollowerId == user.CpcmUserId).Select(c => c.CpcmUser).ToListAsync();
 			}
             catch(DbUpdateException ex)
             {
@@ -2117,7 +2104,7 @@ namespace Capycom.Controllers
 
         [Authorize]
         [HttpPost]
-        [ValidateAntiForgeryToken]
+        //[ValidateAntiForgeryToken]
         public async Task<IActionResult> CreatePostP(UserPostModel userPost)
         {
             //if (userPost.Text == null && userPost.Files.Count > 0)
@@ -2143,12 +2130,26 @@ namespace Capycom.Controllers
                 {
                     var fatherPost = await _context.CpcmPosts.FindAsync(userPost.PostFatherId);
                     if (fatherPost == null)
-                        return StatusCode(StatusCodes.Status400BadRequest);
+                    {
+						Log.Warning("репост поста которого нет {@user}", User.FindFirst(c => c.Type == "CpcmUserId").Value);
+						return StatusCode(StatusCodes.Status400BadRequest);
+					}
+
                     if (fatherPost.CpcmUserId == Guid.Parse(User.FindFirst(c => c.Type == "CpcmUserId").Value))
-                        return StatusCode(StatusCodes.Status417ExpectationFailed);
-                }
+                    {
+                        Log.Warning("Саморепост {@user}", User.FindFirst(c => c.Type == "CpcmUserId").Value);
+						return StatusCode(StatusCodes.Status417ExpectationFailed);
+
+					}
+
+					if (fatherPost.CpcmPostPublishedDate > DateTime.UtcNow)
+					{
+						Log.Information("Попытка репоста отложенного поста {Post}", post.CpcmPostId);
+                        return StatusCode(404);
+					}
+				}
                 post.CpcmPostFather = userPost.PostFatherId;
-                post.CpcmPostCreationDate = DateTime.UtcNow;
+                post.CpcmPostCreationDate = DateTime.UtcNow - new TimeSpan(0,1,0);
                 if (userPost.Published == null)
                 {
 					post.CpcmPostPublishedDate = post.CpcmPostCreationDate;
@@ -2171,6 +2172,10 @@ namespace Capycom.Controllers
 							}
 						}
 					}
+                    if(post.CpcmPostPublishedDate < post.CpcmPostCreationDate)
+                    {
+						post.CpcmPostPublishedDate = post.CpcmPostCreationDate;
+					}
 				}
                 
                 post.CpcmUserId = Guid.Parse(User.FindFirst(c => c.Type == "CpcmUserId").Value);
@@ -2179,10 +2184,10 @@ namespace Capycom.Controllers
                 List<string> filePaths = new List<string>();
                 List<CpcmImage> images = new List<CpcmImage>();
 
-                if (userPost.PostFatherId != null)
+                if (userPost.PostFatherId == null)
                 {
                     int i = 0;
-                    if (userPost.Files!=null)
+                    if (userPost.Files != null)
                     {
                         foreach (IFormFile file in userPost.Files)
                         {
@@ -2264,13 +2269,14 @@ namespace Capycom.Controllers
 							return StatusCode(403);
 						}
 
-                        if(fathergroup == null)
+                        if(fatheruser ==null && fathergroup == null)
                         {
 							return StatusCode(404);
 						}
-                        if(fathergroup!=null && fathergroup.CpcmIsDeleted || fathergroup.CpcmGroupBanned)
+                        if(fatheruser == null && fathergroup != null)
                         {
-                            return StatusCode(403);
+                            if(fathergroup.CpcmIsDeleted || fathergroup.CpcmGroupBanned)
+                                return StatusCode(403);
                         }
 
 						
@@ -2391,7 +2397,6 @@ namespace Capycom.Controllers
 
         [Authorize]
         [HttpPost]
-        [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeletePost(Guid postGuid)
         {
 
@@ -2478,8 +2483,8 @@ namespace Capycom.Controllers
             CpcmPost? post = null;
             try
             {
-                post = await _context.CpcmPosts.Where(c => c.CpcmPostId == postGuid).Include(c => c.CpcmImages).FirstOrDefaultAsync();
-            }
+				post = await _context.CpcmPosts.Where(c => c.CpcmPostId == postGuid).Include(c => c.CpcmImages).FirstOrDefaultAsync();
+			}
 			catch (DbUpdateException ex)
 			{
 				Log.Error(ex, "Ошибка при попытке получить пост из базы данных {guid}", postGuid);
@@ -2534,7 +2539,7 @@ namespace Capycom.Controllers
         [Authorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> EditPost(UserPostEditModel editPost)
+        public async Task<IActionResult> EditPostP(UserPostEditModel editPost)
         {
             //if (editPost.Text == null && editPost.FilesToDelete.Count == 0 && editPost.NewFiles.Count == 0)
             //{
@@ -2550,7 +2555,7 @@ namespace Capycom.Controllers
                 {
                     post = await _context.CpcmPosts.Include(c => c.CpcmImages).Where(c => c.CpcmPostId == editPost.Id).FirstOrDefaultAsync();
 
-                }
+				}
                 catch(DbUpdateException ex)
                 {
 					Log.Error(ex, "Ошибка при попытке получить пост из базы данных {post}", editPost.Id);
@@ -2576,12 +2581,13 @@ namespace Capycom.Controllers
                     Log.Warning("Пользователь не имеет прав на редактирование поста {u}", editPost.Id);
                     return StatusCode(403);
                 }
-                if (post.CpcmImages.Count - editPost.FilesToDelete.Count + editPost.NewFiles.Count > 4)
+				editPost.CpcmImages = post.CpcmImages;
+				if (post.CpcmImages.Count - editPost.FilesToDelete.Count + editPost.NewFiles.Count > 4)
                 {
                     //Log.Debug("Попытка добавить больше 4 файлов в пост {u}", editPost.Id);
                     Log.Warning("Попытка добавить больше 4 файлов в пост {u}", editPost.Id);
                     ModelState.AddModelError("NewFiles", "В посте не может быть больше 4 фотографий");
-                    return View(editPost);
+                    return View("EditPost", editPost);
                 }
 
                 post.CpcmPostText = editPost.Text.Trim();
@@ -2592,20 +2598,24 @@ namespace Capycom.Controllers
 				}
 				else
 				{
-					post.CpcmPostPublishedDate = editPost.NewPublishDate;
-					if (HttpContext.Request.Cookies.ContainsKey("TimeZone"))
-					{
-						string timezoneOffsetCookie = HttpContext.Request.Cookies["TimeZone"];
-						if (timezoneOffsetCookie != null)
-						{
-							if (int.TryParse(timezoneOffsetCookie, out int timezoneOffsetMinutes))
-							{
-								TimeSpan offset = TimeSpan.FromMinutes(timezoneOffsetMinutes);
+                    var datetimeNow = DateTime.UtcNow;
+                    if (post.CpcmPostPublishedDate > datetimeNow)
+                    {
+                        post.CpcmPostPublishedDate = editPost.NewPublishDate;
+                        if (HttpContext.Request.Cookies.ContainsKey("TimeZone"))
+                        {
+                            string timezoneOffsetCookie = HttpContext.Request.Cookies["TimeZone"];
+                            if (timezoneOffsetCookie != null)
+                            {
+                                if (int.TryParse(timezoneOffsetCookie, out int timezoneOffsetMinutes))
+                                {
+                                    TimeSpan offset = TimeSpan.FromMinutes(timezoneOffsetMinutes);
 
-								post.CpcmPostPublishedDate += offset;
+                                    post.CpcmPostPublishedDate += offset;
 
-							}
-						}
+                                }
+                            }
+                        }
 					}
 				}
 
@@ -2633,7 +2643,7 @@ namespace Capycom.Controllers
                     if (!ModelState.IsValid)
                     {
                         Log.Debug("Файл {@file} не прошёл валидацию {u}",file, User.FindFirstValue("CpcmUserId"));
-                        return View(editPost);
+                        return View("EditPost", editPost);
                     }
 
                     string uniqueFileName = Guid.NewGuid().ToString() + Path.GetExtension(file.FileName);
@@ -2666,14 +2676,14 @@ namespace Capycom.Controllers
                         Response.StatusCode = 500;
                         ViewData["ErrorCode"] = 500;
                         ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
-                        return View(editPost);
+                        return View("EditPost", editPost);
                     }
 
                 }
 
 
-                List<CpcmImage>? images = post.CpcmImages.Where(c => !editPost.FilesToDelete.Contains(c.CpcmImageId)).ToList(); //TODO возможно ! тут не нужен 
-                if (images!=null||images.Count != 0)
+                List<CpcmImage>? images = post.CpcmImages.Where(c => editPost.FilesToDelete.Contains(c.CpcmImageId)).ToList();
+                if (images!=null&&images.Count != 0)
                 {
                     //_context.CpcmImages.RemoveRange(images);
                     foreach (var item in images)
@@ -2782,7 +2792,7 @@ namespace Capycom.Controllers
                 return RedirectToAction("Index");
 
             }
-            return View(editPost);
+            return View("EditPost", editPost);
         }
 
         [HttpPost]
@@ -2831,7 +2841,7 @@ namespace Capycom.Controllers
 							}
 						}
 					}
-					postModels.Add(new() { Post = postik, LikesCount = likes, RepostsCount = reposts });
+					postModels.Add(new() { Post = postik, LikesCount = likes, RepostsCount = reposts, UserOwner = user });
 
                 }
             }
@@ -2879,9 +2889,9 @@ namespace Capycom.Controllers
                 foreach (var postik in posts)
                 {
                     postik.CpcmPostFatherNavigation = await GetFatherPostReccurent(postik);
-					//long likes = await _context.Database.SqlQuery<long>($@"SELECT * FROM CPCM_POSTLIKES WHERE CPCM_PostID = '{postik.CpcmGroupId}'");
-					//long reposts = await _context.Database.SqlQuery<long>($@"SELECT * FROM CPCM_POSTREPOSTS WHERE CPCM_PostID = '{postik.CpcmGroupId}'");
-					if (HttpContext.Request.Cookies.ContainsKey("TimeZone"))
+                    //long likes = await _context.Database.SqlQuery<long>($@"SELECT * FROM CPCM_POSTLIKES WHERE CPCM_PostID = '{postik.CpcmGroupId}'");
+                    //long reposts = await _context.Database.SqlQuery<long>($@"SELECT * FROM CPCM_POSTREPOSTS WHERE CPCM_PostID = '{postik.CpcmGroupId}'");
+                    if (HttpContext.Request.Cookies.ContainsKey("TimeZone"))
 					{
 						string timezoneOffsetCookie = HttpContext.Request.Cookies["TimeZone"];
 						if (timezoneOffsetCookie != null)
@@ -2895,7 +2905,7 @@ namespace Capycom.Controllers
 							}
 						}
 					}
-					postModels.Add(new() { Post = postik, LikesCount = 0, RepostsCount = 0 });
+					postModels.Add(new() { Post = postik, LikesCount = 0, RepostsCount = 0 , UserOwner = user });
                 }
             }
             catch (DbException ex)
@@ -2950,7 +2960,7 @@ namespace Capycom.Controllers
 							}
 						}
 					}
-					postModels.Add(new() { Post = postik, LikesCount = 0, RepostsCount = 0 });
+					postModels.Add(new() { Post = postik, LikesCount = 0, RepostsCount = 0, UserOwner = user });
                 }
             }
             catch (DbException ex)
@@ -2969,7 +2979,7 @@ namespace Capycom.Controllers
         [HttpPost]
         public async Task<IActionResult> BanUnbanPost(Guid id)
         {
-            if (!CheckUserPrivilege("CpcmCanDelUsersPosts", "True"))
+            if (!CheckUserAdminPrivilege("CpcmCanDelUsersPosts", "True"))
             {
                 Log.Warning("Пользователь {uu} не имеет прав на блокировку постов {u}", User.FindFirstValue("CpcmUserId"), id);
                 return StatusCode(403);
@@ -3051,7 +3061,7 @@ namespace Capycom.Controllers
                 //ViewData["additionalName"] = additionalName;
                 query = query.Where(u => EF.Functions.Like(u.CpcmUserAdditionalName, $"%{filters.AdditionalName}%"));
             }
-			if (filters.UserRole.HasValue && CheckUserPrivilege("CpcmCanEditUsers", "True"))
+			if (filters.UserRole.HasValue && CheckUserAdminPrivilege("CpcmCanEditUsers", "True"))
 			{
 				query = query.Where(u => u.CpcmUserRole == filters.UserRole);
 			}
@@ -3126,13 +3136,13 @@ namespace Capycom.Controllers
 				//ViewData["additionalName"] = additionalName;
 				query = query.Where(u => EF.Functions.Like(u.CpcmUserAdditionalName, $"%{filters.AdditionalName}%"));
 			}
-			if (filters.UserRole.HasValue && CheckUserPrivilege("CpcmCanEditUsers", "True"))
+			if (filters.UserRole.HasValue && CheckUserAdminPrivilege("CpcmCanEditUsers", "True"))
 			{
 				query = query.Where(u => u.CpcmUserRole == filters.UserRole);
 			}
 			try
             {
-                var rez = await query.Where(u => u.CpcmUserId.CompareTo(filters.lastId) > 0).OrderBy(u => u.CpcmUserId).Take(10).ToListAsync();
+                var rez = await query.Where(u => u.CpcmUserId > filters.lastId).OrderBy(u => u.CpcmUserId).Take(10).ToListAsync();
                 return PartialView(rez);
             }
             catch (DbUpdateException ex)
@@ -3151,7 +3161,15 @@ namespace Capycom.Controllers
 
 
 
+        private string GetUserIdString()
+        {
+            if (User.Identity.IsAuthenticated)
+            {
+                return HttpContext.User.FindFirst(c => c.Type == "CpcmUserId").Value;
 
+			}
+            return null;
+        }
         private bool CheckUserPrivilege(string claimType, string claimValue, string id)
         {
             var authFactor = HttpContext.User.FindFirst(c => c.Type == "CpcmUserId" && c.Value == id || c.Type == claimType && c.Value == claimValue);
@@ -3174,7 +3192,7 @@ namespace Capycom.Controllers
 			Log.Information("Привелегии подтверждены {claim} {user}", claimValue, HttpContext.User.FindFirst(c => c.Type == "CpcmUserId").Value);
 			return true;
         }
-        private bool CheckUserPrivilege(string claimType, string claimValue)
+        private bool CheckUserAdminPrivilege(string claimType, string claimValue)
         {
             var authFactor = HttpContext.User.FindFirst(c => c.Type == claimType && c.Value == claimValue);
             if (authFactor == null)

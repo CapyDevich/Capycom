@@ -80,3 +80,9 @@ function sendNewSchoolName() {
 		}
 	});
 }
+
+function clearSelect(selectID) {
+	$(`#${selectID}`).val('');
+	$(`#${selectID}`).selectpicker("destroy");
+	$(`#${selectID}`).addClass('selectpicker').selectpicker("render");
+}

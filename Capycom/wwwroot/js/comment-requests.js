@@ -4,16 +4,14 @@ $(document).ready(function () {
         e.preventDefault();
 
         let formData = new FormData(this);
-        console.log(formData);
         $.ajax({
             type: 'POST',
-            url: '/PostComment/AddComment', // Укажите URL вашего обработчика на сервере
+            url: '/PostComment/AddComment',
             data: formData,
             processData: false,
             contentType: false,
             success: function (response) {
-                console.log('Данные успешно отправлены!');
-                console.log(response);
+                location.reload();
             },
             error: function (error) {
                 console.error('Ошибка при отправке данных:', error);
@@ -21,3 +19,37 @@ $(document).ready(function () {
         });
     });
 });
+
+let lastIDToDelete = ''
+function askCommentDelete(commentID) {
+    lastIDToDelete = commentID;
+}
+function deleteComment() {
+    let dataToSend = {
+        commentId: lastIDToDelete
+    };
+    if (lastIDToDelete != '')
+        $.ajax({
+            url: '/PostComment/DeleteComment',
+            type: 'POST',
+            data: dataToSend,
+            success: function (response) {
+                if (response['status']) {
+                    $(`#${lastIDToDelete}`).remove();
+                    lastIDToDelete = ''
+                }
+                else {
+                    alert('Удалить пост не вышло :(');
+                    lastIDToDelete = ''
+                }
+            },
+            error: function (obj) {
+                if (obj.status == 401)
+                    window.location.replace("/UserLogIn");
+                else
+                    alert(`Удалить комментарий не вышло, что-то пошло не так :(\nСтатус: ${obj.status}`);
+                lastIDToDelete = ''
+            }
+        });
+
+}

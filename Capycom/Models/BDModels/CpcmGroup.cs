@@ -27,11 +27,18 @@ public partial class CpcmGroup
     public bool CpcmGroupBanned { get; set; }
 
     public bool CpcmIsDeleted { get; set; }
-	[NotMapped]
-	public bool? IsFollowed { get; set; }
-	[NotMapped]
-	public bool IsAdmin { get; set; }
+    [NotMapped]
+    [Obsolete("Нужно использовать поле UserFollowerRole. Если свойство UserFollowerRole null то он не подписан")]
+    public bool? IsFollowed { get; set; }
+    [NotMapped]
+    [Obsolete("Нужно использовать поле UserFollowerRole. Если свойство UserFollowerRole null то он не подписан. Иначе можно увидеть его права")]
+    public bool IsAdmin { get; set; }
 
+	/// <summary>
+	/// Если свойство UserFollowerRole null то он не подписан. Иначе можно увидеть его права
+	/// </summary>
+	[NotMapped]
+    public CpcmGroupRole? UserFollowerRole {get;set;}
 	public virtual CpcmCity? CpcmGroupCityNavigation { get; set; }
 
     public virtual CpcmGroupsubject CpcmGroupSubjectNavigation { get; set; } = null!;

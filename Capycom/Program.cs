@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.RateLimiting;
 using System.Threading.RateLimiting;
 using System.Configuration;
 using AspNetCoreRateLimit;
+using Microsoft.AspNetCore.HttpOverrides;
 
 namespace Capycom
 {
@@ -28,7 +29,13 @@ namespace Capycom
 
             builder.Services.Configure<MyConfig>((options => builder.Configuration.GetSection("MyConfig").Bind(options)));
 
-            builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme).AddCookie(options => options.LoginPath = "/UserLogIn") ;
+            builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme).AddCookie(options => 
+			{
+				options.LoginPath = "/UserLogIn";
+				options.LogoutPath = "/UserLogIn/LogOut";
+				options.AccessDeniedPath = "/Error/Code403";
+			}
+			) ;
 
             builder.Services.AddAuthorization();
 
@@ -40,23 +47,43 @@ namespace Capycom
 			builder.Logging.ClearProviders();
 			var columnOptions = new ColumnOptions();
 			columnOptions.Store.Add(StandardColumn.LogEvent);
+#if DEBUG
 			Log.Logger = new LoggerConfiguration()
-				.Destructure.With<SerializationPolicy>()
-                .MinimumLevel.Debug() //Information()
-				.MinimumLevel.Override("Microsoft", LogEventLevel.Error) //все события от Microsoft, Microsoft.AspNetCore, Microsoft.AspNetCore.Hosting и т.д., будут записываться на уровне Information и выше.
-				.Enrich.FromLogContext()
-	            .WriteTo.Console()
-	            .WriteTo.Async(a=> a.File(path:"Logs/log-.txt", rollingInterval: RollingInterval.Day, retainedFileTimeLimit: TimeSpan.FromDays(30))) //formatter: new JsonFormatter()
-				.WriteTo.Async(a=> a.MSSqlServer(
-		            connectionString: builder.Configuration.GetSection("Test1")["OurDB"],
-					columnOptions: columnOptions,
-					sinkOptions: new MSSqlServerSinkOptions { TableName = "CPCM_LogEvents", AutoCreateSqlTable = true, }))
-	            .CreateLogger();
-
+					.Destructure.With<SerializationPolicy>()
+					.MinimumLevel.Debug() //Information()
+					.MinimumLevel.Override("Microsoft", LogEventLevel.Error) //все события от Microsoft, Microsoft.AspNetCore, Microsoft.AspNetCore.Hosting и т.д., будут записываться на уровне Information и выше.
+					.Enrich.FromLogContext()
+					.WriteTo.Console()
+					.WriteTo.Async(a => a.File(path: "Logs/log-.txt", rollingInterval: RollingInterval.Day, retainedFileTimeLimit: TimeSpan.FromDays(30))) //formatter: new JsonFormatter()
+					.WriteTo.Async(a => a.MSSqlServer(
+						connectionString: builder.Configuration.GetSection("Test1")["OurDB"],
+						columnOptions: columnOptions,
+						sinkOptions: new MSSqlServerSinkOptions { TableName = "CPCM_LogEvents", AutoCreateSqlTable = true, }))
+					.CreateLogger();
+#elif RELEASE
+			Log.Logger = new LoggerConfiguration()
+					.Destructure.With<SerializationPolicy>()
+					.MinimumLevel.Warning() //Information()
+					.MinimumLevel.Override("Microsoft", LogEventLevel.Error) //все события от Microsoft, Microsoft.AspNetCore, Microsoft.AspNetCore.Hosting и т.д., будут записываться на уровне Information и выше.
+					.Enrich.FromLogContext()
+					.WriteTo.Console()
+					.WriteTo.Async(a => a.File(path: "Logs/log-.txt", rollingInterval: RollingInterval.Day, retainedFileTimeLimit: TimeSpan.FromDays(30))) //formatter: new JsonFormatter()
+					.WriteTo.Async(a => a.MSSqlServer(
+						connectionString: builder.Configuration.GetSection("Test1")["OurDB"],
+						columnOptions: columnOptions,
+						sinkOptions: new MSSqlServerSinkOptions { TableName = "CPCM_LogEvents", AutoCreateSqlTable = true, }))
+					.CreateLogger();
+#endif
 			builder.Host.UseSerilog();
 			Serilog.Debugging.SelfLog.Enable(msg => Console.WriteLine(msg));
 
 			builder.Services.AddControllersWithViews();
+
+			builder.Services.AddMvc(options =>
+			{
+				options.Filters.Add(typeof(AuthFilter)); // Добавляем фильтр аутентификации
+			});
+
 
 			builder.Services.AddRateLimiter(_ => _
 			.AddFixedWindowLimiter(policyName: "fixed", options =>
@@ -66,6 +93,11 @@ namespace Capycom
 				options.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
 				options.QueueLimit = 100;
 			}));
+			builder.Services.AddSession(options =>
+			{
+				options.Cookie.HttpOnly = true; // Куки сессии будут доступны только через HTTP(S), а не через клиентский скрипт
+				options.Cookie.IsEssential = true; // Куки сессии являются существенными, что позволяет их сохранять даже при отключенном согласии на куки
+			});
 
 			builder.Services.AddOptions();
 			builder.Services.AddMemoryCache();
@@ -80,8 +112,7 @@ namespace Capycom
 			// Configure the HTTP request pipeline.
 			if (!app.Environment.IsDevelopment())
             {
-                app.UseExceptionHandler("/Home/Error");
-                // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
+                app.UseExceptionHandler("/Error/ErrorF");
                 app.UseHsts();
             }
 
@@ -90,16 +121,23 @@ namespace Capycom
 
             app.UseRouting();
 
-            app.UseAuthentication();
+			app.UseForwardedHeaders(new ForwardedHeadersOptions
+			{
+				ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+			});
+
+
+			app.UseAuthentication();
             app.UseAuthorization();
 
 			app.UseRateLimiter();
+			app.UseSession();
 
-			app.UseMiddleware<UserAuthMiddleware>();
+			//app.UseMiddleware<UserAuthMiddleware>();
 
 			app.MapControllerRoute(
                 name: "default",
-                pattern: "{controller=Home}/{action=Index}/{id?}");
+                pattern: "{controller=Home}/{action=Index}");
 
             app.Run();
         }

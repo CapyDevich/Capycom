@@ -63,5 +63,7 @@ namespace Capycom.Models
         public IFormFile? CpcmUserImage { get; set; }
 
         public IFormFile? CpcmUserCoverImage { get; set; }
+
+        public bool IsDeletingUserImage { get; set; }
     }
 }

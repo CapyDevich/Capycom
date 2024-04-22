@@ -38,16 +38,17 @@ namespace Capycom.Controllers
 
 				// Получаем всех друзей пользователя
 				var friendIds = await _context.CpcmUserfriends
-					.Where(f => f.CmcpUserId == userId || f.CmcpFriendId == userId)
-					.Select(f => f.CmcpUserId == userId ? f.CmcpFriendId : f.CmcpUserId).ToListAsync();
+				  .Where(f => f.CmcpUserId == userId && f.CpcmFriendRequestStatus == true || f.CmcpFriendId == userId && f.CpcmFriendRequestStatus == true)
+				  .Select(f => f.CmcpUserId == userId ? f.CmcpFriendId : f.CmcpUserId).ToListAsync();
 
 				// Получаем всех пользователей, на которых подписан пользователь
 				var followerIds = await _context.CpcmUserfollowers
-					.Where(f => f.CpcmUserId == userId)
-					.Select(f => f.CpcmFollowersId).ToListAsync();
+					.Where(f => f.CpcmFollowerId == userId)
+					.Select(f => f.CpcmUserId).ToListAsync();
 
 				// Объединяем все ID в одну коллекцию
 				var allUserIds = friendIds.Union(followerIds).ToList();
+
 
 				// Получаем все посты этих групп и пользователей
 				var posts = await _context.CpcmPosts
@@ -85,7 +86,13 @@ namespace Capycom.Controllers
 					CpcmGroup? groupOwner = await _context.CpcmGroups.Where(u => u.CpcmGroupId == post.CpcmGroupId).FirstOrDefaultAsync();
 					long likes = await _context.Database.SqlQuery<long>($@"SELECT * FROM CPCM_POSTLIKES WHERE CPCM_PostID = {post.CpcmPostId}").CountAsync();
 					long reposts = await _context.Database.SqlQuery<long>($@"SELECT * FROM CPCM_POSTREPOSTS WHERE CPCM_PostID = {post.CpcmPostId}").CountAsync();
-
+					if (User.Identity.IsAuthenticated && groupOwner != null)
+					{
+						var authUserId = GetUserIdString();
+						var authFollower = await _context.CpcmGroupfollowers.Where(f => f.CpcmUserId == authUserId && f.CpcmGroupId == groupOwner.CpcmGroupId).Include(f => f.CpcmUserRoleNavigation).FirstOrDefaultAsync();
+						groupOwner.UserFollowerRole = authFollower.CpcmUserRoleNavigation;
+						post.Group.UserFollowerRole = authFollower.CpcmUserRoleNavigation;
+					}
 					if (HttpContext.Request.Cookies.ContainsKey("TimeZone"))
 					{
 						string timezoneOffsetCookie = HttpContext.Request.Cookies["TimeZone"];
@@ -270,6 +277,14 @@ namespace Capycom.Controllers
 				Log.Error(ex, "Не удалось выгрузить родительские посты {@fathrepostnavigation}", cpcmPostFatherNavigation);
 				throw;
 			}
+		}
+		private Guid GetUserIdString()
+		{
+			if (User.Identity.IsAuthenticated)
+			{
+				return Guid.Parse(HttpContext.User.FindFirst(c => c.Type == "CpcmUserId").Value);
+			}
+			throw new InvalidOperationException("User is not authenticated");
 		}
 	}
 }

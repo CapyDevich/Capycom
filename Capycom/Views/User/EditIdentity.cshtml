@@ -1,0 +1,41 @@
+﻿@model UserEditIdentityModel
+@{
+	ViewData["Title"] = "Изменение настроек безопасности";
+}
+<link href="~/css/signup.css" rel="stylesheet" />
+<div class="container">
+	<h1 class="text-center mt-5">@ViewData["Title"]</h1>
+	<form class="col-md-6 mx-auto" asp-action="EditIdentity" enctype="multipart/form-data">
+		@Html.AntiForgeryToken()
+		<input asp-for="CpcmUserId" value="@Model.CpcmUserId" hidden />
+		<div asp-validation-summary="ModelOnly" class="text-danger"></div>
+		<label asp-for="CpcmUserNickName" class="form-label">Псевдоним</label>
+		<div class="input-group">
+			<span class="input-group-text" id="inputGroupPrepend">@@</span>
+			<input asp-for="CpcmUserNickName" type="text" class="form-control" id="validationCustomUsername">
+		</div>
+		<span asp-validation-for="CpcmUserNickName" class="text-danger"></span>
+		<div class="mb-3">
+			<label asp-for="CpcmUserEmail" class="form-label">Электронная почта</label>
+			<input asp-for="CpcmUserEmail" type="email" class="form-control" id="email" required>
+		</div>
+		<span asp-validation-for="CpcmUserEmail" class="text-danger"></span>
+		<div class="mb-3">
+			<label asp-for="CpcmUserTelNum" class="form-label">Номер телефона</label>
+			<input asp-for="CpcmUserTelNum" type="tel" class="form-control" id="phone" title="Номер телефона должен содержать только цифры и специальные символы" required>
+		</div>
+		<span asp-validation-for="CpcmUserTelNum" class="text-danger"></span>
+		<div class="mb-3">
+			<label asp-for="CpcmUserPwd" class="form-label">Пароль</label>
+			<input asp-for="CpcmUserPwd" type="password" class="form-control" id="password">
+		</div>
+		<span asp-validation-for="CpcmUserPwd" class="text-danger"></span>
+		<div class="mb-3">
+			<label asp-for="CpcmUserPwdConfirm" class="form-label">Подтвердите пароль</label>
+			<input asp-for="CpcmUserPwdConfirm" type="password" class="form-control" id="confirmPassword" >
+		</div>
+		<span asp-validation-for="CpcmUserPwdConfirm" class="text-danger"></span><br />
+		<button type="submit" class="btn btn-primary" value="Create">Сохранить изменения</button>
+	</form>
+</div>
+<script src="~/js/signup.js"></script>
