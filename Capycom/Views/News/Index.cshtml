@@ -37,9 +37,12 @@
 				}
 			}
 		</div>
-		<div class="col-lg-8 mx-auto">
-			<button class="btn btn-primary container-fluid" onclick="loadNews(this)">Загрузить ещё</button>
-		</div>
+		@if (Model.Count >= 10)
+		{
+			<div class="col-lg-8 mx-auto">
+				<button class="btn btn-primary container-fluid" onclick="loadNews(this)">Загрузить ещё</button>
+			</div>
+		}
 	</div>
 </div>
 

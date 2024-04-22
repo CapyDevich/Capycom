@@ -99,9 +99,12 @@
 					</div>
 				</div>
 			}
-			<div class="col-12 text-center" id="friends-footer">
-				<button class="btn btn-primary" type="button" onclick="loadFriends(this)">Загрузить ещё</button>
-			</div>
+			@if (Model.Count >= 10)
+			{
+				<div class="col-12 text-center" id="friends-footer">
+					<button class="btn btn-primary" type="button" onclick="loadFriends(this)">Загрузить ещё</button>
+				</div>
+			}
 		}
 		else
 		{
