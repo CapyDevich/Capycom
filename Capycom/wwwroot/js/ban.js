@@ -9,12 +9,15 @@ function ban(url, banID) {
         data: dataToSend,
         success: function (response) {
             if (response['status']) {
-                alert(response['status']);
-                let banIco = document.getElementById('banID');
-                if (banIco.style['color'] == '#198754') // ~ green
-                    banIco.style['color'] == '#dc3545' // ~ red
-                else
-                    banIco.style['color'] == '#198754'
+                let banIco = $(`#${banID} .ban-icon`);
+                if (banIco.css('color') == 'rgb(25, 135, 84)') { // ~ green
+                    banIco.css('color', '#dc3545'); // ~ red
+                    $(`#${banID}`).children().first().children().eq(1).html('<div class="card mb-2"><div class="card-body"><div class="d-flex align-items-center">Пост был разбанен.<br/>Чтобы увидеть его содержимое, перезагрузите страницу.</div></div></div>')
+                }
+                else {
+                    banIco.css('color', '#198754'); // ~ green
+                    $(`#${banID}`).children().first().children().eq(1).html('<div class="card mb-2"><div class="card-body"><div class="d-flex align-items-center">Пост был забаннен :(</div></div></div>')
+                }
             }
             else {
                 alert('Забанить не вышло :(');
