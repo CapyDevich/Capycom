@@ -19,23 +19,10 @@ namespace Capycom.Controllers
 
         public IActionResult Index()
         {
-            Debug.WriteLine(db.Database.CanConnect());
             return View();
         }
 
-        public IActionResult Privacy()
-        {
-            return View();
-        }
-        public IActionResult SignUp()
-        {
-            return View();
-        }
-        public IActionResult LogIn()
-        {
-            return View();
-        }
-        public IActionResult Profile()
+        public IActionResult Manual()
         {
             return View();
         }

@@ -55,10 +55,10 @@ namespace Capycom
 					.Enrich.FromLogContext()
 					.WriteTo.Console()
 					.WriteTo.Async(a => a.File(path: "Logs/log-.txt", rollingInterval: RollingInterval.Day, retainedFileTimeLimit: TimeSpan.FromDays(30))) //formatter: new JsonFormatter()
-					.WriteTo.Async(a => a.MSSqlServer(
-						connectionString: builder.Configuration.GetSection("Test1")["OurDB"],
-						columnOptions: columnOptions,
-						sinkOptions: new MSSqlServerSinkOptions { TableName = "CPCM_LogEvents", AutoCreateSqlTable = true, }))
+					//.WriteTo.Async(a => a.MSSqlServer(
+					//	connectionString: builder.Configuration.GetSection("Test1")["OurDB"],
+					//	columnOptions: columnOptions,
+					//	sinkOptions: new MSSqlServerSinkOptions { TableName = "CPCM_LogEvents", AutoCreateSqlTable = true, }))
 					.CreateLogger();
 #elif RELEASE
 			Log.Logger = new LoggerConfiguration()
@@ -112,8 +112,7 @@ namespace Capycom
 			// Configure the HTTP request pipeline.
 			if (!app.Environment.IsDevelopment())
             {
-                app.UseExceptionHandler("/Home/Error");
-                // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
+                app.UseExceptionHandler("/Error/ErrorF");
                 app.UseHsts();
             }
 
@@ -138,7 +137,7 @@ namespace Capycom
 
 			app.MapControllerRoute(
                 name: "default",
-                pattern: "{controller=Home}/{action=Index}/{id?}");
+                pattern: "{controller=Home}/{action=Index}");
 
             app.Run();
         }
