@@ -1981,7 +1981,10 @@ namespace Capycom.Controllers
 
             try
             {
-                var result = await friendList1.OrderBy(p => p.CpcmUserId).Take(10).ToListAsync();
+				ViewData["CpcmUserCity"] = new SelectList(await _context.CpcmCities.ToListAsync(), "CpcmCityId", "CpcmCityName",filters.CityId);
+				ViewData["CpcmUserSchool"] = new SelectList(await _context.CpcmSchools.ToListAsync(), "CpcmSchooldId", "CpcmSchoolName", filters.SchoolId);
+				ViewData["CpcmUserUniversity"] = new SelectList(await _context.CpcmUniversities.ToListAsync(), "CpcmUniversityId", "CpcmUniversityName",filters.UniversityId);
+				var result = await friendList1.OrderBy(p => p.CpcmUserId).Take(10).ToListAsync();
                 //followerList1.AddRange(followerList2);
 
                 return View(result);
