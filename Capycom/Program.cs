@@ -133,7 +133,7 @@ namespace Capycom
 			app.UseRateLimiter();
 			app.UseSession();
 
-			//app.UseMiddleware<UserAuthMiddleware>();
+			app.UseMiddleware<UpdateSessionMiddleware>();
 
 			app.MapControllerRoute(
                 name: "default",
