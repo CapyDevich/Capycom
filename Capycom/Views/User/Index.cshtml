@@ -56,6 +56,10 @@
 }
 <script type="text/javascript" charset="utf-8" src="~/js/post.js"></script>
 <script src="~/js/load-more.js"></script>
+@if (User.FindFirst(c => c.Type == "CpcmCanDelUsersPosts").Value == "True")
+{
+	<script src="~/js/ban.js"></script>
+}
 @if (!Model.User.CpcmUserBanned)
 {
 	<!-- Модальное окно на подтверждение удаление поста -->
