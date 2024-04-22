@@ -13,12 +13,15 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Http;
 using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
+using Microsoft.AspNetCore.Http.HttpResults;
 namespace PostCurdTests
 {
 	public class CurdUserPosrTests : IDisposable
 	{
 		private readonly CapycomContext context;
 		private readonly UserController controller;
+		private readonly List<CpcmUser> users;
+		private readonly List<CpcmPost> posts;
 
 		public CurdUserPosrTests()
 		{
@@ -30,7 +33,7 @@ namespace PostCurdTests
 			context.Database.EnsureCreated();
 
 			//AddUsers
-			var users = new List<CpcmUser>
+			users = new List<CpcmUser>
 				{
 					new CpcmUser
 					{
@@ -106,6 +109,31 @@ namespace PostCurdTests
 						CpcmUserRole = 3,
 						CpcmUserBanned = false,
 						CpcmIsDeleted = true
+					},
+					new CpcmUser
+					{
+						CpcmUserId = new Guid("00000000-0000-0000-0000-000010000009"),
+						CpcmUserEmail = "user3@example.com",
+						CpcmUserTelNum = "555555555",
+						CpcmUserPwdHash = new byte[] { 0x07, 0x08, 0x09 },
+						CpcmUserSalt = "salt3",
+						CpcmUserAbout = "About user 3",
+						CpcmUserCity = new Guid("00000000-0000-0000-0000-000000000010"),
+						CpcmUserSite = "user3.com",
+						CpcmUserBooks = "Books user 3",
+						CpcmUserFilms = "Films user 3",
+						CpcmUserMusics = "Musics user 3",
+						CpcmUserSchool = new Guid("00000000-0000-0000-0000-000000000011"),
+						CpcmUserUniversity = new Guid("00000000-0000-0000-0000-000000000012"),
+						CpcmUserImagePath = "user3.jpg",
+						CpcmUserCoverPath = "user3_cover.jpg",
+						CpcmUserNickName = "User3",
+						CpcmUserFirstName = "First3",
+						CpcmUserSecondName = "Second3",
+						CpcmUserAdditionalName = "Additional3",
+						CpcmUserRole = 3,
+						CpcmUserBanned = false,
+						CpcmIsDeleted = false
 					}
 				};
 
@@ -114,8 +142,8 @@ namespace PostCurdTests
 			//AddPosts
 			var lastGuid = new Guid("00000000-0000-0000-0000-000000000012");
 			var usernum = 0;
-			List<CpcmPost> posts = new List<CpcmPost>();
-			for (int i = 0; i < 18; i++)
+			posts = new List<CpcmPost>();
+			for (int i = 0; i < 24; i++)
 			{
 				if (i % 6 == 0)
 				{
@@ -205,6 +233,10 @@ namespace PostCurdTests
 				controller.HttpContext.Response.StatusCode.Should().Be(400);
 				viewResult.ViewData["Message"].Should().NotBeNull();
 			}
+			else
+			{
+				Assert.Fail();
+			}
 			//else if (result is PartialViewResult partialViewResult)
 			//{
 			//	//var model = partialViewResult.Model;
@@ -214,6 +246,7 @@ namespace PostCurdTests
 			//	partialViewResult.ViewName.Should().Be("UserError");
 			//	partialViewResult.ViewData["Message"].Should().NotBeNull();
 			//}
+
 
 		}
 
@@ -245,14 +278,131 @@ namespace PostCurdTests
 			var result = await controller.CreatePostP(userPostModel);
 
 			//Assert
-			if (result is ViewResult viewResult)
+			if (result is RedirectToActionResult viewResult)
 			{
-				viewResult.ViewName.Should().Be("Index");
+				viewResult.ActionName.Should().Be("Index");
 				//viewResult.StatusCode.Should().Be(400);
-				controller.HttpContext.Response.StatusCode.Should().Be(200);
+				//controller.HttpContext.Response.StatusCode.Should().Be(200);
+			}
+			else
+			{
+				Assert.Fail();
+			}
+
+		}
+
+		[Fact]
+		public async Task CreatePostP_SendPostWithTextNoFilesSelfRepost_ExpectStatusCode417() 
+		{
+			//Arrange
+
+			var userPostModel = new Capycom.Models.UserPostModel()
+			{
+				Files = null,
+				Text = "Text",
+				PostFatherId = posts[1].CpcmPostId,
+			};
+			var validationContext = new ValidationContext(userPostModel);
+			var validationResults = new List<ValidationResult>();
+			Validator.TryValidateObject(userPostModel, validationContext, validationResults, true);
+			if (validationResults.Any())
+			{
+				foreach (var validationResult in validationResults)
+				{
+					controller.ModelState.AddModelError(validationResult.MemberNames.First(), validationResult.ErrorMessage);
+				}
+			}
+
+			//Act
+
+			var result = await controller.CreatePostP(userPostModel);
+
+			//Assert
+			if (result is StatusCodeResult statusCodeResult)
+			{
+				statusCodeResult.StatusCode.Should().Be(417);
+			}
+			else
+			{
+				Assert.Fail();
+			}
+
+		}
+
+		[Fact]
+		public async Task CreatePostP_SendPostWithTextNoFilesReposAuthorBanned_ExpectStatusCode403()
+		{
+			//Arrange
+
+			var userPostModel = new Capycom.Models.UserPostModel()
+			{
+				Files = null,
+				Text = "Text",
+				PostFatherId = posts[10].CpcmPostId,
+			};
+			var validationContext = new ValidationContext(userPostModel);
+			var validationResults = new List<ValidationResult>();
+			Validator.TryValidateObject(userPostModel, validationContext, validationResults, true);
+			if (validationResults.Any())
+			{
+				foreach (var validationResult in validationResults)
+				{
+					controller.ModelState.AddModelError(validationResult.MemberNames.First(), validationResult.ErrorMessage);
+				}
+			}
+
+			//Act
+
+			var result = await controller.CreatePostP(userPostModel);
+
+			//Assert
+			if (result is StatusCodeResult statusCodeResult)
+			{
+				statusCodeResult.StatusCode.Should().Be(403);
+			}
+			else
+			{
+				Assert.Fail();
 			}
 		}
 
+		[Fact]
+		public async Task CreatePostP_SendPostWithTextNoFilesRepost_ExpectStatusCode200()
+		{
+			//Arrange
+
+			var userPostModel = new Capycom.Models.UserPostModel()
+			{
+				Files = null,
+				Text = "Text",
+				PostFatherId = posts[20].CpcmPostId,
+			};
+			var validationContext = new ValidationContext(userPostModel);
+			var validationResults = new List<ValidationResult>();
+			Validator.TryValidateObject(userPostModel, validationContext, validationResults, true);
+			if (validationResults.Any())
+			{
+				foreach (var validationResult in validationResults)
+				{
+					controller.ModelState.AddModelError(validationResult.MemberNames.First(), validationResult.ErrorMessage);
+				}
+			}
+
+			//Act
+			var result = await controller.CreatePostP(userPostModel);
+			//Func<Task> act = async () => await controller.CreatePostP(userPostModel);
+
+			//Assert
+			//await act.Should().ThrowAsync<InvalidOperationException>();
+			if (result is ObjectResult objectResult)
+			{
+				objectResult.StatusCode.Should().Be(200);
+			}
+			else
+			{
+				Assert.Fail();
+			}
+		}
 		#region Вспомогательные методы
 		private static Guid NextGuid(Guid guid)
 		{
