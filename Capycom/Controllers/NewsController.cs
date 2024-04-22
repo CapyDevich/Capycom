@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Serilog;
+using System.Data;
 using System.Data.Common;
 using System.Security.Claims;
 
@@ -56,7 +57,7 @@ namespace Capycom.Controllers
 								(p.CpcmUserId.HasValue && allUserIds.Contains(p.CpcmUserId.Value)))
 					.Include(p => p.CpcmImages)
 					//.Include(p => p.CpcmPostFatherNavigation)
-					.OrderByDescending(c => c.CpcmPostPublishedDate).Where(p => p.CpcmIsDeleted == false)
+					.OrderByDescending(c => c.CpcmPostPublishedDate).Where(p => p.CpcmIsDeleted == false && p.CpcmPostPublishedDate < DateTime.UtcNow)
 					.Take(10)
 					.ToListAsync();
 				foreach (var post in posts)

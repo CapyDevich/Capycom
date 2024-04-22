@@ -81,13 +81,14 @@ function loadFollowers(button) {
             return decodeURI(results[1]) || 0;
         }
         let dataToSend = {
-            FirstName: $.urlParam('FirstName'),
-            SecondName: $.urlParam('SecondName'),
+            FirstName: $.urlParam('FirstName') == 0 ? null : $.urlParam('FirstName'),
+            SecondName: $.urlParam('SecondName') == 0 ? null : $.urlParam('SecondName'),
             AdditionalName: $.urlParam('AdditionalName') == 0 ? null : $.urlParam('AdditionalName'),
             CityId: $.urlParam('CityId'),
             UniversityId: $.urlParam('UniversityId'),
             SchoolId: $.urlParam('SchoolId'),
             NickName: $.urlParam('NickName'),
+            UserId: $('[name=UserId]')[0].value,
             lastId: $('.follower').last()[0].id
         };
         $.ajax({
@@ -95,7 +96,7 @@ function loadFollowers(button) {
             type: 'POST',
             data: dataToSend,
             success: function (response) {
-                let followersContainer = document.getElementById('followers-container')[0];
+                let followersContainer = document.getElementById('followers-container');
                 if (response != '') {
                     followersContainer.innerHTML += response;
                     button.innerHTML = 'Загрузить ещё';
@@ -126,13 +127,14 @@ function loadFriends(button) {
             return decodeURI(results[1]) || 0;
         }
         let dataToSend = {
-            FirstName: $.urlParam('FirstName'),
-            SecondName: $.urlParam('SecondName'),
+            FirstName: $.urlParam('FirstName') == 0 ? null : $.urlParam('FirstName'),
+            SecondName: $.urlParam('SecondName') == 0 ? null : $.urlParam('SecondName'),
             AdditionalName: $.urlParam('AdditionalName') == 0 ? null : $.urlParam('AdditionalName'),
             CityId: $.urlParam('CityId'),
             UniversityId: $.urlParam('UniversityId'),
             SchoolId: $.urlParam('SchoolId'),
             NickName: $.urlParam('NickName'),
+            UserId: $('[name=UserId]')[0].value,
             lastId: $('.friend').last()[0].id
         };
         $.ajax({
@@ -161,7 +163,7 @@ function loadFriends(button) {
     }
 }
 function loadNextUser(button) {
-    if ($('.cpcm-user').length > 0) {
+    if ($('.follower').length > 0) {
         button.innerHTML = '<img src="../images/loading.svg" />';
         $.urlParam = function (name) {
             let results = new RegExp('[\?&]' + name + '=([^&#]*)').exec(window.location.href);
@@ -178,7 +180,7 @@ function loadNextUser(button) {
             UniversityId: $.urlParam('UniversityId'),
             SchoolId: $.urlParam('SchoolId'),
             NickName: $.urlParam('NickName'),
-            lastId: $('.cpcm-user').last()[0].id
+            lastId: $('.follower').last()[0].id
         };
         $.ajax({
             url: '/User/FindNextUser',
@@ -203,5 +205,55 @@ function loadNextUser(button) {
                 button.innerHTML = 'Загрузить ещё';
             }
         });
+    }
+}
+
+function loadNextFriendRequest(button) {
+    if ($('.follower').length > 0) {
+        button.innerHTML = '<img src="../images/loading.svg" />';
+        $.urlParam = function (name) {
+            let results = new RegExp('[\?&]' + name + '=([^&#]*)').exec(window.location.href);
+            if (results == null) {
+                return null;
+            }
+            return decodeURI(results[1]) || 0;
+        }
+        let dataToSend = {
+            FirstName: $.urlParam('FirstName') == 0 ? null : $.urlParam('FirstName'),
+            SecondName: $.urlParam('SecondName') == 0 ? null : $.urlParam('SecondName'),
+            AdditionalName: $.urlParam('AdditionalName') == 0 ? null : $.urlParam('AdditionalName'),
+            CityId: $.urlParam('CityId'),
+            UniversityId: $.urlParam('UniversityId'),
+            SchoolId: $.urlParam('SchoolId'),
+            NickName: $.urlParam('NickName'),
+            lastId: $('.follower').last()[0].id
+        };
+        $.ajax({
+            url: '/User/GetNextFriendRequests',
+            type: 'GET',
+            data: dataToSend,
+            success: function (response) {
+                let friendsContainer = document.getElementById('cpcm-users-container');
+                if (response != '') {
+                    friendsContainer.innerHTML += response;
+                    button.innerHTML = 'Загрузить ещё';
+                }
+                else {
+                    button.remove();
+                    document.getElementById('cpcm-users-footer').innerHTML += '<p class="text-center">Больше никого не нашлось<br/><span class="text-muted">(ну, кроме капибар, конечно)</span></p>'
+                }
+            },
+            error: function (obj) {
+                if (obj.status == 401)
+                    window.location.replace("/UserLogIn");
+                else
+                    alert(`:(\nСтатус: ${obj.status}`);
+                button.innerHTML = 'Загрузить ещё';
+            }
+        });
+    }
+    else {
+        button.remove();
+        document.getElementById('cpcm-users-footer').innerHTML += '<p class="text-center">У вас нет заявок в друзья!<br/><span class="text-muted">(не расстраивайтесь, капибары всегда с вами!)</span></p>'
     }
 }
