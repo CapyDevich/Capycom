@@ -29,4 +29,5 @@ EXEC dbo.sp_add_jobschedule
     @name = N'Ежедневное удаление',
     @freq_type = 4,
     @freq_interval = 1,
-    @active_start_date = 20240404;
+    @active_start_date = 20240404; 
+    -- махнуть на текущую дату

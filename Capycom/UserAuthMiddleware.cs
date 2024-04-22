@@ -4,6 +4,7 @@ using System.Security.Claims;
 
 namespace Capycom
 {
+	[Obsolete]
     public class UserAuthMiddleware
     {
 		private readonly RequestDelegate _next;
@@ -16,24 +17,27 @@ namespace Capycom
 			_serviceProvider = serviceProvider;
 		}
 
-		public async Task Invoke(HttpContext context)
+		public Task InvokeAsync(HttpContext context)
 		{
-			using (var scope = _serviceProvider.CreateAsyncScope())
+			return Task.Run(() =>
 			{
-				_context = scope.ServiceProvider.GetRequiredService<CapycomContext>();
-				if (context.User.Identity.IsAuthenticated)
+				using (var scope = _serviceProvider.CreateScope())
 				{
-					var user = _context.CpcmUsers.FirstOrDefault(u => u.CpcmUserId.ToString() == context.User.FindFirstValue("CpcmUserId"));
-					if (user != null && user.CpcmUserBanned || user.CpcmIsDeleted)
+					var _context = scope.ServiceProvider.GetRequiredService<CapycomContext>();
+					if (context.User.Identity.IsAuthenticated)
 					{
-						await context.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-						context.Response.Redirect("/UserLogIn/Index");
-						return;
+						var user = _context.CpcmUsers.FirstOrDefault(u => u.CpcmUserId.ToString() == context.User.FindFirstValue("CpcmUserId"));
+						if (user != null && user.CpcmUserBanned || user.CpcmIsDeleted)
+						{
+							context.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme).Wait();
+							context.Response.Redirect("/UserLogIn/Index");
+							return;
+						}
 					}
-				} 
-			}
+				}
 
-			await _next(context);
+				_next(context).Wait();
+			});
 		}
 	}
 }

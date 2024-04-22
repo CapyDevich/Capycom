@@ -8,6 +8,7 @@ using Serilog;
 using System.Data.Common;
 using System.Reflection;
 using System.Security.Claims;
+using System.Text.RegularExpressions;
 
 namespace Capycom.Controllers
 {
@@ -101,7 +102,7 @@ namespace Capycom.Controllers
 					posts = await _context.CpcmPosts.Where(c => c.CpcmGroupId == group.CpcmGroupId && c.CpcmPostPublishedDate < DateTime.UtcNow).Include(c => c.CpcmImages).OrderByDescending(c => c.CpcmPostPublishedDate).AsNoTracking().Take(10).ToListAsync();
 					if (User.Identity.IsAuthenticated)
 					{
-						follower = await _context.CpcmGroupfollowers.Where(f => f.CpcmGroupId == group.CpcmGroupId && f.CpcmUserId.ToString() == User.FindFirstValue("CpcmUserId")).FirstOrDefaultAsync();
+						follower = await _context.CpcmGroupfollowers.Where(f => f.CpcmGroupId == group.CpcmGroupId && f.CpcmUserId.ToString() == User.FindFirstValue("CpcmUserId")).Include(c => c.CpcmUserRole).FirstOrDefaultAsync();
 					}
 				}
 				catch(DbUpdateException ex)
@@ -124,6 +125,10 @@ namespace Capycom.Controllers
 			ICollection<CpcmPost> postsWithLikesCount = new List<CpcmPost>();
 			GroupProfileAndPostsModel groupProfile = new();
 			groupProfile.Group = group;
+			if (follower != null)
+			{
+				group.UserFollowerRole = follower.CpcmUserRoleNavigation;
+			}
 			foreach (var postik in posts)
 			{
 				postik.Group = group;
@@ -133,6 +138,7 @@ namespace Capycom.Controllers
 					postik.CpcmPostFatherNavigation = await GetFatherPostReccurent(postik);
 					long likes = await _context.Database.SqlQuery<long>($@"SELECT * FROM CPCM_POSTLIKES WHERE CPCM_PostID = {postik.CpcmPostId}").CountAsync();
 					long reposts = await _context.Database.SqlQuery<long>($@"SELECT * FROM CPCM_POSTREPOSTS WHERE CPCM_PostID = {postik.CpcmPostId}").CountAsync();
+					postik.Group = group;
 					postik.LikesCount = likes;
 					postik.RepostsCount = reposts;
 				}
@@ -177,14 +183,7 @@ namespace Capycom.Controllers
 					else
 						postik.IsLiked = false;
 
-					if (follower != null)
-					{
-						group.IsFollowed = true;
-						if(follower.CpcmUserRole==CpcmGroupfollower.AuthorRole || follower.CpcmUserRole == CpcmGroupfollower.AdminRole)
-						{
-							group.IsAdmin = true;
-						}
-					}
+					
 
 				}
 				if (HttpContext.Request.Cookies.ContainsKey("TimeZone"))
@@ -245,6 +244,14 @@ namespace Capycom.Controllers
 						long reposts = await _context.Database.SqlQuery<long>($@"SELECT * FROM CPCM_POSTREPOSTS WHERE CPCM_PostID = {postik.CpcmPostId} AND CPCM_IsDeleted = 0 ").CountAsync();
 						postik.LikesCount = likes;
 						postik.RepostsCount = reposts;
+
+						if (User.Identity.IsAuthenticated)
+						{
+							var authUserId = GetUserIdString();
+							var authFollower = await _context.CpcmGroupfollowers.Where(f => f.CpcmUserId == authUserId && f.CpcmGroupId == group.CpcmGroupId).Include(f => f.CpcmUserRoleNavigation).FirstOrDefaultAsync();
+							group.UserFollowerRole = authFollower.CpcmUserRoleNavigation;
+						}						
+						postik.Group = group;
 					}
 					catch(DbUpdateException ex)
 					{
@@ -1062,7 +1069,7 @@ namespace Capycom.Controllers
 					Log.Warning("Группа не найдена {group}", groupId);
 					return StatusCode(404);
 				}
-				if (await CheckUserPrivilegeClaim("CpcmCanEditGroups", "True"))
+				if (await CheckUserAdminPrivilege("CpcmCanEditGroups", "True"))
 				{
 					group.CpcmGroupBanned = !group.CpcmGroupBanned;
 					await _context.SaveChangesAsync();
@@ -1231,6 +1238,12 @@ namespace Capycom.Controllers
 				{
 					group = await _context.CpcmGroups.Where(c => c.CpcmGroupNickName == filters.NickName).FirstOrDefaultAsync();
 				}
+				if (User.Identity.IsAuthenticated)
+				{
+					var authUserId = GetUserIdString();
+					var authFollower = await _context.CpcmGroupfollowers.Where(f => f.CpcmUserId == authUserId && f.CpcmGroupId == group.CpcmGroupId).Include(f => f.CpcmUserRoleNavigation).FirstOrDefaultAsync();
+					group.UserFollowerRole = authFollower.CpcmUserRoleNavigation;
+				}
 			}
 			catch (DbException ex)
 			{
@@ -1304,19 +1317,19 @@ namespace Capycom.Controllers
 				//ViewData["additionalName"] = additionalName;
 				followerList1 = followerList1.Where(u => EF.Functions.Like(u.CpcmUserAdditionalName, $"%{filters.AdditionalName}%"));
 			}
-			if(filters.GroupRole.HasValue && true) //filters.GroupRole.HasValue && (await CheckUserPrivilegeClaim("CpcmCanEditGroups", "True") || await CheckOnlyGroupPrivelege("CpcmCanEditGroup",true, filters.GroupId))
+			if(filters.GroupRole.HasValue && true) //filters.GroupRole.HasValue && (await CheckUserAdminPrivilege("CpcmCanEditGroups", "True") || await CheckOnlyGroupPrivelege("CpcmCanEditGroup",true, filters.GroupId))
 			{
 				followerList1 = followerList1.Where(u => _context.CpcmGroupfollowers.Any( gf => gf.CpcmUserId==u.CpcmUserId && gf.CpcmGroupId==filters.GroupId && gf.CpcmUserRole==filters.GroupRole)
 				);
 			}
-			if(filters.UserRole.HasValue && await CheckUserPrivilegeClaim("CpcmCanEditGroups", "True"))
+			if(filters.UserRole.HasValue && await CheckUserAdminPrivilege("CpcmCanEditGroups", "True"))
 			{
 				followerList1 = followerList1.Where(u => u.CpcmUserRole == filters.UserRole);
 			}
 			try
 			{
 				var result = await followerList1.OrderBy(p => p.CpcmUserId).Take(10).ToListAsync();
-
+				ViewData["CurrentUserRole"] = group.UserFollowerRole;
 				return View(followerList1);
 			}
 			catch (DbException ex)
@@ -1341,6 +1354,12 @@ namespace Capycom.Controllers
 				else
 				{
 					group = await _context.CpcmGroups.Where(c => c.CpcmGroupNickName == filters.NickName).FirstOrDefaultAsync();
+				}
+				if (User.Identity.IsAuthenticated && group != null)
+				{
+					var authUserId = GetUserIdString();
+					var authFollower = await _context.CpcmGroupfollowers.Where(f => f.CpcmUserId == authUserId && f.CpcmGroupId == group.CpcmGroupId).Include(f => f.CpcmUserRoleNavigation).FirstOrDefaultAsync();
+					group.UserFollowerRole = authFollower.CpcmUserRoleNavigation;
 				}
 			}
 			catch(DbUpdateException ex)
@@ -1368,7 +1387,7 @@ namespace Capycom.Controllers
 			//List<CpcmUser> followerList2;
 			try
 			{
-				followerList1 = _context.CpcmGroupfollowers.Where(c => c.CpcmGroupId == group.CpcmGroupId && c.CpcmUserId.CompareTo(filters.lastId) > 0).Select(c => c.CpcmUser);
+				followerList1 = _context.CpcmGroupfollowers.Where(c => c.CpcmGroupId == group.CpcmGroupId && c.CpcmUserId > filters.lastId).Select(c => c.CpcmUser);
 				//followerList2 = await _context.CpcmUserfollowers.Where(c => c.CpcmFollowerId == user.CpcmUserId).Select(c => c.CpcmUser).ToListAsync();
 			}
 			catch(DbUpdateException ex)
@@ -1413,12 +1432,12 @@ namespace Capycom.Controllers
 				//ViewData["additionalName"] = additionalName;
 				followerList1 = followerList1.Where(u => EF.Functions.Like(u.CpcmUserAdditionalName, $"%{filters.AdditionalName}%"));
 			}
-			if (true) //filters.GroupRole.HasValue && (await CheckUserPrivilegeClaim("CpcmCanEditGroups", "True") || await CheckOnlyGroupPrivelege("CpcmCanEditGroup", true, filters.GroupId))
+			if (true) //filters.GroupRole.HasValue && (await CheckUserAdminPrivilege("CpcmCanEditGroups", "True") || await CheckOnlyGroupPrivelege("CpcmCanEditGroup", true, filters.GroupId))
 			{
 				followerList1 = followerList1.Where(u => _context.CpcmGroupfollowers.Any(gf => gf.CpcmUserId == u.CpcmUserId && gf.CpcmGroupId == filters.GroupId && gf.CpcmUserRole == filters.GroupRole)
 				);
 			}
-			if (filters.UserRole.HasValue && await CheckUserPrivilegeClaim("CpcmCanEditGroups", "True"))
+			if (filters.UserRole.HasValue && await CheckUserAdminPrivilege("CpcmCanEditGroups", "True"))
 			{
 				followerList1 = followerList1.Where(u => u.CpcmUserRole == filters.UserRole);
 			}
@@ -1426,7 +1445,7 @@ namespace Capycom.Controllers
 			{
 				var result = await followerList1.OrderBy(p => p.CpcmUserId).Take(10).ToListAsync();
 				//followerList1.AddRange(followerList2);
-
+				ViewData["CurrentUserRole"] = group.UserFollowerRole;
 				return PartialView(followerList1);
 			}
 			catch (DbUpdateException ex)
@@ -1580,7 +1599,7 @@ namespace Capycom.Controllers
 			query.Where(u => u.CpcmIsDeleted == false && u.CpcmGroupBanned == false);
 			try
 			{
-				var rez = await query.OrderBy(u => u.CpcmGroupId).Where(g=>g.CpcmGroupId.CompareTo(filters.lastId)>0).Take(10).ToListAsync();
+				var rez = await query.OrderBy(u => u.CpcmGroupId).Where(g=>g.CpcmGroupId > filters.lastId).Take(10).ToListAsync();
 				return View(rez);
 			}
 			catch(DbUpdateException ex)
@@ -1657,7 +1676,7 @@ namespace Capycom.Controllers
 		[Authorize]
 		[HttpPost]
 		[ValidateAntiForgeryToken]
-		public async Task<IActionResult> CreatePost(GroupPostModel groupPost)
+		public async Task<IActionResult> CreatePostP(GroupPostModel groupPost)
 		{
 			try
 			{
@@ -1716,7 +1735,7 @@ namespace Capycom.Controllers
 				post.CpcmPostCreationDate = DateTime.UtcNow;
 				if (groupPost.Published == null)
 				{
-					post.CpcmPostPublishedDate = post.CpcmPostCreationDate;
+					post.CpcmPostPublishedDate = post.CpcmPostCreationDate - new TimeSpan(0, 1, 0);
 				}
 				else
 				{
@@ -1831,7 +1850,7 @@ namespace Capycom.Controllers
 					Response.StatusCode = 409;
 					ViewData["ErrorCode"] = 409;
 					ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
-					return View(groupPost);
+					return View("CreatePost",groupPost);
 				}
 				catch(DbUpdateException ex)
 				{
@@ -1853,7 +1872,7 @@ namespace Capycom.Controllers
 					Response.StatusCode = 500;
 					ViewData["ErrorCode"] = 500;
 					ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
-					return View(groupPost);
+					return View("CreatePost",groupPost);
 				}
 				catch (DbException ex)
 				{
@@ -1875,7 +1894,7 @@ namespace Capycom.Controllers
 					Response.StatusCode = 500;
 					ViewData["ErrorCode"] = 500;
 					ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
-					return View(groupPost);
+					return View("CreatePost", groupPost);
 				}
 
 				if (groupPost.PostFatherId != null)
@@ -1891,7 +1910,7 @@ namespace Capycom.Controllers
 			Log.Warning("Ошибка валидации модели. {@model}", groupPost);
 			if (groupPost.PostFatherId == null)
 			{
-				return View(groupPost);
+				return View("CreatePost", groupPost);
 			}
 			else
 			{
@@ -2000,7 +2019,7 @@ namespace Capycom.Controllers
 		public async Task<IActionResult> BanUnbanPost(Guid id)
 		{
 			Log.Information("Попытка забанить/разбанить пост {postGuid} пользователем {user}", id, HttpContext.User.FindFirstValue("CpcmUserId"));
-			if (!await CheckUserPrivilegeClaim("CpcmCanDelUsersPosts", "True"))
+			if (!await CheckUserAdminPrivilege("CpcmCanDelUsersPosts", "True"))
 			{
 				Log.Warning("Недостаточно прав для забана/разбана поста {id}", id);
 				return StatusCode(403);
@@ -2079,7 +2098,7 @@ namespace Capycom.Controllers
 			CpcmPost? post = null;
 			try
 			{
-				post = await _context.CpcmPosts.Where(c => c.CpcmPostId == postGuid && c.CpcmGroupId==groupId).FirstOrDefaultAsync();
+				post = await _context.CpcmPosts.Where(c => c.CpcmPostId == postGuid && c.CpcmGroupId==groupId).Include(c => c.CpcmImages).FirstOrDefaultAsync();
 			}
 			catch (DbException ex)
 			{
@@ -2119,7 +2138,7 @@ namespace Capycom.Controllers
 		[Authorize]
 		[HttpPost]
 		[ValidateAntiForgeryToken]
-		public async Task<IActionResult> EditPost(GroupPostEditModel editPost) 
+		public async Task<IActionResult> EditPostP(GroupPostEditModel editPost) 
 		{
 			//if (editPost.Text == null && editPost.FilesToDelete.Count == 0 && editPost.NewFiles.Count == 0)
 			//{
@@ -2196,6 +2215,7 @@ namespace Capycom.Controllers
 					Log.Warning("Недостаточно прав для редактирования поста {id}. User {user}", editPost.Id, HttpContext.User.FindFirstValue("CpcmUserId"));
 					return StatusCode(403);
 				}
+				editPost.CpcmImages = post.CpcmImages;
 				if (post.CpcmImages.Count - editPost.FilesToDelete.Count + editPost.NewFiles.Count > 4)
 				{
 					Log.Warning("Превышено количество фотографий в посте {id}", editPost.Id);
@@ -2296,7 +2316,7 @@ namespace Capycom.Controllers
 				}
 
 
-				List<CpcmImage>? images = post.CpcmImages.Where(c => !editPost.FilesToDelete.Contains(c.CpcmImageId)).ToList(); //TODO возможно ! тут не нужен 
+				List<CpcmImage>? images = post.CpcmImages.Where(c => editPost.FilesToDelete.Contains(c.CpcmImageId)).ToList();
 				if (images != null || images.Count != 0)
 				{
 					//_context.CpcmImages.RemoveRange(images);
@@ -2841,7 +2861,7 @@ namespace Capycom.Controllers
 
 		}
 
-		private async Task<bool> CheckUserPrivilegeClaim(string claimType, string claimValue)
+		private async Task<bool> CheckUserAdminPrivilege(string claimType, string claimValue)
 		{
 			var authFactor = HttpContext.User.FindFirst(c => c.Type == claimType && c.Value == claimValue);
 			if (authFactor == null)
@@ -2849,6 +2869,14 @@ namespace Capycom.Controllers
 				return false;
 			}
 			return true;
+		}
+		private Guid GetUserIdString()
+		{
+			if (User.Identity.IsAuthenticated)
+			{
+				return Guid.Parse(HttpContext.User.FindFirst(c => c.Type == "CpcmUserId").Value);
+			}
+			throw new InvalidOperationException("User is not authenticated");
 		}
 
 	}

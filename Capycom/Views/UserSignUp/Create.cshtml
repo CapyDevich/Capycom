@@ -27,8 +27,9 @@
 		<label asp-for="CpcmUserNickName" class="form-label">Псевдоним</label>
 		<div class="input-group">
 			<span class="input-group-text" id="inputGroupPrepend">@@</span>
-			<input asp-for="CpcmUserNickName" type="text" class="form-control" id="validationCustomUsername" aria-describedby="inputGroupPrepend">
+			<input asp-for="CpcmUserNickName" type="text" class="form-control" id="validationCustomUsername">
 		</div>
+		<span asp-validation-for="CpcmUserNickName" class="text-danger"></span>
 		<div class="mb-3">
 			<label asp-for="CpcmUserEmail" class="form-label">Электронная почта</label>
 			<input asp-for="CpcmUserEmail" type="email" class="form-control" id="email" required>
@@ -60,38 +61,41 @@
 		</div>
 		<span asp-validation-for="CpcmUserImage" class="text-danger"></span>
 		<div class="col mb-3">
-			<label for="userAbout" class="form-label">О себе</label>
-			<textarea type="text" class="form-control" id="userAbout" rows="3"></textarea>
+			<label asp-for="CpcmUserAbout" userAbout" class="form-label">О себе</label>
+			<textarea asp-for="CpcmUserAbout" type="text" class="form-control" id="userAbout" rows="3"></textarea>
 		</div>
 
 		<label asp-for="CpcmUserCity" class="form-label">Город</label>
 		<div class="flex-grow-1 input-group d-flex justify-content-between mb-3">
 			<select data-live-search="true" asp-for="CpcmUserCity" asp-items="ViewBag.CpcmUserCity" class="selectpicker flex-grow-1" id="city" data-live-search="true">
 				<option value="" selected disabled>Выберите город...</option>
-				<option value="">testC1...</option>
-				<option value="">testC2...</option>
 			</select>
 			<button type="button" class="btn btn-light addOptionButton" data-bs-toggle="modal" data-bs-target="#addingCityModal">+</button>
+			<button type="button" class="btn btn-light addOptionButton" onclick="clearSelect('city')">
+				<img src="~/images/eraser-fill.svg" />
+			</button>
 		</div>
 
 		<label asp-for="CpcmUserUniversity" class="form-label">Университет</label>
 		<div class="flex-grow-1 input-group d-flex justify-content-between mb-3">
 			<select data-live-search="true" asp-for="CpcmUserUniversity" asp-items="ViewBag.CpcmUserUniversity" class="selectpicker flex-grow-1" id="university">
 				<option value="" selected disabled>Выберите университет...</option>
-				<option value="">testU1...</option>
-				<option value="">testU2...</option>
 			</select>
 			<button type="button" class="btn btn-light addOptionButton" data-bs-toggle="modal" data-bs-target="#addingUniversityModal">+</button>
+			<button type="button" class="btn btn-light addOptionButton" onclick="clearSelect('university')">
+				<img src="~/images/eraser-fill.svg" />
+			</button>
 		</div>
 
 		<label asp-for="CpcmUserSchool" class="form-label">Школа</label>
 		<div class="flex-grow-1 input-group d-flex justify-content-between mb-3">
 			<select data-live-search="true" asp-for="CpcmUserSchool" asp-items="ViewBag.CpcmUserSchool" class="selectpicker flex-grow-1" id="school">
 				<option value="" selected disabled>Выберите школу...</option>
-				<option value="">testS1...</option>
-				<option value="">testS2...</option>
 			</select>
 			<button type="button" class="btn btn-light addOptionButton" data-bs-toggle="modal" data-bs-target="#addingSchoolModal">+</button>
+			<button type="button" class="btn btn-light addOptionButton" onclick="clearSelect('school')">
+				<img src="~/images/eraser-fill.svg" />
+			</button>
 		</div>
 		<div class="col mb-3">
 			<label asp-for="CpcmUserSite" class="form-label">Сайт</label>
