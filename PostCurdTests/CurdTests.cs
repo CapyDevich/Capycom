@@ -15,12 +15,12 @@ using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
 namespace PostCurdTests
 {
-	public class CurdTests : IDisposable
+	public class CurdUserPosrTests : IDisposable
 	{
 		private readonly CapycomContext context;
 		private readonly UserController controller;
 
-		public CurdTests()
+		public CurdUserPosrTests()
 		{
 			var options = new DbContextOptionsBuilder<CapycomContext>()
 				.UseInMemoryDatabase(Guid.NewGuid().ToString())
@@ -184,7 +184,7 @@ namespace PostCurdTests
 
 			//Act
 
-			var result = await controller.CreatePostP(new Capycom.Models.UserPostModel());
+			var result = await controller.CreatePostP(userPostModel);
 
 
 			//Asserts
@@ -217,7 +217,41 @@ namespace PostCurdTests
 
 		}
 
+		[Fact]
+		public async Task CreatePostP_SendPostWithTextNoFilesPublishedSet_ExpectViewAnd200Code()
+		{
+			//Arrange
 
+			var userPostModel = new Capycom.Models.UserPostModel()
+			{
+				Files = null,
+				Text = "Text",
+				PostFatherId = null,
+				Published = DateTime.UtcNow + new TimeSpan(1, 0, 0)
+			};
+			var validationContext = new ValidationContext(userPostModel);
+			var validationResults = new List<ValidationResult>();
+			Validator.TryValidateObject(userPostModel, validationContext, validationResults, true);
+			if (validationResults.Any())
+			{
+				foreach (var validationResult in validationResults)
+				{
+					controller.ModelState.AddModelError(validationResult.MemberNames.First(), validationResult.ErrorMessage);
+				}
+			}
+
+			//Act
+
+			var result = await controller.CreatePostP(userPostModel);
+
+			//Assert
+			if (result is ViewResult viewResult)
+			{
+				viewResult.ViewName.Should().Be("Index");
+				//viewResult.StatusCode.Should().Be(400);
+				controller.HttpContext.Response.StatusCode.Should().Be(200);
+			}
+		}
 
 		#region Вспомогательные методы
 		private static Guid NextGuid(Guid guid)
