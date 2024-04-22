@@ -81,13 +81,14 @@ function loadFollowers(button) {
             return decodeURI(results[1]) || 0;
         }
         let dataToSend = {
-            FirstName: $.urlParam('FirstName'),
-            SecondName: $.urlParam('SecondName'),
+            FirstName: $.urlParam('FirstName') == 0 ? null : $.urlParam('FirstName'),
+            SecondName: $.urlParam('SecondName') == 0 ? null : $.urlParam('SecondName'),
             AdditionalName: $.urlParam('AdditionalName') == 0 ? null : $.urlParam('AdditionalName'),
             CityId: $.urlParam('CityId'),
             UniversityId: $.urlParam('UniversityId'),
             SchoolId: $.urlParam('SchoolId'),
             NickName: $.urlParam('NickName'),
+            UserId: $('[name=UserId]')[0].value,
             lastId: $('.follower').last()[0].id
         };
         $.ajax({
@@ -95,7 +96,7 @@ function loadFollowers(button) {
             type: 'POST',
             data: dataToSend,
             success: function (response) {
-                let followersContainer = document.getElementById('followers-container')[0];
+                let followersContainer = document.getElementById('followers-container');
                 if (response != '') {
                     followersContainer.innerHTML += response;
                     button.innerHTML = 'Загрузить ещё';
@@ -126,13 +127,14 @@ function loadFriends(button) {
             return decodeURI(results[1]) || 0;
         }
         let dataToSend = {
-            FirstName: $.urlParam('FirstName'),
-            SecondName: $.urlParam('SecondName'),
+            FirstName: $.urlParam('FirstName') == 0 ? null : $.urlParam('FirstName'),
+            SecondName: $.urlParam('SecondName') == 0 ? null : $.urlParam('SecondName'),
             AdditionalName: $.urlParam('AdditionalName') == 0 ? null : $.urlParam('AdditionalName'),
             CityId: $.urlParam('CityId'),
             UniversityId: $.urlParam('UniversityId'),
             SchoolId: $.urlParam('SchoolId'),
             NickName: $.urlParam('NickName'),
+            UserId: $('[name=UserId]')[0].value,
             lastId: $('.friend').last()[0].id
         };
         $.ajax({
