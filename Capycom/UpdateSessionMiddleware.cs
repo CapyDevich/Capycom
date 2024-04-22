@@ -32,18 +32,17 @@ namespace Capycom
 			}
 			else
 			{
-				using (var scope = _serviceProvider.CreateScope())
+
+				var _context = new CapycomContext();
+				if (context.User.Identity.IsAuthenticated)
 				{
-					var _context = scope.ServiceProvider.GetRequiredService<CapycomContext>();
-					if (context.User.Identity.IsAuthenticated)
+					var user = _context.CpcmUsers.FirstOrDefault(u => u.CpcmUserId.ToString() == context.User.FindFirstValue("CpcmUserId"));
+					if (user != null)
 					{
-						var user = _context.CpcmUsers.FirstOrDefault(u => u.CpcmUserId.ToString() == context.User.FindFirstValue("CpcmUserId"));
-						if (user != null)
-						{
-							context.Session.SetString("ProfileImage", string.IsNullOrEmpty(user.CpcmUserImagePath) ? Path.Combine("\\", "images", "default.png") : user.CpcmUserImagePath);
-						}
+						context.Session.SetString("ProfileImage", string.IsNullOrEmpty(user.CpcmUserImagePath) ? Path.Combine("\\", "images", "default.png") : user.CpcmUserImagePath);
 					}
 				}
+
 
 				await _next(context);
 			}
@@ -62,18 +61,17 @@ namespace Capycom
 				}
 				else
 				{
-					using (var scope = _serviceProvider.CreateScope())
+
+					var _context = new CapycomContext();
+					if (context.User.Identity.IsAuthenticated)
 					{
-						var _context = scope.ServiceProvider.GetRequiredService<CapycomContext>();
-						if (context.User.Identity.IsAuthenticated)
+						var user = _context.CpcmUsers.FirstOrDefault(u => u.CpcmUserId.ToString() == context.User.FindFirstValue("CpcmUserId"));
+						if (user != null)
 						{
-							var user = _context.CpcmUsers.FirstOrDefault(u => u.CpcmUserId.ToString() == context.User.FindFirstValue("CpcmUserId"));
-							if (user != null)
-							{
-								context.Session.SetString("ProfileImage", string.IsNullOrEmpty(user.CpcmUserImagePath) ? Path.Combine("\\", "images", "default.png") : user.CpcmUserImagePath);
-							}
+							context.Session.SetString("ProfileImage", string.IsNullOrEmpty(user.CpcmUserImagePath) ? Path.Combine("\\", "images", "default.png") : user.CpcmUserImagePath);
 						}
 					}
+
 
 					_next(context).Wait();
 				}
