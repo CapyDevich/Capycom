@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication;
 using System.Security.Claims;
 using Newtonsoft.Json.Linq;
+using static System.Formats.Asn1.AsnWriter;
 
 namespace Capycom
 {
@@ -28,19 +29,22 @@ namespace Capycom
 			}
 			else
 			{
-
-				var _context = new CapycomContext();
-				if (context.User.Identity.IsAuthenticated)
+				using (var scope = _serviceProvider.CreateScope()) 
 				{
-					var user = _context.CpcmUsers.FirstOrDefault(u => u.CpcmUserId.ToString() == context.User.FindFirstValue("CpcmUserId"));
-					if (user != null)
+					var _context = scope.ServiceProvider.GetRequiredService<CapycomContext>();
+					if (context.User.Identity.IsAuthenticated)
 					{
-						context.Session.SetString("ProfileImage", string.IsNullOrEmpty(user.CpcmUserImagePath) ? Path.Combine("\\", "images", "default.png") : user.CpcmUserImagePath);
+						var user = _context.CpcmUsers.FirstOrDefault(u => u.CpcmUserId.ToString() == context.User.FindFirstValue("CpcmUserId"));
+						if (user != null)
+						{
+							context.Session.SetString("ProfileImage", string.IsNullOrEmpty(user.CpcmUserImagePath) ? Path.Combine("\\", "images", "default.png") : user.CpcmUserImagePath);
+						}
 					}
+
+
+					await _next(context);
 				}
 
-
-				await _next(context);
 			}
 			return;
 
@@ -58,7 +62,9 @@ namespace Capycom
 				else
 				{
 
-					var _context = new CapycomContext();
+					using (var scope = _serviceProvider.CreateScope()) 
+				{
+					var _context = scope.ServiceProvider.GetRequiredService<CapycomContext>();
 					if (context.User.Identity.IsAuthenticated)
 					{
 						var user = _context.CpcmUsers.FirstOrDefault(u => u.CpcmUserId.ToString() == context.User.FindFirstValue("CpcmUserId"));
@@ -70,6 +76,7 @@ namespace Capycom
 
 
 					_next(context).Wait();
+				}
 				}
 				return;
 				
