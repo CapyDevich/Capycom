@@ -158,7 +158,7 @@ namespace PostCurdTests
 			{
 				HttpContext = httpcontext
 			};
-			controller.User.AddIdentity(new ClaimsIdentity(new List<Claim>() { new Claim("CpcmUserId", "123") }, "Cookies"));
+			controller.User.AddIdentity(new ClaimsIdentity(new List<Claim>() { new Claim("CpcmUserId", users[0].CpcmUserId.ToString()) }, "Cookies"));
 		}
 
 		
@@ -216,7 +216,6 @@ namespace PostCurdTests
 			//}
 
 		}
-
 
 
 
