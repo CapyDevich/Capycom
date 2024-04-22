@@ -1979,13 +1979,16 @@ namespace Capycom.Controllers
 				friendList1 = friendList1.Where(u => EF.Functions.Like(u.CpcmUserAdditionalName, $"%{filters.AdditionalName}%"));
 			}
 
-            try
-            {
-                var result = await friendList1.OrderBy(p => p.CpcmUserId).Take(10).ToListAsync();
-                //followerList1.AddRange(followerList2);
+			try
+			{
+				ViewData["CpcmUserCity"] = new SelectList(await _context.CpcmCities.ToListAsync(), "CpcmCityId", "CpcmCityName", filters.CityId);
+				ViewData["CpcmUserSchool"] = new SelectList(await _context.CpcmSchools.ToListAsync(), "CpcmSchooldId", "CpcmSchoolName", filters.SchoolId);
+				ViewData["CpcmUserUniversity"] = new SelectList(await _context.CpcmUniversities.ToListAsync(), "CpcmUniversityId", "CpcmUniversityName", filters.UniversityId);
+				var result = await friendList1.OrderBy(p => p.CpcmUserId).Take(10).ToListAsync();
+				//followerList1.AddRange(followerList2);
 
-                return View(result);
-            }
+				return View(result);
+			}
 			catch (DbException ex)
 			{
                 Log.Error(ex, "Ошибка при попытке получить список запросов на дружбу из базы данных {u}", user.CpcmUserId);
