@@ -14,6 +14,8 @@ using Microsoft.AspNetCore.Http;
 using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
 using Microsoft.AspNetCore.Http.HttpResults;
+using Moq;
+using Microsoft.AspNetCore.StaticFiles;
 namespace PostCurdTests
 {
 	public class CurdUserPosrTests : IDisposable
@@ -251,7 +253,7 @@ namespace PostCurdTests
 		}
 
 		[Fact]
-		public async Task CreatePostP_SendPostWithTextNoFilesPublishedSet_ExpectViewAnd200Code()
+		public async Task CreatePostP_SendPostWithTextNoFilesPublishedSet_ExpectViewAnd300Code()
 		{
 			//Arrange
 
@@ -402,6 +404,70 @@ namespace PostCurdTests
 			{
 				Assert.Fail();
 			}
+		}
+
+		[Fact]
+		public async Task CreatePostP_SendPostWithFileAndText_ExpectViewAnd300Code()
+		{
+			// Arrange
+
+			//var fileMock = new Mock<IFormFile>();
+			//var content = "Hello World from a Fake File";
+			//var fileName = "test.pdf";
+			//var ms = new MemoryStream();
+			//var writer = new StreamWriter(ms);
+			//writer.Write(content);
+			//writer.Flush();
+			//ms.Position = 0;
+			//fileMock.Setup(_ => _.OpenReadStream()).Returns(ms);
+			//fileMock.Setup(_ => _.FileName).Returns(fileName);
+			//fileMock.Setup(_ => _.Length).Returns(ms.Length);
+
+			//var file = fileMock.Object;
+
+			FormFile file;
+			Directory.GetCurrentDirectory();
+			using (var stream = File.OpenRead("default.png"))
+			{
+				var provider = new FileExtensionContentTypeProvider();
+				if (!provider.TryGetContentType(stream.Name, out var contentType))
+				{
+					contentType = "image/png"; 
+				}
+				file = new FormFile(stream, 0, stream.Length, null, Path.GetFileName(stream.Name))
+				{
+					Headers = new HeaderDictionary(),
+					ContentType = contentType
+				};
+
+
+				var userPostModel = new Capycom.Models.UserPostModel()
+				{
+					Files = new FormFileCollection() { file },
+					Text = "asd",
+					Published = DateTime.UtcNow + new TimeSpan(1, 0, 0)
+				};
+
+				// Act
+				var result = await controller.CreatePostP(userPostModel);
+
+				// Assert
+
+				if (result is RedirectToActionResult viewResult)
+				{
+					viewResult.ActionName.Should().Be("Index");
+					//viewResult.StatusCode.Should().Be(400);
+					//controller.HttpContext.Response.StatusCode.Should().Be(200);
+				}
+				else
+				{
+					Assert.Fail();
+				}
+			}
+
+
+
+
 		}
 		#region Вспомогательные методы
 		private static Guid NextGuid(Guid guid)
