@@ -11,10 +11,6 @@ namespace Capycom
 		private readonly RequestDelegate _next;
 		private IServiceProvider _serviceProvider;
 
-		public UpdateSessionMiddleware(RequestDelegate next)
-		{
-			_next = next;
-		}
 
 		public UpdateSessionMiddleware(RequestDelegate next, IServiceProvider serviceProvider)
 		{
