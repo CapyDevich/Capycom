@@ -161,7 +161,7 @@ function loadFriends(button) {
     }
 }
 function loadNextUser(button) {
-    if ($('.cpcm-user').length > 0) {
+    if ($('.follower').length > 0) {
         button.innerHTML = '<img src="../images/loading.svg" />';
         $.urlParam = function (name) {
             let results = new RegExp('[\?&]' + name + '=([^&#]*)').exec(window.location.href);
@@ -178,7 +178,7 @@ function loadNextUser(button) {
             UniversityId: $.urlParam('UniversityId'),
             SchoolId: $.urlParam('SchoolId'),
             NickName: $.urlParam('NickName'),
-            lastId: $('.cpcm-user').last()[0].id
+            lastId: $('.follower').last()[0].id
         };
         $.ajax({
             url: '/User/FindNextUser',

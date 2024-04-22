@@ -53,10 +53,10 @@
 	</div>
 </form>
 <div class="container mt-3">
-	<div class="row" id="cpcm-users-conntainer">
+	<div class="row" id="cpcm-users-container">
 		@foreach (CpcmUser user in Model)
 		{
-			<div class="col-md-4 cpcm-user" id="@user.CpcmUserId">
+			<div class="col-md-4 follower" id="@user.CpcmUserId">
 				<div class="card mb-4 shadow-sm">
 					@if (user.CpcmUserNickName != null)
 					{
@@ -97,10 +97,10 @@
 				</div>
 			</div>
 		}
-		<div class="col-12 text-center" id="cpcm-users-footer">
-			<button class="btn btn-primary" type="button" onclick="loadNextUser(this)">Загрузить ещё</button>
-		</div>
 	</div>
+		<div class="col-12 text-center" id="cpcm-users-footer">
+			<button id="load-more-btn" class="btn btn-primary" type="button" onclick="loadNextUser(this)">Загрузить ещё</button>
+		</div>
 </div>
 <script src="~/js/friends.js"></script>
 <script src="~/js/signup.js"></script>
