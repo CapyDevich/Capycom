@@ -98,10 +98,13 @@
 				</div>
 			</div>
 		}
-		<div class="col-12 text-center" id="cpcm-users-footer">
-			<button class="btn btn-primary" type="button" onclick="loadNextFriendRequest(this)">Загрузить ещё</button>
-		</div>
-    </div>
+		@if (Model.Count >= 10)
+		{
+			<div class="col-12 text-center" id="cpcm-users-footer">
+				<button class="btn btn-primary" type="button" onclick="loadNextFriendRequest(this)">Загрузить ещё</button>
+			</div>
+		}
+	</div>
 </div>
 <script src="~/js/friends.js"></script>
 <script src="~/js/load-more.js"></script>
