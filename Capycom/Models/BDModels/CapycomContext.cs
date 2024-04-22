@@ -424,10 +424,11 @@ public partial class CapycomContext : DbContext
 
 	public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default(CancellationToken))
 	{
+		Log.Information("Вызов SaveChangesAsync начат");
 		var entries = ChangeTracker.Entries()
 				.Where(e => e.State == EntityState.Added || e.State == EntityState.Modified);
 
-        var result = await base.SaveChangesAsync(cancellationToken);
+       
 
 		foreach (var entry in entries)
 		{
@@ -471,7 +472,8 @@ public partial class CapycomContext : DbContext
 					changedValues);
 			}
 		}
-
-        return result;
+		var result = await base.SaveChangesAsync(cancellationToken);
+        Log.Information("Вызов SaveChangesAsync прошел");
+		return result;
 	}
 }
