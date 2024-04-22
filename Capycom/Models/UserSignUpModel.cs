@@ -8,7 +8,7 @@ namespace Capycom.Models
 {
     public class UserSignUpModel
     {
-        public static readonly int BaseUserRole = 0;
+        public static readonly int BaseUserRole = 1;
 
         [Display(Name = "Адрес электронной почты")]
         [Required(ErrorMessage = "Некорректный адрес")]
