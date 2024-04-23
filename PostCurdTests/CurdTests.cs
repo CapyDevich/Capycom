@@ -201,6 +201,9 @@ namespace PostCurdTests
 			
 
 			var userPostModel = new Capycom.Models.UserPostModel();
+
+
+			//Act
 			var validationContext = new ValidationContext(userPostModel);
 			var validationResults = new List<ValidationResult>();
 			Validator.TryValidateObject(userPostModel, validationContext, validationResults, true);
@@ -211,9 +214,6 @@ namespace PostCurdTests
 					controller.ModelState.AddModelError(validationResult.MemberNames.First(), validationResult.ErrorMessage);
 				}
 			}
-
-			//Act
-
 			var result = await controller.CreatePostP(userPostModel);
 
 
@@ -264,6 +264,9 @@ namespace PostCurdTests
 				PostFatherId = null,
 				Published = DateTime.UtcNow + new TimeSpan(1, 0, 0)
 			};
+
+
+			//Act
 			var validationContext = new ValidationContext(userPostModel);
 			var validationResults = new List<ValidationResult>();
 			Validator.TryValidateObject(userPostModel, validationContext, validationResults, true);
@@ -274,9 +277,6 @@ namespace PostCurdTests
 					controller.ModelState.AddModelError(validationResult.MemberNames.First(), validationResult.ErrorMessage);
 				}
 			}
-
-			//Act
-
 			var result = await controller.CreatePostP(userPostModel);
 
 			//Assert
@@ -304,6 +304,9 @@ namespace PostCurdTests
 				Text = "Text",
 				PostFatherId = posts[1].CpcmPostId,
 			};
+
+
+			//Act
 			var validationContext = new ValidationContext(userPostModel);
 			var validationResults = new List<ValidationResult>();
 			Validator.TryValidateObject(userPostModel, validationContext, validationResults, true);
@@ -314,9 +317,6 @@ namespace PostCurdTests
 					controller.ModelState.AddModelError(validationResult.MemberNames.First(), validationResult.ErrorMessage);
 				}
 			}
-
-			//Act
-
 			var result = await controller.CreatePostP(userPostModel);
 
 			//Assert
@@ -342,6 +342,9 @@ namespace PostCurdTests
 				Text = "Text",
 				PostFatherId = posts[10].CpcmPostId,
 			};
+
+
+			//Act
 			var validationContext = new ValidationContext(userPostModel);
 			var validationResults = new List<ValidationResult>();
 			Validator.TryValidateObject(userPostModel, validationContext, validationResults, true);
@@ -352,9 +355,6 @@ namespace PostCurdTests
 					controller.ModelState.AddModelError(validationResult.MemberNames.First(), validationResult.ErrorMessage);
 				}
 			}
-
-			//Act
-
 			var result = await controller.CreatePostP(userPostModel);
 
 			//Assert
@@ -379,6 +379,9 @@ namespace PostCurdTests
 				Text = "Text",
 				PostFatherId = posts[20].CpcmPostId,
 			};
+
+
+			//Act
 			var validationContext = new ValidationContext(userPostModel);
 			var validationResults = new List<ValidationResult>();
 			Validator.TryValidateObject(userPostModel, validationContext, validationResults, true);
@@ -389,8 +392,6 @@ namespace PostCurdTests
 					controller.ModelState.AddModelError(validationResult.MemberNames.First(), validationResult.ErrorMessage);
 				}
 			}
-
-			//Act
 			var result = await controller.CreatePostP(userPostModel);
 			//Func<Task> act = async () => await controller.CreatePostP(userPostModel);
 
@@ -449,6 +450,16 @@ namespace PostCurdTests
 				};
 
 				// Act
+				var validationContext = new ValidationContext(userPostModel);
+				var validationResults = new List<ValidationResult>();
+				Validator.TryValidateObject(userPostModel, validationContext, validationResults, true);
+				if (validationResults.Any())
+				{
+					foreach (var validationResult in validationResults)
+					{
+						controller.ModelState.AddModelError(validationResult.MemberNames.First(), validationResult.ErrorMessage);
+					}
+				}
 				var result = await controller.CreatePostP(userPostModel);
 
 				// Assert
@@ -469,6 +480,84 @@ namespace PostCurdTests
 
 
 		}
+
+
+		[Fact]
+		public async Task CreatePostP_SendPostWith5FilesAndText_ExpectRejectValidatione()
+		{
+			// Arrange
+
+			//var fileMock = new Mock<IFormFile>();
+			//var content = "Hello World from a Fake File";
+			//var fileName = "test.pdf";
+			//var ms = new MemoryStream();
+			//var writer = new StreamWriter(ms);
+			//writer.Write(content);
+			//writer.Flush();
+			//ms.Position = 0;
+			//fileMock.Setup(_ => _.OpenReadStream()).Returns(ms);
+			//fileMock.Setup(_ => _.FileName).Returns(fileName);
+			//fileMock.Setup(_ => _.Length).Returns(ms.Length);
+
+			//var file = fileMock.Object;
+
+			FormFile file;
+			Directory.GetCurrentDirectory();
+			using (var stream = File.OpenRead("default.png"))
+			{
+				var provider = new FileExtensionContentTypeProvider();
+				if (!provider.TryGetContentType(stream.Name, out var contentType))
+				{
+					contentType = "image/png";
+				}
+				file = new FormFile(stream, 0, stream.Length, null, Path.GetFileName(stream.Name))
+				{
+					Headers = new HeaderDictionary(),
+					ContentType = contentType
+				};
+
+
+				var userPostModel = new Capycom.Models.UserPostModel()
+				{
+					Files = new FormFileCollection() { file,file,file,file,file },
+					Text = "asd",
+					Published = DateTime.UtcNow + new TimeSpan(1, 0, 0)
+				};
+
+				// Act
+				var validationContext = new ValidationContext(userPostModel);
+				var validationResults = new List<ValidationResult>();
+				Validator.TryValidateObject(userPostModel, validationContext, validationResults, true);
+				if (validationResults.Any())
+				{
+					foreach (var validationResult in validationResults)
+					{
+						controller.ModelState.AddModelError(validationResult.MemberNames.First(), validationResult.ErrorMessage);
+					}
+				}
+				var result = await controller.CreatePostP(userPostModel);
+
+				// Assert
+
+				if (result is ViewResult viewResult)
+				{
+					viewResult.ViewName.Should().Be("CreatePost");
+					//viewResult.StatusCode.Should().Be(400);
+					controller.HttpContext.Response.StatusCode.Should().Be(200);
+					controller.ModelState.IsValid.Should().BeFalse();
+				}
+				else
+				{
+					Assert.Fail();
+				}
+			}
+
+
+
+
+		}
+
+
 		#region Вспомогательные методы
 		private static Guid NextGuid(Guid guid)
 		{
