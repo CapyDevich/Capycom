@@ -2701,7 +2701,7 @@ namespace Capycom.Controllers
                         {
                             imagesAfterDeletion[j].CpcmImageOrder = j;
                         }
-                        i = imagesAfterDeletion.Last().CpcmImageOrder;
+                        //i = imagesAfterDeletion.Last().CpcmImageOrder;
 
 
                         foreach (var image in images)
