@@ -634,7 +634,63 @@ namespace PostCurdTests
 		}
 
 		[Fact]
-		public async Task DelPost
+		public async Task DelPostP_TryDeleteDeletedPost_ExpectStatusCode404()
+		{
+			//Arrange
+			var post = posts[0];
+
+			//Act
+			var result = await controller.DeletePost(post.CpcmPostId);
+
+			//Assert
+			if (result is StatusCodeResult statusCodeResult)
+			{
+				statusCodeResult.StatusCode.Should().Be(404);
+			}
+			else
+			{
+				Assert.Fail();
+			}
+		}
+		//[Fact]
+		//public async Task DelPostP_TryDeletePostWithOutRole_ExpectStatusCode403()
+		//{
+		//	//Arrange
+		//	var post = posts[1];
+
+		//	//Act
+		//	var result = await controller.DeletePost(post.CpcmPostId);
+
+		//	//Assert
+		//	if (result is StatusCodeResult statusCodeResult)
+		//	{
+		//		statusCodeResult.StatusCode.Should().Be(403);
+		//	}
+		//	else
+		//	{
+		//		Assert.Fail();
+		//	}
+		//}
+
+		//[Fact]
+		//public async Task DelPostP_TryDeletePostWithRole_ExpectStatucCode500()
+		//{
+		//	//Arrange
+		//	var post = posts[0];
+
+		//	//Act
+		//	var result = await controller.DeletePost(post.CpcmPostId);
+
+		//	//Assert
+		//	if (result is StatusCodeResult statusCodeResult)
+		//	{
+		//		statusCodeResult.StatusCode.Should().Be(403);
+		//	}
+		//	else
+		//	{
+		//		Assert.Fail();
+		//	}
+		//}
 		#region Вспомогательные методы
 		private static Guid NextGuid(Guid guid)
 		{
@@ -652,5 +708,7 @@ namespace PostCurdTests
 			context.Dispose();
 		}
 		#endregion
+
+		//controller.User.AddIdentity(new ClaimsIdentity(new List<Claim>() { new Claim("CpcmUserId", users[0].CpcmUserId.ToString()) }, "Cookies"));
 	}
 }
