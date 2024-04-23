@@ -4,7 +4,7 @@ namespace Capycom.Models
 {
 	public class UserPostModel
 	{
-		[MaxFileCount(4)]
+		[MaxFileCount(2)]
 		public IFormFileCollection? Files { get; set; }
 
 		public string? Text { get; set; }
