@@ -18,7 +18,7 @@ namespace Capycom.Attributes
 
             if (str != null && str.Split(' ').Length > _maxWords)
             {
-                return new ValidationResult(ErrorMessage);
+                return new ValidationResult(ErrorMessage, new List<string> { validationContext.DisplayName });
             }
 
             return ValidationResult.Success;
