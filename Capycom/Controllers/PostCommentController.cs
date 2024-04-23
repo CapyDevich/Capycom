@@ -44,14 +44,14 @@ namespace Capycom.Controllers
                 }
                 post.User = await _context.CpcmUsers.Where(u => u.CpcmUserId == post.CpcmUserId).FirstOrDefaultAsync();
                 post.Group = await _context.CpcmGroups.Where(g => g.CpcmGroupId == post.CpcmGroupId).FirstOrDefaultAsync();
-                if (post.CpcmPostBanned)
-                {
-                    Log.Information("Попытка просмотра заблокированного поста {Post}", postId);
-                    Response.StatusCode = 403;
-                    ViewData["ErrorCode"] = 403;
-                    ViewData["Message"] = "Пост заблокирован";
-                    return View("UserError");
-                }
+                //if (post.CpcmPostBanned)
+                //{
+                //    Log.Information("Попытка просмотра заблокированного поста {Post}", postId);
+                //    Response.StatusCode = 403;
+                //    ViewData["ErrorCode"] = 403;
+                //    ViewData["Message"] = "Пост заблокирован";
+                //    return View("UserError");
+                //}
                 if (post.User == null || post.User.CpcmIsDeleted)
                 {
 					Log.Information("Попытка просмотра поста удалённого Юзера {Post}", postId);
@@ -66,6 +66,7 @@ namespace Capycom.Controllers
 					Response.StatusCode = 403;
 					ViewData["ErrorCode"] = 403;
 					ViewData["Message"] = "Автор поста заблокирован";
+                    ViewData["id"] = post.CpcmUserId;
 					return View("UserError");
 				}
                 if (post.User==null)
@@ -83,7 +84,8 @@ namespace Capycom.Controllers
                         Log.Information("Попытка просмотра поста заблокированной Группы{Post}", postId);
                         Response.StatusCode = 403;
                         ViewData["ErrorCode"] = 403;
-                        ViewData["Message"] = "Группа поста заблокирован";
+                        ViewData["Message"] = "Группа поста заблокирована";
+                        ViewData["id"] = post.CpcmGroupId;
                         return View("UserError");
                     } 
                 }
@@ -508,6 +510,7 @@ namespace Capycom.Controllers
 					Response.StatusCode = 404;
 					ViewData["ErrorCode"] = 404;
 					ViewData["Message"] = "Коммент не найден";
+					ViewData["id"] = comment.CpcmUserId;
 					return View("UserError");
 				}
                 if(comment.CpcmPost.User == null || comment.CpcmPost.User.CpcmIsDeleted)
@@ -524,6 +527,7 @@ namespace Capycom.Controllers
 					Response.StatusCode = 403;
                     ViewData["ErrorCode"] = 403;
                     ViewData["Message"] = "Пост комментария принадлежит заблокированному пользователю";
+					ViewData["id"] = comment.CpcmPost.User.CpcmUserId;
 					return View("UserError");
 				}
                 if (comment.CpcmPost.User==null)
@@ -542,7 +546,8 @@ namespace Capycom.Controllers
                         Response.StatusCode = 403;
                         ViewData["ErrorCode"] = 403;
                         ViewData["Message"] = "Пост комментария принадлежит заблокированной группе";
-                        return View("UserError");
+						ViewData["id"] = comment.CpcmPost.CpcmGroupId;
+						return View("UserError");
                     } 
                 }
 				//comment.CpcmCommentBanned = !comment.CpcmCommentBanned;
