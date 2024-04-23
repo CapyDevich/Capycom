@@ -1,5 +1,5 @@
 ﻿'use strict'
-function ban(url, banID) {
+function banPost(url, banID) {
     let dataToSend = {
         id: banID
     };
@@ -12,11 +12,11 @@ function ban(url, banID) {
                 let banIco = $(`#${banID} .ban-icon`);
                 if (banIco.css('color') == 'rgb(25, 135, 84)') { // ~ green
                     banIco.css('color', '#dc3545'); // ~ red
-                    $(`#${banID}`).children().first().children().eq(1).html('<div class="card mb-2"><div class="card-body"><div class="d-flex align-items-center">Пост был разбанен.<br/>Чтобы увидеть его содержимое, перезагрузите страницу.</div></div></div>')
+                    $(`#${banID}`).children().first().children().eq(1).html('<i>Пост был разбанен.<br/>Чтобы увидеть его содержимое, перезагрузите страницу.</i>')
                 }
                 else {
                     banIco.css('color', '#198754'); // ~ green
-                    $(`#${banID}`).children().first().children().eq(1).html('<div class="card mb-2"><div class="card-body"><div class="d-flex align-items-center">Пост был забаннен :(</div></div></div>')
+                    $(`#${banID}`).children().first().children().eq(1).html('<i>Пост был забаннен :(</i>')
                 }
             }
             else {
