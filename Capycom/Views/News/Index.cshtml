@@ -3,6 +3,10 @@
 	ViewData["Title"] = "Лента";
 }
 <link href="~/css/post.css" rel="stylesheet" />
+@if (User.Identity.IsAuthenticated && User.FindFirst(c => c.Type == "CpcmCanDelUsersPosts").Value == "True")
+{
+	<link href="~/css/ban.css" rel="stylesheet" />
+}
 <div class="container mt-5">
 	<div class="row">
 		<div class="col-lg-8 mx-auto feed">
@@ -49,6 +53,10 @@
 @await Html.PartialAsync("~/Views/User/RepostModal.cshtml")
 <script type="text/javascript" charset="utf-8" src="~/js/post.js"></script>
 <script src="~/js/load-more.js"></script>
+@if (User.FindFirst(c => c.Type == "CpcmCanDelUsersPosts").Value == "True")
+{
+	<script src="~/js/ban.js"></script>
+}
 <!-- Модальное окно на подтверждение удаление поста -->
 <div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteModalLabel" aria-hidden="true">
 	<div class="modal-dialog">
