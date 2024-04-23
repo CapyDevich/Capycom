@@ -53,7 +53,7 @@
 @await Html.PartialAsync("~/Views/User/RepostModal.cshtml")
 <script type="text/javascript" charset="utf-8" src="~/js/post.js"></script>
 <script src="~/js/load-more.js"></script>
-@if (User.FindFirst(c => c.Type == "CpcmCanDelUsersPosts").Value == "True")
+@if (User.Identity.IsAuthenticated && User.FindFirst(c => c.Type == "CpcmCanDelUsersPosts").Value == "True")
 {
 	<script src="~/js/ban.js"></script>
 }
