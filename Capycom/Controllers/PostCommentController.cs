@@ -550,6 +550,23 @@ namespace Capycom.Controllers
 						return View("UserError");
                     } 
                 }
+                if (comment.CpcmPost.CpcmPostBanned)
+                {
+					Log.Warning("Попытка просмотра комментария к забаненному посту {Comment}", commentId);
+					Response.StatusCode = 403;
+					ViewData["ErrorCode"] = 403;
+					ViewData["Message"] = "Пост комментария заблокирован";
+					ViewData["id"] = comment.CpcmPost;
+					return View("UserError");
+				}
+				if (comment.CpcmPost.CpcmIsDeleted)
+				{
+					Log.Warning("Попытка просмотра комментария к удалённому посту {Comment}", commentId);
+					Response.StatusCode = 403;
+					ViewData["ErrorCode"] = 403;
+					ViewData["Message"] = "Пост комментария не найден";
+					return View("UserError");
+				}
 				//comment.CpcmCommentBanned = !comment.CpcmCommentBanned;
 				if (HttpContext.Request.Cookies.ContainsKey("TimeZone"))
 				{
