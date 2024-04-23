@@ -500,7 +500,7 @@ namespace Capycom.Controllers
                             catch (Exception ex)
                             {
                                 Log.Error(ex, "Ошибка при попытке сохранить изображение {@image} пользователя {user} на сервере", user.CpcmUserImage, User.FindFirstValue("CpcmUserId"));
-                                cpcmUser.CpcmUserImagePath = Path.Combine("\\","images", "default.png");
+                                cpcmUser.CpcmUserImagePath = Path.Combine("wwwroot","images", "default.png").Replace("wwwroot", "");
                             }
                         }
 
@@ -508,7 +508,7 @@ namespace Capycom.Controllers
                 }
                 else
                 {
-					cpcmUser.CpcmUserImagePath = Path.Combine("\\","images", "default.png");
+					cpcmUser.CpcmUserImagePath = Path.Combine("wwwroot","images", "default.png");
 				}
 
                 string filePathUserCoverImage = "";
@@ -2701,7 +2701,7 @@ namespace Capycom.Controllers
                         {
                             imagesAfterDeletion[j].CpcmImageOrder = j;
                         }
-                        i = imagesAfterDeletion.Last().CpcmImageOrder;
+                        //i = imagesAfterDeletion.Last().CpcmImageOrder;
 
 
                         foreach (var image in images)
@@ -3029,7 +3029,7 @@ namespace Capycom.Controllers
             if (!string.IsNullOrEmpty(filters.NickName))
             {
                 //ViewData["nick"]=nick;
-                query = query.Where( u => EF.Functions.Like(u.CpcmUserNickName, $"%{filters.NickName}%"));
+                //query = query.Where( u => EF.Functions.Like(u.CpcmUserNickName, $"%{filters.NickName}%"));
 			}
             if (filters.CityId.HasValue)
             {
@@ -3104,7 +3104,7 @@ namespace Capycom.Controllers
 			if (!string.IsNullOrEmpty(filters.NickName))
 			{
 				//ViewData["nick"]=nick;
-				query = query.Where(u => EF.Functions.Like(u.CpcmUserNickName, $"%{filters.NickName}%"));
+				//query = query.Where(u => EF.Functions.Like(u.CpcmUserNickName, $"%{filters.NickName}%"));
 			}
 			if (filters.CityId.HasValue)
 			{

@@ -155,7 +155,7 @@ if (ModelState.IsValid)
                     returnClaims.Add(new Claim(property.Name, property.GetValue(userRole).ToString()));          
                 }       
             }
-			HttpContext.Session.SetString("ProfileImage", string.IsNullOrEmpty(user.CpcmUserImagePath) ? Path.Combine("\\","images", "default.png") : user.CpcmUserImagePath); 
+			HttpContext.Session.SetString("ProfileImage", string.IsNullOrEmpty(user.CpcmUserImagePath) ? Path.Combine("wwwroot","images", "default.png").Replace("wwwroot", "") : user.CpcmUserImagePath); 
 
 			return returnClaims;
         }
