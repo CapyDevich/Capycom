@@ -1,4 +1,4 @@
-﻿//#define ASYNC
+﻿#define ASYNC
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication;
 using System.Security.Claims;
@@ -23,7 +23,7 @@ namespace Capycom
 		public async Task InvokeAsync(HttpContext context)
 		{
 
-			if (context.Session.TryGetValue("MySessionVariable", out _))
+			if (context.Session.TryGetValue("ProfileImage", out _))
 			{
 				await _next(context);
 			}
@@ -55,7 +55,7 @@ namespace Capycom
 		{
 			return Task.Run(() =>
 			{
-				if (context.Session.TryGetValue("MySessionVariable", out _))
+				if (context.Session.TryGetValue("ProfileImage", out _))
 				{
 					_next(context).Wait();
 				}
@@ -63,20 +63,20 @@ namespace Capycom
 				{
 
 					using (var scope = _serviceProvider.CreateScope()) 
-				{
-					var _context = scope.ServiceProvider.GetRequiredService<CapycomContext>();
-					if (context.User.Identity.IsAuthenticated)
 					{
-						var user = _context.CpcmUsers.FirstOrDefault(u => u.CpcmUserId.ToString() == context.User.FindFirstValue("CpcmUserId"));
-						if (user != null)
+						var _context = scope.ServiceProvider.GetRequiredService<CapycomContext>();
+						if (context.User.Identity.IsAuthenticated)
 						{
-							context.Session.SetString("ProfileImage", string.IsNullOrEmpty(user.CpcmUserImagePath) ? Path.Combine("\\", "images", "default.png") : user.CpcmUserImagePath);
+							var user = _context.CpcmUsers.FirstOrDefault(u => u.CpcmUserId.ToString() == context.User.FindFirstValue("CpcmUserId"));
+							if (user != null)
+							{
+								context.Session.SetString("ProfileImage", string.IsNullOrEmpty(user.CpcmUserImagePath) ? Path.Combine("\\", "images", "default.png") : user.CpcmUserImagePath);
+							}
 						}
+
+
+						_next(context).Wait();
 					}
-
-
-					_next(context).Wait();
-				}
 				}
 				return;
 				

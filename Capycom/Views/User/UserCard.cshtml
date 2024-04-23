@@ -128,10 +128,20 @@
 			<a class="btn btn-secondary mb-1" asp-controller="User" asp-action="ViewFriendRequests">Заявки в друзья</a>
 		</div>
 	}
-	<div class="row">
-		<a class="btn btn-outline-secondary mb-1" asp-controller="User" asp-action="Friends" asp-route-NickName="@Model.CpcmUserNickName">Друзья</a>
-		<a class="btn btn-outline-secondary mb-1" asp-controller="User" asp-action="Followers" asp-route-NickName="@Model.CpcmUserNickName">Подписчики</a>
-	</div>
+	@if (Model.CpcmUserNickName != null || Model.CpcmUserNickName != string.Empty)
+	{
+		<div class="row">
+			<a class="btn btn-outline-secondary mb-1" asp-controller="User" asp-action="Friends" asp-route-NickName="@Model.CpcmUserNickName">Друзья</a>
+			<a class="btn btn-outline-secondary mb-1" asp-controller="User" asp-action="Followers" asp-route-NickName="@Model.CpcmUserNickName">Подписчики</a>
+		</div>
+	}
+	else
+	{
+		<div class="row">
+			<a class="btn btn-outline-secondary mb-1" asp-controller="User" asp-action="Friends" asp-route-UserId="@Model.CpcmUserId">Друзья</a>
+			<a class="btn btn-outline-secondary mb-1" asp-controller="User" asp-action="Followers" asp-route-UserId="@Model.CpcmUserId">Подписчики</a>
+		</div>
+	}
 }
 else
 {

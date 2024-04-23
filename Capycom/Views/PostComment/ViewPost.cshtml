@@ -95,9 +95,7 @@
 			<div class="row g-1 p-1">
 				@Model.Post.CpcmPostText
 			</div>
-			@if (Model.Post.CpcmImages.Count != 0)
-			{
-				<div class="row row-cols-1 @(Model.Post.CpcmImages.Count > 1 ? "row-cols-md-2 row-cols-lg-2" : "") g-4">
+				<div class="row row-cols-1 mt-0 @(Model.Post.CpcmImages.Count > 1 ? "row-cols-md-2 row-cols-lg-2" : "") g-4">
 					@{
 						if (Model.Post.CpcmPostFatherNavigation == null)
 							foreach (var image in Model.Post.CpcmImages)
@@ -110,7 +108,7 @@
 							@await Html.PartialAsync("/Views/User/PostChild.cshtml", Model.Post.CpcmPostFatherNavigation)
 					}
 				</div>
-			}
+			
 		</div>
 		@if (User.Identity.IsAuthenticated)
 		{
