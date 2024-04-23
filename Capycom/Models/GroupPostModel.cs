@@ -7,7 +7,7 @@ namespace Capycom.Models
 	public class GroupPostModel
 	{
 
-		[MaxFileCount(4)]
+		[MaxFileCount(2)]
 		public IFormFileCollection? Files { get; set; }
 		[MaxLength(500, ErrorMessage = "Текст поста не может состоять из более чем 500 символов")]
 		public string? Text { get; set; }

@@ -16,7 +16,7 @@ namespace Capycom.Attributes
             var files = value as IList<IFormFile>;
             if (files != null && files.Count > _maxFileCount)
             {
-                return new ValidationResult(GetErrorMessage());
+                return new ValidationResult(GetErrorMessage(), new List<string> { validationContext.DisplayName });
             }
 
             return ValidationResult.Success;
