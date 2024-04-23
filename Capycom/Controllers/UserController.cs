@@ -3029,7 +3029,7 @@ namespace Capycom.Controllers
             if (!string.IsNullOrEmpty(filters.NickName))
             {
                 //ViewData["nick"]=nick;
-                query = query.Where( u => EF.Functions.Like(u.CpcmUserNickName, $"%{filters.NickName}%"));
+                //query = query.Where( u => EF.Functions.Like(u.CpcmUserNickName, $"%{filters.NickName}%"));
 			}
             if (filters.CityId.HasValue)
             {
@@ -3104,7 +3104,7 @@ namespace Capycom.Controllers
 			if (!string.IsNullOrEmpty(filters.NickName))
 			{
 				//ViewData["nick"]=nick;
-				query = query.Where(u => EF.Functions.Like(u.CpcmUserNickName, $"%{filters.NickName}%"));
+				//query = query.Where(u => EF.Functions.Like(u.CpcmUserNickName, $"%{filters.NickName}%"));
 			}
 			if (filters.CityId.HasValue)
 			{
