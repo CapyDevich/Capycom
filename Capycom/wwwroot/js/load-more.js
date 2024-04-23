@@ -88,7 +88,7 @@ function loadFollowers(button) {
             UniversityId: $.urlParam('UniversityId'),
             SchoolId: $.urlParam('SchoolId'),
             NickName: $.urlParam('NickName'),
-            UserId: $('[name=UserId]')[0].value,
+            UserId: $.urlParam('UserId'),
             lastId: $('.follower').last()[0].id
         };
         $.ajax({
@@ -134,7 +134,7 @@ function loadFriends(button) {
             UniversityId: $.urlParam('UniversityId'),
             SchoolId: $.urlParam('SchoolId'),
             NickName: $.urlParam('NickName'),
-            UserId: $('[name=UserId]')[0].value,
+            UserId: $.urlParam('UserId'),
             lastId: $('.friend').last()[0].id
         };
         $.ajax({

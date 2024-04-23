@@ -2,7 +2,6 @@
 <link href="~/css/user-card.css" rel="stylesheet" />
 <form class="col-md-12 mx-auto" id="searchUser">
 	<h4 class="text-center">Фильтры поиска</h4>
-	<input name="UserId" type="text" value="@User.FindAll(x => x.Type == "CpcmUserId").FirstOrDefault().Value" hidden>
 	<div class="row mb-3">
 		<div class="col">
 			<label for="FirstName" class="form-label">Имя</label>
@@ -99,9 +98,12 @@
 					</div>
 				</div>
 			}
-			<div class="col-12 text-center" id="friends-footer">
-				<button class="btn btn-primary" type="button" onclick="loadFriends(this)">Загрузить ещё</button>
-			</div>
+			@if (Model.Count >= 10)
+			{
+				<div class="col-12 text-center" id="friends-footer">
+					<button class="btn btn-primary" type="button" onclick="loadFriends(this)">Загрузить ещё</button>
+				</div>
+			}
 		}
 		else
 		{

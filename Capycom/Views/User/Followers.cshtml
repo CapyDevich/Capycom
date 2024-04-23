@@ -2,8 +2,6 @@
 <link href="~/css/user-card.css" rel="stylesheet" />
 <form class="col-md-12 mx-auto" id="searchUser">
 	<h4 class="text-center">Фильтры поиска</h4>
-	<input name="UserId" type="text" value="@User.FindAll(x => x.Type == "CpcmUserId").FirstOrDefault().Value" hidden>
-	<div class="row mb-3">
 		<div class="col">
 			<label for="FirstName" class="form-label">Имя</label>
 			<input name="FirstName" type="text" class="form-control">
@@ -105,7 +103,7 @@
 			<h5 class="col-12 text-muted text-center mt-2">К сожалению, кроме капибар никого не нашлось :(</h5>
 		}
 	</div>
-	@if (Model.Count != 0)
+	@if (Model.Count >= 10)
 	{
 		<div class="col-12 text-center" id="followers-footer">
 			<button class="btn btn-primary" type="button" onclick="loadFollowers(this)">Загрузить ещё</button>

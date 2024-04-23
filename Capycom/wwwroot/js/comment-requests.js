@@ -53,3 +53,37 @@ function deleteComment() {
         });
 
 }
+
+function askDelete(postID) {
+    lastIDToDelete = postID;
+}
+function deletePost() {
+    let dataToSend = {
+        postGuid: lastIDToDelete
+    };
+    if (lastIDToDelete != '')
+        $.ajax({
+            url: '/User/DeletePost',
+            type: 'POST',
+            data: dataToSend,
+            success: function (response) {
+                if (response['status']) {
+                    $(`#${lastIDToDelete}`).remove();
+                    lastIDToDelete = ''
+                    window.location.replace("/User");
+                }
+                else {
+                    alert('Удалить пост не вышло :(');
+                    lastIDToDelete = ''
+                }
+            },
+            error: function (obj) {
+                if (obj.status == 401)
+                    window.location.replace("/UserLogIn");
+                else
+                    alert(`Удалить пост не вышло, что-то пошло не так :(\nСтатус: ${obj.status}`);
+                lastIDToDelete = ''
+            }
+        });
+
+}
