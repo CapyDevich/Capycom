@@ -25,7 +25,10 @@
 						@await Html.PartialAsync("Post", item)
 					}
 					</div>
-					<button class="btn btn-primary container-fluid" onclick="loadProfilePost(this)">Загрузить ещё</button>
+					@if (Model.Posts.Count >= 10)
+					{
+						<button class="btn btn-primary container-fluid" onclick="loadProfilePost(this)">Загрузить ещё</button>
+					}
 				}
 			}
 			else if (Model.User.CpcmIsDeleted)
