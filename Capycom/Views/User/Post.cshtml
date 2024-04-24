@@ -6,22 +6,32 @@
 			@if (Model.UserOwner.CpcmUserNickName != null)
 			{
 				<a asp-controller="User" asp-action="Index" asp-route-Nickname="@Model.UserOwner.CpcmUserNickName">
-					@if (@Model.UserOwner.CpcmUserImagePath != string.Empty)
+					@if (Model.UserOwner.CpcmIsDeleted || Model.UserOwner.CpcmUserBanned)
+					{
+						<img src="\images\default-banned.png"
+							 class="rounded-circle me-3" style="width: 50px; height: 50px; object-fit: cover;">
+					}
+					else if (@Model.UserOwner.CpcmUserImagePath != string.Empty)
 					{
 						<img src="@Url.Content(@Model.UserOwner.CpcmUserImagePath)"
-							 class="rounded-circle me-3" style="width: 50px; height: 50px; object-fit: cover;">
+						class="rounded-circle me-3" style="width: 50px; height: 50px; object-fit: cover;">
 					}
 					else
 					{
 						<img src="\images\default.png"
-							 class="rounded-circle me-3" style="width: 50px; height: 50px; object-fit: cover;">
+						class="rounded-circle me-3" style="width: 50px; height: 50px; object-fit: cover;">
 					}
 				</a>
 			}
 			else
 			{
 				<a asp-controller="User" asp-action="Index" asp-route-UserId="@Model.Post.CpcmUserId">
-					@if (@Model.UserOwner.CpcmUserImagePath != string.Empty)
+					@if (Model.UserOwner.CpcmIsDeleted || Model.UserOwner.CpcmUserBanned)
+					{
+						<img src="\images\default-banned.png"
+							 class="rounded-circle me-3" style="width: 50px; height: 50px; object-fit: cover;">
+					}
+					else if (@Model.UserOwner.CpcmUserImagePath != string.Empty)
 					{
 						<img src="@Url.Content(@Model.UserOwner.CpcmUserImagePath)"
 							 class="rounded-circle me-3" style="width: 50px; height: 50px; object-fit: cover;">

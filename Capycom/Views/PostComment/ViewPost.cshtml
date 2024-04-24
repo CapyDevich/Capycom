@@ -10,7 +10,12 @@
 			@if (Model.Post.User?.CpcmUserNickName != null)
 			{
 				<a asp-controller="User" asp-action="Index" asp-route-Nickname="@Model.Post.User?.CpcmUserNickName">
-					@if (@Model.Post.User?.CpcmUserImagePath != string.Empty)
+					@if (Model.Post.User.CpcmIsDeleted || Model.Post.User.CpcmUserBanned)
+					{
+						<img src="\images\default-banned.png"
+							 class="rounded-circle me-3" style="width: 50px; height: 50px; object-fit: cover;">
+					}
+					else if (@Model.Post.User?.CpcmUserImagePath != string.Empty)
 					{
 						<img src="@Url.Content(@Model.Post.User?.CpcmUserImagePath)"
 							 class="rounded-circle me-3" style="width: 50px; height: 50px; object-fit: cover;">
@@ -25,7 +30,12 @@
 			else
 			{
 				<a asp-controller="User" asp-action="Index" asp-route-UserId="@Model.Post.CpcmUserId">
-					@if (@Model.Post.User?.CpcmUserImagePath != string.Empty)
+					@if (Model.Post.User.CpcmIsDeleted || Model.Post.User.CpcmUserBanned)
+					{
+						<img src="\images\default-banned.png"
+							 class="rounded-circle me-3" style="width: 50px; height: 50px; object-fit: cover;">
+					}
+					else if (@Model.Post.User?.CpcmUserImagePath != string.Empty)
 					{
 						<img src="@Url.Content(@Model.Post.User?.CpcmUserImagePath)"
 							 class="rounded-circle me-3" style="width: 50px; height: 50px; object-fit: cover;">
@@ -160,7 +170,12 @@
 						@if (comment.CpcmUser.CpcmUserNickName != null)
 						{
 							<a asp-controller="User" asp-action="Index" asp-route-Nickname="@comment.CpcmUser.CpcmUserNickName">
-								@if (comment.CpcmUser.CpcmUserImagePath != string.Empty)
+								@if (comment.CpcmUser.CpcmIsDeleted || comment.CpcmUser.CpcmUserBanned)
+								{
+									<img src="\images\default-banned.png"
+										 class="rounded-circle mt-2 ms-2 me-2 user-icon">
+								}
+								else if (comment.CpcmUser.CpcmUserImagePath != null && comment.CpcmUser.CpcmUserImagePath != string.Empty)
 								{
 									<img src="@Url.Content(@comment.CpcmUser?.CpcmUserImagePath)"
 										 class="rounded-circle mt-2 ms-2 me-2 user-icon">
@@ -170,14 +185,26 @@
 									<img src="\images\default.png"
 										 class="rounded-circle mt-2 ms-2 me-2 user-icon">
 								}
-
 							</a>
 						}
 						else
 						{
 							<a asp-controller="User" asp-action="Index" asp-route-UserId="@comment.CpcmUser.CpcmUserId">
-								<img src="@Url.Content(@comment.CpcmUser?.CpcmUserImagePath)"
-									 class="rounded-circle mt-2 ms-2 me-2 user-icon">
+								@if (comment.CpcmUser.CpcmIsDeleted || comment.CpcmUser.CpcmUserBanned)
+								{
+									<img src="\images\default-banned.png"
+										 class="rounded-circle mt-2 ms-2 me-2 user-icon">
+								}
+								else if (comment.CpcmUser.CpcmUserImagePath != null && comment.CpcmUser.CpcmUserImagePath != string.Empty)
+								{
+										<img src="@Url.Content(@comment.CpcmUser?.CpcmUserImagePath)"
+											 class="rounded-circle mt-2 ms-2 me-2 user-icon">
+								}
+								else
+								{
+									<img src="\images\default.png"
+										 class="rounded-circle mt-2 ms-2 me-2 user-icon">
+								}
 							</a>
 						}
 						<div class="p-1">
