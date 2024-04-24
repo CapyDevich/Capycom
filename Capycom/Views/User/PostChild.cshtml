@@ -5,7 +5,12 @@
 			@if (Model.User?.CpcmUserNickName != null)
 			{
 				<a asp-controller="User" asp-action="Index" asp-route-Nickname="@Model.User?.CpcmUserNickName">
-					@if (@Model.User?.CpcmUserImagePath != string.Empty)
+					@if (Model.User.CpcmIsDeleted || Model.User.CpcmUserBanned)
+					{
+						<img src="\images\default-banned.png"
+							 class="rounded-circle me-3" style="width: 50px; height: 50px; object-fit: cover;">
+					}
+					else if (@Model.User?.CpcmUserImagePath != string.Empty)
 					{
 						<img src="@Url.Content(@Model.User?.CpcmUserImagePath)"
 							 class="rounded-circle me-3" style="width: 50px; height: 50px; object-fit: cover;">
@@ -20,7 +25,12 @@
 			else
 			{
 				<a asp-controller="User" asp-action="Index" asp-route-UserId="@Model.CpcmUserId">
-					@if (@Model.User?.CpcmUserImagePath != string.Empty)
+					@if (Model.User.CpcmIsDeleted || Model.User.CpcmUserBanned)
+					{
+						<img src="\images\default-banned.png"
+							 class="rounded-circle me-3" style="width: 50px; height: 50px; object-fit: cover;">
+					}
+					else if (@Model.User?.CpcmUserImagePath != string.Empty)
 					{
 						<img src="@Url.Content(@Model.User?.CpcmUserImagePath)"
 							 class="rounded-circle me-3" style="width: 50px; height: 50px; object-fit: cover;">
