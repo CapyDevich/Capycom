@@ -6,8 +6,8 @@ namespace Capycom;
 
 public partial class CpcmRole
 {
-    [ValidateNever]
-    public int CpcmRoleId { get; set; }
+	[ValidateNever]
+	public int CpcmRoleId { get; set; }
 
     public string CpcmRoleName { get; set; } = null!;
 
@@ -17,17 +17,19 @@ public partial class CpcmRole
 
     public bool CpcmCanEditRoles { get; set; }
 
-    public bool CpcmCanDelUsersPosts { get; set; }
+    public bool CpcmCanEditGroupRoles { get; set; }
 
-    public bool CpcmCanDelUsersComments { get; set; }
+    public bool CpcmCanEditUsersPost { get; set; }
 
-    public bool CpcmCanDelGroupsPosts { get; set; }
+    public bool CpcmCanEditGroupsPost { get; set; }
 
-    public bool CpcmCanAddPost { get; set; }
+    public bool CpcmCanBanUsers { get; set; }
 
-    public bool CpcmCanAddGroups { get; set; }
+    public bool CpcmCanBanUsersPost { get; set; }
 
-    public bool CpcmCanAddComments { get; set; }
+    public bool CpcmCanBanUsersComment { get; set; }
+
+    public bool CpcmCanBanGroupsPost { get; set; }
 
     public virtual ICollection<CpcmUser> CpcmUsers { get; set; } = new List<CpcmUser>();
 }
