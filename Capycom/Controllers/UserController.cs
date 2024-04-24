@@ -825,7 +825,7 @@ namespace Capycom.Controllers
         [HttpPost]
         public async Task<IActionResult> BanUnbanUser(Guid id)
         {
-            if (!CheckUserAdminPrivilege("CpcmCanEditUsers", "True"))
+            if (!CheckUserAdminPrivilege("CpcmCanBanUsers", "True"))
             {
                 Log.Warning("Пользователь {user} не имеет прав на редактирование пользователей", User.FindFirstValue("CpcmUserId"));
                 return StatusCode(403);
@@ -1526,16 +1526,17 @@ namespace Capycom.Controllers
         [HttpPost]
         public async Task<ActionResult> Delete(UserDeleteModel userdel)
         {
-            if (!CheckUserPrivilege("CpcmCanEditUsers", "True", userdel.CpcmUserId))
-            {
-                Log.Error("Пользователь {user} не имеет прав на удаление пользователя {u}", User.FindFirstValue("CpcmUserId"), userdel.CpcmUserId);
-                return StatusCode(403);
-            }
 
             CpcmUser user;
             try
             {
                 user = await _context.CpcmUsers.Where(c => c.CpcmUserId == userdel.CpcmUserId).FirstOrDefaultAsync();
+                if (user.CpcmUserId.ToString() != GetUserIdString())
+                {
+					Log.Error("Пользователь {user} не имеет прав на удаление пользователя {u}", User.FindFirstValue("CpcmUserId"), userdel.CpcmUserId);
+					return StatusCode(403);
+				}
+
             }
             catch(DbUpdateException ex)
             {
@@ -2432,14 +2433,19 @@ namespace Capycom.Controllers
             //    return StatusCode(403);
             //}
 
-            if (!CheckUserPrivilege("CpcmCanDelUsersPosts", "True", post.CpcmUserId.ToString()))
-            {
-                Log.Warning("Пользователь {user} не имеет прав на удаление поста {u}",User.FindFirstValue("CpcmUserId"), postGuid);
-                return StatusCode(403);
-            }
+            //if (!CheckUserPrivilege("CpcmCanEditUsersPost", "True", post.CpcmUserId.ToString()))
+            //{
+            //    Log.Warning("Пользователь {user} не имеет прав на удаление поста {u}",User.FindFirstValue("CpcmUserId"), postGuid);
+            //    return StatusCode(403);
+            //}
+			if (post.CpcmUserId.ToString() != GetUserIdString())
+			{
+				Log.Error("Пользователь {user} не имеет прав на удаление поста {u}", User.FindFirstValue("CpcmUserId"), post.CpcmPostId);
+				return StatusCode(403);
+			}
 
 
-            post.CpcmIsDeleted = true;
+			post.CpcmIsDeleted = true;
             try
             {
                 using(var transaction = await _context.Database.BeginTransactionAsync())
@@ -2506,7 +2512,7 @@ namespace Capycom.Controllers
                 Log.Warning("Пост удалён {u}", postGuid);
                 return StatusCode(404);
             }
-            if (!CheckUserPrivilege("CpcmCanDelUsersPosts", "True", post.CpcmUserId.ToString()) || post.CpcmPostBanned == true)
+            if (!CheckUserPrivilege("CpcmCanEditUsersPost", "True", post.CpcmUserId.ToString()) || post.CpcmPostBanned == true)
             {
                 Log.Warning("Пользователь не имеет прав на редактирование поста {u}", postGuid);
                 return View("Index");
@@ -2576,7 +2582,7 @@ namespace Capycom.Controllers
                     Log.Warning("Пост удалён {u}", editPost.Id);
                     return StatusCode(404);
                 }
-                if (!CheckUserPrivilege("CpcmCanDelUsersPosts", "True", post.CpcmUserId.ToString()) || post.CpcmPostBanned == true)
+                if (!CheckUserPrivilege("CpcmCanEditUsersPost", "True", post.CpcmUserId.ToString()) || post.CpcmPostBanned == true)
                 {
                     Log.Warning("Пользователь не имеет прав на редактирование поста {u}", editPost.Id);
                     return StatusCode(403);
@@ -2857,7 +2863,7 @@ namespace Capycom.Controllers
         [Authorize]
         public async Task<IActionResult> GetNextNotPublishedPosts(Guid userId, Guid lastPostId)
         {
-            if (!CheckUserPrivilege("CpcmCanEditUsers", "True", userId))
+            if (!CheckUserPrivilege("CpcmCanEditUsersPost", "True", userId))
             {
                 Log.Warning("Пользователь {uu} не имеет прав на просмотр неопубликованных постов {u}",User.FindFirstValue("CpcmUserId"), userId);
                 ViewData["ErrorCode"] = 403;
@@ -2919,7 +2925,7 @@ namespace Capycom.Controllers
 		[HttpGet]
         public async Task<IActionResult> NotPublishedPosts(Guid id)
         {
-            if (!CheckUserPrivilege("CpcmCanEditUsers", "True", id))
+            if (!CheckUserPrivilege("CpcmCanEditUsersPost", "True", id))
             {
                 Log.Error("Пользователь {uu} не имеет прав на просмотр неопубликованных постов {u}", User.FindFirstValue("CpcmUserId"), id);
                 ViewData["ErrorCode"] = 403;
@@ -2979,7 +2985,7 @@ namespace Capycom.Controllers
         [HttpPost]
         public async Task<IActionResult> BanUnbanPost(Guid id)
         {
-            if (!CheckUserAdminPrivilege("CpcmCanDelUsersPosts", "True"))
+            if (!CheckUserAdminPrivilege("CpcmCanBanUsersPost", "True"))
             {
                 Log.Warning("Пользователь {uu} не имеет прав на блокировку постов {u}", User.FindFirstValue("CpcmUserId"), id);
                 return StatusCode(403);

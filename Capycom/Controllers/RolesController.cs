@@ -111,7 +111,7 @@ namespace Capycom.Controllers
         // POST: Roles/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("CpcmRoleName,CpcmCanEditUsers,CpcmCanEditGroups,CpcmCanEditRoles,CpcmCanDelUsersPosts,CpcmCanDelUsersComments,CpcmCanDelGroupsPosts,CpcmCanAddPost,CpcmCanAddGroups,CpcmCanAddComments")] CpcmRole cpcmRole)
+        public async Task<IActionResult> Create(CpcmRole cpcmRole)
         {
             Log.Information ("Пользователь {HttpContext.User} пытается создать роль {@cpcmRole}. Данные по соединеню {@HttpContext.Connection}", HttpContext.User.FindFirstValue("CpcmUserId"), cpcmRole, HttpContext.Connection);
             if (ModelState.IsValid)
@@ -203,7 +203,7 @@ namespace Capycom.Controllers
         // POST: Roles/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("CpcmRoleName,CpcmCanEditUsers,CpcmCanEditGroups,CpcmCanEditRoles,CpcmCanDelUsersPosts,CpcmCanDelUsersComments,CpcmCanDelGroupsPosts,CpcmCanAddPost,CpcmCanAddGroups,CpcmCanAddComments")] CpcmRole cpcmRole)
+        public async Task<IActionResult> Edit(int id, CpcmRole cpcmRole)
         {
             Log.Information ("Пользователь {@HttpContext.User.Identity.Name} пытается изменить роль {@cpcmRole}. Данные по соединеню {@HttpContext.Connection}", HttpContext.User, cpcmRole, HttpContext.Connection);
             if (id != cpcmRole.CpcmRoleId)

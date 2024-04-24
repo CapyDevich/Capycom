@@ -289,6 +289,7 @@ public partial class CapycomContext : DbContext
 			entity.Property(e => e.CpcmCanEditRoles).HasColumnName("CPCM_CanEditRoles");
 			entity.Property(e => e.CpcmCanEditUsers).HasColumnName("CPCM_CanEditUsers");
 			entity.Property(e => e.CpcmCanEditUsersPost).HasColumnName("CPCM_CanEditUsersPost");
+			entity.Property(e => e.CpcmCanBanGroups).HasColumnName("CPCM_CanBanGroups");
 			entity.Property(e => e.CpcmRoleName)
 				.HasMaxLength(64)
 				.HasColumnName("CPCM_RoleName");

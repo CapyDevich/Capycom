@@ -30,6 +30,7 @@ public partial class CpcmRole
     public bool CpcmCanBanUsersComment { get; set; }
 
     public bool CpcmCanBanGroupsPost { get; set; }
+    public bool CpcmCanBanGroups { get; set; }
 
-    public virtual ICollection<CpcmUser> CpcmUsers { get; set; } = new List<CpcmUser>();
+	public virtual ICollection<CpcmUser> CpcmUsers { get; set; } = new List<CpcmUser>();
 }
