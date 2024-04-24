@@ -4,7 +4,7 @@
 		background-color: #f7f7f7;
 	}
 </style>
-@if (!(Model.CpcmUserBanned && Model.CpcmIsDeleted))
+@if (!Model.CpcmUserBanned && !Model.CpcmIsDeleted)
 {
 	<div class="row">
 		<div class="pt-2 pb-2 profile-block card mb-2">
@@ -142,13 +142,19 @@
 			<a class="btn btn-outline-secondary mb-1" asp-controller="User" asp-action="Followers" asp-route-UserId="@Model.CpcmUserId">Подписчики</a>
 		</div>
 	}
+	@if (User.FindFirst(c => c.Type == "CpcmCanDelUsersPosts").Value == "True")
+	{
+		<div class="row mt-md-2 mt-1 mb-2">
+			<button class="btn btn-outline-danger" onclick="banUser('/User/BanUnbanUser', '@Model.CpcmUserId')">Заблокировать пользователя</button>
+		</div>
+	}
 }
 else
 {
 	<div class="row">
 		<div class="pt-2 pb-2 profile-block card mb-2">
 			<div class="mx-auto" style="width: 256px; height: 256px;">
-				<img src="\images\default_banned.png" class="img-fluid rounded h-100 w-100" alt="Иконка пользователя" style="object-fit: cover;">
+				<img src="\images\default-banned.png" class="img-fluid rounded h-100 w-100" alt="Иконка пользователя" style="object-fit: cover;">
 			</div>
 
 			<div class="text-center">
@@ -184,6 +190,12 @@ else
 			{
 				<button class="btn btn-outline-primary mb-1" id="subscribeButton" onclick="unfollow()">Отписаться</button>
 			}
+		</div>
+	}
+	@if (User.FindFirst(c => c.Type == "CpcmCanDelUsersPosts").Value == "True")
+	{
+		<div class="row mt-md-2 mt-1 mb-2">
+			<button class="btn btn-outline-success" onclick="banUser('/User/BanUnbanUser', '@Model.CpcmUserId')">Разблокировать пользователя</button>
 		</div>
 	}
 }
