@@ -3,6 +3,10 @@
 	ViewData["Title"] = "Профиль";
 }
 <link href="~/css/post.css" rel="stylesheet" />
+@if (User.Identity.IsAuthenticated && User.FindFirst(c => c.Type == "CpcmCanDelUsersPosts").Value == "True")
+{
+	<link href="~/css/ban.css" rel="stylesheet" />
+}
 <div class="container mt-5">
 	<div class="row">
 		<div class="col-lg-4">
@@ -14,7 +18,7 @@
 				<a asp-area="" asp-controller="User" asp-action="CreatePost" asp-route-postId="" class="btn btn-outline-primary col-12 mb-1">Добавить пост</a>
 				<a asp-area="" asp-controller="User" asp-action="NotPublishedPosts" asp-route-id="@Model.User.CpcmUserId" class="btn btn-outline-primary col-12 mb-1">Посмотреть отложенные посты</a>
 			}
-			@if (!(Model.User.CpcmUserBanned && Model.User.CpcmIsDeleted))
+			@if (!Model.User.CpcmUserBanned && !Model.User.CpcmIsDeleted)
 			{
 				
 				@if (Model.Posts != null)
@@ -56,6 +60,10 @@
 }
 <script type="text/javascript" charset="utf-8" src="~/js/post.js"></script>
 <script src="~/js/load-more.js"></script>
+@if (User.Identity.IsAuthenticated && User.FindFirst(c => c.Type == "CpcmCanDelUsersPosts").Value == "True")
+{
+	<script src="~/js/ban.js"></script>
+}
 @if (!Model.User.CpcmUserBanned)
 {
 	<!-- Модальное окно на подтверждение удаление поста -->
