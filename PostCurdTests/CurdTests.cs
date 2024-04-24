@@ -396,7 +396,7 @@ namespace PostCurdTests
 		}
 
 		[Fact]
-		public async Task CreatePostP_SendPostWithFileAndText_ExpectViewAnd300Code()
+		public async Task CreatePostP_SendPostWithFileAndText_RedirectToIndex()
 		{
 			// Arrange
 
@@ -742,6 +742,167 @@ namespace PostCurdTests
 			}
 		}
 
+		[Fact]
+		public async Task EditPostP_TryEditUnavailablePost_ExpectStatusCode404()
+		{
+			//Arrange
+
+			var postmodel = new Capycom.Models.UserPostEditModel()
+			{
+				Id = new Guid("00010010-0010-0000-0000-000000000012"),
+				Text = "Text",
+				PostFatherId = null,
+				NewPublishDate = DateTime.UtcNow + new TimeSpan(1, 0, 0)
+			};
+
+			//Act
+			var result = await controller.EditPostP(postmodel);
+			//Assert
+			if (result is StatusCodeResult codeResult)
+			{
+				codeResult.StatusCode.Should().Be(404);
+			}
+			else
+			{
+				Assert.Fail();
+			}
+		}
+
+		[Fact]
+		public async Task EditPostP_TryEditDeletedPost_ExpectStatusCode404()
+		{
+			//Arrange
+
+			var postmodel = new Capycom.Models.UserPostEditModel()
+			{
+				Id = posts[0].CpcmPostId,
+				Text = "Text",
+				PostFatherId = null,
+				NewPublishDate = DateTime.UtcNow + new TimeSpan(1, 0, 0)
+			};
+
+			//Act
+			var result = await controller.EditPostP(postmodel);
+			//Assert
+			if (result is StatusCodeResult codeResult)
+			{
+				codeResult.StatusCode.Should().Be(404);
+			}
+			else
+			{
+				Assert.Fail();
+			}
+		}
+
+		[Fact]
+		public async Task EditPostP_TryEditPostWithOutRoles_ExpectStatusCode404()
+		{
+			//Arrange
+
+			var postmodel = new Capycom.Models.UserPostEditModel()
+			{
+				Id = posts[23].CpcmPostId,
+				Text = "Text",
+				PostFatherId = null,
+				NewPublishDate = DateTime.UtcNow + new TimeSpan(1, 0, 0)
+			};
+
+			//Act
+			var result = await controller.EditPostP(postmodel);
+			//Assert
+			if (result is StatusCodeResult codeResult)
+			{
+				codeResult.StatusCode.Should().Be(403);
+			}
+			else
+			{
+				Assert.Fail();
+			}
+		}
+
+		[Fact]
+		public async Task EditPostP_TryEditPostWithRolesNotMyPost_ExpectRedirectToIndex()
+		{
+			//Arrange
+
+			var postmodel = new Capycom.Models.UserPostEditModel()
+			{
+				Id = posts[23].CpcmPostId,
+				Text = "Text",
+				PostFatherId = null,
+				NewPublishDate = DateTime.UtcNow + new TimeSpan(1, 0, 0)
+			};
+			controller.User.AddIdentity(new ClaimsIdentity(new List<Claim>() { new Claim("CpcmCanDelUsersPosts", "True") }, "Cookies"));
+
+			//Act
+			var result = await controller.EditPostP(postmodel);
+			//Assert
+			if (result is RedirectToActionResult redirectResult)
+			{
+				redirectResult.ActionName.Should().Be("Index");
+				//controller.HttpContext.Response.StatusCode.Should.Be(300)
+			}
+			else
+			{
+				Assert.Fail();
+			}
+		}
+
+		[Fact]
+		public async Task EditPostP_TryEditMyPost_ExpectRedirectToIndex()
+		{
+			//Arrange
+
+			var postmodel = new Capycom.Models.UserPostEditModel()
+			{
+				Id = posts[4].CpcmPostId,
+				Text = "Text",
+				PostFatherId = null,
+				NewPublishDate = DateTime.UtcNow + new TimeSpan(1, 0, 0)
+			};
+			//controller.User.AddIdentity(new ClaimsIdentity(new List<Claim>() { new Claim("CpcmCanDelUsersPosts", "True") }, "Cookies"));
+
+			//Act
+			var result = await controller.EditPostP(postmodel);
+			//Assert
+			if (result is RedirectToActionResult redirectResult)
+			{
+				redirectResult.ActionName.Should().Be("Index");
+				//controller.HttpContext.Response.StatusCode.Should.Be(300)
+			}
+			else
+			{
+				Assert.Fail();
+			}
+		}	
+
+		public async Task EditPostP_TryAddFileToPost_ExpectRetirectTiTindex()
+		{
+			//Arrange
+			var file = GetFile();
+			var postmodel = new Capycom.Models.UserPostEditModel()
+			{
+				Id = posts[4].CpcmPostId,
+				Text = "Text",
+				PostFatherId = null,
+				NewPublishDate = DateTime.UtcNow + new TimeSpan(1, 0, 0)
+			};
+			//controller.User.AddIdentity(new ClaimsIdentity(new List<Claim>() { new Claim("CpcmCanDelUsersPosts", "True") }, "Cookies"));
+
+			//Act
+			var result = await controller.EditPostP(postmodel);
+			//Assert
+			if (result is RedirectToActionResult redirectResult)
+			{
+				redirectResult.ActionName.Should().Be("Index");
+				//controller.HttpContext.Response.StatusCode.Should.Be(300)
+			}
+			else
+			{
+				Assert.Fail();
+			}
+		}
+
 		#region Вспомогательные методы
 
 		private static Guid NextGuid(Guid guid)
@@ -755,6 +916,27 @@ namespace PostCurdTests
 			return Guid.ParseExact(newGuidStr, "N");
 		}
 
+		private static FormFile GetFile(string path = "default.png")
+		{
+			FormFile file;
+			Directory.GetCurrentDirectory();
+			using (var stream = File.OpenRead(path))
+			{
+				var provider = new FileExtensionContentTypeProvider();
+				if (!provider.TryGetContentType(stream.Name, out var contentType))
+				{
+					contentType = "image/png";
+				}
+				file = new FormFile(stream, 0, stream.Length, null, Path.GetFileName(stream.Name))
+				{
+					Headers = new HeaderDictionary(),
+					ContentType = contentType
+				};
+
+			}
+			return file;
+		}
+
 		public void Dispose()
 		{
 			context.Dispose();
@@ -762,6 +944,6 @@ namespace PostCurdTests
 
 		#endregion Вспомогательные методы
 
-		//controller.User.AddIdentity(new ClaimsIdentity(new List<Claim>() { new Claim("CpcmUserId", users[0].CpcmUserId.ToString()) }, "Cookies"));
+		//controller.User.AddIdentity(new ClaimsIdentity(new List<Claim>() { new Claim("CpcmUserId", users[0].CpcmUserId.ToString()) }, "Cookies")); CpcmCanDelUsersPosts
 	}
 }
