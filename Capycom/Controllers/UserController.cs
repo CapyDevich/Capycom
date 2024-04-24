@@ -150,16 +150,16 @@ namespace Capycom.Controllers
                 return View("UserError");
             }
 
-            //if (user == null||user.CpcmIsDeleted)
-            //{
-            //    Log.Warning("Пользователь не найден или удалён {u}", filter.UserId);
-            //    Response.StatusCode = 404;
-            //    ViewData["ErrorCode"] = 404;
-            //    ViewData["Message"] = "Пользователь не найден";
-            //    return View("UserError");
-            //}
+            if (user == null || user.CpcmIsDeleted)
+            {
+                Log.Warning("Пользователь не найден или удалён {u}", filter.UserId);
+                Response.StatusCode = 404;
+                ViewData["ErrorCode"] = 404;
+                ViewData["Message"] = "Пользователь не найден";
+                return View("UserError");
+            }
             List<CpcmPost> posts = new List<CpcmPost>();
-            if (!user.CpcmIsDeleted || !user.CpcmUserBanned)
+            if (!user.CpcmIsDeleted && !user.CpcmUserBanned)
             {
                 try
                 {
