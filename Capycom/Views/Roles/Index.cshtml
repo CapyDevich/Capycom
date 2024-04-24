@@ -1,89 +1,89 @@
 ﻿@model IEnumerable<Capycom.CpcmRole>
 
 @{
-    ViewData["Title"] = "Index";
+	ViewData["Title"] = "Редактирование ролей";
 }
 
-<h1>Index</h1>
-
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
-<table class="table">
-    <thead>
-        <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.CpcmRoleName)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.CpcmCanEditUsers)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.CpcmCanEditGroups)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.CpcmCanEditRoles)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.CpcmCanDelUsersPosts)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.CpcmCanDelUsersComments)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.CpcmCanDelGroupsPosts)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.CpcmCanAddPost)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.CpcmCanAddGroups)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.CpcmCanAddComments)
-            </th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.CpcmRoleName)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.CpcmCanEditUsers)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.CpcmCanEditGroups)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.CpcmCanEditRoles)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.CpcmCanDelUsersPosts)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.CpcmCanDelUsersComments)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.CpcmCanDelGroupsPosts)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.CpcmCanAddPost)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.CpcmCanAddGroups)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.CpcmCanAddComments)
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.CpcmRoleId">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.CpcmRoleId">Details</a> @* | *@
-@*                 <a asp-action="Delete" asp-route-id="@item.CpcmRoleId">Delete</a> *@
-            </td>
-        </tr>
-}
-    </tbody>
-</table>
+<div class="container" style="overflow: auto">
+	<h1>@ViewData["Title"]</h1>
+	<a class="btn btn-primary mb-3" asp-action="Create">Добавить роль</a>
+	<table class="table">
+		<thead>
+			<tr>
+				<th>
+					@Html.DisplayNameFor(model => model.CpcmRoleName)
+				</th>
+				<th>
+					@Html.DisplayNameFor(model => model.CpcmCanEditUsers)
+				</th>
+				<th>
+					@Html.DisplayNameFor(model => model.CpcmCanEditGroups)
+				</th>
+				<th>
+					@Html.DisplayNameFor(model => model.CpcmCanEditRoles)
+				</th>
+				<th>
+					@Html.DisplayNameFor(model => model.CpcmCanDelUsersPosts)
+				</th>
+				<th>
+					@Html.DisplayNameFor(model => model.CpcmCanDelUsersComments)
+				</th>
+				<th>
+					@Html.DisplayNameFor(model => model.CpcmCanDelGroupsPosts)
+				</th>
+				<th>
+					@Html.DisplayNameFor(model => model.CpcmCanAddPost)
+				</th>
+				<th>
+					@Html.DisplayNameFor(model => model.CpcmCanAddGroups)
+				</th>
+				<th>
+					@Html.DisplayNameFor(model => model.CpcmCanAddComments)
+				</th>
+				<th></th>
+			</tr>
+		</thead>
+		<tbody>
+			@foreach (var item in Model)
+			{
+				<tr>
+					<td class="text-center">
+						@Html.DisplayFor(modelItem => item.CpcmRoleName)
+					</td>
+					<td class="text-center">
+						@Html.DisplayFor(modelItem => item.CpcmCanEditUsers)
+					</td>
+					<td class="text-center">
+						@Html.DisplayFor(modelItem => item.CpcmCanEditGroups)
+					</td>
+					<td class="text-center">
+						@Html.DisplayFor(modelItem => item.CpcmCanEditRoles)
+					</td>
+					<td class="text-center">
+						@Html.DisplayFor(modelItem => item.CpcmCanDelUsersPosts)
+					</td>
+					<td class="text-center">
+						@Html.DisplayFor(modelItem => item.CpcmCanDelUsersComments)
+					</td>
+					<td class="text-center">
+						@Html.DisplayFor(modelItem => item.CpcmCanDelGroupsPosts)
+					</td>
+					<td class="text-center">
+						@Html.DisplayFor(modelItem => item.CpcmCanAddPost)
+					</td>
+					<td class="text-center">
+						@Html.DisplayFor(modelItem => item.CpcmCanAddGroups)
+					</td>
+					<td class="text-center">
+						@Html.DisplayFor(modelItem => item.CpcmCanAddComments)
+					</td>
+					<td class="text-center">
+						<a class="btn btn-warning container-fluid mb-1" asp-action="Edit" asp-route-id="@item.CpcmRoleId">Редактировать</a>
+						<a class="btn btn-info container-fluid mb-1" asp-action="Details" asp-route-id="@item.CpcmRoleId">Детали</a>
+						<a class="btn btn-danger container-fluid mb-1" asp-action="Delete" asp-route-id="@item.CpcmRoleId">Удалить</a>
+					</td>
+				</tr>
+			}
+		</tbody>
+	</table>
+</div>
