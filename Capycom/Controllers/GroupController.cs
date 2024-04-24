@@ -1069,7 +1069,7 @@ namespace Capycom.Controllers
 					Log.Warning("Группа не найдена {group}", groupId);
 					return StatusCode(404);
 				}
-				if (await CheckUserAdminPrivilege("CpcmCanEditGroups", "True"))
+				if (await CheckUserAdminPrivilege("CpcmCanBanGroups", "True"))
 				{
 					group.CpcmGroupBanned = !group.CpcmGroupBanned;
 					await _context.SaveChangesAsync();
@@ -1122,7 +1122,7 @@ namespace Capycom.Controllers
 				//	ViewData["Message"] = "Группа для удаления заблокирована";
 				//	return View("UserError");
 				//}
-				if (await CheckUserPrivilege("CpcmCanEditGroup", true, "CpcmCanEditGroups", true, groupId))
+				if (await CheckOnlyGroupPrivelege("CpcmCanEditGroup", true,  groupId))
 				{
 					return View();
 				}
@@ -2019,7 +2019,7 @@ namespace Capycom.Controllers
 		public async Task<IActionResult> BanUnbanPost(Guid id)
 		{
 			Log.Information("Попытка забанить/разбанить пост {postGuid} пользователем {user}", id, HttpContext.User.FindFirstValue("CpcmUserId"));
-			if (!await CheckUserAdminPrivilege("CpcmCanDelUsersPosts", "True"))
+			if (!await CheckUserAdminPrivilege("CpcmCanBanGroupsPost", "True"))
 			{
 				Log.Warning("Недостаточно прав для забана/разбана поста {id}", id);
 				return StatusCode(403);
