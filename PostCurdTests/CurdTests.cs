@@ -16,6 +16,7 @@ using System.Diagnostics;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Moq;
 using Microsoft.AspNetCore.StaticFiles;
+
 namespace PostCurdTests
 {
 	public class CurdUserPosrTests : IDisposable
@@ -157,8 +158,8 @@ namespace PostCurdTests
 					CpcmUserId = users[usernum - 1].CpcmUserId,
 					CpcmGroupId = null,
 					CpcmPostText = $"Post {(i % 6) + 1} by User {usernum}",
-					CpcmPostCreationDate = DateTime.UtcNow,
-					CpcmPostPublishedDate = null,
+					CpcmPostCreationDate = DateTime.UtcNow - new TimeSpan(1, 0, 0),
+					CpcmPostPublishedDate = DateTime.UtcNow - new TimeSpan(1, 0, 0),
 					CpcmPostBanned = false,
 					CpcmIsDeleted = false
 				};
@@ -167,18 +168,18 @@ namespace PostCurdTests
 			}
 			posts[0].CpcmIsDeleted = true;
 			posts[1].CpcmPostBanned = true;
-			posts[2].CpcmIsDeleted = true; posts[2].CpcmPostBanned=true;
-			posts[3].CpcmPostPublishedDate = posts[3].CpcmPostCreationDate + TimeSpan.FromHours(1);
+			posts[2].CpcmIsDeleted = true; posts[2].CpcmPostBanned = true;
+			posts[3].CpcmPostPublishedDate = posts[3].CpcmPostCreationDate + TimeSpan.FromHours(2);
 
 			posts[6].CpcmIsDeleted = true;
 			posts[7].CpcmPostBanned = true;
 			posts[8].CpcmIsDeleted = true; posts[8].CpcmPostBanned = true;
-			posts[9].CpcmPostPublishedDate = posts[9].CpcmPostCreationDate + TimeSpan.FromHours(1);
+			posts[9].CpcmPostPublishedDate = posts[9].CpcmPostCreationDate + TimeSpan.FromHours(2);
 
 			posts[12].CpcmIsDeleted = true;
 			posts[13].CpcmPostBanned = true;
 			posts[14].CpcmIsDeleted = true; posts[14].CpcmPostBanned = true;
-			posts[15].CpcmPostPublishedDate = posts[15].CpcmPostCreationDate + TimeSpan.FromHours(1);
+			posts[15].CpcmPostPublishedDate = posts[15].CpcmPostCreationDate + TimeSpan.FromHours(2);
 			context.CpcmPosts.AddRange(posts);
 			context.SaveChanges();
 
@@ -191,17 +192,12 @@ namespace PostCurdTests
 			controller.User.AddIdentity(new ClaimsIdentity(new List<Claim>() { new Claim("CpcmUserId", users[0].CpcmUserId.ToString()) }, "Cookies"));
 		}
 
-		
-
 		[Fact]
 		public async Task CreatePostP_SendNullModel_ExpectViewWithMessageAnd400Code()
 		{
 			// Arrange
 
-			
-
 			var userPostModel = new Capycom.Models.UserPostModel();
-
 
 			//Act
 			var validationContext = new ValidationContext(userPostModel);
@@ -215,7 +211,6 @@ namespace PostCurdTests
 				}
 			}
 			var result = await controller.CreatePostP(userPostModel);
-
 
 			//Asserts
 
@@ -249,8 +244,6 @@ namespace PostCurdTests
 			//	partialViewResult.ViewName.Should().Be("UserError");
 			//	partialViewResult.ViewData["Message"].Should().NotBeNull();
 			//}
-
-
 		}
 
 		[Fact]
@@ -265,7 +258,6 @@ namespace PostCurdTests
 				PostFatherId = null,
 				Published = DateTime.UtcNow + new TimeSpan(1, 0, 0)
 			};
-
 
 			//Act
 			var validationContext = new ValidationContext(userPostModel);
@@ -291,11 +283,10 @@ namespace PostCurdTests
 			{
 				Assert.Fail();
 			}
-
 		}
 
 		[Fact]
-		public async Task CreatePostP_SendPostWithTextNoFilesSelfRepost_ExpectStatusCode417() 
+		public async Task CreatePostP_SendPostWithTextNoFilesSelfRepost_ExpectStatusCode417()
 		{
 			//Arrange
 
@@ -305,7 +296,6 @@ namespace PostCurdTests
 				Text = "Text",
 				PostFatherId = posts[1].CpcmPostId,
 			};
-
 
 			//Act
 			var validationContext = new ValidationContext(userPostModel);
@@ -329,7 +319,6 @@ namespace PostCurdTests
 			{
 				Assert.Fail();
 			}
-
 		}
 
 		[Fact]
@@ -343,7 +332,6 @@ namespace PostCurdTests
 				Text = "Text",
 				PostFatherId = posts[10].CpcmPostId,
 			};
-
 
 			//Act
 			var validationContext = new ValidationContext(userPostModel);
@@ -380,7 +368,6 @@ namespace PostCurdTests
 				Text = "Text",
 				PostFatherId = posts[20].CpcmPostId,
 			};
-
 
 			//Act
 			var validationContext = new ValidationContext(userPostModel);
@@ -434,14 +421,13 @@ namespace PostCurdTests
 				var provider = new FileExtensionContentTypeProvider();
 				if (!provider.TryGetContentType(stream.Name, out var contentType))
 				{
-					contentType = "image/png"; 
+					contentType = "image/png";
 				}
 				file = new FormFile(stream, 0, stream.Length, null, Path.GetFileName(stream.Name))
 				{
 					Headers = new HeaderDictionary(),
 					ContentType = contentType
 				};
-
 
 				var userPostModel = new Capycom.Models.UserPostModel()
 				{
@@ -476,12 +462,7 @@ namespace PostCurdTests
 					Assert.Fail();
 				}
 			}
-
-
-
-
 		}
-
 
 		[Fact]
 		public async Task CreatePostP_SendPostWith5FilesAndText_ExpectRejectValidation()
@@ -517,10 +498,9 @@ namespace PostCurdTests
 					ContentType = contentType
 				};
 
-
 				var userPostModel = new Capycom.Models.UserPostModel()
 				{
-					Files = new FormFileCollection() { file,file,file,file,file },
+					Files = new FormFileCollection() { file, file, file, file, file },
 					Text = "asd",
 					Published = DateTime.UtcNow + new TimeSpan(1, 0, 0)
 				};
@@ -552,10 +532,6 @@ namespace PostCurdTests
 					Assert.Fail();
 				}
 			}
-
-
-
-
 		}
 
 		[Fact]
@@ -592,7 +568,6 @@ namespace PostCurdTests
 					ContentType = contentType
 				};
 
-
 				var userPostModel = new Capycom.Models.UserPostModel()
 				{
 					Files = new FormFileCollection() { file, file, file, file, file },
@@ -627,10 +602,6 @@ namespace PostCurdTests
 					Assert.Fail();
 				}
 			}
-
-
-
-
 		}
 
 		[Fact]
@@ -652,6 +623,7 @@ namespace PostCurdTests
 				Assert.Fail();
 			}
 		}
+
 		//[Fact]
 		//public async Task DelPostP_TryDeletePostWithOutRole_ExpectStatusCode403()
 		//{
@@ -691,7 +663,87 @@ namespace PostCurdTests
 		//		Assert.Fail();
 		//	}
 		//}
+
+		[Fact]
+		public async Task BanUnbanPost_TryBanPostWithOutRole_ExpectStatusCode403()
+		{
+			//Arrange
+			var post = posts[1];
+
+			//Act
+			var result = await controller.BanUnbanPost(post.CpcmPostId);
+			//Assert
+			if (result is StatusCodeResult statusCodeResult)
+			{
+				statusCodeResult.StatusCode.Should().Be(403);
+			}
+			else
+			{
+				Assert.Fail();
+			}
+		}
+
+		[Fact]
+		public async Task BanUnbanPost_TryBanPostWithRole_ExpectStatusCode403()
+		{
+			//Arrange
+			var post = posts[1];
+			controller.User.AddIdentity(new ClaimsIdentity(new List<Claim>() { new Claim("CpcmCanDelUsersPosts", "True") }, "Cookies"));
+
+			//Act
+			var result = await controller.BanUnbanPost(post.CpcmPostId);
+			//Assert
+			if (result is ObjectResult objectResult)
+			{
+				objectResult.StatusCode.Should().Be(200);
+			}
+			else
+			{
+				Assert.Fail();
+			}
+		}
+
+		[Fact]
+		public async Task BanUnbanPost_TryBanUnavailablePostWithRole_ExpectStatusCode404()
+		{
+			//Arrange
+			controller.User.AddIdentity(new ClaimsIdentity(new List<Claim>() { new Claim("CpcmCanDelUsersPosts", "True") }, "Cookies"));
+
+			//Act
+			var result = await controller.BanUnbanPost(new Guid("00010010-0010-0000-0000-000000000012"));
+			//Assert
+			if (result is StatusCodeResult statusCodeResult)
+			{
+				statusCodeResult.StatusCode.Should().Be(404);
+			}
+			else
+			{
+				Assert.Fail();
+			}
+		}
+
+		[Fact]
+		public async Task BanUnbanPost_TryBanDeletedPostWithRole_ExpectStatusCode404()
+		{
+			//Arrange
+			var post = posts[0];
+			controller.User.AddIdentity(new ClaimsIdentity(new List<Claim>() { new Claim("CpcmCanDelUsersPosts", "True") }, "Cookies"));
+
+			//Act
+			var result = await controller.BanUnbanPost(post.CpcmPostId);
+			//Assert
+			if (result is StatusCodeResult statusCodeResult)
+			{
+				statusCodeResult.StatusCode.Should().Be(404);
+			}
+			else
+			{
+				Assert.Fail();
+			}
+		}
+
 		#region Вспомогательные методы
+
 		private static Guid NextGuid(Guid guid)
 		{
 			var guidStr = guid.ToString("N");
@@ -707,7 +759,8 @@ namespace PostCurdTests
 		{
 			context.Dispose();
 		}
-		#endregion
+
+		#endregion Вспомогательные методы
 
 		//controller.User.AddIdentity(new ClaimsIdentity(new List<Claim>() { new Claim("CpcmUserId", users[0].CpcmUserId.ToString()) }, "Cookies"));
 	}
