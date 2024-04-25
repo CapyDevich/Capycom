@@ -1,8 +1,11 @@
 ﻿@model PostModel
 <link href="~/css/post-content.css" rel="stylesheet" />
-@if (User.Identity.IsAuthenticated && User.FindFirst(c => c.Type == "CpcmCanDelUsersPosts").Value == "True")
+@if (User.Identity.IsAuthenticated)
 {
-	<link href="~/css/ban.css" rel="stylesheet" />
+	@if (User.FindFirst(c => c.Type == "CpcmCanBanUsersPost").Value == "True" || User.FindFirst(c => c.Type == "CpcmCanBanUsersComment").Value == "True" || User.FindFirst(c => c.Type == "CpcmCanBanUsers").Value == "True")
+	{
+		<link href="~/css/ban.css" rel="stylesheet" />
+	}
 }
 <div class="card mb-2" id="@Model.Post.CpcmPostId">
 	<div class="card-body">
@@ -78,7 +81,7 @@
 							</a>
 						</div>
 					}
-					@if (User.FindFirst(c => c.Type == "CpcmCanDelUsersPosts").Value == "True")
+					@if (User.FindFirst(c => c.Type == "CpcmCanBanUsersPost").Value == "True")
 					{
 						if (!Model.Post.CpcmPostBanned)
 						{
@@ -257,7 +260,7 @@
 									</svg>
 								</a>
 							}
-							@if (User.Identity.IsAuthenticated && User.FindFirst(c => c.Type == "CpcmCanDelUsersPosts").Value == "True")
+							@if (User.Identity.IsAuthenticated && User.FindFirst(c => c.Type == "CpcmCanBanUsersComment").Value == "True")
 							{
 								if (!comment.CpcmCommentBanned)
 								{
@@ -329,7 +332,14 @@
 		</div>
 	</div>
 </div>
-@if (User.Identity.IsAuthenticated && User.FindFirst(c => c.Type == "CpcmCanDelUsersPosts").Value == "True")
+@if (User.Identity.IsAuthenticated)
 {
-	<script src="~/js/ban.js"></script>
+	@if (User.FindFirst(c => c.Type == "CpcmCanBanUsersPost").Value == "True")
+	{
+		<script src="~/js/ban/ban-post.js"></script>
+	}
+	@if (User.FindFirst(c => c.Type == "CpcmCanBanUsersComment").Value == "True")
+	{
+		<script src="~/js/ban/ban-comment.js"></script>
+	}
 }
