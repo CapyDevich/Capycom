@@ -874,27 +874,214 @@ namespace PostCurdTests
 			{
 				Assert.Fail();
 			}
-		}	
+		}
 
-		public async Task EditPostP_TryAddFileToPost_ExpectRetirectTiTindex()
+		[Fact]
+		public async Task EditPostP_TryAddFileToPost_ExpectRetirectToIndex()
 		{
 			//Arrange
-			var file = GetFile();
+			var file = GetFile(out FileStream filestream);
 			var postmodel = new Capycom.Models.UserPostEditModel()
 			{
 				Id = posts[4].CpcmPostId,
 				Text = "Text",
 				PostFatherId = null,
-				NewPublishDate = DateTime.UtcNow + new TimeSpan(1, 0, 0)
+				NewPublishDate = DateTime.UtcNow + new TimeSpan(1, 0, 0),
+				NewFiles = new List<IFormFile> { file }
 			};
 			//controller.User.AddIdentity(new ClaimsIdentity(new List<Claim>() { new Claim("CpcmCanDelUsersPosts", "True") }, "Cookies"));
 
 			//Act
 			var result = await controller.EditPostP(postmodel);
+			filestream.Close();
 			//Assert
 			if (result is RedirectToActionResult redirectResult)
 			{
 				redirectResult.ActionName.Should().Be("Index");
+				//controller.HttpContext.Response.StatusCode.Should.Be(300)
+			}
+			else
+			{
+				Assert.Fail();
+			}
+		}
+
+		[Fact]
+		public async Task EditPostP_TryAddInvalidFileToPost_ExpectViewResultAndCode500()
+		{
+			//Arrange
+			var file = GetFile(out FileStream filestream, "image/bmp");
+			var postmodel = new Capycom.Models.UserPostEditModel()
+			{
+				Id = posts[4].CpcmPostId,
+				Text = "Text",
+				PostFatherId = null,
+				NewPublishDate = DateTime.UtcNow + new TimeSpan(1, 0, 0),
+				NewFiles = new List<IFormFile> { file }
+			};
+			//controller.User.AddIdentity(new ClaimsIdentity(new List<Claim>() { new Claim("CpcmCanDelUsersPosts", "True") }, "Cookies"));
+
+			//Act
+			var actionresult = await controller.EditPostP(postmodel);
+			filestream.Close();
+			//Assert
+			if (actionresult is ViewResult result)
+			{
+				result.ViewName.Should().Be("EditPost");
+				controller.HttpContext.Response.StatusCode.Should().Be(500);
+			}
+			else
+			{
+				Assert.Fail();
+			}
+		}
+
+		[Fact]
+		public async Task EditPostP_TryAdd5FilesToPost_ExpectViewResultAndCode500()
+		{
+			//Arrange
+			var file = GetFile(out FileStream filestream, "image/bmp");
+			var postmodel = new Capycom.Models.UserPostEditModel()
+			{
+				Id = posts[4].CpcmPostId,
+				Text = "Text",
+				PostFatherId = null,
+				NewPublishDate = DateTime.UtcNow + new TimeSpan(1, 0, 0),
+				NewFiles = new List<IFormFile> { file, file, file, file, file }
+			};
+			//controller.User.AddIdentity(new ClaimsIdentity(new List<Claim>() { new Claim("CpcmCanDelUsersPosts", "True") }, "Cookies"));
+
+			//Act
+			var actionresult = await controller.EditPostP(postmodel);
+			filestream.Close();
+			//Assert
+			if (actionresult is ViewResult result)
+			{
+				result.ViewName.Should().Be("EditPost");
+				controller.HttpContext.Response.StatusCode.Should().Be(500);
+			}
+			else
+			{
+				Assert.Fail();
+			}
+		}
+
+		[Fact]
+		public async Task EditPostP_TryDelUnavailableFile_ExpectRetirectToIndex()
+		{
+			//Arrange
+			//var file = GetFile(out FileStream filestream, "image/bmp");
+			var postmodel = new Capycom.Models.UserPostEditModel()
+			{
+				Id = posts[4].CpcmPostId,
+				Text = "Text",
+				PostFatherId = null,
+				NewPublishDate = DateTime.UtcNow + new TimeSpan(1, 0, 0),
+				FilesToDelete = new List<Guid> { new Guid("11111110-0010-0000-0000-000000000012") }
+				//NewFiles = new List<IFormFile> { file, file, file, file, file }
+			};
+			//controller.User.AddIdentity(new ClaimsIdentity(new List<Claim>() { new Claim("CpcmCanDelUsersPosts", "True") }, "Cookies"));
+
+			//Act
+			var actionResult = await controller.EditPostP(postmodel);
+			//filestream.Close();
+			//Assert
+			if (actionResult is RedirectToActionResult redirectResult)
+			{
+				redirectResult.ActionName.Should().Be("Index");
+				//controller.HttpContext.Response.StatusCode.Should.Be(300)
+			}
+			else
+			{
+				Assert.Fail();
+			}
+		}
+
+		[Fact]
+		public async Task EditPostP_Del2filesAdd3ToPostWhere1FileAlreadyExist_ExpectRetirectToIndex()
+		{
+			//Arrange
+
+			posts[20].CpcmImages.Add(new CpcmImage() { CpcmImageId = Guid.NewGuid(), CpcmImageOrder=0,CpcmImagePath="/uploads/test.png" });
+			posts[20].CpcmImages.Add(new CpcmImage() { CpcmImageId = Guid.NewGuid(), CpcmImageOrder=0,CpcmImagePath="/uploads/test1.png" });
+			context.SaveChanges();
+
+			var file = GetFile(out FileStream filestream, "image/png");
+
+			var postmodel = new Capycom.Models.UserPostEditModel()
+			{
+				Id = posts[4].CpcmPostId,
+				Text = "Text",
+				PostFatherId = null,
+				NewPublishDate = DateTime.UtcNow + new TimeSpan(1, 0, 0),
+				FilesToDelete = new List<Guid> { posts[20].CpcmImages.First().CpcmImageId, posts[20].CpcmImages.Last().CpcmImageId },
+				NewFiles = new List<IFormFile> { file, file, file,  }
+			};
+
+			//Act
+			var actionResult = await controller.EditPostP(postmodel);
+			//filestream.Close();
+			//Assert
+			if (actionResult is RedirectToActionResult redirectResult)
+			{
+				redirectResult.ActionName.Should().Be("Index");
+				//controller.HttpContext.Response.StatusCode.Should.Be(300)
+			}
+			else
+			{
+				Assert.Fail();
+			}
+		}
+
+		[Fact]
+		public async Task EditPostP_TryChangeNotPublishedPostPublishDate_ExpectRetirectToIndex()
+		{
+
+			//Arrange
+			var postmodel = new Capycom.Models.UserPostEditModel()
+			{
+				Id = posts[3].CpcmPostId,
+				Text = "Text",
+				PostFatherId = null,
+				NewPublishDate = DateTime.UtcNow + new TimeSpan(1, 0, 0),
+			};
+
+			//Act
+			var actionResult = await controller.EditPostP(postmodel);
+			//filestream.Close();
+			//Assert
+			if (actionResult is RedirectToActionResult redirectResult)
+			{
+				redirectResult.ActionName.Should().Be("Index");
+				//controller.HttpContext.Response.StatusCode.Should.Be(300)
+			}
+			else
+			{
+				Assert.Fail();
+			}
+		}
+
+		[Fact]
+		public async Task EditPostP_TryChangePublishedPostPublishDate_ExpectRetirectToIndex()
+		{
+
+			//Arrange
+			var postmodel = new Capycom.Models.UserPostEditModel()
+			{
+				Id = posts[4].CpcmPostId,
+				Text = "Text",
+				PostFatherId = null,
+				NewPublishDate = DateTime.UtcNow + new TimeSpan(1, 0, 0),
+			};
+
+			//Act
+			var actionResult = await controller.EditPostP(postmodel);
+			//filestream.Close();
+			//Assert
+			if (actionResult is RedirectToActionResult redirectResult)
+			{
+				redirectResult.ActionName.Should().Be("Index");
+				posts[4].CpcmPostPublishedDate.Should().NotBe(postmodel.NewPublishDate);
 				//controller.HttpContext.Response.StatusCode.Should.Be(300)
 			}
 			else
@@ -916,24 +1103,35 @@ namespace PostCurdTests
 			return Guid.ParseExact(newGuidStr, "N");
 		}
 
-		private static FormFile GetFile(string path = "default.png")
+		private static FormFile GetFile(out FileStream stream, string useFileContentType = null, string path = "default.png")
 		{
 			FormFile file;
 			Directory.GetCurrentDirectory();
-			using (var stream = File.OpenRead(path))
+			stream = File.OpenRead(path);
+
+			string type = "";
+			if (useFileContentType == null)
 			{
 				var provider = new FileExtensionContentTypeProvider();
 				if (!provider.TryGetContentType(stream.Name, out var contentType))
 				{
-					contentType = "image/png";
+					type = "image/png";
 				}
-				file = new FormFile(stream, 0, stream.Length, null, Path.GetFileName(stream.Name))
+				else
 				{
-					Headers = new HeaderDictionary(),
-					ContentType = contentType
-				};
-
+					type = contentType;
+				}
 			}
+			else
+			{
+				type = useFileContentType;
+			}
+			file = new FormFile(stream, 0, stream.Length, null, Path.GetFileName(stream.Name))
+			{
+				Headers = new HeaderDictionary(),
+				ContentType = type
+			};
+
 			return file;
 		}
 
