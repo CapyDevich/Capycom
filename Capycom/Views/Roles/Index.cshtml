@@ -25,22 +25,28 @@
 						@Html.DisplayNameFor(model => model.CpcmCanEditRoles)
 					</th>
 					<th align="center" valign="middle">
-						@Html.DisplayNameFor(model => model.CpcmCanDelUsersPosts)
+						@Html.DisplayNameFor(model => model.CpcmCanEditGroupRoles)
 					</th>
 					<th align="center" valign="middle">
-						@Html.DisplayNameFor(model => model.CpcmCanDelUsersComments)
+						@Html.DisplayNameFor(model => model.CpcmCanEditUsersPost)
 					</th>
 					<th align="center" valign="middle">
-						@Html.DisplayNameFor(model => model.CpcmCanDelGroupsPosts)
+						@Html.DisplayNameFor(model => model.CpcmCanEditGroupsPost)
 					</th>
 					<th align="center" valign="middle">
-						@Html.DisplayNameFor(model => model.CpcmCanAddPost)
+						@Html.DisplayNameFor(model => model.CpcmCanBanUsers)
 					</th>
 					<th align="center" valign="middle">
-						@Html.DisplayNameFor(model => model.CpcmCanAddGroups)
+						@Html.DisplayNameFor(model => model.CpcmCanBanUsersPost)
 					</th>
 					<th align="center" valign="middle">
-						@Html.DisplayNameFor(model => model.CpcmCanAddComments)
+						@Html.DisplayNameFor(model => model.CpcmCanBanUsersComment)
+					</th>
+					<th align="center" valign="middle">
+						@Html.DisplayNameFor(model => model.CpcmCanBanGroupsPost)
+					</th>
+					<th align="center" valign="middle">
+						@Html.DisplayNameFor(model => model.CpcmCanBanGroups)
 					</th>
 				</tr>
 			</thead>
@@ -66,22 +72,28 @@
 							@Html.DisplayFor(modelItem => item.CpcmCanEditRoles)
 						</td>
 						<td align="center" valign="middle">
-							@Html.DisplayFor(modelItem => item.CpcmCanDelUsersPosts)
+							@Html.DisplayFor(modelItem => item.CpcmCanEditGroupRoles)
 						</td>
 						<td align="center" valign="middle">
-							@Html.DisplayFor(modelItem => item.CpcmCanDelUsersComments)
+							@Html.DisplayFor(modelItem => item.CpcmCanEditUsersPost)
 						</td>
 						<td align="center" valign="middle">
-							@Html.DisplayFor(modelItem => item.CpcmCanDelGroupsPosts)
+							@Html.DisplayFor(modelItem => item.CpcmCanEditGroupsPost)
 						</td>
 						<td align="center" valign="middle">
-							@Html.DisplayFor(modelItem => item.CpcmCanAddPost)
+							@Html.DisplayFor(modelItem => item.CpcmCanBanUsers)
 						</td>
 						<td align="center" valign="middle">
-							@Html.DisplayFor(modelItem => item.CpcmCanAddGroups)
+							@Html.DisplayFor(modelItem => item.CpcmCanBanUsersPost)
 						</td>
 						<td align="center" valign="middle">
-							@Html.DisplayFor(modelItem => item.CpcmCanAddComments)
+							@Html.DisplayFor(modelItem => item.CpcmCanBanUsersComment)
+						</td>
+						<td align="center" valign="middle">
+							@Html.DisplayFor(modelItem => item.CpcmCanBanGroupsPost)
+						</td>
+						<td align="center" valign="middle">
+							@Html.DisplayFor(modelItem => item.CpcmCanBanGroups)
 						</td>
 					</tr>
 				}

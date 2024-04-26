@@ -6,8 +6,8 @@ namespace Capycom;
 
 public partial class CpcmGroupRole
 {
-    [ValidateNever]
-    public int CpcmRoleId { get; set; }
+	[ValidateNever]
+	public int CpcmRoleId { get; set; }
 
     public string CpcmRoleName { get; set; } = null!;
 

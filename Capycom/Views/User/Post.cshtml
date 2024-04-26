@@ -73,7 +73,7 @@
 							</svg>
 						</a>
 					}
-					@if (User.FindFirst(c => c.Type == "CpcmCanDelUsersPosts").Value == "True")
+					@if (User.FindFirst(c => c.Type == "CpcmCanBanUsersPost").Value == "True")
 					{
 						if (!Model.Post.CpcmPostBanned)
 						{
