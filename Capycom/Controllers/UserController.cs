@@ -2593,6 +2593,7 @@ namespace Capycom.Controllers
                     //Log.Debug("Попытка добавить больше 4 файлов в пост {u}", editPost.Id);
                     Log.Warning("Попытка добавить больше 4 файлов в пост {u}", editPost.Id);
                     ModelState.AddModelError("NewFiles", "В посте не может быть больше 4 фотографий");
+                    Response.StatusCode = 500;
                     return View("EditPost", editPost);
                 }
 
@@ -2649,6 +2650,7 @@ namespace Capycom.Controllers
                     if (!ModelState.IsValid)
                     {
                         Log.Debug("Файл {@file} не прошёл валидацию {u}",file, User.FindFirstValue("CpcmUserId"));
+                        Response.StatusCode = 500;
                         return View("EditPost", editPost);
                     }
 
@@ -2793,7 +2795,7 @@ namespace Capycom.Controllers
                     Log.Error(ex, "Ошибка при попытке сохранить пост {@post} {u}",editPost, User.FindFirstValue("CpcmUserId"));
                     Response.StatusCode = 500;
                     ViewData["Message"] = "Не удалось сохранить пост. Пожалуйста, повторите запрос позднее или обратитесь к Администратору.";
-                    return View("UserError"); // TODO Продумать место для сохранения еррора
+                    return View("UserError");
                 }
                 return RedirectToAction("Index");
 

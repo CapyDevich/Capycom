@@ -53,9 +53,10 @@ if (ModelState.IsValid)
 				{
                     potentialUser = await _context.CpcmUsers.Where(e => e.CpcmUserEmail == user.CpcmUserEmail.Trim()).Include(p => p.CpcmUserRoleNavigation).FirstOrDefaultAsync();
 
-                    if(potentialUser == null)
+                     if(potentialUser == null)
                     {
 						Log.Information("Попытка входа в аккаунт, который null. Введенные данные {@user}",user);
+                        Response.StatusCode = 403;
 						ViewData["Message"] = "Неверный логин или пароль";
                         return View();
                     }
@@ -99,11 +100,12 @@ if (ModelState.IsValid)
                     if (potentialUser.CpcmIsDeleted == true)
                     {
                         Log.Information("Попытка входа в удалённый аккаунт {@potentialUser}", potentialUser);
-                        //Response.StatusCode = 404;
-                        //ViewData["ErrorCode"] = 404;
-                        //ViewData["Message"] = "Аккаунт был удалён";
-                        //return View("UserError");
-                        ViewData["Message"] = "Неверный логин или пароль";
+						//Response.StatusCode = 404;
+						//ViewData["ErrorCode"] = 404;
+						//ViewData["Message"] = "Аккаунт был удалён";
+						//return View("UserError");
+						Response.StatusCode = 404;
+						ViewData["Message"] = "Неверный логин или пароль";
                         return View();
                     }
                     List<Claim> claims = GetUserClaims(potentialUser); 
@@ -119,7 +121,8 @@ if (ModelState.IsValid)
                 else
                 {
                     Log.Information("Попытка входа в аккаунт {@potentialUser} - непройдена проверка пароля", potentialUser);
-                    ViewData["Message"] = "Неверный логин или пароль";
+					Response.StatusCode = 403;
+					ViewData["Message"] = "Неверный логин или пароль";
                     return View();
                 }
             }
