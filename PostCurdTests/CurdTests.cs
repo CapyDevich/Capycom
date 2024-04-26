@@ -688,7 +688,7 @@ namespace PostCurdTests
 		{
 			//Arrange
 			var post = posts[1];
-			controller.User.AddIdentity(new ClaimsIdentity(new List<Claim>() { new Claim("CpcmCanDelUsersPosts", "True") }, "Cookies"));
+			controller.User.AddIdentity(new ClaimsIdentity(new List<Claim>() { new Claim("CpcmCanBanUsersPost", "True") }, "Cookies"));
 
 			//Act
 			var result = await controller.BanUnbanPost(post.CpcmPostId);
@@ -707,7 +707,7 @@ namespace PostCurdTests
 		public async Task BanUnbanPost_TryBanUnavailablePostWithRole_ExpectStatusCode404()
 		{
 			//Arrange
-			controller.User.AddIdentity(new ClaimsIdentity(new List<Claim>() { new Claim("CpcmCanDelUsersPosts", "True") }, "Cookies"));
+			controller.User.AddIdentity(new ClaimsIdentity(new List<Claim>() { new Claim("CpcmCanBanUsersPost", "True") }, "Cookies"));
 
 			//Act
 			var result = await controller.BanUnbanPost(new Guid("00010010-0010-0000-0000-000000000012"));
@@ -727,7 +727,7 @@ namespace PostCurdTests
 		{
 			//Arrange
 			var post = posts[0];
-			controller.User.AddIdentity(new ClaimsIdentity(new List<Claim>() { new Claim("CpcmCanDelUsersPosts", "True") }, "Cookies"));
+			controller.User.AddIdentity(new ClaimsIdentity(new List<Claim>() { new Claim("CpcmCanBanUsersPost", "True") }, "Cookies"));
 
 			//Act
 			var result = await controller.BanUnbanPost(post.CpcmPostId);
@@ -832,7 +832,7 @@ namespace PostCurdTests
 				PostFatherId = null,
 				NewPublishDate = DateTime.UtcNow + new TimeSpan(1, 0, 0)
 			};
-			controller.User.AddIdentity(new ClaimsIdentity(new List<Claim>() { new Claim("CpcmCanDelUsersPosts", "True") }, "Cookies"));
+			controller.User.AddIdentity(new ClaimsIdentity(new List<Claim>() { new Claim("CpcmCanEditUsersPost", "True") }, "Cookies"));
 
 			//Act
 			var result = await controller.EditPostP(postmodel);
