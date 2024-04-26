@@ -443,7 +443,7 @@ namespace Capycom.Controllers
         public async Task<IActionResult> BanUnbanComment(Guid commentId)
         {
             Log.Information("Пользователь {User} пытается заблокировать/разблокировать комментарий {Comment}", HttpContext.User.FindFirstValue("CpcmUserId"), commentId);
-            if(!CheckUserAdminPrivilege("CpcmCanDelUsersComments","True")){
+            if(!CheckUserAdminPrivilege("CpcmCanBanUsersComment", "True")){
                 Log.Warning("Пользователь {User} пытается заблокировать/разблокировать комментарий {Comment}. У пользователя недостаточно прав", HttpContext.User.FindFirstValue("CpcmUserId"), commentId);
                 return StatusCode(403);
             }

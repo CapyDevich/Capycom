@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -25,7 +25,6 @@ public partial class CpcmPost
     public bool CpcmIsDeleted { get; set; }
 
 
-
 	[NotMapped]
 	public CpcmUser? User { get; set; }
 	[NotMapped]
@@ -41,15 +40,16 @@ public partial class CpcmPost
 
 
 
+
 	public virtual ICollection<CpcmComment> CpcmComments { get; set; } = new List<CpcmComment>();
 
     public virtual ICollection<CpcmImage> CpcmImages { get; set; } = new List<CpcmImage>();
 
     public virtual CpcmPost? CpcmPostFatherNavigation { get; set; }
 
+    public virtual ICollection<CpcmPostrepost> CpcmPostreposts { get; set; } = new List<CpcmPostrepost>();
+
     public virtual ICollection<CpcmPost> InverseCpcmPostFatherNavigation { get; set; } = new List<CpcmPost>();
 
     public virtual ICollection<CpcmUser> CpcmUsers { get; set; } = new List<CpcmUser>();
-
-    public virtual ICollection<CpcmUser> CpcmUsersNavigation { get; set; } = new List<CpcmUser>();
 }

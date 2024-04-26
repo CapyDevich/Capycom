@@ -56,6 +56,8 @@ public partial class CpcmUser
 
     public virtual ICollection<CpcmGroupfollower> CpcmGroupfollowers { get; set; } = new List<CpcmGroupfollower>();
 
+    public virtual ICollection<CpcmPostrepost> CpcmPostreposts { get; set; } = new List<CpcmPostrepost>();
+
     public virtual CpcmCity? CpcmUserCityNavigation { get; set; }
 	[ValidateNever]
 	public virtual CpcmRole CpcmUserRoleNavigation { get; set; } = null!;
@@ -73,10 +75,6 @@ public partial class CpcmUser
     public virtual ICollection<CpcmUserfriend> CpcmUserfriendCmcpUsers { get; set; } = new List<CpcmUserfriend>();
 
     public virtual ICollection<CpcmPost> CpcmPosts { get; set; } = new List<CpcmPost>();
-
-    public virtual ICollection<CpcmPost> CpcmPostsNavigation { get; set; } = new List<CpcmPost>();
-
-
 
 	[NotMapped]
 	public FriendStatusEnum IsFriend { get; set; }
