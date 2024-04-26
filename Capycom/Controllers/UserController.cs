@@ -2117,11 +2117,18 @@ namespace Capycom.Controllers
             {
                 if(string.IsNullOrEmpty(userPost.Text)||string.IsNullOrWhiteSpace(userPost.Text) && userPost.Files == null)
                 {
-                    Log.Warning("Попытка создать пустой {@post} пост {u}",userPost, User.FindFirstValue("CpcmUserId"));
-					Response.StatusCode = 400;
-					ViewData["ErrorCode"] = 400;
-					ViewData["Message"] = "Нельзя создавать пустой пост";
-					return View("CreatePost",userPost);
+                    if (userPost.PostFatherId==null)
+                    {
+                        Log.Warning("Попытка создать пустой {@post} пост {u}", userPost, User.FindFirstValue("CpcmUserId"));
+                        Response.StatusCode = 400;
+                        ViewData["ErrorCode"] = 400;
+                        ViewData["Message"] = "Нельзя создавать пустой пост";
+                        return View("CreatePost", userPost); 
+                    }
+                    else
+                    {
+                        return StatusCode(500, new { message = "Нельзя создать пустой репост " });
+                    }
 				}
                 CpcmPost post = new CpcmPost();
 
@@ -2515,7 +2522,7 @@ namespace Capycom.Controllers
             if (!CheckUserPrivilege("CpcmCanEditUsersPost", "True", post.CpcmUserId.ToString()) || post.CpcmPostBanned == true)
             {
                 Log.Warning("Пользователь не имеет прав на редактирование поста {u}", postGuid);
-                return View("Index");
+                return RedirectToAction("Index");
             }
             
             
