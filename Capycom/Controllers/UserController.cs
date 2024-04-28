@@ -917,6 +917,7 @@ namespace Capycom.Controllers
 				ViewData["CpcmUserCity"] = new SelectList(await _context.CpcmCities.ToListAsync(), "CpcmCityId", "CpcmCityName");
 				ViewData["CpcmUserSchool"] = new SelectList(await _context.CpcmSchools.ToListAsync(), "CpcmSchooldId", "CpcmSchoolName");
 				ViewData["CpcmUserUniversity"] = new SelectList(await _context.CpcmUniversities.ToListAsync(), "CpcmUniversityId", "CpcmUniversityName");
+				ViewData["СpcmRoles"] = new SelectList(await _context.CpcmRoles.ToListAsync(), "CpcmRoleId", "CpcmRoleName");
 			}
 			catch (DbUpdateException ex)
 			{
@@ -1169,6 +1170,7 @@ namespace Capycom.Controllers
 				ViewData["CpcmUserCity"] = new SelectList(await _context.CpcmCities.ToListAsync(), "CpcmCityId", "CpcmCityName");
 				ViewData["CpcmUserSchool"] = new SelectList(await _context.CpcmSchools.ToListAsync(), "CpcmSchooldId", "CpcmSchoolName");
 				ViewData["CpcmUserUniversity"] = new SelectList(await _context.CpcmUniversities.ToListAsync(), "CpcmUniversityId", "CpcmUniversityName");
+				ViewData["СpcmRoles"] = new SelectList(await _context.CpcmRoles.ToListAsync(), "CpcmRoleId", "CpcmRoleName");
 			}
             catch (DbException ex)
             {
@@ -1329,7 +1331,7 @@ namespace Capycom.Controllers
             }
             try
             {
-                var result = await followerList1.Take(10).ToListAsync();
+				var result = await followerList1.Take(10).ToListAsync();
                 return PartialView(result);
             }
 			catch (DbException ex)
@@ -1902,6 +1904,10 @@ namespace Capycom.Controllers
 			{
 				var stringGuid = User.FindFirstValue("CpcmUserId");
 				user = await _context.CpcmUsers.Where(c => c.CpcmUserId.ToString() == stringGuid).FirstOrDefaultAsync();
+				ViewData["CpcmUserCity"] = new SelectList(await _context.CpcmCities.ToListAsync(), "CpcmCityId", "CpcmCityName");
+				ViewData["CpcmUserSchool"] = new SelectList(await _context.CpcmSchools.ToListAsync(), "CpcmSchooldId", "CpcmSchoolName");
+				ViewData["CpcmUserUniversity"] = new SelectList(await _context.CpcmUniversities.ToListAsync(), "CpcmUniversityId", "CpcmUniversityName");
+				ViewData["СpcmRoles"] = new SelectList(await _context.CpcmRoles.ToListAsync(), "CpcmRoleId", "CpcmRoleName");
 			}
             catch(DbUpdateException ex)
             {
@@ -1983,10 +1989,13 @@ namespace Capycom.Controllers
 				//ViewData["additionalName"] = additionalName;
 				friendList1 = friendList1.Where(u => EF.Functions.Like(u.CpcmUserAdditionalName, $"%{filters.AdditionalName}%"));
 			}
-
-            try
+			if (filters.UserRole.HasValue && CheckUserAdminPrivilege("CpcmCanEditUsers", "True"))
+			{
+				friendList1 = friendList1.Where(u => u.CpcmUserRole == filters.UserRole);
+			}
+			try
             {
-                var result = await friendList1.OrderBy(p => p.CpcmUserId).Take(10).ToListAsync();
+				var result = await friendList1.OrderBy(p => p.CpcmUserId).Take(10).ToListAsync();
                 //followerList1.AddRange(followerList2);
 
 				return View(result);
@@ -2075,8 +2084,12 @@ namespace Capycom.Controllers
 				//ViewData["additionalName"] = additionalName;
 				friendList1 = friendList1.Where(u => EF.Functions.Like(u.CpcmUserAdditionalName, $"%{filters.AdditionalName}%"));
 			}
+			if (filters.UserRole.HasValue && CheckUserAdminPrivilege("CpcmCanEditUsers", "True"))
+			{
+				friendList1 = friendList1.Where(u => u.CpcmUserRole == filters.UserRole);
+			}
 
-            try
+			try
             {
                 var result = await friendList1.OrderBy(p => p.CpcmUserId).Take(10).ToListAsync();
                 //followerList1.AddRange(followerList2);
@@ -3149,6 +3162,7 @@ namespace Capycom.Controllers
 				ViewData["CpcmUserCity"] = new SelectList(await _context.CpcmCities.ToListAsync(), "CpcmCityId", "CpcmCityName");
 				ViewData["CpcmUserSchool"] = new SelectList(await _context.CpcmSchools.ToListAsync(), "CpcmSchooldId", "CpcmSchoolName");
 				ViewData["CpcmUserUniversity"] = new SelectList(await _context.CpcmUniversities.ToListAsync(), "CpcmUniversityId", "CpcmUniversityName");
+				ViewData["СpcmRoles"] = new SelectList(await _context.CpcmRoles.ToListAsync(), "CpcmRoleId", "CpcmRoleName");
 				var rez = await query.OrderBy(u => u.CpcmUserId).Take(10).ToListAsync();
                 return View(rez);
             }
