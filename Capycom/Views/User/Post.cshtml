@@ -64,7 +64,7 @@
 				<div class="ms-auto mb-auto d-flex" style="flex-direction: column;">
 					@if (Model.Post.CpcmUserId.ToString() == User.FindAll(x => x.Type == "CpcmUserId").FirstOrDefault().Value)
 					{
-						<a asp-controller="User" asp-action="EditPost" asp-route-postGuid="@Model.Post.CpcmPostId">
+						<a class="edit-post-button" asp-controller="User" asp-action="EditPost" asp-route-postGuid="@Model.Post.CpcmPostId" style='display: @(Model.Post.CpcmPostBanned ? "none" : "")'>
 							<img src="~/images/pencil-square.svg" />
 						</a>
 						<a style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#confirmDeleteModal" onclick="askDelete('@Model.Post.CpcmPostId')">

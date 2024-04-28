@@ -10,13 +10,16 @@ function banPost(url, banID) {
         success: function (response) {
             if (response['status']) {
                 let banIco = $(`#${banID} .ban-icon`);
+                let repostButton = $(`#${banID} .edit-post-button`);
                 if (banIco.css('color') == 'rgb(25, 135, 84)') { // ~ green
                     banIco.css('color', '#dc3545'); // ~ red
                     $(`#${banID}`).children().first().children().eq(1).html('<i>Пост был разбанен.<br/>Чтобы увидеть его содержимое, перезагрузите страницу.</i>')
+                    repostButton.show();
                 }
                 else {
                     banIco.css('color', '#198754'); // ~ green
-                    $(`#${banID}`).children().first().children().eq(1).html('<i>Пост был забаннен :(</i>')
+                    $(`#${banID}`).children().first().children().eq(1).html('<i>Пост был забаннен :(</i>');
+                    repostButton.hide();
                 }
             }
             else {
