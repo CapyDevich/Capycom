@@ -14,12 +14,12 @@
 					else if (@Model.UserOwner.CpcmUserImagePath != string.Empty)
 					{
 						<img src="@Url.Content(@Model.UserOwner.CpcmUserImagePath)"
-						class="rounded-circle me-3" style="width: 50px; height: 50px; object-fit: cover;">
+							 class="rounded-circle me-3" style="width: 50px; height: 50px; object-fit: cover;">
 					}
 					else
 					{
 						<img src="\images\default.png"
-						class="rounded-circle me-3" style="width: 50px; height: 50px; object-fit: cover;">
+							 class="rounded-circle me-3" style="width: 50px; height: 50px; object-fit: cover;">
 					}
 				</a>
 			}
@@ -114,12 +114,12 @@
 		}
 		else
 		{
-		<div class="g-2">
-			<div class="row g-1 p-1">
-				@Model.Post.CpcmPostText
-			</div>
-			<div class="@(Model.Post.CpcmImages.Count != 0 ? ("row row-cols-1 g-4 mt-0 " + (Model.Post.CpcmImages.Count > 1 ? "row-cols-md-2 row-cols-lg-2" : "")) : "")">
-				@{
+			<div class="g-2">
+				<div class="row g-1 p-1">
+					@Model.Post.CpcmPostText
+				</div>
+				<div class="@(Model.Post.CpcmImages.Count != 0 ? ("row row-cols-1 g-4 mt-0 " + (Model.Post.CpcmImages.Count > 1 ? "row-cols-md-2 row-cols-lg-2" : "")) : "")">
+					@{
 						if (Model.Post.CpcmPostFatherNavigation == null)
 							foreach (var image in Model.Post.CpcmImages.OrderBy(c => c.CpcmImageOrder))
 							{
@@ -171,31 +171,34 @@
 						{
 							@await Html.PartialAsync("~/Views/User/PostChild.cshtml", Model.Post.CpcmPostFatherNavigation)
 						}
-				}
-			</div>
-			<div class="d-grid d-flex mt-1 justify-content-md-start">
-				<button class="btn btn-outline-primary me-2 button-bottom" onclick="likePost(this, '@Model.Post.CpcmPostId');">
-					@if (@Model.Post.IsLiked)
-					{
-						<img src="~/images/tangerine_colored.svg" />
 					}
-					else
+				</div>
+				<div class="d-grid d-flex mt-1 justify-content-md-start">
+					<button class="btn btn-outline-primary me-2 button-bottom" onclick="likePost(this, '@Model.Post.CpcmPostId');">
+						@if (@Model.Post.IsLiked)
+						{
+							<img src="~/images/tangerine_colored.svg" />
+						}
+						else
+						{
+							<img src="~/images/tangerine_black.svg" />
+						}
+						<span class="likes-count-show"></span>
+						<span class="likes-count" style="display: none">@Model.LikesCount</span>
+					</button>
+					<a asp-area="" asp-controller="PostComment" asp-action="ViewPost" asp-route-postId="@Model.Post.CpcmPostId" class="btn btn-outline-primary me-2 button-bottom">
+						<img src="~/images/comments.svg" />
+					</a>
+					@if (Model.UserOwner.CpcmUserId.ToString() != User.FindAll(x => x.Type == "CpcmUserId").FirstOrDefault().Value)
 					{
-						<img src="~/images/tangerine_black.svg" />
+						<button class="btn btn-outline-primary me-2 button-bottom" data-bs-toggle="modal" data-bs-target="#repostModal" onclick="repost(this, '@Model.Post.CpcmPostId');">
+							<img src="~/images/repost.svg" />
+							<span class="repost-count-show"></span>
+							<span class="repost-count" style="display: none">@Model.RepostsCount</span>
+						</button>
 					}
-					<span class="likes-count-show"></span>
-					<span class="likes-count" style="display: none">@Model.LikesCount</span>
-				</button>
-				<a asp-area="" asp-controller="PostComment" asp-action="ViewPost" asp-route-postId="@Model.Post.CpcmPostId" class="btn btn-outline-primary me-2 button-bottom">
-					<img src="~/images/comments.svg" />
-				</a>
-				<button class="btn btn-outline-primary me-2 button-bottom" data-bs-toggle="modal" data-bs-target="#repostModal" onclick="repost(this, '@Model.Post.CpcmPostId');">
-					<img src="~/images/repost.svg" />
-					<span class="repost-count-show"></span>
-					<span class="repost-count" style="display: none">@Model.RepostsCount</span>
-				</button>
+				</div>
 			</div>
-		</div>
 		}
 	</div>
 </div>
