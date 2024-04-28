@@ -88,7 +88,7 @@
 	{
 		<script src="~/js/ban/ban-post.js"></script>
 	}
-	@if (User.FindFirst(c => c.Type == "CpcmCanBanUsers").Value == "True")
+	@if (User.FindFirst(c => c.Type == "CpcmCanBanUsers").Value == "True" && Model.User.CpcmUserId.ToString() != User.FindAll(x => x.Type == "CpcmUserId").FirstOrDefault().Value)
 	{
 		<script src="~/js/ban/ban-user.js"></script>
 	}

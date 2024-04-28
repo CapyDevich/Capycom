@@ -142,7 +142,7 @@
 			<a class="btn btn-outline-secondary mb-1" asp-controller="User" asp-action="Followers" asp-route-UserId="@Model.CpcmUserId">Подписчики</a>
 		</div>
 	}
-	@if (User.FindFirst(c => c.Type == "CpcmCanBanUsers").Value == "True")
+	@if (User.FindFirst(c => c.Type == "CpcmCanBanUsers").Value == "True" && Model.CpcmUserId.ToString() != User.FindAll(x => x.Type == "CpcmUserId").FirstOrDefault().Value)
 	{
 		<div class="row mt-md-2 mt-1 mb-2">
 			<button class="btn btn-outline-danger" onclick="banUser('/User/BanUnbanUser', '@Model.CpcmUserId')">Заблокировать пользователя</button>
