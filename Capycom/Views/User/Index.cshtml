@@ -80,6 +80,8 @@
 }
 <script type="text/javascript" charset="utf-8" src="~/js/post.js"></script>
 <script src="~/js/load-more.js"></script>
+<script src="~/js/post/format-post-number.js"></script>
+<script src="~/js/post/like-repost-post.js"></script>
 @if (User.Identity.IsAuthenticated)
 {
 	@if (User.FindFirst(c => c.Type == "CpcmCanBanUsersPost").Value == "True")

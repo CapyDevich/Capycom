@@ -181,6 +181,25 @@
 						}
 					}
 				</div>
+				<div class="d-grid d-flex mt-1 justify-content-md-start">
+					<button class="btn btn-outline-primary me-2 button-bottom" onclick="likePost(this, '@Model.Post.CpcmPostId');">
+						@if (@Model.Post.IsLiked)
+						{
+							<img src="~/images/tangerine_colored.svg" />
+						}
+						else
+						{
+							<img src="~/images/tangerine_black.svg" />
+						}
+						<span class="likes-count-show"></span>
+						<span class="likes-count" style="display: none">@Model.LikesCount</span>
+					</button>
+					<button class="btn btn-outline-primary me-2 button-bottom" data-bs-toggle="modal" data-bs-target="#repostModal" onclick="repost(this, '@Model.Post.CpcmPostId');">
+						<img src="~/images/repost.svg" />
+						<span class="repost-count-show"></span>
+						<span class="repost-count" style="display: none">@Model.RepostsCount</span>
+					</button>
+				</div>
 
 			</div>
 			@if (User.Identity.IsAuthenticated)
@@ -336,44 +355,51 @@
 		}
 	</div>
 </div>
+@if (User.Identity.IsAuthenticated)
+{
+	@await Html.PartialAsync("~/Views/User/RepostModal.cshtml")
+	<!-- Модальное окно на подтверждение удаление комментария -->
+	<div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteModalLabel" aria-hidden="true">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title" id="confirmDeleteModalLabel">Подтверждение удаления</h5>
+					<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+				</div>
+				<div class="modal-body">
+					Вы уверены, что хотите удалить данный комментарий?
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+					<button type="button" class="btn btn-danger" data-bs-dismiss="modal" onclick="deleteComment()">Удалить</button>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!-- Модальное окно на подтверждение удаление поста -->
+	<div class="modal fade" id="confirmDeleteModalPost" tabindex="-1" aria-labelledby="confirmDeleteModalLabel" aria-hidden="true">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title" id="confirmDeleteModalLabel">Подтверждение удаления</h5>
+					<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+				</div>
+				<div class="modal-body">
+					Вы уверены, что хотите удалить данный пост?
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+					<button type="button" class="btn btn-danger" data-bs-dismiss="modal" onclick="deletePost()">Удалить</button>
+				</div>
+			</div>
+		</div>
+	</div>
+}
 <script src="~/js/post-content.js"></script>
 <script src="~/js/comment-requests.js"></script>
-<!-- Модальное окно на подтверждение удаление комментария -->
-<div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteModalLabel" aria-hidden="true">
-	<div class="modal-dialog">
-		<div class="modal-content">
-			<div class="modal-header">
-				<h5 class="modal-title" id="confirmDeleteModalLabel">Подтверждение удаления</h5>
-				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-			</div>
-			<div class="modal-body">
-				Вы уверены, что хотите удалить данный комментарий?
-			</div>
-			<div class="modal-footer">
-				<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
-				<button type="button" class="btn btn-danger" data-bs-dismiss="modal" onclick="deleteComment()">Удалить</button>
-			</div>
-		</div>
-	</div>
-</div>
-<!-- Модальное окно на подтверждение удаление поста -->
-<div class="modal fade" id="confirmDeleteModalPost" tabindex="-1" aria-labelledby="confirmDeleteModalLabel" aria-hidden="true">
-	<div class="modal-dialog">
-		<div class="modal-content">
-			<div class="modal-header">
-				<h5 class="modal-title" id="confirmDeleteModalLabel">Подтверждение удаления</h5>
-				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-			</div>
-			<div class="modal-body">
-				Вы уверены, что хотите удалить данный пост?
-			</div>
-			<div class="modal-footer">
-				<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
-				<button type="button" class="btn btn-danger" data-bs-dismiss="modal" onclick="deletePost()">Удалить</button>
-			</div>
-		</div>
-	</div>
-</div>
+<script src="~/js/post/format-post-number.js"></script>
+<script src="~/js/post/like-repost-post.js"></script>
+
 @if (User.Identity.IsAuthenticated)
 {
 	@if (User.FindFirst(c => c.Type == "CpcmCanBanUsersPost").Value == "True")
