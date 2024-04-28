@@ -17,6 +17,7 @@ namespace Capycom.Models
         public List<IFormFile>? NewFiles { get; set; } = new List<IFormFile>();
 
         public ICollection<CpcmImage>? CpcmImages { get; set; }
+
         [FutureDate]
         public DateTime? NewPublishDate { get; set; }
 
