@@ -18,15 +18,21 @@
 				</label>
 			</div>
 		</div>
-		<input asp-validation-for="NewFiles" asp-for="NewFiles" id="fileInput" type="file" multiple hidden />
+		<div>
+			<span asp-validation-for="Text" class="text-danger"></span>
+		</div>
+		<input asp-for="NewFiles" id="fileInput" type="file" multiple hidden />
 		<div class="ps-1 pe-1 mb-1">
 			<div class="file-list"></div>
 			<span asp-validation-for="NewFiles" class="text-danger d-flex justify-content-between text ps-1 mb-1 rounded"></span>
 		</div>
 		<div class="ps-1 pe-1 mb-1">
-			@foreach (var image in Model.CpcmImages.OrderBy(c => c.CpcmImageOrder))
+			@if (Model.CpcmImages != null)
 			{
-				<img id="@image.CpcmImageId" src="@Url.Content(@image.CpcmImagePath)" class="existing-img rounded card-img-top" alt="Изображение" style="object-fit: cover; width: 128px; height: 128px;" onclick="darkenImage(this)">
+				@foreach (var image in Model.CpcmImages.OrderBy(c => c.CpcmImageOrder))
+				{
+					<img id="@image.CpcmImageId" src="@Url.Content(@image.CpcmImagePath)" class="existing-img rounded card-img-top" alt="Изображение" style="object-fit: cover; width: 128px; height: 128px;" onclick="darkenImage(this)">
+				}
 			}
 		</div>
 		@if (@Model.NewPublishDate > DateTime.Now)
@@ -34,6 +40,7 @@
 			<div class="mb-3">
 				<label asp-for="NewPublishDate" class="form-label">Дата публикации</label>
 				<input type="datetime-local" id="datetimePicker" class="form-control" asp-for="NewPublishDate" value="@Model.NewPublishDate?.ToString("yyyy-MM-ddTHH:mm")">
+				<span asp-validation-for="NewPublishDate" class="text-danger"></span>
 			</div>
 		}
 		<div class="ps-1 pe-1">
