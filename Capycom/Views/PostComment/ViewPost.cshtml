@@ -194,11 +194,14 @@
 						<span class="likes-count-show"></span>
 						<span class="likes-count" style="display: none">@Model.LikesCount</span>
 					</button>
-					<button class="btn btn-outline-primary me-2 button-bottom" data-bs-toggle="modal" data-bs-target="#repostModal" onclick="repost(this, '@Model.Post.CpcmPostId');">
-						<img src="~/images/repost.svg" />
-						<span class="repost-count-show"></span>
-						<span class="repost-count" style="display: none">@Model.RepostsCount</span>
-					</button>
+					@if (Model.UserOwner.CpcmUserId.ToString() != User.FindAll(x => x.Type == "CpcmUserId").FirstOrDefault().Value)
+					{
+						<button class="btn btn-outline-primary me-2 button-bottom" data-bs-toggle="modal" data-bs-target="#repostModal" onclick="repost(this, '@Model.Post.CpcmPostId');">
+							<img src="~/images/repost.svg" />
+							<span class="repost-count-show"></span>
+							<span class="repost-count" style="display: none">@Model.RepostsCount</span>
+						</button>
+					}
 				</div>
 
 			</div>
