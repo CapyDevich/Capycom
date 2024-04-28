@@ -68,7 +68,7 @@
 			<div class="row g-1 p-1">
 				@Model.Post.CpcmPostText
 			</div>
-			<div class="@(Model.Post.CpcmImages.Count != 0 ? ("row row-cols-1 g-4 " + (Model.Post.CpcmImages.Count > 1 ? "row-cols-md-2 row-cols-lg-2" : "")) : "")">
+			<div class="@(Model.Post.CpcmImages.Count != 0 ? ("row row-cols-1 g-4 mt-0 " + (Model.Post.CpcmImages.Count > 1 ? "row-cols-md-2 row-cols-lg-2" : "")) : "")">
 				@{
 					if (Model.Post.CpcmPostFatherNavigation == null)
 						foreach (var image in Model.Post.CpcmImages.OrderBy(c => c.CpcmImageOrder))
