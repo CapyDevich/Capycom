@@ -48,6 +48,19 @@
 			<img src="~/images/eraser-fill.svg" />
 		</button>
 	</div>
+	@if (User.FindFirst(c => c.Type == "CpcmCanEditUsers").Value == "True")
+	{
+		<label for="UserRole" class="form-label">Роль пользователя</label>
+		<div class="flex-grow-1 input-group d-flex justify-content-between mb-3">
+			<select data-live-search="true" name="UserRole" class="selectpicker flex-grow-1" id="role" asp-items="ViewBag.СpcmRoles">
+				<option value="" selected disabled>Выберите роль...</option>
+			</select>
+			<button type="button" class="btn btn-light addOptionButton" onclick="clearSelect('school')">
+				<img src="~/images/eraser-fill.svg" />
+			</button>
+		</div>
+		<span validation-for="UserRole" class="text-danger"></span>
+	}
 	<div class="row">
 		<button type="submit" class="btn btn-outline-primary">Найти</button>
 	</div>

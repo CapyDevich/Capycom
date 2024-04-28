@@ -22,8 +22,15 @@
 				<label asp-for="CpcmUserAdditionalName" class="form-label">Отчество</label>
 				<input type="text" class="form-control" id="middleName" asp-for="CpcmUserAdditionalName">
 			</div>
-			<span asp-validation-for="CpcmUserFirstName" class="text-danger"></span>
-			<span asp-validation-for="CpcmUserSecondName" class="text-danger"></span>
+			<div>
+				<span asp-validation-for="CpcmUserFirstName" class="text-danger"></span>
+			</div>
+			<div>
+				<span asp-validation-for="CpcmUserSecondName" class="text-danger"></span>
+			</div>
+			<div>
+				<span asp-validation-for="CpcmUserAdditionalName" class="text-danger"></span>
+			</div>
 		</div>
 		<div class="mb-3">
 			<label asp-for="CpcmUserImage" class="form-label">Иконка профиля</label>
