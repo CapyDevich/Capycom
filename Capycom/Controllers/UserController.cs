@@ -2834,7 +2834,7 @@ namespace Capycom.Controllers
                     Log.Warning("Пользователь заблокирован {u}", userId);
 					return StatusCode(403);
 				}   
-                posts = await _context.CpcmPosts.Where(c => c.CpcmUserId == userId).Where(c => c.CpcmPostPublishedDate < post.CpcmPostPublishedDate && c.CpcmPostPublishedDate < DateTime.UtcNow && !post.CpcmIsDeleted).Take(10).ToListAsync();
+                posts = await _context.CpcmPosts.Where(c => c.CpcmUserId == userId).Where(c => c.CpcmPostPublishedDate < post.CpcmPostPublishedDate && c.CpcmPostPublishedDate < DateTime.UtcNow && !c.CpcmIsDeleted).Take(10).ToListAsync();
                 foreach (var postik in posts)
                 {
                     long likes = 0;
