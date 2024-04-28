@@ -288,8 +288,11 @@ namespace Capycom.Controllers
 						if (int.TryParse(timezoneOffsetCookie, out int timezoneOffsetMinutes))
 						{
 							TimeSpan offset = TimeSpan.FromMinutes(timezoneOffsetMinutes);
-							
-							postik.CpcmPostPublishedDate -=  offset;
+
+                            if (offset.TotalHours <= 24)
+                            {
+                                postik.CpcmPostPublishedDate -= offset; 
+                            }
 
 						}
 					}
@@ -2175,7 +2178,10 @@ namespace Capycom.Controllers
 							{
 								TimeSpan offset = TimeSpan.FromMinutes(timezoneOffsetMinutes);
 
-								post.CpcmPostPublishedDate += offset;
+                                if (offset.TotalHours <= 24)
+                                {
+                                    post.CpcmPostPublishedDate += offset; 
+                                }
 
 							}
 						}
@@ -2541,8 +2547,11 @@ namespace Capycom.Controllers
 					{
 						TimeSpan offset = TimeSpan.FromMinutes(timezoneOffsetMinutes);
 
-						model.NewPublishDate -= offset;
+                        if (offset.TotalHours <= 24)
+                        {
+                            model.NewPublishDate -= offset;
 
+                        }
 					}
 				}
 			}
@@ -2625,7 +2634,10 @@ namespace Capycom.Controllers
                                 {
                                     TimeSpan offset = TimeSpan.FromMinutes(timezoneOffsetMinutes);
 
-                                    post.CpcmPostPublishedDate += offset;
+                                    if (offset.TotalHours <= 24)
+                                    {
+                                        post.CpcmPostPublishedDate += offset; 
+                                    }
 
                                 }
                             }
@@ -2851,7 +2863,10 @@ namespace Capycom.Controllers
 							{
 								TimeSpan offset = TimeSpan.FromMinutes(timezoneOffsetMinutes);
 
-								postik.CpcmPostPublishedDate -= offset;
+                                if (offset.TotalHours <= 24)
+                                {
+                                    postik.CpcmPostPublishedDate -= offset; 
+                                }
 
 							}
 						}
@@ -2915,7 +2930,10 @@ namespace Capycom.Controllers
 							{
 								TimeSpan offset = TimeSpan.FromMinutes(timezoneOffsetMinutes);
 
-								postik.CpcmPostPublishedDate -= offset;
+                                if (offset.TotalHours <= 24)
+                                {
+                                    postik.CpcmPostPublishedDate -= offset; 
+                                }
 
 							}
 						}
@@ -2970,7 +2988,10 @@ namespace Capycom.Controllers
 							{
 								TimeSpan offset = TimeSpan.FromMinutes(timezoneOffsetMinutes);
 
-								postik.CpcmPostPublishedDate -= offset;
+                                if (offset.TotalHours <= 24)
+                                {
+                                    postik.CpcmPostPublishedDate -= offset; 
+                                }
 
 							}
 						}
@@ -3238,7 +3259,10 @@ namespace Capycom.Controllers
 							{
 								TimeSpan offset = TimeSpan.FromMinutes(timezoneOffsetMinutes);
 
-								father.CpcmPostPublishedDate -= offset;
+                                if (offset.TotalHours <= 24)
+                                {
+                                    father.CpcmPostPublishedDate -= offset; 
+                                }
 
 							}
 						}

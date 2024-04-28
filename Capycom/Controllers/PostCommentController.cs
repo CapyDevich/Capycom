@@ -9,6 +9,7 @@ using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 using System.Reflection.Metadata;
 using System.Security.Claims;
 using Serilog;
+using Microsoft.Extensions.FileSystemGlobbing;
 
 namespace Capycom.Controllers
 {
@@ -109,8 +110,11 @@ namespace Capycom.Controllers
 							if (int.TryParse(timezoneOffsetCookie, out int timezoneOffsetMinutes))
 							{
 								TimeSpan offset = TimeSpan.FromMinutes(timezoneOffsetMinutes);
+								if (offset.TotalHours <= 24)
+								{
+									TopComment.CpcmCommentCreationDate -= offset;
+								}
 
-								TopComment.CpcmCommentCreationDate -= offset;
 
 							}
 						}
@@ -149,8 +153,11 @@ namespace Capycom.Controllers
 						if (int.TryParse(timezoneOffsetCookie, out int timezoneOffsetMinutes))
 						{
 							TimeSpan offset = TimeSpan.FromMinutes(timezoneOffsetMinutes);
-
-							post.CpcmPostPublishedDate -= offset;
+							if (offset.TotalHours <= 24)
+							{
+								post.CpcmPostPublishedDate -= offset;
+							}
+							
 
 						}
 					}
@@ -263,7 +270,10 @@ namespace Capycom.Controllers
 						{
 							TimeSpan offset = TimeSpan.FromMinutes(timezoneOffsetMinutes);
 
-							comment.CpcmCommentCreationDate += offset;
+                            if (offset.TotalHours <= 24)
+                            {
+                                comment.CpcmCommentCreationDate += offset; 
+                            }
 
 						}
 					}
@@ -577,7 +587,10 @@ namespace Capycom.Controllers
 						{
 							TimeSpan offset = TimeSpan.FromMinutes(timezoneOffsetMinutes);
 
-							comment.CpcmCommentCreationDate -= offset;
+                            if (offset.TotalHours <= 24)
+                            {
+                                comment.CpcmCommentCreationDate -= offset; 
+                            }
 
 						}
 					}
@@ -692,7 +705,10 @@ namespace Capycom.Controllers
 							{
 								TimeSpan offset = TimeSpan.FromMinutes(timezoneOffsetMinutes);
 
-								comment.CpcmCommentCreationDate -= offset;
+                                if (offset.TotalHours <= 24)
+                                {
+                                    comment.CpcmCommentCreationDate -= offset; 
+                                }
 
 							}
 						}
@@ -894,7 +910,10 @@ namespace Capycom.Controllers
                                 {
                                     TimeSpan offset = TimeSpan.FromMinutes(timezoneOffsetMinutes);
 
-                                    childComm.CpcmCommentCreationDate -= offset;
+                                    if (offset.TotalHours <= 24)
+                                    {
+                                        childComm.CpcmCommentCreationDate -= offset; 
+                                    }
 
                                 }
                             }
