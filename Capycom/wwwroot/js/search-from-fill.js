@@ -20,6 +20,8 @@ function filltheFields() {
         document.getElementById('university').querySelector(`option[value="${$.urlParam('UniversityId')}"]`).selected = true;
     if ($.urlParam('SchoolId') != null)
         document.getElementById('school').querySelector(`option[value="${$.urlParam('SchoolId')}"]`).selected = true;
+    if ($.urlParam('UserRole') != null)
+        document.getElementById('role').querySelector(`option[value="${$.urlParam('UserRole')}"]`).selected = true;
 
     let selectpickers = $('.selectpicker');
     selectpickers.selectpicker('destroy');
