@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using Serilog;
 using System.Data;
@@ -102,8 +103,11 @@ namespace Capycom.Controllers
 							if (int.TryParse(timezoneOffsetCookie, out int timezoneOffsetMinutes))
 							{
 								TimeSpan offset = TimeSpan.FromMinutes(timezoneOffsetMinutes);
-
-								post.CpcmPostPublishedDate-= offset;
+								if (offset.TotalHours <= 24)
+								{
+									post.CpcmPostPublishedDate-= offset;
+								}
+								
 
 							}
 						}
@@ -210,8 +214,10 @@ namespace Capycom.Controllers
 							if (int.TryParse(timezoneOffsetCookie, out int timezoneOffsetMinutes))
 							{
 								TimeSpan offset = TimeSpan.FromMinutes(timezoneOffsetMinutes);
-
-								post.CpcmPostPublishedDate -= offset;
+								if (offset.TotalHours <= 24)
+								{
+									post.CpcmPostPublishedDate -= offset;
+								}
 
 							}
 						}
@@ -250,8 +256,10 @@ namespace Capycom.Controllers
 							if (int.TryParse(timezoneOffsetCookie, out int timezoneOffsetMinutes))
 							{
 								TimeSpan offset = TimeSpan.FromMinutes(timezoneOffsetMinutes);
-
-								father.CpcmPostPublishedDate -= offset;
+								if (offset.TotalHours <= 24)
+								{
+									father.CpcmPostPublishedDate -= offset;
+								}
 
 							}
 						}
