@@ -36,8 +36,8 @@ fileInput.addEventListener('change', function () {
     }
 });
 
-const textarea = document.getElementById('commentText');
-textarea.addEventListener('input', function () {
+const commentTextarea = document.getElementById('commentText');
+commentTextarea.addEventListener('input', function () {
 
 	if (this.scrollHeight > 200)
 		this.style.overflow = 'scroll';
