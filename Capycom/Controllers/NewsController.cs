@@ -173,7 +173,7 @@ namespace Capycom.Controllers
 					.Where(p => ((p.CpcmGroupId.HasValue && groupIds.Contains(p.CpcmGroupId.Value)) ||
 								(p.CpcmUserId.HasValue && allUserIds.Contains(p.CpcmUserId.Value))) &&
 								p.CpcmPostPublishedDate < lastPost.CpcmPostPublishedDate)
-					.Where(p=> !p.CpcmIsDeleted)
+					//.Where(p=> !p.CpcmIsDeleted)
 					.Include(p => p.CpcmImages)
 					//.Include(p => p.CpcmPostFatherNavigation)
 					.OrderByDescending(c => c.CpcmPostPublishedDate).Where(p => p.CpcmIsDeleted == false)
