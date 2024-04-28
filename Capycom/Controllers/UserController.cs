@@ -12,6 +12,7 @@ using System.Security.Claims;
 using Capycom.Enums;
 using Serilog;
 using Microsoft.Data.SqlClient;
+using Microsoft.Extensions.Hosting;
 
 
 namespace Capycom.Controllers
@@ -2819,7 +2820,49 @@ namespace Capycom.Controllers
                 return RedirectToAction("Index");
 
             }
-            return View("EditPost", editPost);
+			try
+			{
+				var post = await _context.CpcmPosts.Include(c => c.CpcmImages).Where(c => c.CpcmPostId == editPost.Id).FirstOrDefaultAsync();
+                if (post != null)
+                {
+					if (HttpContext.Request.Cookies.ContainsKey("TimeZone"))
+					{
+						string timezoneOffsetCookie = HttpContext.Request.Cookies["TimeZone"];
+						if (timezoneOffsetCookie != null)
+						{
+							if (int.TryParse(timezoneOffsetCookie, out int timezoneOffsetMinutes))
+							{
+								TimeSpan offset = TimeSpan.FromMinutes(timezoneOffsetMinutes);
+
+								if (offset.TotalHours <= 24)
+								{
+									editPost.NewPublishDate = post.CpcmPostPublishedDate - offset;
+
+								}
+                                else
+                                {
+                                    editPost.NewPublishDate = post.CpcmPostPublishedDate;
+
+								}
+							}
+						}
+					}
+					
+				}
+
+
+			}
+			catch (DbUpdateException ex)
+			{
+				Log.Error(ex, "Ошибка при попытке получить пост из базы данных {post}", editPost.Id);
+				return StatusCode(500);
+			}
+			catch (DbException ex)
+			{
+				Log.Error(ex, "Ошибка при попытке получить пост из базы данных {post}", editPost.Id);
+				return StatusCode(500);
+			}
+			return View("EditPost", editPost);
         }
 
         [HttpPost]
