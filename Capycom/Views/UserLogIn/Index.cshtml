@@ -10,20 +10,27 @@
 		<label for="login" class="form-label" asp-for="CpcmUserEmail">Email</label>
 		<div class="input-group">
 			<input type="text" class="form-control" id="login" required asp-for="CpcmUserEmail">
+			<div>
+				<span asp-validation-for="CpcmUserEmail" class="text-danger d-block" onchange="showImg()"></span>
+			</div>
 		</div>
-		<span asp-validation-for="CpcmUserEmail" class="text-danger d-block"></span>
 		<div class="mb-3">
 			<label for="password" class="form-label" asp-for="CpcmUserPwd">Пароль</label>
 			<input type="password" class="form-control" id="password" required asp-for="CpcmUserPwd">
+			<div>
+				<span asp-validation-for="CpcmUserPwd" class="text-danger"></span>
+				<span class="text-danger">@ViewData["Message"]</span>
+			</div>
 		</div>
-		<span asp-validation-for="CpcmUserPwd" class="text-danger"></span>
-		<span class="text-danger">@ViewData["Message"]</span>
 		<button type="submit" class="col-md-12 btn btn-primary container-fluid">Войти</button>
 	</form>
 	<div class="col-md-6 mx-auto mt-2">
 		<a class="col-md-12 btn btn-secondary container-fluid" asp-area="" asp-controller="UserSignUp" asp-action="Create">Зарегистрироваться</a>
 	</div>
-	<div class="col-md-6 mx-auto mt-4">
-		<img class="col-md-12 rounded img-fluid" src="~/images/не удаётся войти？жаль....png" />
-	</div>
+	@if (!ViewData.ModelState.IsValid || ViewData["Message"] != null)
+	{
+		<div class="col-md-6 mx-auto mt-4" id="cantLogIn">
+			<img class="col-md-12 rounded img-fluid" src="~/images/sad.png" />
+		</div>
+	}
 </div>
