@@ -41,47 +41,47 @@
 							<a class="nav-link text-dark" asp-area="" asp-controller="Group" asp-action="">Найти группу</a>
 						</li> *@
 					</ul>
-				</div>
-				@if (User.Identity.IsAuthenticated)
-				{
-					<div class="dropdown" style="background-color: transparent;">
-						<button class="btn btn-light dropdown-toggle border-0 justify-content-sm-center" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false" style="background-color: transparent;">
-							<img src='@Url.Content(Context.Session.GetString("ProfileImage"))'
-								 class="rounded-circle me-3" style="width: 50px; height: 50px; object-fit: cover">
-						</button>
-						<ul class="dropdown-menu pb-0 dropdown-menu-end" aria-labelledby="dropdownMenuButton">
-							<li>
-								<a class="nav-link text-dark dropdown-button text-nowrap" asp-area="" asp-controller="User" asp-action="Index" style="font-size: 20px">
+					@if (User.Identity.IsAuthenticated)
+					{
+						<div class="dropdown" style="background-color: transparent;">
+							<button class="btn btn-light dropdown-toggle border-0" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false" style="background-color: transparent;">
+								<img src='@Url.Content(Context.Session.GetString("ProfileImage"))'
+									 class="rounded-circle me-3" style="width: 50px; height: 50px; object-fit: cover">
+							</button>
+							<ul class="dropdown-menu pb-0 dropdown-menu-sm-end" aria-labelledby="dropdownMenuButton">
+								<li>
+									<a class="nav-link text-dark dropdown-button text-nowrap" asp-area="" asp-controller="User" asp-action="Index" style="font-size: 20px">
 										<img src='@Url.Content(Context.Session.GetString("ProfileImage"))'
-										class="rounded-circle me-3" style="display:inline-block; width: 50px; height: 50px; object-fit: cover">
-									Профиль
-								</a>
-							</li>
-							<li><hr class="dropdown-divider"></li>
-							<li>
-								<a class="nav-link text-dark dropdown-button  text-nowrap" asp-area="" asp-controller="User" asp-action="Edit" asp-route-id="@User.FindAll(x => x.Type == "CpcmUserId").FirstOrDefault().Value">
-									<img class="d-inline m-1" src="~/images/pencil-square.svg" />
-									Редактировать профиль
-								</a>
-							</li>
-							<li>
-								<a class="nav-link text-dark dropdown-button  text-nowrap" asp-area="" asp-controller="User" asp-action="EditIdentity" asp-route-id="@User.FindAll(x => x.Type == "CpcmUserId").FirstOrDefault().Value">
-									<img class="d-inline m-1" src="~/images/shield-lock-fill.svg" />
-									Безопасность
-								</a>
-							</li>
-							<li>
-								<a class="nav-link text-dark dropdown-button  text-nowrap" asp-area="" asp-controller="UserLogIn" asp-action="LogOut">
-									<img class="d-inline m-1" src="~/images/box-arrow-right.svg" style="padding-left: 2px" />Выйти
-								</a>
-							</li>
-						</ul>
-					</div>
-				}
-				else
-				{
-					<a class="nav-link text-dark pe-md-1" asp-area="" asp-controller="UserLogIn" asp-action="Index">Войти или зарегистрироваться</a>
-				}
+											 class="rounded-circle me-3" style="display:inline-block; width: 50px; height: 50px; object-fit: cover">
+										Профиль
+									</a>
+								</li>
+								<li><hr class="dropdown-divider"></li>
+								<li>
+									<a class="nav-link text-dark dropdown-button  text-nowrap" asp-area="" asp-controller="User" asp-action="Edit" asp-route-id="@User.FindAll(x => x.Type == "CpcmUserId").FirstOrDefault().Value">
+										<img class="d-inline m-1" src="~/images/pencil-square.svg" />
+										Редактировать профиль
+									</a>
+								</li>
+								<li>
+									<a class="nav-link text-dark dropdown-button  text-nowrap" asp-area="" asp-controller="User" asp-action="EditIdentity" asp-route-id="@User.FindAll(x => x.Type == "CpcmUserId").FirstOrDefault().Value">
+										<img class="d-inline m-1" src="~/images/shield-lock-fill.svg" />
+										Безопасность
+									</a>
+								</li>
+								<li>
+									<a class="nav-link text-dark dropdown-button  text-nowrap" asp-area="" asp-controller="UserLogIn" asp-action="LogOut">
+										<img class="d-inline m-1" src="~/images/box-arrow-right.svg" style="padding-left: 2px" />Выйти
+									</a>
+								</li>
+							</ul>
+						</div>
+					}
+					else
+					{
+						<a class="nav-link text-dark pe-md-1" asp-area="" asp-controller="UserLogIn" asp-action="Index">Войти или зарегистрироваться</a>
+					}
+				</div>
 			</div>
 		</nav>
 	</header>
