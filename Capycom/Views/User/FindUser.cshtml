@@ -48,7 +48,7 @@
 			<img src="~/images/eraser-fill.svg" />
 		</button>
 	</div>
-	@if (User.FindFirst(c => c.Type == "CpcmCanEditUsers").Value == "True")
+	@if (User.Identity.IsAuthenticated && User.FindFirst(c => c.Type == "CpcmCanEditUsers").Value == "True")
 	{
 		<label for="UserRole" class="form-label">Роль пользователя</label>
 		<div class="flex-grow-1 input-group d-flex justify-content-between mb-3">
