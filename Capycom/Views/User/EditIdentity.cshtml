@@ -30,12 +30,46 @@
 			<input asp-for="CpcmUserPwd" type="password" class="form-control" id="password">
 		</div>
 		<span asp-validation-for="CpcmUserPwd" class="text-danger"></span>
-		<div class="mb-3">
+		<div>
 			<label asp-for="CpcmUserPwdConfirm" class="form-label">Подтвердите пароль</label>
 			<input asp-for="CpcmUserPwdConfirm" type="password" class="form-control" id="confirmPassword" >
 		</div>
 		<span asp-validation-for="CpcmUserPwdConfirm" class="text-danger"></span><br />
-		<button type="submit" class="btn btn-primary" value="Create">Сохранить изменения</button>
+		<button type="submit" class="btn btn-primary container-fluid" value="Create">Сохранить изменения</button>
+	</form>
+	<hr />
+	<form class="col-md-6 mx-auto" asp-action="Delete" enctype="multipart/form-data" id="deleteUser">
+		<div class="p-1 alert-danger">
+			<input asp-for="CpcmUserId" value="@Model.CpcmUserId" hidden />
+			<p class="mb-0 text-center">Это необратимо!</p>
+			<button type="button" class="btn btn-danger container-fluid mt-3" data-bs-toggle="modal" data-bs-target="#confirmDeleteUserModal">Удалить профиль</button>
+		</div>
 	</form>
 </div>
 <script src="~/js/signup.js"></script>
+<script>
+	$(document).ready(function () {
+		$('#confirmDelete').on('click', function () {
+			bootstrap.Modal.getInstance(document.getElementById('confirmDeleteUserModal')).hide();
+			document.getElementById('deleteUser').submit();
+		});
+	});
+</script>
+<!-- Модальное окно на подтверждение пользователя -->
+<div class="modal fade" id="confirmDeleteUserModal" tabindex="-1" aria-labelledby="confirmDeleteUserModalLabel" aria-hidden="true">
+	<div class="modal-dialog">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h5 class="modal-title" id="confirmDeleteUserModalLabel">Подтверждение удаления</h5>
+				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+			</div>
+			<div class="modal-body">
+				Вы уверены, что хотите удалить профиль? Это необратимо!
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+				<button type="button" class="btn btn-danger" data-bs-dismiss="modal" id="confirmDelete">Удалить</button>
+			</div>
+		</div>
+	</div>
+</div>
