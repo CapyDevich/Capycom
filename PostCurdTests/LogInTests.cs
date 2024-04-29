@@ -235,7 +235,7 @@ namespace PostCurdTests
 		}
 
 		[Fact]
-		public async Task Index_TryLogIntoBannedProfileWithIncorrectData_Expect()
+		public async Task Index_TryLogIntoBannedProfileWithIncorrectData_ExpectViewResultAndCode403()
 		{
 			//Arrange
 			var model = new UserLogInModel()
@@ -287,7 +287,7 @@ namespace PostCurdTests
 		//}
 
 		[Fact]
-		public async Task Index_TryLogIntoProfileWithInvalidEmailValidation_Expect()
+		public async Task Index_TryLogIntoProfileWithInvalidEmailValidation_ExpectViewResult()
 		{
 			//Arrange
 			var model = new UserLogInModel()
@@ -317,7 +317,7 @@ namespace PostCurdTests
 		}
 
 		[Fact]
-		public async Task Index_TryLogIntoProfileWithInvalidPasswordValidation_Expect()
+		public async Task Index_TryLogIntoProfileWithInvalidPasswordValidation_ExpectViewResult()
 		{
 			//Arrange
 			var model = new UserLogInModel()
