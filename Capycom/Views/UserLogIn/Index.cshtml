@@ -10,16 +10,14 @@
 		<label for="login" class="form-label" asp-for="CpcmUserEmail">Email</label>
 		<div class="input-group">
 			<input type="text" class="form-control" id="login" required asp-for="CpcmUserEmail">
-			<div>
-				<span asp-validation-for="CpcmUserEmail" class="text-danger d-block" onchange="showImg()"></span>
-			</div>
 		</div>
+		<span asp-validation-for="CpcmUserEmail" class="text-danger d-block">авыавыаыа</span>
 		<div class="mb-3">
 			<label for="password" class="form-label" asp-for="CpcmUserPwd">Пароль</label>
 			<input type="password" class="form-control" id="password" required asp-for="CpcmUserPwd">
 			<div>
-				<span asp-validation-for="CpcmUserPwd" class="text-danger"></span>
-				<span class="text-danger">@ViewData["Message"]</span>
+				<span asp-validation-for="CpcmUserPwd" class="text-danger">авыавы</span>
+				<span class="text-danger">@ViewData["Message"] авыаыв</span>
 			</div>
 		</div>
 		<button type="submit" class="col-md-12 btn btn-primary container-fluid">Войти</button>
