@@ -82,6 +82,7 @@ namespace Capycom
 			builder.Services.AddMvc(options =>
 			{
 				options.Filters.Add(typeof(AuthFilter)); // Добавляем фильтр аутентификации
+				//options.Filters.Add(typeof(UpdateSessionFilter)); // Добавляем фильтр сессии
 			});
 
 
@@ -106,7 +107,6 @@ namespace Capycom
 			builder.Services.AddSingleton<IRateLimitCounterStore, MemoryCacheRateLimitCounterStore>();
 			builder.Services.AddSingleton<IRateLimitConfiguration, RateLimitConfiguration>();
 
-			// Остальной код...
 			var app = builder.Build();
 			app.UseSerilogRequestLogging();
 			// Configure the HTTP request pipeline.
