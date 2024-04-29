@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authentication;
 using System.Security.Claims;
 using Newtonsoft.Json.Linq;
 using static System.Formats.Asn1.AsnWriter;
+using Microsoft.EntityFrameworkCore;
 
 namespace Capycom
 {
@@ -34,7 +35,7 @@ namespace Capycom
 					var _context = scope.ServiceProvider.GetRequiredService<CapycomContext>();
 					if (context.User.Identity.IsAuthenticated)
 					{
-						var user = _context.CpcmUsers.FirstOrDefault(u => u.CpcmUserId.ToString() == context.User.FindFirstValue("CpcmUserId"));
+						var user = await _context.CpcmUsers.FirstOrDefaultAsync(u => u.CpcmUserId.ToString() == context.User.FindFirstValue("CpcmUserId"));
 						if (user != null)
 						{
 							context.Session.SetString("ProfileImage", string.IsNullOrEmpty(user.CpcmUserImagePath) ? Path.Combine("\\", "images", "default.png") : user.CpcmUserImagePath);
