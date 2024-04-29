@@ -9,7 +9,7 @@ function banPost(url, banID) {
         data: dataToSend,
         success: function (response) {
             if (response['status']) {
-                let banIco = $(`#${banID} .ban-icon`);
+                let banIco = $(`#${banID} .ban-icon`).first();
                 let repostButton = $(`#${banID} .edit-post-button`);
                 if (banIco.css('color') == 'rgb(25, 135, 84)') { // ~ green
                     banIco.css('color', '#dc3545'); // ~ red
