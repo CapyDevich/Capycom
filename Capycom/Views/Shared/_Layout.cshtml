@@ -85,16 +85,20 @@
 			</div>
 		</nav>
 	</header>
-	<div class="container">
+	<div class="container" style="margin-bottom:15vh;">
 		<main role="main" class="pb-3">
 			@RenderBody()
 		</main>
 	</div>
 
 	<footer class="border-top footer text-muted">
-		<div class="container">
-			&copy; 2024 - Capycom - <a asp-area="" asp-controller="Home" asp-action="Manual">Руководство пользователя</a>
-			<a style="float: inline-end;" href="mailto:test@capybara.su">Техническая поддержка</a>
+		<div class="row">
+			<p class="col-sm-6 text-center mb-0">
+				&copy; 2024 - Capycom - <a asp-area="" asp-controller="Home" asp-action="Manual">Руководство пользователя</a>
+			</p>
+			<p class="col-sm-6 text-center mb-0">
+				<a href="mailto:test@capybara.su">Техническая поддержка</a>
+			</p>
 		</div>
 	</footer>
 	<script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
