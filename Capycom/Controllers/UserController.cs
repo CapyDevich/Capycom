@@ -90,6 +90,7 @@ namespace Capycom.Controllers
 
 
         [HttpGet]
+		[ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
 		public async Task<ActionResult> Index(UserFilterModel filter)
         {
             CpcmUser? user;
