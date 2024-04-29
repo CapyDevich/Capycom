@@ -18,9 +18,12 @@
 		</div>
 		<span asp-validation-for="CpcmUserPwd" class="text-danger"></span>
 		<span class="text-danger">@ViewData["Message"]</span>
-		<button type="submit" class="col-md-12 btn btn-primary">Войти</button>
+		<button type="submit" class="col-md-12 btn btn-primary container-fluid">Войти</button>
 	</form>
 	<div class="col-md-6 mx-auto mt-2">
-		<a class="col-md-12 btn btn-secondary" asp-area="" asp-controller="UserSignUp" asp-action="Create">Зарегистрироваться</a>
+		<a class="col-md-12 btn btn-secondary container-fluid" asp-area="" asp-controller="UserSignUp" asp-action="Create">Зарегистрироваться</a>
+	</div>
+	<div class="col-md-6 mx-auto mt-4">
+		<img class="col-md-12 rounded img-fluid" src="~/images/не удаётся войти？жаль....png" />
 	</div>
 </div>
