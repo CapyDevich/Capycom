@@ -27,7 +27,6 @@ function asnwerFriendRequest(userID, accepted) {
 $(document).ready(function () {
 	$('#searchUser').submit(function (event) {
 		event.preventDefault();
-
 		$.urlParam = function (name) {
 			var results = new RegExp('[\?&]' + name + '=([^&#]*)').exec(window.location.href);
 			if (results == null) {
