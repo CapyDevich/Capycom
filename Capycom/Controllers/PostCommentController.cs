@@ -498,9 +498,11 @@ namespace Capycom.Controllers
                 Log.Information("Пользователь {User} просматривает комментарий {Comment}", HttpContext.User.FindFirstValue("CpcmUserId"), commentId);
             else
                 Log.Information("Неавторизирвоанный клиент {@client} просматривает комментарий {Comment}",HttpContext.Connection, commentId);
-            try
+            CpcmComment? comment;
+
+			try
             {
-                var comment = await _context.CpcmComments.Where(c => c.CpcmCommentId == commentId).Include(p => p.CpcmImages).Include(c => c.CpcmUser)
+				 comment = await _context.CpcmComments.Where(c => c.CpcmCommentId == commentId).Include(p => p.CpcmImages).Include(c => c.CpcmUser)
                     .Include(c => c.CpcmPost).Include(c => c.CpcmPost).FirstOrDefaultAsync();
                 if (comment == null)
                 {
@@ -610,7 +612,8 @@ namespace Capycom.Controllers
 					return View("UserError");
 				}
 				await _context.SaveChangesAsync();
-                return View(comment);
+				comment.InverseCpcmCommentFatherNavigation = await GetCommentChildrenReccurent(comment);
+				
 
             }
             catch(DbUpdateException ex)
@@ -629,7 +632,8 @@ namespace Capycom.Controllers
                 ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
                 return View("UserError");
             }
-        }
+			return View(comment);
+		}
         public async Task<IActionResult> GetNextComments(Guid postId, Guid lastCommentId)
         {
 			if (User.Identity.IsAuthenticated)
