@@ -88,17 +88,29 @@ namespace Capycom.Controllers
                         ViewData["Message"] = "Группа поста заблокирована";
                         ViewData["id"] = post.CpcmGroupId;
                         return View("UserError");
-                    } 
-                }
-                if(post.CpcmPostPublishedDate > DateTime.UtcNow)
-                {
-					Log.Information("Попытка просмотра отложенного поста {Post}", postId);
-					Response.StatusCode = 404;
-					ViewData["ErrorCode"] = 404;
-					ViewData["Message"] = "Пост не найден";
-					return View("UserError");
+                    }
+					//if (post.CpcmPostPublishedDate > DateTime.UtcNow && GetUserId() != post.CpcmUserId)
+					//{
+					//	Log.Information("Попытка просмотра отложенного поста {Post}", postId);
+					//	Response.StatusCode = 404;
+					//	ViewData["ErrorCode"] = 404;
+					//	ViewData["Message"] = "Пост не найден";
+					//	return View("UserError");
+					//}
 				}
-				var topComments = await _context.CpcmComments.Where(p => p.CpcmPostId == post.CpcmPostId && p.CpcmCommentFather == null && !p.CpcmIsDeleted).Include(c => c.CpcmImages).Include(c => c.CpcmUser).Take(10).OrderBy(u => u.CpcmCommentCreationDate).ToListAsync(); // впринципе эту итерацию можно пихнуть сразу в тот метод
+                else
+                {
+					if (post.CpcmPostPublishedDate > DateTime.UtcNow && GetUserId() != post.CpcmUserId)
+					{
+						Log.Information("Попытка просмотра отложенного поста {Post}", postId);
+						Response.StatusCode = 404;
+						ViewData["ErrorCode"] = 404;
+						ViewData["Message"] = "Пост не найден";
+						return View("UserError");
+					}
+				}
+
+                var topComments = await _context.CpcmComments.Where(p => p.CpcmPostId == post.CpcmPostId && p.CpcmCommentFather == null && !p.CpcmIsDeleted).Include(c => c.CpcmImages).Include(c => c.CpcmUser).Take(10).OrderBy(u => u.CpcmCommentCreationDate).ToListAsync(); // впринципе эту итерацию можно пихнуть сразу в тот метод
                 foreach (var TopComment in topComments)
                 {
                     TopComment.InverseCpcmCommentFatherNavigation = await GetCommentChildrenReccurent(TopComment);
@@ -128,7 +140,7 @@ namespace Capycom.Controllers
                 CpcmGroup? groupOwner = await _context.CpcmGroups.Where(u => u.CpcmGroupId == post.CpcmGroupId).FirstOrDefaultAsync();
 				if (User.Identity.IsAuthenticated && groupOwner != null )
 				{
-					var authUserId = GetUserIdString();
+					var authUserId = GetUserId();
 					var authFollower = await _context.CpcmGroupfollowers.Where(f => f.CpcmUserId == authUserId && f.CpcmGroupId == groupOwner.CpcmGroupId).Include(f => f.CpcmUserRoleNavigation).FirstOrDefaultAsync();
                     groupOwner.UserFollowerRole = authFollower.CpcmUserRoleNavigation;
                     post.Group.UserFollowerRole = authFollower.CpcmUserRoleNavigation;
@@ -994,7 +1006,7 @@ namespace Capycom.Controllers
             }
             return status;
         }
-		private Guid GetUserIdString()
+		private Guid GetUserId()
 		{
 			if (User.Identity.IsAuthenticated)
 			{
