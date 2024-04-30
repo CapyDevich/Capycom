@@ -229,11 +229,12 @@ namespace Capycom.Controllers
                 }
 				if (post.CpcmPostPublishedDate > DateTime.UtcNow)
 				{
-					Log.Information("Попытка просмкомментировать отложенный пост {Post}", post.CpcmPostId);
-					Response.StatusCode = 404;
-					ViewData["ErrorCode"] = 404;
-					ViewData["Message"] = "Пост не найден";
-					return View("UserError");
+					Log.Information("Попытка прокомментировать отложенный пост {Post}", post.CpcmPostId);
+					//Response.StatusCode = 404;
+					//ViewData["ErrorCode"] = 404;
+					//ViewData["Message"] = "Пост не найден";
+					//return View("UserError");
+					return StatusCode(404);
 				}
 			}
             catch (DbUpdateException ex)
