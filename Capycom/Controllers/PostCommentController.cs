@@ -611,7 +611,7 @@ namespace Capycom.Controllers
 					ViewData["Message"] = "Пост не найден";
 					return View("UserError");
 				}
-				await _context.SaveChangesAsync();
+				//await _context.SaveChangesAsync(); // Чет не понял зачем это тут. Хз на кой вставил 
 				comment.InverseCpcmCommentFatherNavigation = await GetCommentChildrenReccurent(comment);
 				
 
