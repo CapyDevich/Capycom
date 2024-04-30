@@ -2412,7 +2412,14 @@ namespace Capycom.Controllers
                 }
 
             }
-            Log.Information("Пост {@userPost} не прошёл валидацию {u}", userPost,User.FindFirstValue("CpcmUserId"));
+			Log.Information("Пост {@userPost} не прошёл валидацию {u}", userPost, User.FindFirstValue("CpcmUserId"));
+			if (userPost == null)
+            {
+                Log.Warning("Попытка создать пустой пост {u}", User.FindFirstValue("CpcmUserId"));
+				ViewData["Message"] = "Произошла ошибка обработки поста";
+                Response.StatusCode=400;
+				return View("CreatePost", userPost);
+            }
             if (userPost.PostFatherId == null)
             {
                 return View("CreatePost", userPost); 
@@ -2623,6 +2630,8 @@ namespace Capycom.Controllers
                 {
                     //Log.Debug("Попытка добавить больше 4 файлов в пост {u}", editPost.Id);
                     Log.Warning("Попытка добавить больше 4 файлов в пост {u}", editPost.Id);
+                    editPost.NewFiles = new();
+                    editPost.FilesToDelete = new();
                     ModelState.AddModelError("NewFiles", "В посте не может быть больше 4 фотографий");
                     Response.StatusCode = 500;
                     return View("EditPost", editPost);
