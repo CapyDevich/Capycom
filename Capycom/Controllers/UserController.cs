@@ -2679,6 +2679,7 @@ namespace Capycom.Controllers
                 if(post.CpcmPostFather != null)
                 {
                     Log.Debug("Создаётся репост {@post}", editPost);
+                    editPost.PostFatherId = post.CpcmPostFather;
                     editPost.FilesToDelete = new List<Guid>();
                     editPost.NewFiles = new();
                 }
