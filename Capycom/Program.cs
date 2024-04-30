@@ -8,6 +8,7 @@ using System.Threading.RateLimiting;
 using System.Configuration;
 using AspNetCoreRateLimit;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.Server.Kestrel.Core;
 
 namespace Capycom
 {
@@ -106,7 +107,11 @@ namespace Capycom
 			builder.Services.AddSingleton<IIpPolicyStore, MemoryCacheIpPolicyStore>();
 			builder.Services.AddSingleton<IRateLimitCounterStore, MemoryCacheRateLimitCounterStore>();
 			builder.Services.AddSingleton<IRateLimitConfiguration, RateLimitConfiguration>();
-
+			builder.Services.AddHttpContextAccessor();
+			builder.Services.Configure<KestrelServerOptions>(options =>
+			{
+				options.Limits.MaxRequestBodySize = 52428800; // 50 Мебибайт
+			});
 			var app = builder.Build();
 			app.UseSerilogRequestLogging();
 			// Configure the HTTP request pipeline.

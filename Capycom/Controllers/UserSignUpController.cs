@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Serilog;
 using System.Data.Common;
+using System.Security.Claims;
 
 namespace Capycom.Controllers
 {
@@ -298,7 +299,13 @@ namespace Capycom.Controllers
                 }
                 return RedirectToAction(nameof(Index),"UserLogIn");
             }
-            try
+			if (cpcmSignUser == null)
+			{
+				Log.Warning("Попытка создать профиль с пустой моделью {u}", User.FindFirstValue("CpcmUserId"));
+				Response.StatusCode = 400;
+                return View();
+			}
+			try
             {
                 ViewData["CpcmUserCity"] = new SelectList(await _context.CpcmCities.ToListAsync(), "CpcmCityId", "CpcmCityName", cpcmSignUser.CpcmUserCity);
                 ViewData["CpcmUserSchool"] = new SelectList(await _context.CpcmSchools.ToListAsync(), "CpcmSchooldId", "CpcmSchoolName", cpcmSignUser.CpcmUserSchool);
