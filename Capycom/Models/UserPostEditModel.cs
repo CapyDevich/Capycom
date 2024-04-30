@@ -13,7 +13,7 @@ namespace Capycom.Models
 
         public List<Guid>? FilesToDelete { get; set; } = new List<Guid>();
 
-        [MaxFileCount(2)]
+        [MaxFileCount(4)]
         public List<IFormFile>? NewFiles { get; set; } = new List<IFormFile>();
 
         public ICollection<CpcmImage>? CpcmImages { get; set; }
