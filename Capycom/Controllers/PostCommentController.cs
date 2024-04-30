@@ -358,7 +358,13 @@ namespace Capycom.Controllers
                 //return StatusCode(200, new { status = true });
                 return PartialView(comment);
             }
-            Log.Information("Пользователь {User} пытается добавить комментарий к посту {Post}. Комментарий имеет некорректные значения , {@Comment}", HttpContext.User.FindFirstValue("CpcmUserId"), userComment.CpcmPostId, userComment);
+			if (userComment == null)
+			{
+				Log.Warning("Попытка создать коммент с пустой моделью {u}", User.FindFirstValue("CpcmUserId"));
+				Response.StatusCode = 400;
+				return StatusCode(400);
+			}
+			Log.Information("Пользователь {User} пытается добавить комментарий к посту {Post}. Комментарий имеет некорректные значения , {@Comment}", HttpContext.User.FindFirstValue("CpcmUserId"), userComment.CpcmPostId, userComment);
             return StatusCode(200, new { status=false,message = "Комментарий имеет некорректные значения.",errors= ModelState.SelectMany(x => x.Value.Errors.Select(e => e.ErrorMessage)).ToList() });
 
         }

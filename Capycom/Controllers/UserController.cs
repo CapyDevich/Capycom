@@ -650,7 +650,13 @@ namespace Capycom.Controllers
                 ViewData["Message"] = "Произошла ошибка с доступом к серверу. Если проблема сохранится спустя некоторое время, то обратитесь в техническую поддержку";
                 return View("UserError");
             }
-            return View(user);
+			if (user == null)
+			{
+				Log.Warning("Попытка отредачить профиль с пустой моделью {u}", User.FindFirstValue("CpcmUserId"));
+				Response.StatusCode = 400;
+				return RedirectToAction("Index");
+			}
+			return View(user);
         }
 
 
@@ -2418,7 +2424,7 @@ namespace Capycom.Controllers
                 Log.Warning("Попытка создать пустой пост {u}", User.FindFirstValue("CpcmUserId"));
 				ViewData["Message"] = "Произошла ошибка обработки поста";
                 Response.StatusCode=400;
-				return View("CreatePost", userPost);
+				return RedirectToAction("Index");
             }
             if (userPost.PostFatherId == null)
             {
@@ -2845,6 +2851,13 @@ namespace Capycom.Controllers
             }
 			try
 			{
+				if (editPost == null)
+				{
+					Log.Warning("Попытка отредактировать пост с  пустой моделью {u}", User.FindFirstValue("CpcmUserId"));
+					ViewData["Message"] = "Произошла ошибка обработки поста";
+					Response.StatusCode = 400;
+                    return RedirectToAction("Index");
+				}
 				var post = await _context.CpcmPosts.Include(c => c.CpcmImages).Where(c => c.CpcmPostId == editPost.Id).FirstOrDefaultAsync();
                 if (post != null)
                 {

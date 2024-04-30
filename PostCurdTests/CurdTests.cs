@@ -256,7 +256,7 @@ namespace PostCurdTests
 				Files = null,
 				Text = "Text",
 				PostFatherId = null,
-				Published = DateTime.UtcNow + new TimeSpan(1, 0, 0)
+				//Published = DateTime.UtcNow + new TimeSpan(1, 0, 0)
 			};
 
 			//Act
@@ -433,7 +433,7 @@ namespace PostCurdTests
 				{
 					Files = new FormFileCollection() { file },
 					Text = "asd",
-					Published = DateTime.UtcNow + new TimeSpan(1, 0, 0)
+					//Published = DateTime.UtcNow + new TimeSpan(1, 0, 0)
 				};
 
 				// Act
@@ -502,7 +502,7 @@ namespace PostCurdTests
 				{
 					Files = new FormFileCollection() { file, file, file, file, file },
 					Text = "asd",
-					Published = DateTime.UtcNow + new TimeSpan(1, 0, 0)
+					//Published = DateTime.UtcNow + new TimeSpan(1, 0, 0)
 				};
 
 				// Act
@@ -572,7 +572,7 @@ namespace PostCurdTests
 				{
 					Files = new FormFileCollection() { file, file, file, file, file },
 					Text = "asd",
-					Published = DateTime.UtcNow + new TimeSpan(1, 0, 0)
+					//Published = DateTime.UtcNow + new TimeSpan(1, 0, 0)
 				};
 
 				// Act

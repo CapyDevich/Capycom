@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Microsoft.Extensions.Hosting;
+using System.ComponentModel.DataAnnotations;
 
 namespace Capycom.Attributes
 {
@@ -11,9 +12,52 @@ namespace Capycom.Attributes
                 return ValidationResult.Success;
             }
 
-            if (value is DateTime dateTime && dateTime < DateTime.UtcNow)
+            if (value is DateTime dateTime)
             {
-                return new ValidationResult("Дата должна быть больше или равна текущей дате", new List<string> { validationContext.DisplayName });
+				var httpContextAccessor = (IHttpContextAccessor)validationContext.GetService(typeof(IHttpContextAccessor));
+				if (httpContextAccessor.HttpContext.Request.Cookies.ContainsKey("TimeZone"))
+				{
+					string timezoneOffsetCookie = httpContextAccessor.HttpContext.Request.Cookies["TimeZone"];
+					if (timezoneOffsetCookie != null)
+					{
+						if (int.TryParse(timezoneOffsetCookie, out int timezoneOffsetMinutes))
+						{
+							TimeSpan offset = TimeSpan.FromMinutes(timezoneOffsetMinutes);
+
+							if (offset.TotalHours <= 24)
+							{
+								if (dateTime + offset < DateTime.UtcNow )
+								{
+									return new ValidationResult("Дата должна быть больше или равна текущей дате", new List<string> { validationContext.DisplayName });
+								}
+							}
+							else
+							{
+								if (dateTime < DateTime.UtcNow)
+								{
+									return new ValidationResult("Неккоректная дата. Очистите куки TimeZone и перезагрузите страницу", new List<string> { validationContext.DisplayName });
+								}
+							}
+
+						}
+						else
+						{
+							return new ValidationResult("Неккоректная дата. Очистите куки TimeZone и перезагрузите страницу", new List<string> { validationContext.DisplayName });
+						}
+					}
+					else
+					{
+						return new ValidationResult("Неккоректная дата. Очистите куки TimeZone и перезагрузите страницу", new List<string> { validationContext.DisplayName });
+					}
+				}
+				else
+				{
+					if (dateTime < DateTime.UtcNow)
+					{
+						return new ValidationResult("Неккоректная дата. Очистите куки TimeZone и перезагрузите страницу", new List<string> { validationContext.DisplayName });
+					}
+				}
+				
             }
 
             return ValidationResult.Success;
