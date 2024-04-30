@@ -34,8 +34,10 @@
 		</div>
 		<div class="mb-3">
 			<label asp-for="CpcmUserImage" class="form-label">Иконка профиля</label>
-			<input asp-for="CpcmUserImage" class="form-control" type="file" id="formFile">
+			<input asp-for="CpcmUserImage" class="form-control" type="file" accept="image/png, image/gif, image/jpeg" id="formFile">
 		</div>
+		<span asp-validation-for="CpcmUserImage" class="text-danger"></span>
+		<div class="errorFile"></div>
 		<div class="mb-3 form-check form-switch">
 			<input asp-for="IsDeletingUserImage" class="form-check-input" type="checkbox" id="formDeleteImage">
 			<label asp-for="IsDeletingUserImage" class="form-check-label">Удалить текующую картинку профиля?</label>
@@ -169,3 +171,4 @@
 </div>
 
 <script src="~/js/signup.js"></script>
+<script src="~/js/files/file-profile-input.js"></script>

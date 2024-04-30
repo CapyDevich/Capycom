@@ -21,7 +21,7 @@
 		<div>
 			<span asp-validation-for="Text" class="text-danger"></span>
 		</div>
-		<input asp-for="NewFiles" id="fileInput" type="file" multiple hidden />
+		<input asp-for="NewFiles" id="fileInput" type="file" accept="image/png, image/gif, image/jpeg" multiple hidden />
 		<div class="ps-1 pe-1 mb-1">
 			<div class="file-list"></div>
 			<span asp-validation-for="NewFiles" class="text-danger d-flex justify-content-between text ps-1 mb-1 rounded"></span>
@@ -55,5 +55,5 @@
 		</div>
 	</form>
 </div>
-<script src="~/js/create-post.js"></script>
-<script src="~/js/edit-post.js"></script>
+<script src="~/js/files/file-delete.js"></script>
+<script src="~/js/files/file-input.js"></script>

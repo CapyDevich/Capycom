@@ -64,9 +64,10 @@
 		<h4 class="mb-2">Дополнительные сведения</h4>
 		<div class="mb-3">
 			<label asp-for="CpcmUserImage" class="form-label">Иконка профиля</label>
-			<input asp-for="CpcmUserImage" class="form-control" type="file" id="formFile">
+			<input asp-for="CpcmUserImage" class="form-control" type="file" accept="image/png, image/gif, image/jpeg" id="formFile">
 		</div>
 		<span asp-validation-for="CpcmUserImage" class="text-danger"></span>
+		<div class="errorFile"></div>
 		<div class="col mb-3">
 			<label asp-for="CpcmUserAbout" userAbout" class="form-label">О себе</label>
 			<textarea asp-for="CpcmUserAbout" type="text" class="form-control" id="userAbout" rows="3"></textarea>
@@ -199,6 +200,7 @@
 </div>
 
 <script src="~/js/signup.js"></script>
+<script src="~/js/files/file-profile-input.js"></script>
 @section Scripts {
 	@{
 		await Html.RenderPartialAsync("_ValidationScriptsPartial");
