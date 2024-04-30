@@ -112,6 +112,16 @@ namespace Capycom.Controllers
 							}
 						}
 					}
+					long liked =0;
+					if (User.Identity.IsAuthenticated)
+					{
+						liked = await _context.Database.SqlQuery<long>($@"SELECT * FROM CPCM_POSTLIKES WHERE CPCM_PostID = {post.CpcmPostId} AND CPCM_UserID = {User.FindFirstValue("CpcmUserId")}").CountAsync();
+						
+					}
+					if (liked > 0)
+						post.IsLiked = true;
+					else
+						post.IsLiked = false;
 
 					PostModel postModel = new() { Post = post, UserOwner = userOwner, GroupOwner = groupOwner, LikesCount = likes, RepostsCount = reposts };
 					postsModel.Add(postModel);
