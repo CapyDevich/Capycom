@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using Capycom.Models;
 using Microsoft.AspNetCore.Authorization;
@@ -110,7 +110,7 @@ namespace Capycom.Controllers
 					}
 				}
 
-                var topComments = await _context.CpcmComments.Where(p => p.CpcmPostId == post.CpcmPostId && p.CpcmCommentFather == null && !p.CpcmIsDeleted).Include(c => c.CpcmImages).Include(c => c.CpcmUser).Take(10).OrderBy(u => u.CpcmCommentCreationDate).ToListAsync(); // впринципе эту итерацию можно пихнуть сразу в тот метод
+                var topComments = await _context.CpcmComments.Where(p => p.CpcmPostId == post.CpcmPostId && p.CpcmCommentFather == null && !p.CpcmIsDeleted).Include(c => c.CpcmImages).Include(c => c.CpcmUser).OrderBy(u => u.CpcmCommentCreationDate).Take(10).ToListAsync(); // впринципе эту итерацию можно пихнуть сразу в тот метод
                 foreach (var TopComment in topComments)
                 {
                     TopComment.InverseCpcmCommentFatherNavigation = await GetCommentChildrenReccurent(TopComment);
