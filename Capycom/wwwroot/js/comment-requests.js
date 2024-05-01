@@ -1,23 +1,29 @@
 ﻿'use strict'
 $(document).ready(function () {
-    $('#commentForm').submit(function (e) {
-        e.preventDefault();
+    let commentForms = $('.commentForm');
+    for (let i = 0; i < commentForms.length; i++) {
+        commentForms[i].addEventListener('submit', function (e) {
+            e.preventDefault();
 
-        let formData = new FormData(this);
-        $.ajax({
-            type: 'POST',
-            url: '/PostComment/AddComment',
-            data: formData,
-            processData: false,
-            contentType: false,
-            success: function (response) {
-                location.reload();
-            },
-            error: function (error) {
-                console.error('Ошибка при отправке данных:', error);
-            }
+            let formData = new FormData(this);
+            $.ajax({
+                type: 'POST',
+                url: '/PostComment/AddComment',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function (response) {
+                    location.reload();
+                },
+                error: function (obj) {
+                    if (obj.status == 401)
+                        window.location.replace("/UserLogIn");
+                    else
+                        console.error('Ошибка при отправке данных:', obj.status);
+                }
+            });
         });
-    });
+    }
 });
 
 let lastIDToDelete = ''
