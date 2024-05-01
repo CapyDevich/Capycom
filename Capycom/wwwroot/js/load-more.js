@@ -207,7 +207,6 @@ function loadNextUser(button) {
         });
     }
 }
-
 function loadNextFriendRequest(button) {
     if ($('.follower').length > 0) {
         button.innerHTML = '<img src="../images/loading.svg" />';
@@ -256,4 +255,38 @@ function loadNextFriendRequest(button) {
         button.remove();
         document.getElementById('cpcm-users-footer').innerHTML += '<p class="text-center">У вас нет заявок в друзья!<br/><span class="text-muted">(не расстраивайтесь, капибары всегда с вами!)</span></p>'
     }
+}
+function loadComments(button) {
+    button.innerHTML = '<img src="../images/loading.svg" />';
+    const id = $('.comments-body .comment').filter(function () {
+        return $(this).parents('.comment').length === 0;
+    }).last()[0].attributes['id'].value;
+
+    let dataToSend = {
+        postId: $(`.PostId`)[0].innerText,
+        lastCommentId: id
+    };
+    $.ajax({
+        url: '/PostComment/GetNextComments',
+        type: 'POST',
+        data: dataToSend,
+        success: function (response) {
+            let feedBody = $('.comments-body')[0];
+            if (response != '') {
+                feedBody.innerHTML += response;
+                button.innerHTML = 'Загрузить ещё';
+            }
+            else {
+                button.remove();
+                feedBody.innerHTML += '<p class="text-center">У остальных капибар без комментариев!</p>'
+            }
+        },
+        error: function (obj) {
+            if (obj.status == 401)
+                window.location.replace("/UserLogIn");
+            else
+                alert(`:(\nСтатус: ${obj.status}`);
+            button.innerHTML = 'Загрузить ещё';
+        }
+    });
 }

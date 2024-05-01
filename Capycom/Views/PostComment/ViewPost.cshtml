@@ -8,6 +8,7 @@
 	}
 }
 <div class="card mb-2" id="@Model.Post.CpcmPostId">
+	<div class="PostId" hidden>@Model.Post.CpcmPostId</div>
 	<div class="card-body">
 		<div class="d-flex align-items-center mb-3">
 			@if (Model.Post.User?.CpcmUserNickName != null)
@@ -232,9 +233,10 @@
 					</form>
 				</div>
 			}
+			<div class="comments-body">
 			@foreach (var comment in Model.TopLevelComments)
 			{
-				<div class="card mt-2" id="@comment.CpcmCommentId">
+				<div class="card mt-2 comment" id="@comment.CpcmCommentId">
 					<div class="d-flex">
 
 						@if (comment.CpcmUser.CpcmUserNickName != null)
@@ -390,6 +392,13 @@
 					</div>
 				</div>
 			}
+			</div>
+			@if (true || Model.TopLevelComments.Count >= 10)
+			{
+				<div class="d-flex justify-content-center">
+					<a class="text-muted mt-1" onclick="loadComments(this)" style="cursor:pointer;">Загрузить ещё</a>
+				</div>
+			}
 		}
 	</div>
 </div>
@@ -438,6 +447,7 @@
 <script src="~/js/post/like-repost-post.js"></script>
 <script src="~/js/files/file-comment-input.js"></script>
 <script src="~/js/answer-comment.js"></script>
+<script src="~/js/load-more.js"></script>
 
 @if (User.Identity.IsAuthenticated)
 {

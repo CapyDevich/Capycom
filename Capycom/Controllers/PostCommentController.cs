@@ -682,7 +682,7 @@ namespace Capycom.Controllers
                     Log.Warning("Пользователь {User} запрашивает следующие комментарии к посту {Post}. Автор поста удалён", HttpContext.User.FindFirstValue("CpcmUserId"), postId);
 					return StatusCode(404);
 				}
-				if (post.User != null || post.User.CpcmUserBanned)
+				if (post.User != null && post.User.CpcmUserBanned)
 				{
                     Log.Warning("Пользователь {User} запрашивает следующие комментарии к посту {Post}. Автор поста заблокирован", HttpContext.User.FindFirstValue("CpcmUserId"), postId);
 					return StatusCode(403, new { message = "Автор поста заблокирован" });
@@ -713,8 +713,9 @@ namespace Capycom.Controllers
 
 
 
-				var rez = await _context.CpcmComments.Where(c => c.CpcmCommentCreationDate > lastComment.CpcmCommentCreationDate && c.CpcmPostId == postId && c.InverseCpcmCommentFatherNavigation == null).Include( c=>c.CpcmUser).OrderBy(u => u.CpcmCommentCreationDate).Take(10).ToListAsync();
-                foreach (var comment in rez)
+				var rez = await _context.CpcmComments.Where(c => c.CpcmCommentCreationDate > lastComment.CpcmCommentCreationDate && c.CpcmPostId == postId && c.CpcmCommentFather == null && !c.CpcmIsDeleted).Include(c => c.CpcmUser).OrderBy(u => u.CpcmCommentCreationDate).Take(10).ToListAsync();
+
+				foreach (var comment in rez)
                 {
                     //await _context.Entry(comment).Collection(p => p.InverseCpcmCommentFatherNavigation).LoadAsync();
                     //await _context.Entry(comment).Reference(p => p.CpcmCommentFatherNavigation).LoadAsync();
@@ -738,7 +739,7 @@ namespace Capycom.Controllers
 					}
 				}
                 
-                return PartialView(rez);
+                return PartialView("Comment" ,rez);
             }
             catch(DbUpdateException ex)
             {
