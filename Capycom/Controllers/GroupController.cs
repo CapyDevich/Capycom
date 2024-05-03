@@ -2466,7 +2466,7 @@ namespace Capycom.Controllers
 					return StatusCode(403);
 				}
 				long liked;
-				posts = await _context.CpcmPosts.Where(c => c.CpcmGroupId == groupId).Where(c => c.CpcmPostPublishedDate < post.CpcmPostPublishedDate && c.CpcmPostPublishedDate > DateTime.UtcNow).Take(10).ToListAsync();
+				posts = await _context.CpcmPosts.Where(c => c.CpcmGroupId == groupId).Where(c => c.CpcmPostPublishedDate < post.CpcmPostPublishedDate && c.CpcmPostPublishedDate > DateTime.UtcNow).OrderByDescending(c=>c.CpcmPostPublishedDate).Take(10).ToListAsync();
 
 				foreach (var postik in posts)
 				{
