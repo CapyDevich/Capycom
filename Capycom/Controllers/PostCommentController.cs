@@ -110,7 +110,7 @@ namespace Capycom.Controllers
 					}
 				}
 
-                var topComments = await _context.CpcmComments.Where(p => p.CpcmPostId == post.CpcmPostId && p.CpcmCommentFather == null && !p.CpcmIsDeleted).Include(c => c.CpcmImages).Include(c => c.CpcmUser).OrderBy(u => u.CpcmCommentCreationDate).Take(10).ToListAsync(); // впринципе эту итерацию можно пихнуть сразу в тот метод
+                var topComments = await _context.CpcmComments.Where(p => p.CpcmPostId == post.CpcmPostId && p.CpcmCommentFather == null && !p.CpcmIsDeleted).Include(c => c.CpcmImages).Include(c => c.CpcmUser).OrderByDescending(u => u.CpcmCommentCreationDate).Take(10).ToListAsync(); // впринципе эту итерацию можно пихнуть сразу в тот метод
                 foreach (var TopComment in topComments)
                 {
                     TopComment.InverseCpcmCommentFatherNavigation = await GetCommentChildrenReccurent(TopComment);
@@ -713,7 +713,7 @@ namespace Capycom.Controllers
 
 
 
-				var rez = await _context.CpcmComments.Where(c => c.CpcmCommentCreationDate > lastComment.CpcmCommentCreationDate && c.CpcmPostId == postId && c.CpcmCommentFather == null && !c.CpcmIsDeleted).Include(c => c.CpcmUser).OrderBy(u => u.CpcmCommentCreationDate).Take(10).ToListAsync();
+				var rez = await _context.CpcmComments.Where(c => c.CpcmCommentCreationDate < lastComment.CpcmCommentCreationDate && c.CpcmPostId == postId && c.CpcmCommentFather == null && !c.CpcmIsDeleted).Include(c => c.CpcmUser).OrderByDescending(u => u.CpcmCommentCreationDate).Take(10).ToListAsync();
 
 				foreach (var comment in rez)
                 {
@@ -919,7 +919,7 @@ namespace Capycom.Controllers
         {
             try
             {
-                var children = await _context.CpcmComments.Where(c => c.CpcmCommentFather == comm.CpcmCommentId).Include(c => c.CpcmImages).Include(c => c.CpcmUser).ToListAsync();
+                var children = await _context.CpcmComments.Where(c => c.CpcmCommentFather == comm.CpcmCommentId).Include(c => c.CpcmImages).Include(c => c.CpcmUser).OrderByDescending(c=>c.CpcmCommentCreationDate).ToListAsync();
                 if (children.Count != 0)
                 {
                     foreach (var childComm in children)
