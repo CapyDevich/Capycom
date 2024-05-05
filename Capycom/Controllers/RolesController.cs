@@ -341,7 +341,7 @@ namespace Capycom.Controllers
 					Response.StatusCode = 404;
 					ViewData["ErrorCode"] = 404;
 					ViewData["Message"] = "Пользователь с данным id не найден";
-					return View("UserError");
+					return StatusCode(404, new { status = false, message = "Пользователь не найден" });
 				}
                 var role = await _context.CpcmGroupRoles.Where(r=>r.CpcmRoleId==roleId).FirstOrDefaultAsync();
                 if ((role==null))
@@ -350,7 +350,7 @@ namespace Capycom.Controllers
 					Response.StatusCode = 404;
 					ViewData["ErrorCode"] = 404;
 					ViewData["Message"] = "Роль не найдена";
-					return View("UserError");
+					return StatusCode(404, new { status = false, message = "Роль не найдена" });
 				}
                 user.CpcmUserRole = roleId;
                 await _context.SaveChangesAsync();
