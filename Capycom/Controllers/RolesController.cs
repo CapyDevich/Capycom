@@ -33,8 +33,10 @@ namespace Capycom.Controllers
         {
             try
             {
-                Log.Information("Пользователь {@HttpContext.User} зашел на страницу Roles. Данные по соединеню {@HttpContext.Connection}", HttpContext.User.FindFirstValue("CpcmUserId"),HttpContext.Connection); 
-                return View(await _context.CpcmRoles.ToListAsync());
+                var roles = await _context.CpcmRoles.ToListAsync();
+				//ViewData["CpcmRoles"] = new SelectList(roles, "CpcmRoleId", "CpcmRoleName");
+				Log.Information("Пользователь {@HttpContext.User} зашел на страницу Roles. Данные по соединеню {@HttpContext.Connection}", HttpContext.User.FindFirstValue("CpcmUserId"),HttpContext.Connection); 
+                return View(roles);
             }
             catch(DbUpdateException ex)
             {
@@ -297,7 +299,8 @@ namespace Capycom.Controllers
         //    return RedirectToAction(nameof(Index));
         //}
 
-        [HttpPost]
+        [NonAction]
+        [Obsolete("This method is not used and will be removed in future versions",true)]
         public async Task<IActionResult> EditUserRole()
         {
             Log.Information("Пользователь {@HttpContext.User} пытается изменить роль пользователя. Данные по соединеню {@HttpContext.Connection}", HttpContext.User, HttpContext.Connection);
@@ -357,15 +360,15 @@ namespace Capycom.Controllers
 			}
 			catch (DbUpdateConcurrencyException ex)
 			{
-                Log.Error(ex, "Не удалось изменить запись пользователя {userId}. Возможно он был кем-то изменён или удалён.",userId);
-				ViewData["Message"] = "Не удалось изменить запись пользователя. Возможно он была кем-то изменён или удалён.";
-				return View("Index");
+                Log.Error(ex, "Не удалось изменить запись пользователя {userId}. Ошибка конкуренции", userId);
+				ViewData["Message"] = "Не удалось изменить запись пользователя. Ошибка конкуренции";
+				return StatusCode(500, new { status = false, message= "Не удалось изменить запись пользователя. Ошибка конкуренции" });
 			}
 			catch (DbUpdateException ex)
 			{
 				Log.Fatal(ex, "Не удалось изменить запись пользователя {userId}.", userId);
                 ViewData["Message"] = "Не удалось изменить запись пользователя.";
-                return View("Index");
+				return StatusCode(500, new { status = false, message= "Не удалось изменить запись пользователя." });
 			}
 			catch (DbException ex)
             {
@@ -373,7 +376,7 @@ namespace Capycom.Controllers
 				Response.StatusCode = 500;
 				ViewData["ErrorCode"] = 500;
 				ViewData["Message"] = "Ошибка связи с сервером";
-				return View("UserError");
+				return StatusCode(500, new { status = false, message= "Ошибка связи с сервером" }); ;
 			}
 		}
 
