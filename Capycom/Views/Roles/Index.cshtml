@@ -57,7 +57,8 @@
 						<td align="center" valign="middle">
 							<a class="btn btn-outline-info container-fluid mb-1" asp-action="Details" asp-route-id="@item.CpcmRoleId">Детали</a>
 							<a class="btn btn-outline-warning container-fluid mb-1" asp-action="Edit" asp-route-id="@item.CpcmRoleId">Редактировать</a>
-							<a class="btn btn-outline-danger container-fluid" asp-action="Delete" asp-route-id="@item.CpcmRoleId">Удалить</a>
+							<a class="btn btn-outline-danger container-fluid mb-1" asp-action="Delete" asp-route-id="@item.CpcmRoleId">Удалить</a>
+							<a class="btn btn-outline-danger container-fluid" data-bs-toggle="modal" data-bs-target="#editRoleModal">Назначить роль</a>
 						</td>
 						<td align="center" valign="middle">
 							@Html.DisplayFor(modelItem => item.CpcmRoleName)
@@ -101,3 +102,5 @@
 		</table>
 	</div>
 </div>
+<script src="~/js/modal-edit-role.js"></script>
+@await Html.PartialAsync("ModalEditUserRole")
