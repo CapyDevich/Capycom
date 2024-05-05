@@ -84,6 +84,17 @@
 						@comment.CpcmCommentText
 					}
 				</p>
+				@if (!comment.CpcmUser.CpcmIsDeleted && !comment.CpcmUser.CpcmUserBanned && !comment.CpcmIsDeleted && !comment.CpcmCommentBanned)
+				{
+					<div class="row row-cols-1 ps-2 pb-1 @(comment.CpcmImages.Count > 1 ? "row-cols-md-2 row-cols-lg-2" : "") g-2">
+						@foreach (var image in comment.CpcmImages)
+						{
+							<div class="col block-image">
+								<img src="@Url.Content(@image.CpcmImagePath)" class="rounded card-img-top object-fit-cover h-100 mt-0" alt="Изображение">
+						</div>
+					}
+				</div>
+				}
 			</div>
 			<div class="ms-auto mb-auto me-1 d-flex" style="flex-direction: column;">
 				@if (User.Identity.IsAuthenticated && comment.CpcmUser.CpcmUserId.ToString() == User.FindAll(x => x.Type == "CpcmUserId").FirstOrDefault().Value)
@@ -114,16 +125,6 @@
 					}
 				}
 			</div>
-			<div class="row row-cols-1 ps-2 pb-1 @(comment.CpcmImages.Count > 1 ? "row-cols-md-2 row-cols-lg-2" : "") g-2">
-
-				@foreach (var image in comment.CpcmImages)
-				{
-					<div class="col block-image">
-						<img src="@Url.Content(@image.CpcmImagePath)" class="rounded card-img-top object-fit-cover h-100 mt-0" alt="Изображение">
-					</div>
-				}
-
-			</div>
 		</div>
 		@if (comment.InverseCpcmCommentFatherNavigation?.Count != 0)
 		{
@@ -143,13 +144,13 @@
 							<input name="CpcmPostId" value="@comment.CpcmPost.CpcmPostId" hidden />
 							<textarea name="CpcmCommentText" type="text" class="form-control comment-text" id="commentText" rows="1" required></textarea>
 							<div class="d-flex align-items-center btn btn-light border-top border-bottom">
-								<label class="paperclip-label" for="fileInput">
+								<label class="paperclip-label" for="fileInput-@comment.CpcmCommentId">
 									<img class="paperclip-icon" src="~/images/paperclip.svg" />
 								</label>
 							</div>
 							<button type="submit" class="btn btn-light border" value="">Отправить</button>
 						</div>
-						<input name="Files" id="fileInput" type="file" accept="image/png, image/gif, image/jpeg" multiple hidden />
+						<input name="Files" id="fileInput-@comment.CpcmCommentId" type="file" accept="image/png, image/gif, image/jpeg" onchange="fileLoad(this)" multiple hidden />
 					</div>
 				</div>
 				<div class="row mt-auto mb-auto mt-1 mb-1 me-1">

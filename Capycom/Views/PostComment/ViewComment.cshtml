@@ -113,16 +113,20 @@
 			</div>
 			@if (Model.InverseCpcmCommentFatherNavigation?.Count != 0)
 			{
-				@if (Model.CpcmImages.Count != 0)
+				@if (!Model.CpcmUser.CpcmIsDeleted && !Model.CpcmUser.CpcmUserBanned && !Model.CpcmIsDeleted && !Model.CpcmCommentBanned)
 				{
-					<div class="row row-cols-1 @(Model.CpcmImages.Count > 1 ? "row-cols-md-2 row-cols-lg-2" : "") g-4">
-						@foreach (var image in Model.CpcmImages)
-						{
-							<div class="col m-0" style="padding: 1px;">
-								<img src="@Url.Content(@image.CpcmImagePath)" class="rounded card-img-top object-fit-cover h-100" alt="Изображение">
-							</div>
-						}
-					</div>
+					@if (Model.CpcmImages.Count != 0)
+					{
+
+						<div class="row row-cols-1 @(Model.CpcmImages.Count > 1 ? "row-cols-md-2 row-cols-lg-2" : "") g-4">
+							@foreach (var image in Model.CpcmImages)
+							{
+								<div class="col m-0" style="padding: 1px;">
+									<img src="@Url.Content(@image.CpcmImagePath)" class="rounded card-img-top object-fit-cover h-100" alt="Изображение">
+								</div>
+							}
+						</div>
+					}
 				}
 			}
 			else
@@ -141,6 +145,7 @@
 				}
 			}
 			<div class="card mt-2">
+				@* Форма для добавления комментария *@
 				<form class="commentForm" method="post" enctype="multipart/form-data">
 					@Html.AntiForgeryToken()
 					<div class="row mt-auto mb-auto mt-1 mb-1 me-1">
@@ -151,13 +156,13 @@
 								<input name="CpcmPostId" value="@Model.CpcmPost.CpcmPostId" hidden />
 								<textarea name="CpcmCommentText" type="text" class="form-control comment-text" id="commentText" rows="1" required></textarea>
 								<div class="d-flex align-items-center btn btn-light border-top border-bottom">
-									<label class="paperclip-label" for="fileInput">
+									<label class="paperclip-label" for="fileInput-@Model.CpcmCommentId">
 										<img class="paperclip-icon" src="~/images/paperclip.svg" />
 									</label>
 								</div>
 								<button type="submit" class="btn btn-light border" value="">Отправить</button>
 							</div>
-							<input name="Files" id="fileInput" type="file" accept="image/png, image/gif, image/jpeg" multiple hidden />
+							<input name="Files" id="fileInput-@Model.CpcmCommentId" type="file" accept="image/png, image/gif, image/jpeg" onchange="fileLoad(this)" multiple hidden />
 						</div>
 					</div>
 					<div class="row mt-auto mb-auto mt-1 mb-1 me-1">
