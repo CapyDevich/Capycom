@@ -1,9 +1,5 @@
 ﻿'use strict'
-
-const fileInput = document.getElementById('fileInput');
-const fileList = document.querySelector('.file-list');
-
-function cancelInput(message) {
+function cancelInput(message, fileInput, fileList) {
     fileInput.value = null;
     const listItem = document.createElement('div');
     listItem.classList.add('d-flex', 'justify-content-between', 'text-danger', 'ps-1', 'mb-1', 'rounded');
@@ -17,8 +13,7 @@ function cancelInput(message) {
     fileList.appendChild(listItem);
     listItem.appendChild(cancelBtn);
 }
-
-function succesInput() {
+function succesInput(fileInput, fileList) {
     Array.from(fileInput.files).forEach(file => {
         const listItem = document.createElement('div');
         listItem.classList.add('d-flex', 'justify-content-between', 'align-items-center');
@@ -35,7 +30,7 @@ function succesInput() {
         fileList.appendChild(listItem);
     });
 }
-function fileSizeIsMore(fileByteSize) {
+function fileSizeIsMore(fileByteSize, fileInput) {
     for (let i = 0; i < fileInput.files.length; i++) {
         if (fileInput.files[i].size > fileByteSize) {
             return false;
@@ -43,7 +38,7 @@ function fileSizeIsMore(fileByteSize) {
     }
     return true;
 }
-function checkFileTypes(fileTypesArray) {
+function checkFileTypes(fileTypesArray, fileInput) {
     for (let i = 0; i < fileInput.files.length; i++) {
         let isNeededType = false;
         for (let j = 0; j < fileTypesArray.length; j++) {
@@ -57,34 +52,63 @@ function checkFileTypes(fileTypesArray) {
     }
     return true;
 }
-fileInput.addEventListener('change', function () {
+
+const commentTextareas = document.getElementsByClassName('comment-text');
+for (let i = 0; i < commentTextareas.length; i++) {
+    commentTextareas[i].addEventListener('input', function () {
+
+        if (this.scrollHeight > 200)
+            this.style.overflow = 'scroll';
+        else {
+            this.style.overflow = 'hidden';
+            this.style.height = 'auto';
+            this.style.height = (this.scrollHeight) + 'px';
+        }
+    });
+}
+
+//const commentForms = document.getElementsByClassName('commentForm');
+//for (let j = 0; j < commentForms.length; j++) {
+//    const fileInput = commentForms[j].querySelector('#fileInput');
+//    fileInput.addEventListener('change', function (this) {
+//        const fileList = this.form.getElementsByClassName('file-list')[0];
+//        fileList.innerHTML = '';
+//        if (this.files.length + $('.existing-img').length - $('.delete-img').length <= 2) {
+//            if (checkFileTypes(['image/png', 'image/gif', 'image/jpeg'], this)) {
+//                if (fileSizeIsMore(8_388_608, this)) { // 8 Мб
+//                    succesInput(this, fileList);
+//                }
+//                else {
+//                    cancelInput('Размер файла не должен превышать 8 Мб.', this, fileList);
+//                }
+//            }
+//            else {
+//                cancelInput('Загружаемые файлы должны быть изображениями.', this, fileList);
+//            }
+//        }
+//        else {
+//            cancelInput('Можно загрузить до 2 файлов', this, fileList);
+//        }
+//    });
+//}
+
+function fileLoad(inputF) {
+    const fileList = inputF.form.getElementsByClassName('file-list')[0];
     fileList.innerHTML = '';
-    if (fileInput.files.length + $('.existing-img').length - $('.delete-img').length <= 2) {
-        if (checkFileTypes(['image/png', 'image/gif', 'image/jpeg'])) {
-            if (fileSizeIsMore(8_388_608)) { // 8 Мб
-                succesInput();
+    if (inputF.files.length + $('.existing-img').length - $('.delete-img').length <= 2) {
+        if (checkFileTypes(['image/png', 'image/gif', 'image/jpeg'], inputF)) {
+            if (fileSizeIsMore(8_388_608, inputF)) { // 8 Мб
+                succesInput(inputF, fileList);
             }
             else {
-                cancelInput('Размер файла не должен превышать 8 Мб.');
+                cancelInput('Размер файла не должен превышать 8 Мб.', inputF, fileList);
             }
         }
         else {
-            cancelInput('Загружаемые файлы должны быть изображениями.');
+            cancelInput('Загружаемые файлы должны быть изображениями.', inputF, fileList);
         }
     }
     else {
-        cancelInput('Можно загрузить до 2 файлов');
+        cancelInput('Можно загрузить до 2 файлов', inputF, fileList);
     }
-});
-
-const commentTextarea = document.getElementById('commentText');
-commentTextarea.addEventListener('input', function () {
-
-	if (this.scrollHeight > 200)
-		this.style.overflow = 'scroll';
-	else {
-		this.style.overflow = 'hidden';
-		this.style.height = 'auto';
-		this.style.height = (this.scrollHeight) + 'px';
-	}
-});
+};
