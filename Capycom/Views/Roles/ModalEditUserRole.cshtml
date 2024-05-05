@@ -1,0 +1,31 @@
+﻿<div class="modal fade" id="editRoleModal" tabindex="-1" aria-labelledby="editRoleModalLabel" aria-hidden="true">
+	<div class="modal-dialog">
+		<div class="modal-content">
+			<form id="editUserRole">
+				<div class="modal-header">
+					<h5 class="modal-title" id="editRoleModalLabel">Изменение роли пользователя</h5>
+				</div>
+				<div class="modal-body">
+					<div class="mb-3">
+						<label class="form-label">ID пользователя</label>
+						<input name="userId" class="form-control" type="text">
+					</div>
+					<label class="form-label">Роль</label>
+					<div class="flex-grow-1 input-group d-flex justify-content-between mb-3">
+						<select data-live-search="true" name="roleId" asp-items='new SelectList(Model, "CpcmRoleId", "CpcmRoleName")' class="selectpicker flex-grow-1" id="role" data-live-search="true">
+							<option value="" selected disabled>Выберите роль...</option>
+						</select>
+						<button type="button" class="btn btn-light addOptionButton" onclick="clearSelect('role')">
+							<img src="~/images/eraser-fill.svg" />
+						</button>
+					</div>
+					<div id="editRoleModalAlert" class="alert alert-danger mt-1" role="alert" style="display: none"></div>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+					<button type="submit" class="btn btn-danger">Сохранить</button>
+				</div>
+			</form>
+		</div>
+	</div>
+</div>

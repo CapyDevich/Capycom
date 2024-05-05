@@ -67,31 +67,6 @@ for (let i = 0; i < commentTextareas.length; i++) {
     });
 }
 
-//const commentForms = document.getElementsByClassName('commentForm');
-//for (let j = 0; j < commentForms.length; j++) {
-//    const fileInput = commentForms[j].querySelector('#fileInput');
-//    fileInput.addEventListener('change', function (this) {
-//        const fileList = this.form.getElementsByClassName('file-list')[0];
-//        fileList.innerHTML = '';
-//        if (this.files.length + $('.existing-img').length - $('.delete-img').length <= 2) {
-//            if (checkFileTypes(['image/png', 'image/gif', 'image/jpeg'], this)) {
-//                if (fileSizeIsMore(8_388_608, this)) { // 8 Мб
-//                    succesInput(this, fileList);
-//                }
-//                else {
-//                    cancelInput('Размер файла не должен превышать 8 Мб.', this, fileList);
-//                }
-//            }
-//            else {
-//                cancelInput('Загружаемые файлы должны быть изображениями.', this, fileList);
-//            }
-//        }
-//        else {
-//            cancelInput('Можно загрузить до 2 файлов', this, fileList);
-//        }
-//    });
-//}
-
 function fileLoad(inputF) {
     const fileList = inputF.form.getElementsByClassName('file-list')[0];
     fileList.innerHTML = '';
