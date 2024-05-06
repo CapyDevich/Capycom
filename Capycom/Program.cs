@@ -83,6 +83,7 @@ namespace Capycom
 			builder.Services.AddMvc(options =>
 			{
 				options.Filters.Add(typeof(AuthFilter)); // Добавляем фильтр аутентификации
+				options.Filters.Add(typeof(CoockiesCheckerFilter)); // Добавляем фильтр кукисов
 				//options.Filters.Add(typeof(UpdateSessionFilter)); // Добавляем фильтр сессии
 			});
 
