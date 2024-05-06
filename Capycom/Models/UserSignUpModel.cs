@@ -84,14 +84,14 @@ namespace Capycom.Models
         [Display(Name = "Моя фамилия")]
         [Required(ErrorMessage = "Укажите вашу фамилию")]
         [WordCount(1, ErrorMessage = "Фамилия не может состоять из более чем 1 слова")]
-		[MaxLength(30, ErrorMessage = "Имя не может быть состоять из более чем 30 символов")]
-		[RegularExpression(@"^[a-zA-Z0-9_\-а-яА-ЯёЁ]*$", ErrorMessage = "Имя может содержать только буквы (латиницу и кириллицу), цифры, подчеркивания и дефисы.")]
+		[MaxLength(30, ErrorMessage = "Фамилия не может быть состоять из более чем 30 символов")]
+		[RegularExpression(@"^[a-zA-Z0-9_\-а-яА-ЯёЁ]*$", ErrorMessage = "Фамилия может содержать только буквы (латиницу и кириллицу), цифры, подчеркивания и дефисы.")]
 		public string CpcmUserSecondName { get; set; } = null!;
 
         [Display(Name = "Моё отчество")]
         [WordCount(1, ErrorMessage = "Отчество не может состоять из более чем 1 слова")]
-		[MaxLength(30, ErrorMessage = "Имя не может быть состоять из более чем 30 символов")]
-		[RegularExpression(@"^[a-zA-Z0-9_\-а-яА-ЯёЁ]*$", ErrorMessage = "Имя может содержать только буквы (латиницу и кириллицу), цифры, подчеркивания и дефисы.")]
+		[MaxLength(30, ErrorMessage = "Отчество не может быть состоять из более чем 30 символов")]
+		[RegularExpression(@"^[a-zA-Z0-9_\-а-яА-ЯёЁ]*$", ErrorMessage = "Отчество может содержать только буквы (латиницу и кириллицу), цифры, подчеркивания и дефисы.")]
 		public string? CpcmUserAdditionalName { get; set; }
 
         public IFormFile? CpcmUserImage { get; set; }
