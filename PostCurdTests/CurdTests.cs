@@ -684,7 +684,7 @@ namespace PostCurdTests
 		}
 
 		[Fact]
-		public async Task BanUnbanPost_TryBanPostWithRole_ExpectStatusCode403()
+		public async Task BanUnbanPost_TryBanPostWithRole_ExpectStatusCode200()
 		{
 			//Arrange
 			var post = posts[1];
