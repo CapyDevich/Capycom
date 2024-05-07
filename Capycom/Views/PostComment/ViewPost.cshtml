@@ -75,11 +75,14 @@
 							<a class="edit-post-button" asp-controller="User" asp-action="EditPost" asp-route-postGuid="@Model.Post.CpcmPostId" style='display: @(Model.Post.CpcmPostBanned ? "none" : "")'>
 								<img src="~/images/pencil-square.svg" />
 							</a>
-							<a style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#confirmDeleteModalPost" onclick="askDelete('@Model.Post.CpcmPostId')">
-								<svg class="text-danger" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash3" viewBox="0 0 16 16">
-									<path d="M6.5 1h3a.5.5 0 0 1 .5.5v1H6v-1a.5.5 0 0 1 .5-.5M11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3A1.5 1.5 0 0 0 5 1.5v1H1.5a.5.5 0 0 0 0 1h.538l.853 10.66A2 2 0 0 0 4.885 16h6.23a2 2 0 0 0 1.994-1.84l.853-10.66h.538a.5.5 0 0 0 0-1zm1.958 1-.846 10.58a1 1 0 0 1-.997.92h-6.23a1 1 0 0 1-.997-.92L3.042 3.5zm-7.487 1a.5.5 0 0 1 .528.47l.5 8.5a.5.5 0 0 1-.998.06L5 5.03a.5.5 0 0 1 .47-.53Zm5.058 0a.5.5 0 0 1 .47.53l-.5 8.5a.5.5 0 1 1-.998-.06l.5-8.5a.5.5 0 0 1 .528-.47M8 4.5a.5.5 0 0 1 .5.5v8.5a.5.5 0 0 1-1 0V5a.5.5 0 0 1 .5-.5" />
-								</svg>
-							</a>
+							@if (Model.Post.CpcmPostPublishedDate + TimeSpan.FromMinutes(int.Parse(Context.Request.Cookies["TimeZone"])) <= DateTime.UtcNow)
+							{
+								<a style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#confirmDeleteModalPost" onclick="askDelete('@Model.Post.CpcmPostId')">
+									<svg class="text-danger" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash3" viewBox="0 0 16 16">
+										<path d="M6.5 1h3a.5.5 0 0 1 .5.5v1H6v-1a.5.5 0 0 1 .5-.5M11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3A1.5 1.5 0 0 0 5 1.5v1H1.5a.5.5 0 0 0 0 1h.538l.853 10.66A2 2 0 0 0 4.885 16h6.23a2 2 0 0 0 1.994-1.84l.853-10.66h.538a.5.5 0 0 0 0-1zm1.958 1-.846 10.58a1 1 0 0 1-.997.92h-6.23a1 1 0 0 1-.997-.92L3.042 3.5zm-7.487 1a.5.5 0 0 1 .528.47l.5 8.5a.5.5 0 0 1-.998.06L5 5.03a.5.5 0 0 1 .47-.53Zm5.058 0a.5.5 0 0 1 .47.53l-.5 8.5a.5.5 0 1 1-.998-.06l.5-8.5a.5.5 0 0 1 .528-.47M8 4.5a.5.5 0 0 1 .5.5v8.5a.5.5 0 0 1-1 0V5a.5.5 0 0 1 .5-.5" />
+									</svg>
+								</a>
+							}
 						</div>
 					}
 					@if (User.FindFirst(c => c.Type == "CpcmCanBanUsersPost").Value == "True")
@@ -182,226 +185,232 @@
 						}
 					}
 				</div>
-				<div class="d-grid d-flex mt-1 justify-content-md-start">
-					<button class="btn btn-outline-primary me-2 button-bottom" onclick="likePost(this, '@Model.Post.CpcmPostId');">
-						@if (@Model.Post.IsLiked)
-						{
-							<img src="~/images/tangerine_colored.svg" />
-						}
-						else
-						{
-							<img src="~/images/tangerine_black.svg" />
-						}
-						<span class="likes-count-show"></span>
-						<span class="likes-count" style="display: none">@Model.LikesCount</span>
-					</button>
-					@if (User.Identity.IsAuthenticated && Model.UserOwner.CpcmUserId.ToString() != User.FindAll(x => x.Type == "CpcmUserId").FirstOrDefault().Value)
-					{
-						<button class="btn btn-outline-primary me-2 button-bottom" data-bs-toggle="modal" data-bs-target="#repostModal" onclick="repost(this, '@Model.Post.CpcmPostId');">
-							<img src="~/images/repost.svg" />
-							<span class="repost-count-show"></span>
-							<span class="repost-count" style="display: none">@Model.RepostsCount</span>
-						</button>
-					}
-				</div>
-
-			</div>
-			@if (User.Identity.IsAuthenticated)
-			{
-				<div class="card mt-2">
-					<form class="commentForm" method="post" enctype="multipart/form-data">
-						@Html.AntiForgeryToken()
-						<div class="row mt-auto mb-auto mt-1 mb-1 me-1">
-							<div class="col d-flex align-items-center">
-								<img src='@Url.Content(Context.Session.GetString("ProfileImage"))' class="rounded-circle m-2 user-icon" style="object-fit: cover;">
-								<div class="input-group container-fluid ps-0 pe-0">
-									<input name="CpcmPostId" value="@Model.Post.CpcmPostId" hidden />
-									<textarea name="CpcmCommentText" type="text" class="form-control comment-text" id="commentText" rows="1" required></textarea>
-									<div class="d-flex align-items-center btn btn-light border-top border-bottom">
-										<label class="paperclip-label" for="fileInput">
-											<img class="paperclip-icon" src="~/images/paperclip.svg" />
-										</label>
-									</div>
-									<button type="submit" class="btn btn-light border" value="">Отправить</button>
-								</div>
-								<input name="Files" id="fileInput" type="file" accept="image/png, image/gif, image/jpeg" onchange="fileLoad(this)" multiple hidden />
-							</div>
-						</div>
-						<div class="row mt-auto mb-auto mt-1 mb-1 me-1">
-							<div class="file-list ms-1"></div>
-						</div>
-					</form>
-				</div>
-			}
-			<div class="comments-body">
-				@foreach (var comment in Model.TopLevelComments)
+				@if (Model.Post.CpcmPostPublishedDate + TimeSpan.FromMinutes(int.Parse(Context.Request.Cookies["TimeZone"])) <= DateTime.UtcNow)
 				{
-					<div class="card mt-2 comment" id="@comment.CpcmCommentId">
-						<div class="d-flex">
-
-							@if (comment.CpcmUser.CpcmUserNickName != null)
+					<div class="d-grid d-flex mt-1 justify-content-md-start">
+						<button class="btn btn-outline-primary me-2 button-bottom" onclick="likePost(this, '@Model.Post.CpcmPostId');">
+							@if (@Model.Post.IsLiked)
 							{
-								<a asp-controller="User" asp-action="Index" asp-route-Nickname="@comment.CpcmUser.CpcmUserNickName">
-									@if (comment.CpcmUser.CpcmIsDeleted || comment.CpcmUser.CpcmUserBanned)
-									{
-										<img src="\images\default-banned.png"
-											 class="rounded-circle mt-2 ms-2 me-2 user-icon">
-									}
-									else if (comment.CpcmUser.CpcmUserImagePath != null && comment.CpcmUser.CpcmUserImagePath != string.Empty)
-									{
-										<img src="@Url.Content(@comment.CpcmUser?.CpcmUserImagePath)"
-											 class="rounded-circle mt-2 ms-2 me-2 user-icon">
-									}
-									else
-									{
-										<img src="\images\default.png"
-											 class="rounded-circle mt-2 ms-2 me-2 user-icon">
-									}
-								</a>
+								<img src="~/images/tangerine_colored.svg" />
 							}
 							else
 							{
-								<a asp-controller="User" asp-action="Index" asp-route-UserId="@comment.CpcmUser.CpcmUserId">
-									@if (comment.CpcmUser.CpcmIsDeleted || comment.CpcmUser.CpcmUserBanned)
-									{
-										<img src="\images\default-banned.png"
-											 class="rounded-circle mt-2 ms-2 me-2 user-icon">
-									}
-									else if (comment.CpcmUser.CpcmUserImagePath != null && comment.CpcmUser.CpcmUserImagePath != string.Empty)
-									{
-										<img src="@Url.Content(@comment.CpcmUser?.CpcmUserImagePath)"
-											 class="rounded-circle mt-2 ms-2 me-2 user-icon">
-									}
-									else
-									{
-										<img src="\images\default.png"
-											 class="rounded-circle mt-2 ms-2 me-2 user-icon">
-									}
-								</a>
+								<img src="~/images/tangerine_black.svg" />
 							}
-							<div class="p-1">
-								@if (@comment.CpcmUser?.CpcmUserNickName != null)
-								{
-									<div>
-										<a class="mt-0 mb-0 link-dark nickname" asp-controller="User" asp-action="Index" asp-route-Nickname="@comment.CpcmUser.CpcmUserNickName">
-											@comment.CpcmUser?.CpcmUserFirstName @comment.CpcmUser?.CpcmUserSecondName @comment.CpcmUser?.CpcmUserAdditionalName
-										</a>
-									</div>
-								}
-								else
-								{
-									<div>
-										<a class="mt-0 mb-0 link-dark nickname" asp-controller="User" asp-action="Index" asp-route-UserId="@comment.CpcmUser.CpcmUserId" class="mt-0 mb-0">
-											@comment.CpcmUser?.CpcmUserFirstName @comment.CpcmUser?.CpcmUserSecondName @comment.CpcmUser?.CpcmUserAdditionalName
-										</a>
-									</div>
-								}
-								<a asp-controller="PostComment" asp-action="ViewComment" asp-route-commentId="@comment.CpcmCommentId" class="text-muted">@comment.CpcmCommentCreationDate.ToString("dd.MM.yyyy hh:mm")</a>
-								<p class="mb-1 comment-text">
-									@if (comment.CpcmUser.CpcmIsDeleted)
-									{
-										<i class="m-1 pb-1">Аккаунт автора комментария был удалён :(</i>
-									}
-									else if (comment.CpcmUser.CpcmUserBanned)
-									{
-										<i class="m-1 pb-1">Автор комментария был забаннен :(</i>
-									}
-									else if (comment.CpcmIsDeleted)
-									{
-										<i class="m-1 pb-1">Комментарий удалён :(</i>
-									}
-									else if (comment.CpcmCommentBanned)
-									{
-										<i class="m-1 pb-1">Комментарий забаннен :(</i>
-									}
-									else
-									{
-										@comment.CpcmCommentText
-									}
-								</p>
-							</div>
-							<div class="ms-auto mb-auto me-1 d-flex" style="flex-direction: column;">
-								@if (User.Identity.IsAuthenticated && comment.CpcmUser.CpcmUserId.ToString() == User.FindAll(x => x.Type == "CpcmUserId").FirstOrDefault().Value)
-								{
-									<a style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#confirmDeleteModal" onclick="askCommentDelete('@comment.CpcmCommentId')">
-										<svg class="text-danger" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash3" viewBox="0 0 16 16">
-											<path d="M6.5 1h3a.5.5 0 0 1 .5.5v1H6v-1a.5.5 0 0 1 .5-.5M11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3A1.5 1.5 0 0 0 5 1.5v1H1.5a.5.5 0 0 0 0 1h.538l.853 10.66A2 2 0 0 0 4.885 16h6.23a2 2 0 0 0 1.994-1.84l.853-10.66h.538a.5.5 0 0 0 0-1zm1.958 1-.846 10.58a1 1 0 0 1-.997.92h-6.23a1 1 0 0 1-.997-.92L3.042 3.5zm-7.487 1a.5.5 0 0 1 .528.47l.5 8.5a.5.5 0 0 1-.998.06L5 5.03a.5.5 0 0 1 .47-.53Zm5.058 0a.5.5 0 0 1 .47.53l-.5 8.5a.5.5 0 1 1-.998-.06l.5-8.5a.5.5 0 0 1 .528-.47M8 4.5a.5.5 0 0 1 .5.5v8.5a.5.5 0 0 1-1 0V5a.5.5 0 0 1 .5-.5" />
-										</svg>
-									</a>
-								}
-								@if (User.Identity.IsAuthenticated && User.FindFirst(c => c.Type == "CpcmCanBanUsersComment").Value == "True")
-								{
-									if (!comment.CpcmCommentBanned)
-									{
-										<a class="ban-icon-link" onclick="banComment('/PostComment/BanUnbanComment', '@comment.CpcmCommentId')">
-											<svg class="ban-icon" style="color: #dc3545" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-ban" viewBox="0 0 16 16">
-												<path d="M15 8a6.97 6.97 0 0 0-1.71-4.584l-9.874 9.875A7 7 0 0 0 15 8M2.71 12.584l9.874-9.875a7 7 0 0 0-9.874 9.874ZM16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0" />
-											</svg>
-										</a>
-									}
-									else
-									{
-										<a class="ban-icon-link" onclick="banComment('/PostComment/BanUnbanComment', '@comment.CpcmCommentId')">
-											<svg class="ban-icon" style="color: #198754" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-ban" viewBox="0 0 16 16">
-												<path d="M15 8a6.97 6.97 0 0 0-1.71-4.584l-9.874 9.875A7 7 0 0 0 15 8M2.71 12.584l9.874-9.875a7 7 0 0 0-9.874 9.874ZM16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0" />
-											</svg>
-										</a>
-									}
-								}
-							</div>
-						</div>
-						@if (!comment.CpcmUser.CpcmIsDeleted && !comment.CpcmUser.CpcmUserBanned && !comment.CpcmIsDeleted && !comment.CpcmCommentBanned)
+							<span class="likes-count-show"></span>
+							<span class="likes-count" style="display: none">@Model.LikesCount</span>
+						</button>
+						@if (User.Identity.IsAuthenticated && Model.UserOwner.CpcmUserId.ToString() != User.FindAll(x => x.Type == "CpcmUserId").FirstOrDefault().Value)
 						{
-							<div class="row row-cols-1 ps-2 pb-1 @(comment.CpcmImages.Count > 1 ? "row-cols-md-2 row-cols-lg-2" : "") g-2">
-								@foreach (var image in comment.CpcmImages)
-								{
-									<div class="col block-image">
-										<img src="@Url.Content(@image.CpcmImagePath)" class="rounded card-img-top object-fit-cover h-100 mt-0" alt="Изображение">
-									</div>
-								}
-							</div>
+							<button class="btn btn-outline-primary me-2 button-bottom" data-bs-toggle="modal" data-bs-target="#repostModal" onclick="repost(this, '@Model.Post.CpcmPostId');">
+								<img src="~/images/repost.svg" />
+								<span class="repost-count-show"></span>
+								<span class="repost-count" style="display: none">@Model.RepostsCount</span>
+							</button>
 						}
-						@if (comment.InverseCpcmCommentFatherNavigation?.Count != 0)
-						{
-							<div class="m-1 mt-0">
-								@await Html.PartialAsync("Comment", comment.InverseCpcmCommentFatherNavigation)
-							</div>
-						}
-						<a class="me-auto text-muted mb-1 ms-1" onclick="answerComment('@comment.CpcmCommentId', this)" style="cursor:pointer;">Ответить</a>
-						<div class="card border-0 m-1 commentCard" style="display:none;">
-							@* Форма для добавления комментария *@
-							<form class="commentForm" method="post" enctype="multipart/form-data">
-								@Html.AntiForgeryToken()
-								<div class="row mt-auto mb-auto mt-1 mb-1 me-1">
-									<div class="col d-flex align-items-center">
-										<img src='@Url.Content(Context.Session.GetString("ProfileImage"))' class="rounded-circle m-2 user-icon" style="object-fit: cover;">
-										<div class="input-group container-fluid ps-0 pe-0">
-											<input name="CpcmCommentFather" value="@comment.CpcmCommentId" hidden />
-											<input name="CpcmPostId" value="@comment.CpcmPost.CpcmPostId" hidden />
-											<textarea name="CpcmCommentText" type="text" class="form-control comment-text" id="commentText" rows="1" required></textarea>
-											<div class="d-flex align-items-center btn btn-light border-top border-bottom">
-												<label class="paperclip-label" for="fileInput-@comment.CpcmCommentId">
-													<img class="paperclip-icon" src="~/images/paperclip.svg" />
-												</label>
-											</div>
-											<button type="submit" class="btn btn-light border" value="">Отправить</button>
-										</div>
-										<input name="Files" id="fileInput-@comment.CpcmCommentId" type="file" accept="image/png, image/gif, image/jpeg" onchange="fileLoad(this)" multiple hidden />
-									</div>
-								</div>
-								<div class="row mt-auto mb-auto mt-1 mb-1 me-1">
-									<div class="file-list ms-1"></div>
-								</div>
-							</form>
-						</div>
 					</div>
 				}
 			</div>
-			@if (Model.TopLevelComments.Count >= 10)
+			@if (Model.Post.CpcmPostPublishedDate + TimeSpan.FromMinutes(int.Parse(Context.Request.Cookies["TimeZone"])) <= DateTime.UtcNow)
 			{
-				<div class="d-flex justify-content-center">
-					<a class="text-muted mt-1" onclick="loadComments(this)" style="cursor:pointer;">Загрузить ещё</a>
+				@if (User.Identity.IsAuthenticated)
+				{
+					<div class="card mt-2">
+						<form class="commentForm" method="post" enctype="multipart/form-data">
+							@Html.AntiForgeryToken()
+							<div class="row mt-auto mb-auto mt-1 mb-1 me-1">
+								<div class="col d-flex align-items-center">
+									<img src='@Url.Content(Context.Session.GetString("ProfileImage"))' class="rounded-circle m-2 user-icon" style="object-fit: cover;">
+									<div class="input-group container-fluid ps-0 pe-0">
+										<input name="CpcmPostId" value="@Model.Post.CpcmPostId" hidden />
+										<textarea name="CpcmCommentText" type="text" class="form-control comment-text" id="commentText" rows="1" required></textarea>
+										<div class="d-flex align-items-center btn btn-light border-top border-bottom">
+											<label class="paperclip-label" for="fileInput">
+												<img class="paperclip-icon" src="~/images/paperclip.svg" />
+											</label>
+										</div>
+										<button type="submit" class="btn btn-light border" value="">Отправить</button>
+									</div>
+									<input name="Files" id="fileInput" type="file" accept="image/png, image/gif, image/jpeg" onchange="fileLoad(this)" multiple hidden />
+								</div>
+							</div>
+							<div class="row mt-auto mb-auto mt-1 mb-1 me-1">
+								<div class="file-list ms-1"></div>
+							</div>
+						</form>
+					</div>
+				}
+
+				<div class="comments-body">
+					@foreach (var comment in Model.TopLevelComments)
+					{
+						<div class="card mt-2 comment" id="@comment.CpcmCommentId">
+							<div class="d-flex">
+
+								@if (comment.CpcmUser.CpcmUserNickName != null)
+								{
+									<a asp-controller="User" asp-action="Index" asp-route-Nickname="@comment.CpcmUser.CpcmUserNickName">
+										@if (comment.CpcmUser.CpcmIsDeleted || comment.CpcmUser.CpcmUserBanned)
+										{
+											<img src="\images\default-banned.png"
+												 class="rounded-circle mt-2 ms-2 me-2 user-icon">
+										}
+										else if (comment.CpcmUser.CpcmUserImagePath != null && comment.CpcmUser.CpcmUserImagePath != string.Empty)
+										{
+											<img src="@Url.Content(@comment.CpcmUser?.CpcmUserImagePath)"
+												 class="rounded-circle mt-2 ms-2 me-2 user-icon">
+										}
+										else
+										{
+											<img src="\images\default.png"
+												 class="rounded-circle mt-2 ms-2 me-2 user-icon">
+										}
+									</a>
+								}
+								else
+								{
+									<a asp-controller="User" asp-action="Index" asp-route-UserId="@comment.CpcmUser.CpcmUserId">
+										@if (comment.CpcmUser.CpcmIsDeleted || comment.CpcmUser.CpcmUserBanned)
+										{
+											<img src="\images\default-banned.png"
+												 class="rounded-circle mt-2 ms-2 me-2 user-icon">
+										}
+										else if (comment.CpcmUser.CpcmUserImagePath != null && comment.CpcmUser.CpcmUserImagePath != string.Empty)
+										{
+											<img src="@Url.Content(@comment.CpcmUser?.CpcmUserImagePath)"
+												 class="rounded-circle mt-2 ms-2 me-2 user-icon">
+										}
+										else
+										{
+											<img src="\images\default.png"
+												 class="rounded-circle mt-2 ms-2 me-2 user-icon">
+										}
+									</a>
+								}
+								<div class="p-1">
+									@if (@comment.CpcmUser?.CpcmUserNickName != null)
+									{
+										<div>
+											<a class="mt-0 mb-0 link-dark nickname" asp-controller="User" asp-action="Index" asp-route-Nickname="@comment.CpcmUser.CpcmUserNickName">
+												@comment.CpcmUser?.CpcmUserFirstName @comment.CpcmUser?.CpcmUserSecondName @comment.CpcmUser?.CpcmUserAdditionalName
+											</a>
+										</div>
+									}
+									else
+									{
+										<div>
+											<a class="mt-0 mb-0 link-dark nickname" asp-controller="User" asp-action="Index" asp-route-UserId="@comment.CpcmUser.CpcmUserId" class="mt-0 mb-0">
+												@comment.CpcmUser?.CpcmUserFirstName @comment.CpcmUser?.CpcmUserSecondName @comment.CpcmUser?.CpcmUserAdditionalName
+											</a>
+										</div>
+									}
+									<a asp-controller="PostComment" asp-action="ViewComment" asp-route-commentId="@comment.CpcmCommentId" class="text-muted">@comment.CpcmCommentCreationDate.ToString("dd.MM.yyyy hh:mm")</a>
+									<p class="mb-1 comment-text">
+										@if (comment.CpcmUser.CpcmIsDeleted)
+										{
+											<i class="m-1 pb-1">Аккаунт автора комментария был удалён :(</i>
+										}
+										else if (comment.CpcmUser.CpcmUserBanned)
+										{
+											<i class="m-1 pb-1">Автор комментария был забаннен :(</i>
+										}
+										else if (comment.CpcmIsDeleted)
+										{
+											<i class="m-1 pb-1">Комментарий удалён :(</i>
+										}
+										else if (comment.CpcmCommentBanned)
+										{
+											<i class="m-1 pb-1">Комментарий забаннен :(</i>
+										}
+										else
+										{
+											@comment.CpcmCommentText
+										}
+									</p>
+								</div>
+								<div class="ms-auto mb-auto me-1 d-flex" style="flex-direction: column;">
+									@if (User.Identity.IsAuthenticated && comment.CpcmUser.CpcmUserId.ToString() == User.FindAll(x => x.Type == "CpcmUserId").FirstOrDefault().Value)
+									{
+										<a style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#confirmDeleteModal" onclick="askCommentDelete('@comment.CpcmCommentId')">
+											<svg class="text-danger" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash3" viewBox="0 0 16 16">
+												<path d="M6.5 1h3a.5.5 0 0 1 .5.5v1H6v-1a.5.5 0 0 1 .5-.5M11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3A1.5 1.5 0 0 0 5 1.5v1H1.5a.5.5 0 0 0 0 1h.538l.853 10.66A2 2 0 0 0 4.885 16h6.23a2 2 0 0 0 1.994-1.84l.853-10.66h.538a.5.5 0 0 0 0-1zm1.958 1-.846 10.58a1 1 0 0 1-.997.92h-6.23a1 1 0 0 1-.997-.92L3.042 3.5zm-7.487 1a.5.5 0 0 1 .528.47l.5 8.5a.5.5 0 0 1-.998.06L5 5.03a.5.5 0 0 1 .47-.53Zm5.058 0a.5.5 0 0 1 .47.53l-.5 8.5a.5.5 0 1 1-.998-.06l.5-8.5a.5.5 0 0 1 .528-.47M8 4.5a.5.5 0 0 1 .5.5v8.5a.5.5 0 0 1-1 0V5a.5.5 0 0 1 .5-.5" />
+											</svg>
+										</a>
+									}
+									@if (User.Identity.IsAuthenticated && User.FindFirst(c => c.Type == "CpcmCanBanUsersComment").Value == "True")
+									{
+										if (!comment.CpcmCommentBanned)
+										{
+											<a class="ban-icon-link" onclick="banComment('/PostComment/BanUnbanComment', '@comment.CpcmCommentId')">
+												<svg class="ban-icon" style="color: #dc3545" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-ban" viewBox="0 0 16 16">
+													<path d="M15 8a6.97 6.97 0 0 0-1.71-4.584l-9.874 9.875A7 7 0 0 0 15 8M2.71 12.584l9.874-9.875a7 7 0 0 0-9.874 9.874ZM16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0" />
+												</svg>
+											</a>
+										}
+										else
+										{
+											<a class="ban-icon-link" onclick="banComment('/PostComment/BanUnbanComment', '@comment.CpcmCommentId')">
+												<svg class="ban-icon" style="color: #198754" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-ban" viewBox="0 0 16 16">
+													<path d="M15 8a6.97 6.97 0 0 0-1.71-4.584l-9.874 9.875A7 7 0 0 0 15 8M2.71 12.584l9.874-9.875a7 7 0 0 0-9.874 9.874ZM16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0" />
+												</svg>
+											</a>
+										}
+									}
+								</div>
+							</div>
+							@if (!comment.CpcmUser.CpcmIsDeleted && !comment.CpcmUser.CpcmUserBanned && !comment.CpcmIsDeleted && !comment.CpcmCommentBanned)
+							{
+								<div class="row row-cols-1 ps-2 pb-1 @(comment.CpcmImages.Count > 1 ? "row-cols-md-2 row-cols-lg-2" : "") g-2">
+									@foreach (var image in comment.CpcmImages)
+									{
+										<div class="col block-image">
+											<img src="@Url.Content(@image.CpcmImagePath)" class="rounded card-img-top object-fit-cover h-100 mt-0" alt="Изображение">
+										</div>
+									}
+								</div>
+							}
+							@if (comment.InverseCpcmCommentFatherNavigation?.Count != 0)
+							{
+								<div class="m-1 mt-0">
+									@await Html.PartialAsync("Comment", comment.InverseCpcmCommentFatherNavigation)
+								</div>
+							}
+							<a class="me-auto text-muted mb-1 ms-1" onclick="answerComment('@comment.CpcmCommentId', this)" style="cursor:pointer;">Ответить</a>
+							<div class="card border-0 m-1 commentCard" style="display:none;">
+								@* Форма для добавления комментария *@
+								<form class="commentForm" method="post" enctype="multipart/form-data">
+									@Html.AntiForgeryToken()
+									<div class="row mt-auto mb-auto mt-1 mb-1 me-1">
+										<div class="col d-flex align-items-center">
+											<img src='@Url.Content(Context.Session.GetString("ProfileImage"))' class="rounded-circle m-2 user-icon" style="object-fit: cover;">
+											<div class="input-group container-fluid ps-0 pe-0">
+												<input name="CpcmCommentFather" value="@comment.CpcmCommentId" hidden />
+												<input name="CpcmPostId" value="@comment.CpcmPost.CpcmPostId" hidden />
+												<textarea name="CpcmCommentText" type="text" class="form-control comment-text" id="commentText" rows="1" required></textarea>
+												<div class="d-flex align-items-center btn btn-light border-top border-bottom">
+													<label class="paperclip-label" for="fileInput-@comment.CpcmCommentId">
+														<img class="paperclip-icon" src="~/images/paperclip.svg" />
+													</label>
+												</div>
+												<button type="submit" class="btn btn-light border" value="">Отправить</button>
+											</div>
+											<input name="Files" id="fileInput-@comment.CpcmCommentId" type="file" accept="image/png, image/gif, image/jpeg" onchange="fileLoad(this)" multiple hidden />
+										</div>
+									</div>
+									<div class="row mt-auto mb-auto mt-1 mb-1 me-1">
+										<div class="file-list ms-1"></div>
+									</div>
+								</form>
+							</div>
+						</div>
+					}
 				</div>
+				@if (Model.TopLevelComments.Count >= 10)
+				{
+					<div class="d-flex justify-content-center">
+						<a class="text-muted mt-1" onclick="loadComments(this)" style="cursor:pointer;">Загрузить ещё</a>
+					</div>
+				}
 			}
 		}
 	</div>

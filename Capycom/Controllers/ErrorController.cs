@@ -43,6 +43,14 @@ namespace Capycom.Controllers
 			return View("UserError");
 			return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
 		}
+		public async Task<IActionResult> ErrorWM(string message)
+		{
+			var exceptionHandlerPathFeature = HttpContext.Features.Get<IExceptionHandlerPathFeature>();
+			//Log.Warning(exceptionHandlerPathFeature.Error, "Неперехваченное исключение произошло. {@0}", exceptionHandlerPathFeature);
+			ViewData["Message"] = message;
+			return View("UserError");
+			return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+		}
 
 	}
 }

@@ -41,7 +41,7 @@
 				}
 			}
 		</div>
-		@if (@Model.NewPublishDate > DateTime.Now)
+		@if (Model.NewPublishDate + TimeSpan.FromMinutes(int.Parse(Context.Request.Cookies["TimeZone"])) > DateTime.UtcNow)
 		{
 			<div class="mb-3">
 				<label asp-for="NewPublishDate" class="form-label">Дата публикации</label>
@@ -50,7 +50,7 @@
 			</div>
 		}
 		<div class="ps-1 pe-1">
-			@if (@Model.NewPublishDate <= DateTime.Now)
+			@if (Model.NewPublishDate + TimeSpan.FromMinutes(int.Parse(Context.Request.Cookies["TimeZone"])) <= DateTime.UtcNow)
 			{
 				<button type="submit" id="postButton" class="btn btn-primary col-12" value="CreatePostP">Опубликовать</button>
 			}

@@ -83,7 +83,8 @@ namespace Capycom
 			builder.Services.AddMvc(options =>
 			{
 				options.Filters.Add(typeof(AuthFilter)); // Добавляем фильтр аутентификации
-				//options.Filters.Add(typeof(UpdateSessionFilter)); // Добавляем фильтр сессии
+				options.Filters.Add(typeof(CoockiesCheckerFilter)); // Добавляем фильтр кукисов
+				options.Filters.Add(typeof(UpdateSessionFilter)); // Добавляем фильтр сессии
 			});
 
 
@@ -138,7 +139,7 @@ namespace Capycom
 			app.UseRateLimiter();
 			app.UseSession();
 
-			app.UseMiddleware<UpdateSessionMiddleware>();
+			//app.UseMiddleware<UpdateSessionMiddleware>();
 
 			app.MapControllerRoute(
                 name: "default",
