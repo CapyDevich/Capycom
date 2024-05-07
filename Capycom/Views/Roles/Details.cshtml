@@ -1,0 +1,105 @@
+﻿@model Capycom.CpcmRole
+
+@{
+    ViewData["Title"] = "Детали";
+}
+
+<h1 class="text-center">@ViewData["Title"]</h1>
+
+<div>
+    <h4>CpcmRole</h4>
+    <hr />
+    <dl class="row">
+        <dt class = "col-lg-3">
+            @Html.DisplayNameFor(model => model.CpcmRoleName)
+        </dt>
+        <dd class = "col-lg-9">
+            @Html.DisplayFor(model => model.CpcmRoleName)
+        </dd>
+
+        <dt class = "col-lg-3">
+            @Html.DisplayNameFor(model => model.CpcmCanEditUsers)
+        </dt>
+        <dd class = "col-lg-9">
+            @Html.DisplayFor(model => model.CpcmCanEditUsers)
+        </dd>
+
+        <dt class = "col-lg-3">
+            @Html.DisplayNameFor(model => model.CpcmCanEditGroups)
+        </dt>
+        <dd class = "col-lg-9">
+            @Html.DisplayFor(model => model.CpcmCanEditGroups)
+        </dd>
+
+        <dt class = "col-lg-3">
+            @Html.DisplayNameFor(model => model.CpcmCanEditRoles)
+        </dt>
+        <dd class = "col-lg-9">
+            @Html.DisplayFor(model => model.CpcmCanEditRoles)
+        </dd>
+
+        <dt class = "col-lg-3">
+            @Html.DisplayNameFor(model => model.CpcmCanEditGroupRoles)
+        </dt>
+        <dd class = "col-lg-9">
+            @Html.DisplayFor(model => model.CpcmCanEditGroupRoles)
+        </dd>
+
+        <dt class = "col-lg-3">
+            @Html.DisplayNameFor(model => model.CpcmCanEditUsersPost)
+        </dt>
+        <dd class = "col-lg-9">
+            @Html.DisplayFor(model => model.CpcmCanEditUsersPost)
+        </dd>
+
+        <dt class = "col-lg-3">
+            @Html.DisplayNameFor(model => model.CpcmCanEditGroupsPost)
+        </dt>
+        <dd class = "col-lg-9">
+            @Html.DisplayFor(model => model.CpcmCanEditGroupsPost)
+        </dd>
+
+        <dt class = "col-lg-3">
+            @Html.DisplayNameFor(model => model.CpcmCanBanUsers)
+        </dt>
+        <dd class = "col-lg-9">
+            @Html.DisplayFor(model => model.CpcmCanBanUsers)
+        </dd>
+
+        <dt class = "col-lg-3">
+            @Html.DisplayNameFor(model => model.CpcmCanBanUsersPost)
+        </dt>
+        <dd class = "col-lg-9">
+            @Html.DisplayFor(model => model.CpcmCanBanUsersPost)
+        </dd>
+
+        <dt class = "col-lg-3">
+            @Html.DisplayNameFor(model => model.CpcmCanBanUsersComment)
+        </dt>
+        <dd class = "col-lg-9">
+            @Html.DisplayFor(model => model.CpcmCanBanUsersComment)
+        </dd>
+
+        <dt class = "col-lg-3">
+            @Html.DisplayNameFor(model => model.CpcmCanBanGroupsPost)
+        </dt>
+        <dd class = "col-lg-9">
+            @Html.DisplayFor(model => model.CpcmCanBanGroupsPost)
+        </dd>
+
+        <dt class="col-lg-3">
+            @Html.DisplayNameFor(model => model.CpcmCanBanGroups)
+        </dt>
+        <dd class="col-lg-9">
+            @Html.DisplayFor(model => model.CpcmCanBanGroups)
+        </dd>
+    </dl>
+</div>
+<div class="row">
+    <div class="col-sm-6 m-sm-0 mb-1 p-0 pe-sm-1">
+        <a class="btn btn-outline-primary container-fluid" asp-action="Index">Назад к списку</a>
+    </div>
+    <div class="col-sm-6 p-0">
+        <a class="btn btn-outline-warning container-fluid" asp-action="Edit" asp-route-id="@Model?.CpcmRoleId">Редактировать</a>
+    </div>
+</div>

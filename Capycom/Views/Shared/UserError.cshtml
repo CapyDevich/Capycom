@@ -1,0 +1,11 @@
+﻿@{
+    ViewBag.Title = "Нам очень жаль";
+}
+
+<h1>Что-то пошло не так... @ViewData["ErrorCode"]</h1>
+<p>Наши капибары уже наняли лучших дворфов чтобы всё починить</p>
+<p>@ViewData["Message"]</p>
+@if(ViewData["id"]!=null)
+{
+    <p>Id владельца: @ViewData["id"]</p>
+}

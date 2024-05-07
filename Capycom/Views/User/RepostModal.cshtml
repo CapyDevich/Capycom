@@ -1,0 +1,25 @@
+﻿<style>
+	#repostInput {
+		resize: none;
+		overflow: hidden;
+	}
+</style>
+<div class="modal fade" id="repostModal" tabindex="-1" aria-labelledby="repostLabel" aria-hidden="true">
+	<div class="modal-dialog">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h1 class="modal-title fs-5" id="repostLabel">Поделиться постом</h1>
+				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+			</div>
+			<div class="modal-body">
+				<label for="repostInput" class="col-form-label">Текст</label>
+				<textarea name="Text" type="text" class="form-control" id="repostInput"></textarea>
+				<div id="repostAlert" class="alert alert-danger mt-1" role="alert" style="display: none"></div>
+			</div>
+			<div class="modal-footer">
+				<button type="button" id="cancelButton" class="btn btn-secondary" data-bs-dismiss="modal">Отменить</button>
+				<button type="button" class="btn btn-primary" id="repostSend">Поделиться</button>
+			</div>
+		</div>
+	</div>
+</div>

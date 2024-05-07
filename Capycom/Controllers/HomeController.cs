@@ -1,5 +1,7 @@
 using Capycom.Models;
+using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
+using Serilog;
 using System.Diagnostics;
 
 namespace Capycom.Controllers
@@ -17,11 +19,10 @@ namespace Capycom.Controllers
 
         public IActionResult Index()
         {
-            Debug.WriteLine(db.Database.CanConnect());
             return View();
         }
 
-        public IActionResult Privacy()
+        public IActionResult Manual()
         {
             return View();
         }
@@ -29,7 +30,9 @@ namespace Capycom.Controllers
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()
         {
-            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+			var exceptionHandlerPathFeature = HttpContext.Features.Get<IExceptionHandlerPathFeature>();
+			Log.Fatal(exceptionHandlerPathFeature.Error, "An unhandled exception occurred. {@0}", exceptionHandlerPathFeature);
+			return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
         }
     }
 }
