@@ -1,0 +1,27 @@
+﻿@model List<PostModel>
+@if (Model != null)
+{
+	@foreach (PostModel post in Model)
+	{
+		if (!(post.UserOwner.CpcmUserBanned && post.UserOwner.CpcmIsDeleted))
+		{
+			@await Html.PartialAsync("~/Views/User/Post.cshtml", post)
+		}
+		else if (post.UserOwner.CpcmIsDeleted)
+		{
+			<div class="card mb-2">
+				<div class="card-body">
+					<h5 class="text-center">Аккаунт пользователя удалён ;;</h5>
+				</div>
+			</div>
+		}
+		else
+		{
+			<div class="card mb-2">
+				<div class="card-body">
+					<h5 class="text-center">Пользователь был забанен советом капибар</h5>
+				</div>
+			</div>
+		}
+	}
+}

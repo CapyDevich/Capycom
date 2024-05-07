@@ -20,3 +20,21 @@ html {
 body {
   margin-bottom: 60px;
 }
+
+.user-icon {
+    width: 50px;
+    height: 50px;
+}
+
+.dropdown-button:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+    transition: background-color ease-in-out 0.1s;
+}
+a.nickname {
+    text-decoration: none;
+}
+
+a.nickname:hover {
+    text-decoration: underline;
+    transition: ease-in-out 0.2s;
+}

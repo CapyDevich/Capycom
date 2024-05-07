@@ -1,0 +1,151 @@
+﻿@model List<CpcmUser>?
+<link href="~/css/user-card.css" rel="stylesheet" />
+<form class="col-md-12 mx-auto" id="searchUser">
+	<h4 class="text-center">Фильтры поиска</h4>
+	<div class="col">
+		<label for="FirstName" class="form-label">Имя</label>
+		<input name="FirstName" type="text" class="form-control">
+	</div>
+	<div class="col">
+		<label for="SecondName" class="form-label">Фамилия</label>
+		<input name="SecondName" type="text" class="form-control">
+	</div>
+	<div class="col">
+		<label for="AdditionalName" class="form-label">Отчество</label>
+		<input name="AdditionalName" type="text" class="form-control">
+	</div>
+	<span validation-for="CpcmUserFirstName" class="text-danger"></span>
+	<span validation-for="CpcmUserSecondName" class="text-danger"></span>
+
+	<label for="CpcmUserCity" class="form-label">Город</label>
+	<div class="flex-grow-1 input-group d-flex justify-content-between mb-3">
+		<select data-live-search="true" name="CityId" class="selectpicker flex-grow-1" id="city" data-live-search="true" asp-items="ViewBag.CpcmUserCity">
+			<option value="" selected disabled>Выберите город...</option>
+		</select>
+		<button type="button" class="btn btn-light addOptionButton" onclick="clearSelect('city')">
+			<img src="~/images/eraser-fill.svg" />
+		</button>
+	</div>
+	<span validation-for="CpcmUserCity" class="text-danger"></span>
+
+	<label for="CpcmUserUniversity" class="form-label">Университет</label>
+	<div class="flex-grow-1 input-group d-flex justify-content-between mb-3">
+		<select data-live-search="true" name="UniversityId" class="selectpicker flex-grow-1" id="university" asp-items="ViewBag.CpcmUserUniversity">
+			<option value="" selected disabled>Выберите университет...</option>
+		</select>
+		<button type="button" class="btn btn-light addOptionButton" onclick="clearSelect('university')">
+			<img src="~/images/eraser-fill.svg" />
+		</button>
+	</div>
+	<span validation-for="CpcmUserUniversity" class="text-danger"></span>
+
+	<label for="CpcmUserSchool" class="form-label">Школа</label>
+	<div class="flex-grow-1 input-group d-flex justify-content-between mb-3">
+		<select data-live-search="true" name="SchoolId" class="selectpicker flex-grow-1" id="school" asp-items="ViewBag.CpcmUserSchool">
+			<option value="" selected disabled>Выберите школу...</option>
+		</select>
+		<button type="button" class="btn btn-light addOptionButton" onclick="clearSelect('school')">
+			<img src="~/images/eraser-fill.svg" />
+		</button>
+	</div>
+	<span validation-for="CpcmUserSchool" class="text-danger"></span>
+
+	@if (User.Identity.IsAuthenticated && User.FindFirst(c => c.Type == "CpcmCanEditUsers").Value == "True")
+	{
+		<label for="UserRole" class="form-label">Роль пользователя</label>
+		<div class="flex-grow-1 input-group d-flex justify-content-between mb-3">
+			<select data-live-search="true" name="UserRole" class="selectpicker flex-grow-1" id="role" asp-items="ViewBag.СpcmRoles">
+				<option value="" selected disabled>Выберите роль...</option>
+			</select>
+			<button type="button" class="btn btn-light addOptionButton" onclick="clearSelect('school')">
+				<img src="~/images/eraser-fill.svg" />
+			</button>
+		</div>
+	<span validation-for="UserRole" class="text-danger"></span>
+	}
+	<button type="submit" class="btn btn-outline-primary container-fluid">Найти</button>
+</form>
+<div class="container mt-3">
+	<div class="row" id="followers-container">
+		@if (Model.Count != 0)
+		{
+			@foreach (CpcmUser user in Model)
+			{
+				<div class="col-md-4 follower" id="@user.CpcmUserId">
+					<div class="card mb-4 shadow-sm">
+						@if (user.CpcmUserNickName != null)
+						{
+							@if (user.CpcmIsDeleted || user.CpcmUserBanned)
+							{
+								<a asp-controller="User" asp-action="Index" asp-route-Nickname="@user.CpcmUserNickName">
+									<img src="\images\default-banned.png" class="bd-placeholder-img card-img-top user-image" width="100%" height="225" alt="Иконка пользователя">
+								</a>
+							}
+							else if (user.CpcmUserImagePath != null && user.CpcmUserImagePath != string.Empty)
+							{
+								<a asp-controller="User" asp-action="Index" asp-route-Nickname="@user.CpcmUserNickName">
+									<img src="@Url.Content(@user.CpcmUserImagePath)" class="bd-placeholder-img card-img-top user-image" width="100%" height="225" alt="Иконка пользователя">
+								</a>
+							}
+							else
+							{
+								<a asp-controller="User" asp-action="Index" asp-route-Nickname="@user.CpcmUserNickName">
+									<img src="\images\default.png" class="bd-placeholder-img card-img-top user-image" width="100%" height="225" alt="Иконка пользователя">
+								</a>
+							}
+						}
+						else
+						{
+							@if (user.CpcmIsDeleted || user.CpcmUserBanned)
+							{
+								<a asp-controller="User" asp-action="Index" asp-route-Nickname="@user.CpcmUserId">
+									<img src="\images\default-banned.png" class="bd-placeholder-img card-img-top user-image" width="100%" height="225" alt="Иконка пользователя">
+								</a>
+							}
+							else if (user.CpcmUserImagePath != null && user.CpcmUserImagePath != string.Empty)
+							{
+								<a asp-controller="User" asp-action="Index" asp-route-UserId="@user.CpcmUserId">
+									<img src="@Url.Content(@user.CpcmUserImagePath)" class="bd-placeholder-img card-img-top user-image" width="100%" height="225" alt="Иконка пользователя">
+								</a>
+							}
+							else
+							{
+								<a asp-controller="User" asp-action="Index" asp-route-Nickname="@user.CpcmUserId">
+									<img src="\images\default.png" class="bd-placeholder-img card-img-top user-image" width="100%" height="225" alt="Иконка пользователя">
+								</a>
+							}
+						}
+						<div class="card-body">
+							@if (user.CpcmUserNickName != null)
+							{
+								<a class="card-text link-dark nickname" asp-controller="User" asp-action="Index" asp-route-Nickname="@user.CpcmUserNickName">
+									@user.CpcmUserFirstName @user.CpcmUserSecondName @user.CpcmUserAdditionalName
+								</a>
+							}
+							else
+							{
+								<a class="card-text link-dark nickname" asp-controller="User" asp-action="Index" asp-route-UserId="@user.CpcmUserId" class="mt-0 mb-0">
+									@user.CpcmUserFirstName @user.CpcmUserSecondName @user.CpcmUserAdditionalName
+								</a>
+							}
+						</div>
+					</div>
+				</div>
+			}
+		}
+		else
+		{
+			<h5 class="col-12 text-muted text-center mt-2">К сожалению, кроме капибар никого не нашлось :(</h5>
+		}
+	</div>
+	@if (Model.Count >= 10)
+	{
+		<div class="col-12 text-center" id="followers-footer">
+			<button class="btn btn-primary" type="button" onclick="loadFollowers(this)">Загрузить ещё</button>
+		</div>
+	}
+</div>
+<script src="~/js/friends.js"></script>
+<script src="~/js/load-more.js"></script>
+<script src="~/js/signup.js"></script>
+<script src="~/js/search-from-fill.js"></script>

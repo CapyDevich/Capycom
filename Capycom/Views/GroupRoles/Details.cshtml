@@ -1,0 +1,48 @@
+﻿@model Capycom.CpcmGroupRole
+
+@{
+    ViewData["Title"] = "Details";
+}
+
+<h1>Details</h1>
+
+<div>
+    <h4>CpcmGroupRole</h4>
+    <hr />
+    <dl class="row">
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.CpcmRoleName)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.CpcmRoleName)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.CpcmCanEditGroup)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.CpcmCanEditGroup)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.CpcmCanMakePost)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.CpcmCanMakePost)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.CpcmCanDelPost)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.CpcmCanDelPost)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.CpcmCanEditPost)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.CpcmCanEditPost)
+        </dd>
+    </dl>
+</div>
+<div>
+    <a asp-action="Edit" asp-route-id="@Model?.CpcmRoleId">Edit</a> |
+    <a asp-action="Index">Back to List</a>
+</div>

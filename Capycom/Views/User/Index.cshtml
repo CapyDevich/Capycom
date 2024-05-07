@@ -1,0 +1,99 @@
+﻿@model UserProfileAndPostsModel
+@{
+	ViewData["Title"] = "Профиль";
+}
+<link href="~/css/post.css" rel="stylesheet" />
+@if (User.Identity.IsAuthenticated)
+{
+	@if (User.FindFirst(c => c.Type == "CpcmCanBanUsersPost").Value == "True" || User.FindFirst(c => c.Type == "CpcmCanBanUsersComment").Value == "True" || User.FindFirst(c => c.Type == "CpcmCanBanUsers").Value == "True")
+	{
+		<link href="~/css/ban.css" rel="stylesheet" />
+	}
+}
+<div class="container mt-5">
+	<div class="row">
+		<div class="col-lg-4">
+			@await Html.PartialAsync("UserCard", Model.User)
+		</div>
+		<div class="col-lg-8">
+			@if (User.Identity.IsAuthenticated && Model.User.CpcmUserId.ToString() == User.FindAll(x => x.Type == "CpcmUserId").FirstOrDefault().Value)
+			{
+				<a asp-area="" asp-controller="User" asp-action="CreatePost" asp-route-postId="" class="btn btn-outline-primary col-12 mb-1">Добавить пост</a>
+				<a asp-area="" asp-controller="User" asp-action="NotPublishedPosts" asp-route-id="@Model.User.CpcmUserId" class="btn btn-outline-primary col-12 mb-1">Посмотреть отложенные посты</a>
+			}
+			@if (!Model.User.CpcmUserBanned && !Model.User.CpcmIsDeleted)
+			{
+				@if (Model.Posts != null)
+				{
+					<div class="feed">
+					@foreach (var item in Model.Posts)
+					{
+						@await Html.PartialAsync("Post", item)
+					}
+					</div>
+					@if (Model.Posts.Count >= 10)
+					{
+						<button class="btn btn-primary container-fluid" onclick="loadProfilePost(this)">Загрузить ещё</button>
+					}
+				}
+			}
+			else if (Model.User.CpcmIsDeleted)
+			{
+				<div class="card mb-2">
+					<div class="card-body">
+						<h5 class="text-center">Аккаунт пользователя удалён ;;</h5>
+					</div>
+				</div>
+			}
+			else
+			{
+				<div class="card mb-2">
+					<div class="card-body">
+						<h5 class="text-center">Пользователь был забанен советом капибар</h5>
+					</div>
+				</div>
+			}
+		</div>
+	</div>
+</div>
+@if (!Model.User.CpcmUserBanned)
+{
+	@if (User.Identity.IsAuthenticated)
+	{
+		@await Html.PartialAsync("RepostModal")
+	
+		<!-- Модальное окно на подтверждение удаление поста -->
+		<div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteModalLabel" aria-hidden="true">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h5 class="modal-title" id="confirmDeleteModalLabel">Подтверждение удаления</h5>
+						<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+					</div>
+					<div class="modal-body">
+						Вы уверены, что хотите удалить данный пост?
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+						<button type="button" class="btn btn-danger" data-bs-dismiss="modal" onclick="deletePost()">Удалить</button>
+					</div>
+				</div>
+			</div>
+		</div>
+	}
+}
+<script type="text/javascript" charset="utf-8" src="~/js/post.js"></script>
+<script src="~/js/load-more.js"></script>
+<script src="~/js/post/format-post-number.js"></script>
+<script src="~/js/post/like-repost-post.js"></script>
+@if (User.Identity.IsAuthenticated)
+{
+	@if (User.FindFirst(c => c.Type == "CpcmCanBanUsersPost").Value == "True")
+	{
+		<script src="~/js/ban/ban-post.js"></script>
+	}
+	@if (User.FindFirst(c => c.Type == "CpcmCanBanUsers").Value == "True" && Model.User.CpcmUserId.ToString() != User.FindAll(x => x.Type == "CpcmUserId").FirstOrDefault().Value)
+	{
+		<script src="~/js/ban/ban-user.js"></script>
+	}
+}
