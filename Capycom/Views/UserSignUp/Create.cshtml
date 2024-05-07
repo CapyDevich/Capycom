@@ -125,12 +125,74 @@
 			<input asp-for="CpcmUserMusics" type="text" class="form-control" id="music">
 		</div>
 		<span asp-validation-for="CpcmUserMusics" class="text-danger"></span>
-		<button type="submit" class="btn btn-primary" value="Create">Зарегистрироваться</button>
+		<button type="submit" class="btn btn-primary container-fluid" value="Create">Зарегистрироваться</button>
 	</form>
+	<p class="text-muted col-md-6 mx-auto mt-1">
+		Нажимая кнопку «Зарегистрироваться», я даю свое согласие на обработку моих персональных данных, в соответствии с Федеральным законом от 27.07.2006 года №152-ФЗ «О персональных данных», на условиях и для целей, определенных в 
+		<a href="" data-bs-toggle="modal" data-bs-target="#personalInfoModal">Согласии на обработку персональных данных</a>.
+	</p>
 </div>
-
-<div>
-	<a asp-action="Index" class="btn btn-light">Back to List</a>
+<!-- Модальное окно с информацией об обработке пер. данных. -->
+<div class="modal fade" id="personalInfoModal" tabindex="-1" aria-labelledby="personalInfoModalLabel" aria-hidden="true">
+	<div class="modal-dialog">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h1 class="modal-title fs-5 text-center" id="personalInfoModalLabel">Согласие на обработку персональных данных</h1>
+				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+			</div>
+			<form>
+				<div class="modal-body">
+					<p>
+						Настоящим в соответствии с Федеральным законом № 152-ФЗ «О персональных данных» от 27.07.2006 года свободно, своей волей и в своем интересе выражаю свое безусловное согласие на обработку моих персональных данных ОАО "Капидевич", ИНН 2724458158, ОГРН - 1087701287652 (свидетельство от 02.12.2002), зарегистрированным в соответствии с законодательством РФ по адресу:
+						<br>Россия, 680021, г. Хабаровск, ул. Серышева, дом 47 (далее по тексту - Оператор).
+					</p>
+					<style>
+						li.personal {
+							list-style-type: none;
+							padding: 0;
+							counter-reset: item;
+						}
+						li.personal::before {
+							content: "— ";
+							counter-increment: item;
+						}
+						ul.personal {
+							padding-left: 0px;
+						}
+					</style>
+					<ol>
+						<li>Согласие дается на обработку одной, нескольких или всех категорий персональных данных, не являющихся специальными или биометрическими, предоставляемых мною, которые могут включать:</li>
+						<ul class="personal">
+							<li class="personal">Имя;</li>
+							<li class="personal">Фамилия;</li>
+							<li class="personal">E-mail;</li>
+							<li class="personal">Телефон;</li>
+							<li class="personal">Город;</li>
+							<li class="personal">Школа;</li>
+							<li class="personal">ВУЗ;</li>
+							<li class="personal">Сайт;</li>
+							<li class="personal">Музыка;</li>
+							<li class="personal">Фильмы;</li>
+							<li class="personal">Книги;</li>
+							<li class="personal">О себе.</li>
+						</ul>
+						<li>Оператор может совершать следующие действия: сбор; запись; систематизация; накопление; хранение; уточнение (обновление, изменение); извлечение; использование; блокирование; удаление; уничтожение.</li>
+						<li>Способы обработки: как с использованием средств автоматизации, так и без их использования.</li>
+						<li>Цель обработки: предоставление мне услуг/работ, включая, направление в мой адрес уведомлений, касающихся предоставляемых услуг/работ, подготовка и направление ответов на мои запросы, направление в мой адрес информации о мероприятиях/товарах/услугах/работах Оператора.</li>
+						<li>Настоящее согласие действует до момента его отзыва путем направления соответствующего уведомления на электронный адрес&nbsp;
+							<a href="mailto:test@capybara.su">test@capybara.su</a>
+							&nbsp;или направления по адресу Россия, 680021, г. Хабаровск, ул. Серышева, дом 47.</li>
+						<li>
+							В случае отзыва мною согласия на обработку персональных данных Оператор вправе продолжить обработку персональных данных без моего согласия при наличии оснований, предусмотренных Федеральным законом №152-ФЗ «О персональных данных» от 27.07.2006 г.&nbsp;
+						</li>
+					</ol>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-secondary container-fluid" data-bs-dismiss="modal">Понятно</button>
+				</div>
+			</form>
+		</div>
+	</div>
 </div>
 <!-- Модальное окно на добавление города -->
 <div class="modal fade" id="addingCityModal" tabindex="-1" aria-labelledby="addingCityModalLabel" aria-hidden="true">
