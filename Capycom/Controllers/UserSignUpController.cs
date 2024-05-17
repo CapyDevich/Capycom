@@ -1,3 +1,4 @@
+#define DoNotSignIn
 using Capycom.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -6,7 +7,6 @@ using Microsoft.Extensions.Options;
 using Serilog;
 using System.Data.Common;
 using System.Security.Claims;
-
 namespace Capycom.Controllers
 {
 	public class UserSignUpController : Controller
@@ -59,9 +59,13 @@ namespace Capycom.Controllers
 
         public async Task<IActionResult> Create()
         {
+#if DoNotSignIn
+            if (!_config.AllowSignIn)
+                return RedirectToAction("Index", "Home");
+#endif
             if (User.Identity.IsAuthenticated)
             {
-                RedirectToAction("Index","User");
+                return RedirectToAction("Index","User");
             }
             try
             {
@@ -97,9 +101,13 @@ namespace Capycom.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(UserSignUpModel cpcmSignUser)
 		{
-			if (User.Identity.IsAuthenticated)
+#if DoNotSignIn
+            if (!_config.AllowSignIn)
+                return RedirectToAction("Index", "Home");
+#endif
+            if (User.Identity.IsAuthenticated)
 			{
-				RedirectToAction("Index", "User");
+				return RedirectToAction("Index", "User");
 			}
 			Log.Debug("Попытка регистрации нового пользователя: {@CpcmSignUser}", cpcmSignUser);
             if (ModelState.IsValid)

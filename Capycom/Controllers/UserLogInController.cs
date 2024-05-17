@@ -35,6 +35,10 @@ namespace Capycom.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Index(UserLogInModel user)
         {
+            if (!_config.AllowLogIn)
+            {
+                return RedirectToAction("Index", "Home");
+            }
             CpcmUser? potentialUser;
             if(HttpContext.User.Identity.IsAuthenticated)
                 return RedirectToAction("Index", "User");
