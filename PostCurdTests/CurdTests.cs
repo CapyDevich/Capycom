@@ -183,7 +183,21 @@ namespace PostCurdTests
 			context.CpcmPosts.AddRange(posts);
 			context.SaveChanges();
 
-			controller = new UserController(A.Fake<ILogger<UserController>>(), context, A.Fake<IOptions<MyConfig>>());
+			var config = new MyConfig
+			{
+				ServerSol = "CapybaraTop",
+				AllowSignIn = true,
+				AllowLogIn = true,
+				AllowCreatePost = true,
+				AllowEditPost = true,
+				AllowCreateComment = true,
+				AllowEditUserInfo = true,
+				AllowEditUserIdentity = true
+			};
+            var mockOptions = new Mock<IOptions<MyConfig>>();
+            mockOptions.Setup(o => o.Value).Returns(config);
+
+            controller = new UserController(A.Fake<ILogger<UserController>>(), context, mockOptions.Object);
 			var httpcontext = new DefaultHttpContext();
 			controller.ControllerContext = new ControllerContext()
 			{

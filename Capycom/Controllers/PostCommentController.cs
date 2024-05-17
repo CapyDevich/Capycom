@@ -200,6 +200,10 @@ namespace Capycom.Controllers
         [Authorize]
         public async Task<IActionResult> AddComment(CommentAddModel userComment)
         {
+            if (!_config.AllowCreateComment)
+            {
+                return RedirectToAction("Index", "Home");
+            }
             try
             {
                 var post = await _context.CpcmPosts.Where(p => p.CpcmPostId == userComment.CpcmPostId).FirstOrDefaultAsync();

@@ -19,6 +19,7 @@ using Microsoft.CodeAnalysis.Options;
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using System.Reflection;
+using Moq;
 
 namespace PostCurdTests
 {
@@ -149,9 +150,20 @@ namespace PostCurdTests
 			context.CpcmUsers.AddRange(users); context.CpcmRoles.AddRange(roles);
 
 			context.SaveChanges();
-			var aaa = A.Fake<IOptions<MyConfig>>();
-			aaa.Value.ServerSol = serverSol;
-			controller = new UserLogInController(A.Fake<ILogger<UserLogInController>>(), context, aaa);
+            var config = new MyConfig
+            {
+                ServerSol = "CapybaraTop",
+                AllowSignIn = true,
+                AllowLogIn = true,
+                AllowCreatePost = true,
+                AllowEditPost = true,
+                AllowCreateComment = true,
+                AllowEditUserInfo = true,
+                AllowEditUserIdentity = true
+            };
+            var mockOptions = new Mock<IOptions<MyConfig>>();
+            mockOptions.Setup(o => o.Value).Returns(config);
+            controller = new UserLogInController(A.Fake<ILogger<UserLogInController>>(), context, mockOptions.Object);
 			var httpcontext = new DefaultHttpContext();
 			controller.ControllerContext = new ControllerContext()
 			{
