@@ -1,4 +1,4 @@
-using Capycom.Models;
+﻿using Capycom.Models;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
@@ -412,6 +412,10 @@ namespace Capycom.Controllers
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> Edit(UserEditAboutDataModel user)
         {
+            if (!_config.AllowEditUserInfo)
+            {
+                return RedirectToAction("Index", "Home");
+            }
             if (!CheckUserPrivilege("CpcmCanEditUsers", "True", user.CpcmUserId))
             {
                 Log.Warning("Пользователь {user} не имеет прав на редактирование пользователей", User.FindFirstValue("CpcmUserId"));
@@ -724,6 +728,10 @@ namespace Capycom.Controllers
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> EditIdentity(UserEditIdentityModel user)
         {
+            if (!_config.AllowEditUserIdentity)
+            {
+                return RedirectToAction("Index", "Home");
+            }
             if (ModelState.IsValid)
             {
                 if (!CheckUserPrivilege("CpcmCanEditUsers", "True", user.CpcmUserId))
@@ -2136,7 +2144,10 @@ namespace Capycom.Controllers
             //{
             //    return View(userPost);
             //}
-
+            if (!_config.AllowCreatePost)
+            {
+                return RedirectToAction("Index","Home");
+            }
             if (ModelState.IsValid)
             {
                 if(string.IsNullOrEmpty(userPost.Text)||string.IsNullOrWhiteSpace(userPost.Text) && userPost.Files == null)
@@ -2596,7 +2607,10 @@ namespace Capycom.Controllers
             //{
             //    return View(editPost);
             //}
-
+            if (!_config.AllowEditPost)
+            {
+                return RedirectToAction("Index", "Home");
+            }
             Log.Debug("Попытка редактирования поста {@post} {u}", editPost, User.FindFirstValue("CpcmUserId"));
             if (ModelState.IsValid)
             {
